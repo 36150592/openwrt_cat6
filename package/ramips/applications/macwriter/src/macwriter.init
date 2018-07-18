@@ -1,0 +1,8 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2002-2016 sztozed.com
+
+START=70
+
+start() {
+	macwriter &
+}

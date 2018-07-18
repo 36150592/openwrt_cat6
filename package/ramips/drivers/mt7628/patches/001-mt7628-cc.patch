@@ -1,0 +1,67 @@
+Index: mt7628-p4rev-20160310/build/Makefile
+===================================================================
+--- mt7628-p4rev-20160310.orig/build/Makefile
++++ mt7628-p4rev-20160310/build/Makefile
+@@ -6,7 +6,8 @@ ifeq ($(CONFIG_SUPPORT_OPENWRT),y)
+ EXTRA_CFLAGS = -I$(src)/../src/include \
+ 				-I$(src)/../src/embedded/include \
+ 				-I$(src)/../src/ate/include
+-DRV_NAME = mt7628
++#DRV_NAME = mt7628
++DRV_NAME = rt2860v2_ap
+ SRC_DIR = ../src/embedded
+ obj-m += $(DRV_NAME).o
+ else
+@@ -429,7 +430,7 @@ endif
+ ########################################################
+ # chip related files
+ ########################################################
+-ifeq ($(CONFIG_RALINK_MT7628),y)
++#ifeq ($(CONFIG_RALINK_MT7628),y)
+ EXTRA_CFLAGS += -DMT7628 -DMT_BBP -DMT_RF -DRTMP_RBUS_SUPPORT -DRTMP_RF_RW_SUPPORT -DMT_MAC -DRTMP_MAC_PCI -DRTMP_PCI_SUPPORT
+ EXTRA_CFLAGS += -DRTMP_FLASH_SUPPORT -DDMA_SCH_SUPPORT -DRTMP_EFUSE_SUPPORT
+ EXTRA_CFLAGS += -DCONFIG_ANDES_SUPPORT
+@@ -456,7 +457,7 @@ chip_objs += $(SRC_DIR)/../chips/mt7628.
+ 		$(SRC_DIR)/os/linux/rt_rbus_pci_drv.o\
+ 		$(SRC_DIR)/hif/hif_pci.o\
+ 		$(SRC_DIR)/os/linux/rbus_main_dev.o
+-endif
++#endif
+ 
+ 
+ #
+Index: mt7628-p4rev-20160310/src/embedded/include/iface/rtmp_rbs.h
+===================================================================
+--- mt7628-p4rev-20160310.orig/src/embedded/include/iface/rtmp_rbs.h
++++ mt7628-p4rev-20160310/src/embedded/include/iface/rtmp_rbs.h
+@@ -35,7 +35,7 @@
+   *
+   ************************************************************************/
+ 
+-#define RTMP_MAC_IRQ_NUM		4
++#define RTMP_MAC_IRQ_NUM		6
+ 
+ 
+ /*************************************************************************
+Index: mt7628-p4rev-20160310/src/embedded/os/linux/rt_linux.c
+===================================================================
+--- mt7628-p4rev-20160310.orig/src/embedded/os/linux/rt_linux.c
++++ mt7628-p4rev-20160310/src/embedded/os/linux/rt_linux.c
+@@ -330,7 +330,7 @@ void RtmpFlashRead(
+ #ifdef RA_MTD_RW_BY_NUM
+ 	ra_mtd_read(MTD_NUM_FACTORY, 0, (size_t) b, p);
+ #else
+-	ra_mtd_read_nm("Factory", a&0xFFFF, (size_t) b, p);
++	ra_mtd_read_nm("factory", a&0xFFFF, (size_t) b, p);
+ #endif
+ #endif /* CONFIG_RALINK_FLASH_API */
+ }
+@@ -346,7 +346,7 @@ void RtmpFlashWrite(
+ #ifdef RA_MTD_RW_BY_NUM
+ 	ra_mtd_write(MTD_NUM_FACTORY, 0, (size_t) b, p);
+ #else
+-	ra_mtd_write_nm("Factory", a&0xFFFF, (size_t) b, p);
++	ra_mtd_write_nm("factory", a&0xFFFF, (size_t) b, p);
+ #endif
+ #endif /* CONFIG_RALINK_FLASH_API */
+ }

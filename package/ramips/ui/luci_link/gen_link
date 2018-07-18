@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# luci base
+ln -s ../luci_src/modules/luci-base .
+
+# collections
+ln -s ../luci_src/collections/luci .
+ln -s ../luci_src/collections/luci-light .
+ln -s ../luci_src/collections/luci-ssl .
+
+# package link
+ln -s ../luci_src/contrib/package/community-profiles .
+ln -s ../luci_src/contrib/package/freifunk-common .
+ln -s ../luci_src/contrib/package/freifunk-firewall .
+ln -s ../luci_src/contrib/package/freifunk-gwcheck .
+ln -s ../luci_src/contrib/package/freifunk-mapupdate .
+ln -s ../luci_src/contrib/package/freifunk-p2pblock .
+ln -s ../luci_src/contrib/package/freifunk-policyrouting .
+ln -s ../luci_src/contrib/package/freifunk-watchdog .
+
+# application link
+ln -s ../luci_src/applications/luci-app-adblock .
+ln -s ../luci_src/applications/luci-app-ahcp .
+ln -s ../luci_src/applications/luci-app-asterisk .
+ln -s ../luci_src/applications/luci-app-commands .
+ln -s ../luci_src/applications/luci-app-coovachilli .
+ln -s ../luci_src/applications/luci-app-ddns .
+ln -s ../luci_src/applications/luci-app-diag-core .
+ln -s ../luci_src/applications/luci-app-diag-devinfo .
+ln -s ../luci_src/applications/luci-app-dump1090 .
+ln -s ../luci_src/applications/luci-app-firewall .
+ln -s ../luci_src/applications/luci-app-freifunk-diagnostics .
+ln -s ../luci_src/applications/luci-app-freifunk-policyrouting .
+ln -s ../luci_src/applications/luci-app-freifunk-widgets .
+ln -s ../luci_src/applications/luci-app-fwknopd .
+ln -s ../luci_src/applications/luci-app-hd-idle .
+ln -s ../luci_src/applications/luci-app-ltqtapi .
+ln -s ../luci_src/applications/luci-app-meshwizard .
+ln -s ../luci_src/applications/luci-app-minidlna .
+ln -s ../luci_src/applications/luci-app-mjpg-streamer .
+ln -s ../luci_src/applications/luci-app-mmc-over-gpio .
+ln -s ../luci_src/applications/luci-app-multiwan .
+ln -s ../luci_src/applications/luci-app-ntpc .
+ln -s ../luci_src/applications/luci-app-ocserv .
+ln -s ../luci_src/applications/luci-app-olsr .
+ln -s ../luci_src/applications/luci-app-olsr-services .
+ln -s ../luci_src/applications/luci-app-olsr-viz .
+ln -s ../luci_src/applications/luci-app-openvpn .
+ln -s ../luci_src/applications/luci-app-p2pblock .
+ln -s ../luci_src/applications/luci-app-p910nd .
+ln -s ../luci_src/applications/luci-app-pbx .
+ln -s ../luci_src/applications/luci-app-pbx-voicemail .
+ln -s ../luci_src/applications/luci-app-polipo .
+ln -s ../luci_src/applications/luci-app-privoxy .
+ln -s ../luci_src/applications/luci-app-qos .
+ln -s ../luci_src/applications/luci-app-radicale .
+ln -s ../luci_src/applications/luci-app-radvd .
+ln -s ../luci_src/applications/luci-app-samba .
+ln -s ../luci_src/applications/luci-app-shairplay .
+ln -s ../luci_src/applications/luci-app-shairport .
+ln -s ../luci_src/applications/luci-app-siitwizard .
+ln -s ../luci_src/applications/luci-app-splash .
+ln -s ../luci_src/applications/luci-app-statistics .
+ln -s ../luci_src/applications/luci-app-tinyproxy .
+ln -s ../luci_src/applications/luci-app-transmission .
+ln -s ../luci_src/applications/luci-app-udpxy .
+ln -s ../luci_src/applications/luci-app-upnp .
+ln -s ../luci_src/applications/luci-app-ushare .
+ln -s ../luci_src/applications/luci-app-vnstat .
+ln -s ../luci_src/applications/luci-app-voice-core .
+ln -s ../luci_src/applications/luci-app-voice-diag .
+ln -s ../luci_src/applications/luci-app-watchcat .
+ln -s ../luci_src/applications/luci-app-wol .
+ln -s ../luci_src/applications/luci-app-wshaper .
+
+# libs
+ln -s ../luci_src/libs/luci-lib-httpclient .
+ln -s ../luci_src/libs/luci-lib-ip .
+ln -s ../luci_src/libs/luci-lib-json .
+ln -s ../luci_src/libs/luci-lib-jsonc .
+ln -s ../luci_src/libs/luci-lib-luaneightbl .
+ln -s ../luci_src/libs/luci-lib-nixio .
+ln -s ../luci_src/libs/luci-lib-px5g .
+ln -s ../luci_src/libs/luci-lib-rpcc .
+
+# modules
+ln -s ../luci_src/modules/luci-mod-admin-full .
+ln -s ../luci_src/modules/luci-mod-admin-mini .
+ln -s ../luci_src/modules/luci-mod-failsafe .
+ln -s ../luci_src/modules/luci-mod-freifunk .
+ln -s ../luci_src/modules/luci-mod-freifunk-community .
+ln -s ../luci_src/modules/luci-mod-rpc .
+
+# protocols
+ln -s ../luci_src/protocols/luci-proto-3g .
+ln -s ../luci_src/protocols/luci-proto-ipv6 .
+ln -s ../luci_src/protocols/luci-proto-openconnect .
+ln -s ../luci_src/protocols/luci-proto-ppp .
+ln -s ../luci_src/protocols/luci-proto-relay .
+
+# themes
+ln -s ../luci_src/themes/luci-theme-bootstrap .
+ln -s ../luci_src/themes/luci-theme-freifunk-bno .
+ln -s ../luci_src/themes/luci-theme-freifunk-generic .
+ln -s ../luci_src/themes/luci-theme-openwrt .
+
+# contrib
+ln -s ../luci_src/contrib/package/meshwizard .
+ln -s ../luci_src/contrib/package/remote-update .
+
