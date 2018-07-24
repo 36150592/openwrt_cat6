@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2010-2015 Jo-Philipp Wich <jow@openwrt.org>
+# Copyright (C) 2010-2014 Jo-Philipp Wich <xm@subsignal.org>
 #
 # This is free software, licensed under the GPL 2 license.
 #
@@ -7,23 +7,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libiwinfo
-PKG_VERSION:=2015-06-01
-PKG_RELEASE=$(PKG_SOURCE_VERSION)
+PKG_VERSION:=2014-06-01
+PKG_RELEASE:=1
 
-PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=http://git.openwrt.org/project/iwinfo.git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_VERSION:=ade8b1b299cbd5748db1acf80dd3e9f567938371
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
-PKG_MAINTAINER:=Jo-Philipp Wich <jow@openwrt.org>
-PKG_LICENSE:=GPL-2.0
-
+PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 PKG_CONFIG_DEPENDS := \
 	CONFIG_PACKAGE_kmod-brcm-wl \
 	CONFIG_PACKAGE_kmod-brcm-wl-mini \
 	CONFIG_PACKAGE_kmod-brcm-wl-mimo \
 	CONFIG_PACKAGE_kmod-madwifi \
-	CONFIG_PACKAGE_kmod-cfg80211
+	CONFIG_TARGET_ramips \
+	CONFIG_PACKAGE_kmod-mac80211
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -31,14 +25,15 @@ include $(INCLUDE_DIR)/package.mk
 define Package/libiwinfo
   SECTION:=libs
   CATEGORY:=Libraries
-  TITLE:=Generalized Wireless Information Library (iwinfo)
-  DEPENDS:=+PACKAGE_kmod-cfg80211:libnl-tiny +libuci
+  TITLE:=Generalized Wireless Information Library (iwinfo, support mtk)
+  DEPENDS:=+PACKAGE_kmod-mac80211:libnl-tiny
   ABI_VERSION:=$(PKG_RELEASE)
+  MAINTAINER:=Jo-Philipp Wich <xm@subsignal.org>
 endef
 
 define Package/libiwinfo/description
   Wireless information library with consistent interface for proprietary Broadcom,
-  madwifi, nl80211 and wext driver interfaces.
+  madwifi, mtk, nl80211 and wext driver interfaces.
 endef
 
 
@@ -46,8 +41,9 @@ define Package/libiwinfo-lua
   SUBMENU:=Lua
   SECTION:=lang
   CATEGORY:=Languages
-  TITLE:=libiwinfo Lua binding
+  TITLE:=libiwinfo Lua binding(support mtk)
   DEPENDS:=+libiwinfo +liblua
+  MAINTAINER:=Jo-Philipp Wich <xm@subsignal.org>
 endef
 
 define Package/libiwinfo-lua/description
@@ -59,14 +55,20 @@ endef
 define Package/iwinfo
   SECTION:=utils
   CATEGORY:=Utilities
-  TITLE:=Generalized Wireless Information utility
+  TITLE:=Generalized Wireless Information utility(support mtk)
   DEPENDS:=+libiwinfo
+  MAINTAINER:=Jo-Philipp Wich <xm@subsignal.org>
 endef
 
 define Package/iwinfo/description
   Command line frontend for the wireless information library.
 endef
 
+
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./src/* $(PKG_BUILD_DIR)/
+endef
 
 define Build/Configure
 endef
@@ -76,7 +78,8 @@ IWINFO_BACKENDS := \
 	$(if $(CONFIG_PACKAGE_kmod-brcm-wl-mini),wl) \
 	$(if $(CONFIG_PACKAGE_kmod-brcm-wl-mimo),wl) \
 	$(if $(CONFIG_PACKAGE_kmod-madwifi),madwifi) \
-	$(if $(CONFIG_PACKAGE_kmod-cfg80211),nl80211)
+	$(if $(CONFIG_TARGET_ramips),mtk) \
+	$(if $(CONFIG_PACKAGE_kmod-mac80211),nl80211)
 
 TARGET_CFLAGS += \
 	-I$(STAGING_DIR)/usr/include/libnl-tiny \

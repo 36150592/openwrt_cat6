@@ -1,0 +1,2 @@
+适用于rt2680v2驱动的iwinfo，能获得大部分无线信息，包括客户端列表和扫描。
+此iwinfo代码基于openwrt 14.07版的iwinfo修改。
