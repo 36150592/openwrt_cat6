@@ -1,0 +1,24 @@
+Index: linux-3.18.23/drivers/mtd/Kconfig
+===================================================================
+--- linux-3.18.23.orig/drivers/mtd/Kconfig
++++ linux-3.18.23/drivers/mtd/Kconfig
+@@ -370,4 +370,6 @@ source "drivers/mtd/spi-nor/Kconfig"
+ 
+ source "drivers/mtd/ubi/Kconfig"
+ 
++source "drivers/mtd/ralink/Kconfig"
++
+ endif # MTD
+Index: linux-3.18.23/drivers/mtd/Makefile
+===================================================================
+--- linux-3.18.23.orig/drivers/mtd/Makefile
++++ linux-3.18.23/drivers/mtd/Makefile
+@@ -7,7 +7,7 @@ obj-$(CONFIG_MTD)		+= mtd.o
+ mtd-y				:= mtdcore.o mtdsuper.o mtdconcat.o mtdpart.o mtdchar.o
+ 
+ obj-$(CONFIG_MTD_SPLIT)		+= mtdsplit/
+-
++obj-y				+= ralink/
+ obj-$(CONFIG_MTD_OF_PARTS)	+= ofpart.o
+ obj-$(CONFIG_MTD_REDBOOT_PARTS) += redboot.o
+ obj-$(CONFIG_MTD_CMDLINE_PARTS) += cmdlinepart.o
