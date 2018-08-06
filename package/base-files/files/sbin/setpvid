@@ -1,0 +1,87 @@
+#!/bin/sh
+
+
+
+
+del_switch_port()
+{
+
+	tmp=$(uci get network.@switch_port[0] )
+	
+	while [ $tmp ]
+	do
+		uci delete network.@switch_port[0]
+		tmp=$(uci get network.@switch_port[0] ) 
+	done
+	
+	echo "delete done"
+}
+
+
+
+
+
+
+
+
+del_switch_port
+
+
+i=0
+
+num=0
+
+
+while [ $i -lt 6 ]
+do
+	switch="network.@switch_vlan[$i]"
+
+
+#	if [ -z $switch ] || [ -z $sw_port ];then
+#		 i=$(($i+1))
+#		 continue
+#	fi
+		
+	
+	vid=$(uci get $switch.vid)
+	echo "vid=$vid"	
+	if [ -z $vid ];then
+		i=$(($i+1))		
+		continue
+	 fi		
+	
+	ports=$(uci get $switch.ports)
+	echo "ports=$ports"	
+	
+	for j in $ports
+	do
+		tmp=`echo $j | grep "t"` 
+		if [ $tmp ];then
+		        continue	
+			#break
+		fi
+	
+	uci add network switch_port	
+	
+	sw_port="network.@switch_port[$num]"	
+#	echo "port=$j and $sw_port"	
+	if [ $sw_port ];then
+#		echo $i
+		
+		uci set $sw_port.port=$j
+		uci set $sw_port.pvid=$vid
+	fi		
+
+	num=$(($num+1))	
+	done
+
+
+	i=$(($i+1))
+
+done
+
+
+uci commit network
+
+sleep 1
+
