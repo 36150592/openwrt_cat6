@@ -1,0 +1,15 @@
+Index: linux-3.18.23/Kconfig
+===================================================================
+--- linux-3.18.23.orig/Kconfig
++++ linux-3.18.23/Kconfig
+@@ -8,4 +8,10 @@ config SRCARCH
+ 	string
+ 	option env="SRCARCH"
+ 
++
++
++config SUPPORT_OPENWRT
++	bool "Support OpenWrt"
++	default y
++
+ source "arch/$SRCARCH/Kconfig"
