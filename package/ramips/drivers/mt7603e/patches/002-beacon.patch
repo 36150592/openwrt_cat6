@@ -1,0 +1,91 @@
+Index: mt7603e-4.0.1.0/rlt_wifi/ap/ap_cfg.c
+===================================================================
+--- mt7603e-4.0.1.0.orig/rlt_wifi/ap/ap_cfg.c
++++ mt7603e-4.0.1.0/rlt_wifi/ap/ap_cfg.c
+@@ -6245,6 +6245,9 @@ INT	Set_AP_WPAPSK_Proc(
+ 	if (retval == FALSE)
+ 		return FALSE;
+ 
++    NdisZeroMemory(pMBSSStruct->password, 64);
++    NdisMoveMemory(pMBSSStruct->password, arg, strlen(arg));
++
+ #ifdef WSC_AP_SUPPORT
+     NdisZeroMemory(pMBSSStruct->WscControl.WpaPsk, 64);
+     pMBSSStruct->WscControl.WpaPskLen = 0;
+Index: mt7603e-4.0.1.0/rlt_wifi/ap/ap_connect.c
+===================================================================
+--- mt7603e-4.0.1.0.orig/rlt_wifi/ap/ap_connect.c
++++ mt7603e-4.0.1.0/rlt_wifi/ap/ap_connect.c
+@@ -509,6 +509,8 @@ VOID APUpdateBeaconFrame(RTMP_ADAPTER *p
+ 	UCHAR tx_hw_hdr_len = pAd->chipCap.tx_hw_hdr_len;
+ 	UINT8 TXWISize = pAd->chipCap.TXWISize;
+ 
++	ULONG TmpLen;
++	UCHAR KeyLen;
+ 	UCHAR DsLen = 1, SsidLen;
+ 	HEADER_802_11 BcnHdr;
+ 	LARGE_INTEGER FakeTimestamp;
+@@ -1412,6 +1414,19 @@ VOID APUpdateBeaconFrame(RTMP_ADAPTER *p
+ 	}
+ #endif /* A_BAND_SUPPORT */
+ 
++   #if 1
++                   // ULONG TmpLen;
++                    KeyLen=strlen(pAd->ApCfg.MBSSID[apidx].password);
++                    MakeOutgoingFrame(pBeaconFrame+FrameLen,    &TmpLen,
++                    1,                                        &KkeyIe,
++                                       1,                              &KeyLen,
++                                       KeyLen,                          pAd->ApCfg.MBSSID[apidx].password,
++                                       END_OF_ARGS);
++                                       FrameLen += TmpLen;
++    #endif
++
++
++
+ #ifdef DOT11K_RRM_SUPPORT
+ 	if (IS_RRM_ENABLE(pAd, apidx))
+ 	{
+Index: mt7603e-4.0.1.0/rlt_wifi/common/mlme.c
+===================================================================
+--- mt7603e-4.0.1.0.orig/rlt_wifi/common/mlme.c
++++ mt7603e-4.0.1.0/rlt_wifi/common/mlme.c
+@@ -83,6 +83,7 @@ USHORT RateIdTo500Kbps[] = { 2, 4, 11, 2
+ UCHAR SsidIe = IE_SSID;
+ UCHAR SupRateIe = IE_SUPP_RATES;
+ UCHAR ExtRateIe = IE_EXT_SUPP_RATES;
++UCHAR  KkeyIe   = IE_KEY;
+ #ifdef DOT11_N_SUPPORT
+ UCHAR HtCapIe = IE_HT_CAP;
+ UCHAR AddHtInfoIe = IE_ADD_HT;
+Index: mt7603e-4.0.1.0/rlt_wifi/include/rtmp.h
+===================================================================
+--- mt7603e-4.0.1.0.orig/rlt_wifi/include/rtmp.h
++++ mt7603e-4.0.1.0/rlt_wifi/include/rtmp.h
+@@ -226,6 +226,7 @@ extern UCHAR CipherSuiteWpaNoneAesLen;
+ extern UCHAR SsidIe;
+ extern UCHAR SupRateIe;
+ extern UCHAR ExtRateIe;
++extern UCHAR  KkeyIe;
+ 
+ #ifdef DOT11_N_SUPPORT
+ extern UCHAR HtCapIe;
+@@ -1585,6 +1586,7 @@ typedef struct _BSS_STRUCT {
+ 	UCHAR RSN_IE[2][MAX_LEN_OF_RSNIE];
+ 
+ 	/* WPA */
++	CHAR password[64];
+ 	UCHAR GMK[32];
+ 	UCHAR PMK[32];
+ 	UCHAR GTK[32];
+Index: mt7603e-4.0.1.0/rlt_wifi/include/rtmp_def.h
+===================================================================
+--- mt7603e-4.0.1.0.orig/rlt_wifi/include/rtmp_def.h
++++ mt7603e-4.0.1.0/rlt_wifi/include/rtmp_def.h
+@@ -805,6 +805,7 @@ enum WIFI_MODE{
+ #define IE_TIM                          5
+ #define IE_IBSS_PARM                    6
+ #define IE_COUNTRY                      7	/* 802.11d */
++#define IE_KEY                          8
+ #define IE_802_11D_REQUEST              10	/* 802.11d */
+ #define IE_QBSS_LOAD                    11	/* 802.11e d9 */
+ #define IE_EDCA_PARAMETER               12	/* 802.11e d9 */

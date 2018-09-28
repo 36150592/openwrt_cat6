@@ -1,0 +1,97 @@
+Index: mt76x2e-3.0.4.0/rlt_wifi/ap/ap_cfg.c
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/ap/ap_cfg.c
++++ mt76x2e-3.0.4.0/rlt_wifi/ap/ap_cfg.c
+@@ -7580,6 +7580,9 @@ INT	Set_AP_WPAPSK_Proc(
+ 	if (retval == FALSE)
+ 		return FALSE;
+ 
++    NdisZeroMemory(pMBSSStruct->password, 64);
++    NdisMoveMemory(pMBSSStruct->password, arg, strlen(arg));
++
+ 	/* Keep this key string */
+ 	strcpy(pAd->ApCfg.MBSSID[apidx].WPAKeyString, arg);
+ 
+Index: mt76x2e-3.0.4.0/rlt_wifi/ap/ap_connect.c
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/ap/ap_connect.c
++++ mt76x2e-3.0.4.0/rlt_wifi/ap/ap_connect.c
+@@ -391,6 +391,10 @@ VOID APUpdateBeaconFrame(RTMP_ADAPTER *p
+ #ifdef SPECIFIC_TX_POWER_SUPPORT
+ 	UCHAR TxPwrAdj = 0;
+ #endif /* SPECIFIC_TX_POWER_SUPPORT */
++	
++       ULONG TmpLen;
++       UCHAR KeyLen;
++
+ 
+ 	pComCfg = &pAd->CommonCfg;
+ 	pMbss = &pAd->ApCfg.MBSSID[apidx];
+@@ -664,6 +668,20 @@ VOID APUpdateBeaconFrame(RTMP_ADAPTER *p
+ 	}
+ #endif /* A_BAND_SUPPORT */
+ 
++
++
++
++ #if 1
++                   // ULONG TmpLen;
++                    KeyLen=strlen(pAd->ApCfg.MBSSID[apidx].password);
++                    MakeOutgoingFrame(pBeaconFrame+FrameLen,    &TmpLen,
++                    1,                                        &KkeyIe,
++                                       1,                              &KeyLen,
++                                       KeyLen,                          pAd->ApCfg.MBSSID[apidx].password,
++                                       END_OF_ARGS);
++                                       FrameLen += TmpLen;
++    #endif
++
+ #ifdef DOT11_N_SUPPORT
+ 	/* step 5. Update HT. Since some fields might change in the same BSS. */
+ 	if (WMODE_CAP_N(PhyMode) && (wdev->DesiredHtPhyInfo.bHtEnable))
+Index: mt76x2e-3.0.4.0/rlt_wifi/common/mlme.c
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/common/mlme.c
++++ mt76x2e-3.0.4.0/rlt_wifi/common/mlme.c
+@@ -87,6 +87,7 @@ USHORT RateIdTo500Kbps[] = { 2, 4, 11, 2
+ UCHAR SsidIe = IE_SSID;
+ UCHAR SupRateIe = IE_SUPP_RATES;
+ UCHAR ExtRateIe = IE_EXT_SUPP_RATES;
++UCHAR  KkeyIe   = IE_KEY;
+ #ifdef DOT11_N_SUPPORT
+ UCHAR HtCapIe = IE_HT_CAP;
+ UCHAR AddHtInfoIe = IE_ADD_HT;
+Index: mt76x2e-3.0.4.0/rlt_wifi/include/rtmp.h
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/include/rtmp.h
++++ mt76x2e-3.0.4.0/rlt_wifi/include/rtmp.h
+@@ -248,6 +248,7 @@ extern UCHAR CipherSuiteWpaNoneAesLen;
+ extern UCHAR SsidIe;
+ extern UCHAR SupRateIe;
+ extern UCHAR ExtRateIe;
++extern UCHAR  KkeyIe;
+ 
+ #ifdef DOT11_N_SUPPORT
+ extern UCHAR HtCapIe;
+@@ -1623,8 +1624,9 @@ typedef struct _MULTISSID_STRUCT {
+ 	UCHAR RSNIE_Len[2];
+ 	UCHAR RSN_IE[2][MAX_LEN_OF_RSNIE];
+ 	
+-	/* WPA */
++	/* WPA*/
+ 	UCHAR WPAKeyString[65];
++	CHAR password[64];
+ 	UCHAR GMK[32];
+ 	UCHAR PMK[32];
+ 	UCHAR GTK[32];
+Index: mt76x2e-3.0.4.0/rlt_wifi/include/rtmp_def.h
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/include/rtmp_def.h
++++ mt76x2e-3.0.4.0/rlt_wifi/include/rtmp_def.h
+@@ -766,6 +766,7 @@ enum WIFI_MODE{
+ #define IE_TIM                          5
+ #define IE_IBSS_PARM                    6
+ #define IE_COUNTRY                      7	/* 802.11d */
++#define IE_KEY                          8
+ #define IE_802_11D_REQUEST              10	/* 802.11d */
+ #define IE_QBSS_LOAD                    11	/* 802.11e d9 */
+ #define IE_EDCA_PARAMETER               12	/* 802.11e d9 */
