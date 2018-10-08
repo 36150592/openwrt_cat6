@@ -1,0 +1,78 @@
+#!/usr/bin/lua
+local util = require("luci.util")
+function usage()
+print([[usage: getinfacestatus <-i inf> [-p param] 
+       -i  inf    interface name 
+       -p  param  interface param 
+eoxamples:
+       getinfacestatus -i wan -p ipv4-address'
+       ]])
+end
+
+function arg_parse(arg)
+local res=nil
+local i=1
+
+if 4 > #arg then
+    usage()
+end
+
+while i <= #arg do
+    if "-i" == arg[i] and arg[i+1] and "-" ~= string.sub(arg[i+1],1,1) then
+       if not res then res = {} end
+       res["inf"] = arg[i+1]
+       i = i + 1
+    elseif "-p" == arg[i] and arg[i+1] and "-" ~= string.sub(arg[i+1],1,1) then
+       if not res then res = {} end
+       res["param"] = arg[i+1]
+       i = i + 1
+    end
+    i = i + 1
+end
+return res
+end
+
+--main--
+local arg_t = arg_parse(arg)
+if arg_t and arg_t["inf"] and arg_t["param"] then 
+    local ifa = util.ubus(string.format("network.interface.%s",arg_t["inf"]),"status")
+    if ifa then
+        local p = arg_t["param"]
+        if "ipv4-address" == p then
+            if ifa[p] and ifa[p][1] then
+                local res = ifa[p][1]["address"] or ""
+                print(res)
+            end
+        elseif "dns-server" == p then
+            local res = nil 
+            if ifa[p] and ifa[p][1] then
+                res = ifa[p][1]
+            end
+            if ifa[p] and ifa[p][2] and res then
+                res = res..","..ifa[p][2]
+            end
+            if res then
+                print(res)
+            end
+        elseif "nexthop" == p then
+            if ifa["route"] and ifa["route"][2] then
+                local res = ifa["route"][2][p] or ""
+                print(res)
+            elseif ifa["route"] and ifa["route"][1] then
+                local res = ifa["route"][1][p] or ""
+                print(res)
+            end
+        elseif "mac" == p then
+            local cmd = string.format([[ifconfig %s | grep HWaddr | awk '{print $5}']],ifa["device"])
+            os.execute(cmd)
+        elseif "netmask" == p then
+            local cmd = string.format([[ifconfig %s | grep Mask | awk -F: '{print $4}']],ifa["device"])
+            os.execute(cmd)
+        else
+            if ifa[p] and "table" ~= type(ifa[p]) then
+                print(ifa[p])
+            end
+        end 
+    end
+end
+
