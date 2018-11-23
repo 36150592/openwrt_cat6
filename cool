@@ -1,0 +1,126 @@
+#!/bin/sh
+
+# define echo terminal style
+# color: 0~6 --> black, red, green, yellow, blue, purple, cyan, grey
+export ECHO_STYLE_00="\033[0m"        # default style(black background, white foreground)
+export ECHO_STYLE_01="\033[41;33;1m"  # red background, yellow foregound bold
+export ECHO_STYLE_02="\033[42;34;1m"  # red background, yellow foregound bold
+
+#fix build kerenl when set chinese  as system language.
+export LANG="en_US.UTF-8"
+export LANGUAGE="en"
+
+#echo -e "${ECHO_STYLE_01}echo command terminal style example${ECHO_STYLE_00}"
+
+
+ok_count=0
+fail_count=0
+
+
+load_compile_count()
+{
+        if [ -e .compile_count ] ; then
+                ok_count=$(cat .compile_count | grep ok | awk -F '=' {'print $2'})
+                fail_count=$(cat .compile_count | grep fail | awk -F '=' {'print $2'})
+        fi
+}
+
+check_bash()
+{
+        is_bash=$(ls -l /bin/sh | grep bash)
+        if [ "$is_bash" = "" ] ; then
+                hyphen_e=""
+        else
+                hyphen_e="-e"
+        fi
+}
+
+check_ubuntu_version()
+{
+	ubuntu_version=`cat /etc/issue | awk '{print $2}' | awk -F '.' '{print $1}'`
+	if [ "${ubuntu_version}" != "14" ]; then
+		echo  $hyphen_e "\033[;31m 请使用ubuntu14.04来编译程序 \033[0m"
+	fi
+}
+
+load_compile_count
+check_bash
+check_ubuntu_version
+
+date_start=$(date +%s)
+if [ "$1" = "" ] ; then
+echo ****************************主菜单****************************
+echo cpe
+echo "默认mt7621 cat6模块"
+echo "  1:   mt7621 cat6模块"
+echo other:
+echo "  y:   看看每个人在当前分支上的提交次数吧"
+echo "  z:   看看每个月的提交次数吧"
+echo "  q:   quit"
+
+read line
+else
+line=$1
+fi
+
+if [ "$line" = "" ] ; then
+        line="1"
+fi
+
+if [ "$line" = "1" ] || [ "$line" = "7621_cat6" ] ; then
+        make V=99
+elif [ "$line" = "y" ] ; then
+        git log --pretty='%aN' | sort | uniq -c | sort -k1 -n -r
+        echo ------------------------------------------------
+        echo "  " ` git log --pretty='%aN' | wc -l `   all
+        exit
+elif [ "$line" = "z" ] ; then
+        git log --date short --pretty=format:%ad |  cut -b -7  | sort -r | uniq -c
+        echo ------------------------------------------------
+        echo "  " ` git log --pretty='%aN' | wc -l `   all
+        exit
+elif [ "$line" = "q" ] ; then
+        exit;
+else
+        exit
+fi
+
+compile_result="fail"
+
+if [ "$?" = "0" ] ; then
+        compile_result="ok"
+        ok_count=$(($ok_count+1))
+else
+        fail_count=$(($fail_count+1))
+fi
+
+if [ $compile_result = "ok" ]; then
+	if [ "$line" = "1" ] || [ "$line" = "7621_cat6" ] ; then
+		mkdir -p image/7621_cat6
+		cp -f bin/ramips/openwrt-ramips-mt7621-sxx-u-boot.bin image/7621_cat6/ 
+		cp -f bin/ramips/openwrt-ramips-mt7621-zbt-wg2626-squashfs-sysupgrade.bin image/7621_cat6/
+		rm image/7621_cat6/firmware.bin -rf
+		tr '\000' '\377' < /dev/zero | dd of=image/7621_cat6/firmware.bin bs=1024 count=16384 2>/dev/null
+		dd if=image/7621_cat6/openwrt-ramips-mt7621-sxx-u-boot.bin of=image/7621_cat6/firmware.bin conv=notrunc 2>/dev/null
+		dd if=image/7621_cat6/openwrt-ramips-mt7621-zbt-wg2626-squashfs-sysupgrade.bin of=image/7621_cat6/firmware.bin conv=notrunc bs=64k seek=5 2>/dev/null
+
+	fi
+fi
+
+echo "ok_count=$ok_count" > .compile_count
+echo "fail_count=$fail_count" >> .compile_count
+
+date_end=$(date +%s)
+echo `date`
+
+echo  $hyphen_e "${ECHO_STYLE_01}\n本次操作运行了：$((date_end-date_start))秒\n${ECHO_STYLE_00}"
+echo compile counts ok:$ok_count fail:$fail_count
+
+if [ "$compile_result" = "fail" ] ; then
+        echo  $hyphen_e "\033[;31m 路漫漫其修远兮.... \033[0m"
+        exit 1
+else
+	echo  $hyphen_e "\033[;32m 会当凌绝顶 一览众山小\033[0m"
+fi
+
+

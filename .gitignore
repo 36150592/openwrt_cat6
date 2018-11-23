@@ -23,3 +23,5 @@ key-build*
 .emacs.desktop*
 TAGS*~
 git-src
+/image
+.compile_count
