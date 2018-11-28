@@ -889,7 +889,7 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 
 void OperationSelect(void)
 {
-	printf("\nPlease choose the operation: \n");
+	printf("\nPlease choose the operation fengyz: \n");
 	printf("   %d: Load system code to SDRAM via TFTP. \n", SEL_LOAD_LINUX_SDRAM);
 	printf("   %d: Load system code then write to Flash via TFTP. \n", SEL_LOAD_LINUX_WRITE_FLASH);
 	printf("   %d: Boot system code via Flash (default).\n", SEL_BOOT_FLASH);
@@ -1960,11 +1960,14 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	    s = getenv ("bootdelay");
 	    timer1 = s ? (int)simple_strtol(s, NULL, 10) : CONFIG_BOOTDELAY;
 	}
-
-        if((my_tmp = tstc()) != 0)  
-         {
-           if(getc() == 0x1B) //ESC
-            {
+    
+    printf("please select your keyboad, fengyz \n");
+    //udelay(500*10000);
+   // if((my_tmp = tstc()) != 0)  
+    {
+           //if(getc() == 0x1B) //ESC
+        {
+        printf("before OperationSelect, fengyz\n\n");
 	     OperationSelect();   
 	     while (timer1 > 0) 
              {
@@ -1999,9 +2002,10 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 		memset(file_name_space,0,ARGV_LEN);
 
 #if (CONFIG_COMMANDS & CFG_CMD_NET)
-		eth_initialize(gd->bd);
+	int eth_number =	eth_initialize(gd->bd);
+	printf("eth number = %d \n", eth_number);
 #endif
-
+    printf("end of if\n");
 		switch(BootType) {
 		case '1':
 			printf("   \n%d: System Load Linux to SDRAM via TFTP. \n", SEL_LOAD_LINUX_SDRAM);
@@ -2289,7 +2293,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 
 	/* NOTREACHED - no way out of command loop except booting */
     }
- else
+ /*else
   {
     char *argv[2];
     sprintf(addr_str, "0x%X", CFG_KERN_ADDR);
@@ -2297,7 +2301,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
     printf("   \n3: System Boot to system code via Flash. \n");
     do_bootm(cmdtp,0,2,argv);
 
-  }
+  }*/
 }
 void hang (void)
 {
