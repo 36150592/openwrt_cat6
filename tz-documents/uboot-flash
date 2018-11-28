@@ -45,6 +45,18 @@
     1.4 网线连接板子的wan口(最靠近电源侧的ETH口)
     1.5 输入tftpboot 上要下载的IMAGE的名字
 
+命令方式:
+	0x000000000000-0x000000030000 : "u-boot"
+	0x000000030000-0x000000040000 : "u-boot-env"
+	0x000000040000-0x000000050000 : "factory"
+	0x000000050000-0x000001000000 : "firmware"
+	0x000000050000-0x00000018bfd5 : "kernel"
+	0x00000018bfd5-0x000001000000 : "rootfs"
+	0x000000510000-0x000001000000 : "rootfs_data"
+
+	1. 刷uboot 分区 tftpboot 0x80100000 tftpboot.bin && erase uboot && cp.uboot
+	2. 刷firewall 分区 tftpboot 0x80100000 tftpboot.bin && erase linux && cp.linux
+
 2、uboot 串口刷IMAGE
     1.1 安装kermit
         sudo apt-get install ckermit
