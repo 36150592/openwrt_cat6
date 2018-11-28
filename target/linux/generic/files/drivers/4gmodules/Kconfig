@@ -1,0 +1,27 @@
+menuconfig  4G_SUPPORT
+    bool "4G_SUPPORT"
+    default y
+    ---help---
+    decide support 4G MODULE or not ,and we often choose M for the Modules
+
+if 4G_SUPPORT
+
+config 4G_MODULE_BOARDMOBI
+    tristate "BoardMobi BM806c SUPPORT"
+    default m
+    ---help---
+    it support BM806C BM806U BM806T ,and we will get P520AGibiNet.ko
+
+config 4G_MODULE_LEADERCORE
+    tristate "LEADERCORE L1761 SUPPORT"
+    default m
+    ---help---
+    it support L1761C L1761U L1761T
+
+config 4G_MODULE_QUECTEL
+    tristate "Quectel EC20_SUPPORT"
+    default m
+    ---help---
+    it support EC20 and so on
+
+endif

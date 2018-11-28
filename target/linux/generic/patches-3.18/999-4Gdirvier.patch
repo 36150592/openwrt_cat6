@@ -1,0 +1,20 @@
+Index: linux-3.18.23/drivers/Kconfig
+===================================================================
+--- linux-3.18.23.orig/drivers/Kconfig
++++ linux-3.18.23/drivers/Kconfig
+@@ -182,4 +182,6 @@ source "drivers/ras/Kconfig"
+ 
+ source "drivers/thunderbolt/Kconfig"
+ 
++source "drivers/4gmodules/Kconfig"
++
+ endmenu
+Index: linux-3.18.23/drivers/Makefile
+===================================================================
+--- linux-3.18.23.orig/drivers/Makefile
++++ linux-3.18.23/drivers/Makefile
+@@ -161,3 +161,4 @@ obj-$(CONFIG_POWERCAP)		+= powercap/
+ obj-$(CONFIG_MCB)		+= mcb/
+ obj-$(CONFIG_RAS)		+= ras/
+ obj-$(CONFIG_THUNDERBOLT)	+= thunderbolt/
++obj-$(CONFIG_4G_SUPPORT)    	+= 4gmodules/
