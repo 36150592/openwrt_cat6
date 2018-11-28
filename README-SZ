@@ -1,0 +1,53 @@
+一、uboot
+1、uboot 网口刷IMAGE
+    1.1 搭建TFTP服务器，关闭主机防火墙
+        sudo apt-get install tftp-hpa tftpd-hpa
+        sudo apt-get install xinetd
+
+        配置文件：
+            /etc/default/tftpd-hpa
+                TFTP_USERNAME="tftp"
+                TFTP_DIRECTORY="/tftpboot" tftpboot  #tftp服务器的工作目录 
+                TFTP_ADDRESS="0.0.0.0:69"
+                TFTP_OPTIONS="-l -c -s"
+
+            /etc/xinetd.d/tftp
+                service tftp
+                {
+                    socket_type = dgram
+                    wait = yes
+                    disable = no
+                    user 69= root
+                    protocol = udp
+                    server = /usr/sbin/in.tftpd
+                    server_args = -s /tftpdpboot
+                    disable = no 
+                    per_source = 11
+                    cps =100 2
+                    flags =IPv4
+                }
+
+        sudo mkdir /tftpboot
+        sudo chmod 777 /tftpboot
+
+        重新启动服务
+        sudo service tftpd-hpa restart
+        sudo /etc/init.d/xinetd reload
+        sudo /etc/init.d/xinetd restart
+
+        把需要下载的IMAGE 放到/tftpboot 目录下
+    1.2 配置主机与板子在同一个网段
+        板子配置IP:
+            uboot 菜单选择 4 进入uboot 命令行界面
+            使用printenv 打印环境变量
+            使用set  key=value 的方式设置ipaddr 为板子的ip、serverip 为tftp服务器ip
+    1.3 上电后，出现uboot选择菜单选择9 使用TFTP下载uboot 选择2使用TFTP下载Firewall
+    1.4 网线连接板子的wan口(最靠近电源侧的ETH口)
+    1.5 输入tftpboot 上要下载的IMAGE的名字
+
+2、uboot 串口刷IMAGE
+    1.1 安装kermit
+        sudo apt-get install ckermit
+    1.2 使用kermit连接串口
+    1.3 启动出现uboot菜单的时候，选择7使用串口下载uboot 选择0使用串口下载Firewall
+    1.4 按下 Ctrl + \  然后在输入c ,cd 到IMAGE 所在的目录 使用send  imagename 发送image 到串口
