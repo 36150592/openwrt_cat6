@@ -1,0 +1,48 @@
+Index: linux-3.18.23/drivers/usb/serial/option.c
+===================================================================
+--- linux-3.18.23.orig/drivers/usb/serial/option.c
++++ linux-3.18.23/drivers/usb/serial/option.c
+@@ -511,6 +511,14 @@ static void option_instat_callback(struc
+ #define VIATELECOM_VENDOR_ID			0x15eb
+ #define VIATELECOM_PRODUCT_CDS7			0x0001
+ 
++/*  TZ PRODUCTS  */
++#define TZ_VENDOR_P500_ID			0x2020
++#define TZ_PRODUCT_P500V1			0x2031
++#define TZ_PRODUCT_P500V2			0x2032
++#define TZ_PRODUCT_P500V3			0x2033
++
++
++
+ /* some devices interfaces need special handling due to a number of reasons */
+ enum option_blacklist_reason {
+ 		OPTION_BLACKLIST_NONE = 0,
+@@ -1064,6 +1072,10 @@ static const struct usb_device_id option
+ 	{ USB_DEVICE(NOVATELWIRELESS_VENDOR_ID, NOVATELWIRELESS_PRODUCT_EVDO_EMBEDDED_HIGHSPEED) },
+ 	{ USB_DEVICE(NOVATELWIRELESS_VENDOR_ID, NOVATELWIRELESS_PRODUCT_HSPA_EMBEDDED_HIGHSPEED) },
+ 	{ USB_DEVICE(NOVATELWIRELESS_VENDOR_ID, NOVATELWIRELESS_PRODUCT_G2) },
++	/*  TZ add  */
++	{ USB_DEVICE(TZ_VENDOR_P500_ID, TZ_PRODUCT_P500V1) }, 							/* TZ P500V1 */
++	{ USB_DEVICE(TZ_VENDOR_P500_ID, TZ_PRODUCT_P500V2) }, 							/* TZ P500V2 */
++	{ USB_DEVICE(TZ_VENDOR_P500_ID, TZ_PRODUCT_P500V3) },							/* TZ P500V3 */
+ 	/* Novatel Ovation MC551 a.k.a. Verizon USB551L */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(NOVATELWIRELESS_VENDOR_ID, NOVATELWIRELESS_PRODUCT_MC551, 0xff, 0xff, 0xff) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(NOVATELWIRELESS_VENDOR_ID, NOVATELWIRELESS_PRODUCT_E362, 0xff, 0xff, 0xff) },
+@@ -1903,6 +1915,17 @@ static int option_probe(struct usb_seria
+ 	    iface_desc->bInterfaceClass != USB_CLASS_CDC_DATA)
+ 		return -ENODEV;
+ 
++	if (dev_desc->idVendor == cpu_to_le16(TZ_VENDOR_P500_ID) &&
++	    dev_desc->idProduct == cpu_to_le16(TZ_PRODUCT_P500V3) &&
++	    serial->interface->cur_altsetting->desc.bInterfaceNumber == 0x4)
++	{
++		printk("serial option_probe 0x%X - 0x%X - %d\n", 
++                    le16_to_cpu( serial->dev->descriptor.idVendor ), 
++                    le16_to_cpu( serial->dev->descriptor.idProduct ), 
++                    serial->interface->cur_altsetting->desc.bInterfaceNumber);
++		return -ENODEV;
++	}
++
+ 	/* Store device id so we can use it during attach. */
+ 	usb_set_serial_data(serial, (void *)id);
+ 
