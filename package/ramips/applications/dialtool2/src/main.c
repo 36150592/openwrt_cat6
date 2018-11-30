@@ -715,8 +715,8 @@ int main(int argc,char *argv[] )
 		static int checkPvCounts = 0;
 		static int outWhile = 0;
 		//get  pid and vid of the device
-		ids_module->idVendor=get_value(VENDORID_9341_FILE,16);
-		ids_module->idProduct=get_value(PRODUCTID_9341_FILE,16);
+		ids_module->idVendor=get_value(VENDORID_MT7621_FILE,16);
+		ids_module->idProduct=get_value(PRODUCTID_MT7621_FILE,16);
 		/*
 		** make sure we get right idProduct and idVendor
 		**/
@@ -820,7 +820,7 @@ int main(int argc,char *argv[] )
 	cmd_echo("0",USB_SERIAL_STATUS);
 	//system("echo ready >> /tmp/test");
 //	log_info("imei:%s\n",global_system_info.module_info.imei);
-	if(FALSE==get_version("/version",&global_system_info))
+	if(FALSE==get_version("/etc/dialogtool2_version",&global_system_info))
 	{
 		char buffer_tmp[1024];
 		snprintf(buffer_tmp,sizeof(buffer_tmp),"%s:get version error\n",__FUNCTION__);

@@ -487,26 +487,26 @@ static const char* bm806_hardware_summary[]=
 const MDI bm806_moduleinfo=
 {
 	{TZ_VENDOR_P500_ID,TZ_PRODUCT_P500V3},
-	"1-1.1:1.2",
+	"1-1:1.2",
 	bm806_get_moduleinfo,
 	"0",
 	"0",
 	"0",
 	"0",
-	"P520AGobiNet.ko",
+	"bm_gobi_net.ko",
 	"usb0",
 };
 #else
 const MDI bm806_moduleinfo=
 {
 	{TZ_VENDOR_P500_ID,TZ_PRODUCT_P500V3},
-	"1-1.4:1.2",
+	"1-1:1.2",
 	bm806_get_moduleinfo,
 	"0",
 	"0",
 	"0",
 	"0",
-	"P520AGobiNet.ko",
+	"bm_gobi_net.ko",
 	"usb0",
 };
 #endif

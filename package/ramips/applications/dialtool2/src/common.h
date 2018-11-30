@@ -55,13 +55,18 @@
 #define TZ_VENNOR_LT10      			0x1ab7
 #define TZ_PRODUCT_LT10     			0x1761
 
+#if 0
+
 #ifdef P61_DIALTOOL_FLAG
-    #define VENDORID_9341_FILE	"/sys/bus/usb/devices/1-1.1/idVendor"
-    #define PRODUCTID_9341_FILE	"/sys/bus/usb/devices/1-1.1/idProduct"
+	    #define VENDORID_9341_FILE	"/sys/bus/usb/devices/1-1.1/idVendor"
+	    #define PRODUCTID_9341_FILE	"/sys/bus/usb/devices/1-1.1/idProduct"
 #else
-    #define VENDORID_9341_FILE	"/sys/bus/usb/devices/1-1.4/idVendor"
-    #define PRODUCTID_9341_FILE	"/sys/bus/usb/devices/1-1.4/idProduct"
+	    #define VENDORID_9341_FILE	"/sys/bus/usb/devices/1-1.4/idVendor"
+	    #define PRODUCTID_9341_FILE	"/sys/bus/usb/devices/1-1.4/idProduct"
 #endif
+#endif
+    #define VENDORID_MT7621_FILE	"/sys/devices/platform/xhci-hcd/usb1/1-1/idVendor"
+    #define PRODUCTID_MT7621_FILE	"/sys/devices/platform/xhci-hcd/usb1/1-1/idProduct"
 
 #define UDHCPC_PIDFILE_PATH "/tmp/.udhcpc.pid"
 #define SYSTEM_INFO_STATIC		"/tmp/.system_info_static"
