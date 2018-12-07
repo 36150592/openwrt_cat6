@@ -1,19 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
- 
 <head>
-<style type="text/css">
-h1 {color: red}
-p {color: blue}
-</style>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+<title>Router</title>
+<link rel="stylesheet" type="text/css" href="css/main.css?t=000000">
+
+<script type="text/javascript" src="js/json2.js"></script>
+<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="js/jquery.form.js"></script>
+<script type="text/javascript" src="js/jquery.validate.js"></script>
+<script type="text/javascript" src="js/jquery.accordion.js"></script>
+<script type="text/javascript" src="js/underscore-min.js"></script>
+<script type="text/javascript" src="js/language_list.js?t=000000"></script>
+<script type="text/javascript" src="js/language.js?t=000000"></script>
+<script type="text/javascript" src="js/language/cn.js?t=000000"></script>
+<script type="text/javascript" src="js/helper.js?t=000000"></script>
+<script type="text/javascript" src="js/main.js?t=000000"></script>
+<script type="text/javascript">
+
+$(document).ready(function() {
+    var path = window.location.search;
+    var theIndex = path.indexOf("?");
+    var sessionId = null;
+    if (theIndex >= 0) {
+    	var queryString = path.substring(theIndex + 1).split("&");
+        for (var i = 0; i < queryString.length; i++) {
+            var theArray = queryString[i].split("=");
+            if (theArray.length == 2 && theArray[0] == "sessionId") {
+            	sessionId = theArray[1];
+                break;
+            }
+        }
+    }
+    if (sessionId == null) {
+    	sessionId = CookieUtil.getCookie("sessionId");
+    }
+    Page.sessionId = sessionId || "";
+    
+    //var isAdmin = false;
+    function init() {
+    	Page.getHtml('html/home.html', 0, function(data) {
+			if (data.indexOf('"message":"NO_AUTH"') > 0) {
+				location.href = Page.getUrl(Url.LOGIN);
+			} else {
+				$('#container').html(data);
+			}
+		});
+    }
+    
+    Page.postJSON({
+		json: { cmd: RequestCmd.INIT_PAGE },
+		success: function(data) {
+			console.log("init page success");
+			console.log(data);
+			/*
+			Page.isRuKuVersion = (data.isRuku == '1');
+        	Page.setSupported(ConvertUtil.parseHex(data.supported || 0));
+        	Page.setUnsupported(ConvertUtil.parseHex(data.unsupported || 0));
+        	Page.setItemHide(ConvertUtil.parseHex(data.itemHide));
+        	Page.setItemDisable(ConvertUtil.parseHex(data.itemDisable));
+            Page.lock_band_hide = (data.lock_band_hide == "1");
+        	Page.isAdmin = (data.userType == "1");
+
+			Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue(data.languageList) || "3E");
+			var language = data.language.toUpperCase();
+			if (Page.requireChangeLang(language)) {
+				Page.language = language;
+				$("script[src^='js/language/']").remove();
+				$("script[src^='js/main']").remove();
+				$.getScript('js/language/' + language.toLowerCase() + '.js', function() {
+					$.getScript('js/main.js', init);
+				});
+			} else {
+				//init();
+			}
+			*/
+		}
+	});
+
+
+});
+
+function closeBox() {
+    $('#btnClose').click();
+}
+</script>
 </head>
- 
 <body>
-<h1>header 1</h1>
-<p>A paragraph.</p>
+<a id="top" style="display:none;">TOP</a>
+<div id="container" style="display:none;"></div>
+<p>hello world</p>
 </body>
- 
-<p style="color: red; margin-left: 20px">
-This is a paragraph
-</p>
- 
 </html>

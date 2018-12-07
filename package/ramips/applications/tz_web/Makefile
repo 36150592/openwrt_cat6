@@ -43,12 +43,24 @@ TARGET_CFLAGS += \
 define Package/tz_web/install
 	$(INSTALL_DIR) $(1)/tz_www
 	$(INSTALL_DIR) $(1)/tz_www/cgi-bin/
+	$(INSTALL_DIR) $(1)/tz_www/js
+	$(INSTALL_DIR) $(1)/tz_www/css
+	$(INSTALL_DIR) $(1)/tz_www/images
+	$(INSTALL_DIR) $(1)/tz_www/js/language
+	$(INSTALL_DIR) $(1)/tz_www/images/anhui
+	$(INSTALL_DIR) $(1)/tz_www/images/orange
+	$(INSTALL_DIR) $(1)/tz_www/images/shatel
 
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/cgi-bin/* $(1)/tz_www/cgi-bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/mini_httpd.conf $(1)/tz_www
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/*.html $(1)/tz_www
-
-
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/js/*.js $(1)/tz_www/js
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/js/language/* $(1)/tz_www/js/language
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/css/* $(1)/tz_www/css
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/images/*.gif $(1)/tz_www/images
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/images/anhui/* $(1)/tz_www/images/anhui
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/images/orange/* $(1)/tz_www/images/orange
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/images/shatel/* $(1)/tz_www/images/shatel
 endef
 
 

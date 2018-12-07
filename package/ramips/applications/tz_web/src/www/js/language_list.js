@@ -1,0 +1,22 @@
+var all_supported_language_info={
+	"cn":{
+		"bit_offset":"1"
+		,"language_id":"LANG.cn"
+	}
+	,"en":{
+		"bit_offset":"2"
+		,"language_id":"LANG.en"
+	}
+	,"es":{
+		"bit_offset":"3"
+		,"language_id":"LANG.es"
+	}
+	,"pt":{
+		"bit_offset":"4"
+		,"language_id":"LANG.pt"
+	}
+	,"vi":{
+		"bit_offset":"5"
+		,"language_id":"LANG.vi"
+	}
+};
