@@ -1,0 +1,42 @@
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=alien
+PKG_VERSION:=master
+PKG_RELEASE=$(PKG_SOURCE_VERSION)
+
+
+
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar
+#PKG_CAT:=unzip
+PKG_SOURCE_URL:=https://github.com/mascarenhas/alien/archive/master.zip#
+PKG_MD5SUM:=296851d0c257199341eddb529bdf772b
+CMAKE_INSTALL:=1
+
+PKG_LICENSE:=MIT
+PKG_LICENSE_FILES:=
+
+include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/autotools.mk
+
+TARGET_LDFLAGS += $(if $(CONFIG_USE_GLIBC),-lrt)
+
+define Package/alien
+  SECTION:=MTK Properties
+  CATEGORY:=MTK Properties
+  DEPENDS:=+libffi
+  TITLE:=lua C lib helper
+  SUBMENU:=Applications
+endef
+
+define Build/Configure
+#	$(PKG_BUILD_DIR)/bootstrap --force
+	$(Build/Configure/Default)
+endef
+
+define Package/alien/install
+	$(INSTALL_DIR) $(1)/sbin $(1)/usr/sbin $(1)/lib/ $(1)/etc/init.d/
+
+endef
+
+$(eval $(call BuildPackage,alien))

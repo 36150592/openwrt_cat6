@@ -1,0 +1,40 @@
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=libffi
+PKG_VERSION:=3.2.1
+PKG_RELEASE=$(PKG_SOURCE_VERSION)
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=ftp://sourceware.org/pub/libffi/
+PKG_MD5SUM:=83b89587607e3eb65c70d361f13bab43
+CMAKE_INSTALL:=1
+
+PKG_LICENSE:=MIT
+PKG_LICENSE_FILES:=
+
+include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/autotools.mk
+
+TARGET_LDFLAGS += $(if $(CONFIG_USE_GLIBC),-lrt)
+
+define Package/libffi
+  SECTION:=MTK Properties
+  CATEGORY:=MTK Properties
+  TITLE:=libffi
+  SUBMENU:=Applications
+endef
+
+define Build/Configure
+	$(Build/Configure/Default)
+endef
+
+define Package/libffi/install
+	$(INSTALL_DIR)  $(1)/usr/lib/ 
+	$(INSTALL_DIR)  $(1)/usr/include/ 
+
+	$(CP) $(PKG_BUILD_DIR)/mipsel-openwrt-linux-gnu/.libs/*  $(1)/usr/lib/
+	$(CP) $(PKG_BUILD_DIR)/mipsel-openwrt-linux-gnu/include/ffi.h  $(1)/usr/include/
+
+endef
+
+$(eval $(call BuildPackage,libffi))
