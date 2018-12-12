@@ -1,0 +1,445 @@
+#!/usr/bin/lua
+
+local wifi = require "tz.wifi"
+
+
+
+function wifi_get_dev()
+	print("in wifi_get_dev")
+	wifi.wifi_get_dev()
+
+end
+
+function wifi_get_hidden_ssid()
+	print("wifi_get_hidden_ssid")
+	local hidden = wifi.wifi_get_hidden_ssid(tonumber(arg[2]))
+	print(hidden)
+	if "0" == hidden 
+	then
+		print("ssid hidden is disable")
+	elseif "1" == hidden
+	then
+		print("ssid hidden is enable")
+	else
+		print("get ssid hidden config fail")
+	end
+end
+
+function wifi_enable_hidden_ssid()
+	print("wifi_enable_hidden_ssid")
+	local ret = wifi.wifi_enable_hidden_ssid(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("enable hidden ssid success")
+	else
+		print("enable hidden ssid fail")
+	end
+end
+
+function wifi_disable_hidden_ssid()
+	print("wifi_disable_hidden_ssid")
+	local ret = wifi.wifi_disable_hidden_ssid(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("disable hidden ssid success")
+	else
+		print("disable hidden ssid fail")
+	end
+end
+
+
+function wifi_get_mode()
+	print("wifi_get_mode")
+	local ret = wifi.wifi_get_mode(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("wifi mode = ", ret)
+	else
+		print("get wifi mode fail")
+	end
+end
+
+function wifi_set_mode()
+	print("wifi_set_mode")
+	local ret = wifi.wifi_set_mode(tonumber(arg[2]), tonumber(arg[3]))
+
+	if  ret 
+	then
+		print("set wifi mode success")
+	else
+		print("set wifi fail")
+	end
+end
+
+function wifi_get_ssid()
+	print("wifi_get_ssid")
+	local ret = wifi.wifi_get_ssid(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("wifi ssid = ", ret)
+	else
+		print("get ssid fail")
+	end
+end
+
+function wifi_set_ssid()
+	print("wifi_set_ssid")
+	local ret = wifi.wifi_set_ssid(tonumber(arg[2]), arg[3])
+
+	if  ret 
+	then
+		print("set wifi ssid success")
+	else
+		print("set ssid fail")
+	end
+end
+
+
+function wifi_get_password()
+	print("wifi_get_password")
+	local ret = wifi.wifi_get_password(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("wifi password = ", ret)
+	else
+		print("get password  fail")
+	end
+end
+
+function wifi_set_password()
+	print("wifi_set_password")
+	print(type(arg[3]))
+	local ret = wifi.wifi_set_password(tonumber(arg[2]), arg[3])
+
+	if  ret 
+	then
+		print("set wifi password success")
+	else
+		print("set password fail")
+	end
+end
+
+function wifi_get_txpower()
+	print("wifi_get_txpower")
+	local ret = wifi.wifi_get_txpower(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("wifi txpower = ", ret)
+	else
+		print("get txpower  fail")
+	end
+end
+
+function wifi_set_txpower()
+	print("wifi_set_txpower")
+	local ret = wifi.wifi_set_txpower(tonumber(arg[2]), tonumber(arg[3]))
+
+	if  ret 
+	then
+		print("set wifi txpower success")
+	else
+		print("set txpower fail")
+	end
+end
+
+function wifi_get_channel()
+	print("wifi_get_channel")
+	local ret = wifi.wifi_get_channel(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("wifi channel = ", ret)
+	else
+		print("get channel  fail")
+	end
+end
+
+function wifi_set_channel()
+	print("wifi_set_channel")
+	local ret = wifi.wifi_set_channel(tonumber(arg[2]), arg[3])
+
+	if  ret 
+	then
+		print("set wifi channel success")
+	else
+		print("set channel fail")
+	end
+end
+
+
+function wifi_get_ht_mode()
+	print("wifi_get_ht_mode")
+	local ret = wifi.wifi_get_ht_mode(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("ht mode = ", ret)
+	else
+		print("get ht mode fail")
+	end
+end
+
+function wifi_set_ht_mode()
+	print("wifi_set_ht_mode")
+	local ret = wifi.wifi_set_ht_mode(tonumber(arg[2]), tostring(arg[3]))
+
+	if  ret 
+	then
+		print("set ht mode success")
+	else
+		print("set ht fail")
+	end
+end
+
+
+function wifi_get_encryption()
+	print("wifi_get_encryption")
+	local ret = wifi.wifi_get_encryption(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("encryption = ", ret)
+	else
+		print("get encryption fail")
+	end
+end
+
+function wifi_set_encryption()
+	print("wifi_set_encryption")
+	local ret = wifi.wifi_set_encryption(tonumber(arg[2]), tostring(arg[3]))
+
+	if  ret 
+	then
+		print("set encryption success")
+	else
+		print("set encryption fail")
+		print("usepage: wifi_set_encryption wifi_id  wep|psk|psk2|miexed|none")
+	end
+end
+
+
+function wifi_get_encryption_type()
+	print("wifi_get_encryption_type")
+	local ret = wifi.wifi_get_encryption_type(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("encryption type = ", ret)
+	else
+		print("get encryption type fail")
+		print("usepage:wifi_get_encryption_type wifi_id")
+	end
+end
+
+function wifi_set_encryption_type()
+	print("wifi_set_encryption_type")
+	local ret = wifi.wifi_set_encryption_type(tonumber(arg[2]), tostring(arg[3]))
+
+	if  ret 
+	then
+		print("set encryption type success")
+	else
+		print("set encryption type fail")
+		print("usepage: wifi_set_encryption_type wifi_id ccmp+tkip|ccmp|tkip|none")
+	end
+end
+
+
+
+function wifi_get_wmm()
+	print("wifi_get_wmm")
+	local ret = wifi.wifi_get_wmm(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("wmm = ", ret)
+	else
+		print("get encryption type fail")
+		print("usepage:wifi_get_wmm wifi_id")
+	end
+end
+
+function wifi_enable_wmm()
+	print("wifi_enable_wmm")
+	local ret = wifi.wifi_enable_wmm(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("enable wmm success")
+	else
+		print("set wmm fail")
+		print("usepage: wifi_enable_wmm wifi_id ")
+	end
+end
+
+function wifi_disable_wmm()
+	print("wifi_disable_wmm")
+	local ret = wifi.wifi_disable_wmm(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("disable wmm success")
+	else
+		print("set wmm fail")
+		print("usepage: wifi_disable_wmm wifi_id ")
+	end
+end		
+
+
+function wifi_start()
+	print("wifi_start_wifi")
+	local ret = wifi.wifi_start(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("start wifi success")
+	else
+		print("starat wifi fail")
+		print("usepage: wifi_start_wifi ")
+	end
+end	
+
+function wifi_start_all()
+	print("wifi_start_all")
+	local ret = wifi.wifi_start_all()
+
+	if  ret 
+	then
+		print("start wifi all success")
+	else
+		print("starat wifi all fail")
+		print("usepage: wifi_start_all wifi_id ")
+	end
+end	
+
+function wifi_restart(wifi_id)
+	print("wifi_restart_wifi")
+	local ret = wifi.wifi_restart(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("restart wifi success")
+	else
+		print("restarat wifi  fail")
+		print("usepage: wifi_restart wifi_id  ")
+	end
+end	
+
+function wifi_restart_all()
+	print("wifi_restart_all")
+	local ret = wifi.wifi_restart_all()
+
+	if  ret 
+	then
+		print("restart wifi all success")
+	else
+		print("restarat wifi all fail")
+		print("usepage: wifi_restart_all  ")
+	end
+end	
+
+
+function wifi_stop()
+	print("wifi_stop")
+	local ret = wifi.wifi_stop(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("stop wifi success")
+	else
+		print("stop wifi fail")
+		print("usepage: wifi_stop ")
+	end
+end	
+
+function wifi_stop_all()
+	print("wifi_stop_all")
+	local ret = wifi.wifi_stop_all()
+
+	if  ret 
+	then
+		print("stop wifi all success")
+	else
+		print("stop wifi all fail")
+		print("usepage: wifi_stop_all ")
+	end
+end	
+
+
+function wifi_get_connect_sta_list()
+	print("wifi_get_connect_sta_list")
+	local ret = wifi.wifi_get_connect_sta_list(tonumber(arg[2]))
+
+	
+	for key, value in pairs(ret)
+	do
+		
+		for k,v in pairs(value)
+		do
+			print(k,"=",v)
+		end
+		
+	end
+end
+
+local api_func = {
+	["wifi_get_dev"]=wifi_get_dev,
+	["wifi_get_hidden_ssid"]=wifi_get_hidden_ssid,
+	["wifi_enable_hidden_ssid"]=wifi_enable_hidden_ssid,
+	["wifi_disable_hidden_ssid"]=wifi_disable_hidden_ssid,
+	["wifi_get_mode"]=wifi_get_mode,
+	["wifi_set_mode"]=wifi_set_mode,
+	["wifi_get_ht_mode"]=wifi_get_ht_mode,
+	["wifi_set_ht_mode"]=wifi_set_ht_mode,
+	["wifi_get_encryption"]=wifi_get_encryption,
+	["wifi_set_encryption"]=wifi_set_encryption,
+	["wifi_get_encryption_type"]=wifi_get_encryption_type,
+	["wifi_set_encryption_type"]=wifi_set_encryption_type,
+	["wifi_get_wmm"]=wifi_get_wmm,
+	["wifi_enable_wmm"]=wifi_enable_wmm,
+	["wifi_disable_wmm"]=wifi_disable_wmm,
+	["wifi_get_ssid"]=wifi_get_ssid,
+	["wifi_set_ssid"]=wifi_set_ssid,
+	["wifi_get_password"]=wifi_get_password,
+	["wifi_set_password"]=wifi_set_password,
+	["wifi_get_txpower"]=wifi_get_txpower,
+	["wifi_set_txpower"]=wifi_set_txpower,
+	
+	["wifi_get_channel"]=wifi_get_channel,
+	["wifi_set_channel"]=wifi_set_channel,
+
+	["wifi_start"]=wifi_start,
+	["wifi_start_all"]=wifi_start_all,
+
+	["wifi_restart"]=wifi_restart,
+	["wifi_restart_all"]=wifi_restart_all,
+
+	["wifi_stop"]=wifi_stop,
+	["wifi_stop_all"]=wifi_stop_all,
+	
+	
+	["wifi_get_connect_sta_list"]=wifi_get_connect_sta_list
+}
+
+
+
+
+for i,v in pairs(api_func)  do
+
+        if type(v) == "function"  and arg[1] == i then
+         	v()
+         	return 0
+        end
+end
+
+
+for i,v in pairs(api_func) do
+	print(i)
+end
+
