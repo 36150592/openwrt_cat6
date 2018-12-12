@@ -226,7 +226,8 @@ include /lib/wifi
 scan_wifi
 
 case "$1" in
-	down) wifi_updown "disable" "$2";;
+    down) wifi_updown "disable" "$2";;
+	start) wifi_updown "enable" "$2";;
 	detect) wifi_detect "$2";;
 	status) ubus_wifi_cmd "status" "$2";;
 	reload) wifi_reload "$2";;
