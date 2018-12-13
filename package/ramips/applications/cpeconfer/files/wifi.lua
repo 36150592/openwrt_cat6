@@ -1,13 +1,14 @@
 require("uci")
 require("io")
-DEBUG=require("debug")
 module = {}
-x = uci.cursor()
-WIFI_CONFIG_FILE="wireless"
-WIFI_OPTION_DEVICE="wifi-device"
-WIFI_OPTION_INTERFACE="wifi-ifame"
-WIFI_DRIVE_CONFIG_DIR="/etc/wireless"
-function debug(...)
+
+local DEBUG=require("debug")
+local x = uci.cursor()
+local WIFI_CONFIG_FILE="wireless"
+local WIFI_OPTION_DEVICE="wifi-device"
+local WIFI_OPTION_INTERFACE="wifi-ifame"
+local WIFI_DRIVE_CONFIG_DIR="/etc/wireless"
+local function debug(...)
 	arg = { ... } 
  	local info = DEBUG.getinfo( 2, "nSl")
 	for k,v in pairs(info) do
@@ -59,7 +60,7 @@ end
 -- 		number:wifi_id --> wifi index get by wifi_get_dev
 -- return:
 --		string:device type or nil if get fail
-function common_get_section_name_by_index(wifi_id)
+local function common_get_section_name_by_index(wifi_id)
 
 	assert(type(wifi_id) == "number", "wifi_id is not a number")
 
@@ -95,7 +96,7 @@ end
 -- 		number:wifi_id --> wifi index get by wifi_get_dev
 -- return:
 --		string:section name or nil if get fail
-function common_get_ifame_section_name_by_index(wifi_id)
+local function common_get_ifame_section_name_by_index(wifi_id)
 	assert(type(wifi_id) == "number", "wifi_id is not a number")
 
 	debug("wifi_id = ", wifi_id)
@@ -132,7 +133,7 @@ end
 -- return:
 --		boolean true if success false if fail
 
-function common_config_set(wifi, option, dat_option, value)
+local function common_config_set(wifi, option, dat_option, value)
 	local ret = nil
 	local section_name = nil
 	if type(wifi) == "number"
@@ -190,7 +191,7 @@ end
 --		string value of option or nil if not found
 
 
-function common_config_get(wifi_id, option, dat_option)
+local function common_config_get(wifi_id, option, dat_option)
 	assert(type(wifi_id) == "number", "wifi_id is not a number")
 
 	debug("wifi_id = ", wifi_id)
@@ -329,7 +330,7 @@ function module.device:new(o,obj)
 end
 
 
-Device = module.device
+local Device = module.device
 function module.wifi_get_dev()
 
 	dev_array = {}
@@ -727,16 +728,22 @@ end
 function module.wifi_get_encryption(wifi_id)
 	local encry_all = common_config_get(wifi_id, "encryption", "AuthMode")
 
+	debug("encry_all = ", encry_all)
 	local start, endp = string.find(encry_all, "+")
 
     debug("start = ", start, "endp = ", endp)
+    -- no encryption type return directly
+    if nil == start 
+    then
+		return encry_all
+    else
 
-	local encry = string.sub(encry_all, 1, start-1)
+		local encry = string.sub(encry_all, 1, start-1)
 
-	debug("encry = ", encry)
+		debug("encry = ", encry)
 
-	return encry
-   
+		return encry
+   	end
 end
 
 --set encryption
@@ -782,6 +789,11 @@ function module.wifi_get_encryption_type(wifi_id)
 	local start, endp = string.find(encry_all, "+")
 
     debug("start = ", start, "endp = ", endp)
+
+	if nil == start
+	then 
+		return "none"
+	end
 
 	local encry_type = string.sub(encry_all, start+1)
 
@@ -929,7 +941,7 @@ function module.station:new(o,obj)
    return o
 end
 
-Station=module.station
+local Station=module.station
 
 
 local function get_sta_mac_table(ifname,sta_list)
@@ -1159,8 +1171,5 @@ function module.wifi_get_connect_sta_list(wifi_id)
 	return station_list
 	
 end
-
-
-
  
 return module
