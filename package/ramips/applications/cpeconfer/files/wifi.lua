@@ -1,59 +1,15 @@
 require("uci")
 require("io")
-module = {}
-
-local DEBUG=require("debug")
+wifi_module = {}
+local util=require("tz.util")
 local x = uci.cursor()
 local WIFI_CONFIG_FILE="wireless"
 local WIFI_OPTION_DEVICE="wifi-device"
 local WIFI_OPTION_INTERFACE="wifi-ifame"
 local WIFI_DRIVE_CONFIG_DIR="/etc/wireless"
-local function debug(...)
-	arg = { ... } 
- 	local info = DEBUG.getinfo( 2, "nSl")
-	for k,v in pairs(info) do
-		if k == "name" or k == "source"
-		then
-			io.write(v)
-		elseif k == "currentline"
-		then
-			io.write(":")
-			io.write(v)
-			io.write(" ")
-		end
-		
-	end
-
-	for k,v in pairs(arg) do
-		io.write(v)
-		io.write(" ")
-	end
-	io.write("\n")
-end
-
-local function split(szFullString, szSeparator)  
-	local nFindStartIndex = 1  
-	local nSplitIndex = 1  
-	local nSplitArray = {}  
-	while true do  
-	   local nFindLastIndex = string.find(szFullString, szSeparator, nFindStartIndex)  
-	   if not nFindLastIndex then  
-	    nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, string.len(szFullString))  
-	    break  
-	   end  
-	   nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, nFindLastIndex - 1)  
-	   nFindStartIndex = nFindLastIndex + string.len(szSeparator)  
-	   nSplitIndex = nSplitIndex + 1  
-	end  
-	return nSplitArray  
-end 
-local function sleep(n)
-
-   local t0 = os.clock()
-
-   while os.clock() - t0 <= n do end
-
-end
+local debug = util.debug
+local split = util.split 
+local sleep = util.sleep
 
 -- get section name (.name) by index 
 -- input:
@@ -282,7 +238,7 @@ end
 --txpower	 = 	100
 --.anonymous	 = 	false
 
-module.device = {
+wifi_module.device = {
 	["band"]	 = 	nil,
 	["txpower"]	 = 	nil,
 	["type"]	 = 	nil,
@@ -302,7 +258,7 @@ module.device = {
 	["connect_sta_number"] = nil,
 }
 
-function module.device:new(o,obj)
+function wifi_module.device:new(o,obj)
 	o = o or {}
 	setmetatable(o, self)
 	self.__index = self
@@ -330,8 +286,8 @@ function module.device:new(o,obj)
 end
 
 
-local Device = module.device
-function module.wifi_get_dev()
+local Device = wifi_module.device
+function wifi_module.wifi_get_dev()
 
 	dev_array = {}
 	var = 1
@@ -425,7 +381,7 @@ function module.wifi_get_dev()
 end
 
 
-function module.wifi_start(wifi_id)
+function wifi_module.wifi_start(wifi_id)
 	local section_name = common_get_section_name_by_index(wifi_id)
 	local dev_type = x:get(WIFI_CONFIG_FILE, section_name,"type")
 	if nil == dev_type
@@ -435,10 +391,10 @@ function module.wifi_start(wifi_id)
     return os.execute("wifi start " .. dev_type)
 end
 
-function module.wifi_start_all(wifi_id)
+function wifi_module.wifi_start_all(wifi_id)
      return os.execute("wifi  ")
 end
-function module.wifi_restart(wifi_id)
+function wifi_module.wifi_restart(wifi_id)
 	local section_name = common_get_section_name_by_index(wifi_id)
 	local dev_type = x:get(WIFI_CONFIG_FILE, section_name,"type")
 	if nil == dev_type
@@ -450,13 +406,13 @@ function module.wifi_restart(wifi_id)
     return os.execute("wifi start " .. dev_type)
 end
 
-function module.wifi_restart_all()
+function wifi_module.wifi_restart_all()
     os.execute("wifi  down")
     sleep(1)
     return os.execute("wifi")
 end
 
-function module.wifi_stop(wifi_id)
+function wifi_module.wifi_stop(wifi_id)
     local section_name = common_get_section_name_by_index(wifi_id)
 	local dev_type = x:get(WIFI_CONFIG_FILE, section_name,"type")
 	if nil == dev_type
@@ -466,7 +422,7 @@ function module.wifi_stop(wifi_id)
     return os.execute("wifi down " .. dev_type)
 end
 
-function module.wifi_stop_all()
+function wifi_module.wifi_stop_all()
    	return os.execute("wifi  down")
 end
 
@@ -476,7 +432,7 @@ end
 --		wifi_id(number) get by wifi_get_dev
 -- return:string
 --		the wifi ssid
-function module.wifi_get_ssid(wifi_id)
+function wifi_module.wifi_get_ssid(wifi_id)
     return  common_config_get(wifi_id, "ssid", "SSID")
 end
 
@@ -486,7 +442,7 @@ end
 --		ssid(string)
 -- return:boolean
 --		true if success  false if fail
-function module.wifi_set_ssid(wifi_id,ssid)
+function wifi_module.wifi_set_ssid(wifi_id,ssid)
      debug("set ssid")
     -- set the ifame section
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
@@ -499,7 +455,7 @@ end
 --		wifi_id(number) get by wifi_get_dev
 -- return:string
 --		the wifi password
-function module.wifi_get_password(wifi_id)
+function wifi_module.wifi_get_password(wifi_id)
 
 	--when is wep encryption the dat_option is DefaultKeyID  ,and the key group(key1 key2 key3 key4) is also set 	
     return  common_config_get(wifi_id, "key", "WPAPSK")
@@ -511,7 +467,7 @@ end
 --		password(string)
 -- return:boolean
 --		true if success  false if fail
-function module.wifi_set_password(wifi_id,password)
+function wifi_module.wifi_set_password(wifi_id,password)
    debug("set password")
     -- set the ifame section
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
@@ -525,7 +481,7 @@ end
 --		wifi_id(number) get by wifi_get_dev
 -- return:string
 --		the wifi channel
-function module.wifi_get_channel(wifi_id)
+function wifi_module.wifi_get_channel(wifi_id)
     return  common_config_get(wifi_id, "channel", "Channel")
 end
 
@@ -535,7 +491,7 @@ end
 --		channel(string) 2.4G [auto 0-13] 5.8G [36 40 44 48 52 56 60 64 149 153 157 161 165]
 -- return:boolean
 --		true if success  false if fail
-function module.wifi_set_channel(wifi_id,channel)
+function wifi_module.wifi_set_channel(wifi_id,channel)
 
 	local section_name = common_get_section_name_by_index(wifi_id)
 	local band = x:get(WIFI_CONFIG_FILE, section_name, "band")
@@ -570,7 +526,7 @@ end
 -- return:
 -- 		number
 --		the number of txpower percent range from 0 to 100
-function module.wifi_get_txpower(wifi_id)
+function wifi_module.wifi_get_txpower(wifi_id)
     local txpower =  common_config_get(wifi_id, "txpower", "TxPower")
     return tonumber(txpower)
 end
@@ -581,7 +537,7 @@ end
 --		txpower(number) [0 ,100]
 -- return:boolean
 --		true if success  false if fail
-function module.wifi_set_txpower(wifi_id,txpower)
+function wifi_module.wifi_set_txpower(wifi_id,txpower)
 	if type(txpower) ~= "number" 
 	then
 		debug("input error: txpower not number")
@@ -603,7 +559,7 @@ end
 -- return:
 -- 		boolean
 --		true if success  false if fail
-function module.wifi_enable_hidden_ssid(wifi_id)
+function wifi_module.wifi_enable_hidden_ssid(wifi_id)
 	debug("enable hidden ssid")
 	-- hidden ssid , set the ifame section
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
@@ -616,7 +572,7 @@ end
 -- return:
 -- 		boolean
 --		true if success  false if fail
-function module.wifi_disable_hidden_ssid(wifi_id)
+function wifi_module.wifi_disable_hidden_ssid(wifi_id)
 	debug("disable hidden ssid")
     -- hidden ssid , set the ifame section
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
@@ -631,7 +587,7 @@ end
 -- return: string value as follow
 -- 		0:disable
 -- 		1:enable
-function module.wifi_get_hidden_ssid(wifi_id)
+function wifi_module.wifi_get_hidden_ssid(wifi_id)
 	return common_config_get(wifi_id, "hidden", "HideSSID")
 end
 
@@ -656,7 +612,7 @@ end
 --11: 11n only in 5g band
 --14: 11A/AN/AC mixed 5G band only (Only 11AC chipset support)
 --15: 11 AN/AC mixed 5G band only (Only 11AC chipset support)
-function module.wifi_get_mode(wifi_id)
+function wifi_module.wifi_get_mode(wifi_id)
     return common_config_get(wifi_id, "mode", "WirelessMode")
 end
 
@@ -666,7 +622,7 @@ end
 --		mode number as above
 -- return:
 --		boolean true if success false if fail
-function module.wifi_set_mode(wifi_id,mode)
+function wifi_module.wifi_set_mode(wifi_id,mode)
    if type(mode) ~= "number"
    then
 		debug("input error: not a number")
@@ -687,7 +643,7 @@ end
 -- 20 -->20M
 -- 40 -->40M
 -- 20+40 -->20/40M
-function module.wifi_get_ht_mode(wifi_id)
+function wifi_module.wifi_get_ht_mode(wifi_id)
    return common_config_get(wifi_id, "ht", "HT_BW")
 end
 
@@ -697,7 +653,7 @@ end
 --		mode string value as above
 -- return:
 --		boolean true if success false if fail
-function module.wifi_set_ht_mode(wifi_id,mode)
+function wifi_module.wifi_set_ht_mode(wifi_id,mode)
 	if "20" == mode or "40" == mode or "20+40" ==mode
 	then
 	    return common_config_set(wifi_id, "ht", "HT_BW", mode)
@@ -725,7 +681,7 @@ end
 --	option key2 '1234567890'
 --	option key3 '1234567890'
 --	option key4 '1234567890'
-function module.wifi_get_encryption(wifi_id)
+function wifi_module.wifi_get_encryption(wifi_id)
 	local encry_all = common_config_get(wifi_id, "encryption", "AuthMode")
 
 	debug("encry_all = ", encry_all)
@@ -752,7 +708,7 @@ end
 --		encryption string value as above
 -- return:
 --		boolean true if success false if fail
-function module.wifi_set_encryption(wifi_id,encryption)
+function wifi_module.wifi_set_encryption(wifi_id,encryption)
 	if type(encryption) ~= "string" 
 	then 
 		debug("encryption not string,input error")
@@ -782,7 +738,7 @@ end
 --		ccmp	-->  AES
 --		tkip -->TKIP
 --		none --> AUTO
-function module.wifi_get_encryption_type(wifi_id)
+function wifi_module.wifi_get_encryption_type(wifi_id)
 	
 	local encry_all = common_config_get(wifi_id, "encryption", "EncrypType")
 
@@ -810,7 +766,7 @@ end
 --		none --> AUTO
 -- return:
 --		boolean true if success false if fail
-function module.wifi_set_encryption_type(wifi_id,encry_algorithms)
+function wifi_module.wifi_set_encryption_type(wifi_id,encry_algorithms)
   	debug("set encryption")
   	if type(encry_algorithms) ~= "string" 
 	then 
@@ -822,7 +778,7 @@ function module.wifi_set_encryption_type(wifi_id,encry_algorithms)
 		or "ccmp" == encry_algorithms or "tkip" == encry_algorithms 
 	then
 	    --  set the ifame section
-		local encry = module.wifi_get_encryption(wifi_id)
+		local encry = wifi_module.wifi_get_encryption(wifi_id)
 		encry_algorithms = encry .. "+" .. encry_algorithms 
 	    
 		local section_name = common_get_ifame_section_name_by_index(wifi_id)
@@ -841,7 +797,7 @@ end
 -- input:number
 --		wifi_id get by wifi_get_dev 
 -- return:number 
-function module.wifi_get_connect_sta_number(wifi_id)
+function wifi_module.wifi_get_connect_sta_number(wifi_id)
    local sta_number = common_config_get(wifi_id, "maxassoc", "MaxStaNum")
    return tonumber(sta_number)
 end
@@ -852,7 +808,7 @@ end
 --		number --> the number of sta limit number
 -- return:
 --		boolean true if success false if fail
-function module.wifi_set_connect_sta_number(wifi_id,number)
+function wifi_module.wifi_set_connect_sta_number(wifi_id,number)
     debug("set connect sta number")
   	if type(encry_algorithms) ~= "number" 
 	then 
@@ -874,7 +830,7 @@ end
 --		wifi_id(number) get by wifi_get_dev
 -- return:boolean
 --		 true if success false if fail
-function module.wifi_enable_wmm(wifi_id)
+function wifi_module.wifi_enable_wmm(wifi_id)
     debug("enable wmm")
 	-- set the ifame section
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
@@ -886,7 +842,7 @@ end
 --		wifi_id(number) get by wifi_get_dev
 -- return:boolean
 --		 true if success false if fail
-function module.wifi_disable_wmm(wifi_id)
+function wifi_module.wifi_disable_wmm(wifi_id)
      debug("disable wmm")
 	-- set the ifame section
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
@@ -898,15 +854,15 @@ end
 --		wifi_id(number) get by wifi_get_dev
 -- return:number
 --		wmm 0 disable 1 enable
-function module.wifi_get_wmm(wifi_id)
+function wifi_module.wifi_get_wmm(wifi_id)
    local wmm = common_config_get(wifi_id, "wmm", "WmmCapable")
    return tonumber(wmm)
 end
 
 
 
-module.station = {
-	["MAC"]	 = 	nil,
+wifi_module.station = {
+	["mac"]	 = 	nil,
 	["dev_name"]	 = 	nil,
 	["interface_name"]	 = 	nil,
 	["wifi_id"]	 = 	nil,
@@ -919,7 +875,7 @@ module.station = {
 	["rx_bytes"] = nil
 }
 
-function module.station:new(o,obj)
+function wifi_module.station:new(o,obj)
 	o = o or {}
 	setmetatable(o, self)
 	self.__index = self
@@ -941,7 +897,7 @@ function module.station:new(o,obj)
    return o
 end
 
-local Station=module.station
+local Station=wifi_module.station
 
 
 local function get_sta_mac_table(ifname,sta_list)
@@ -1138,7 +1094,7 @@ local function get_sta_count_info(ifname,sta_list)
 end
 
 --connect sta list
-function module.wifi_get_connect_sta_list(wifi_id)
+function wifi_module.wifi_get_connect_sta_list(wifi_id)
 	debug("wifi_get_connect_sta_list")
     local section_name = common_get_ifame_section_name_by_index(wifi_id)
     local ifname = x:get(WIFI_CONFIG_FILE, section_name, "ifname")
@@ -1172,4 +1128,4 @@ function module.wifi_get_connect_sta_list(wifi_id)
 	
 end
  
-return module
+return wifi_module

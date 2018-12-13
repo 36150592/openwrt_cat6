@@ -1,7 +1,7 @@
 #!/usr/bin/lua
 
 local wifi = require "tz.wifi"
-
+local dhcp = require "tz.dhcp"
 
 
 function wifi_get_dev()
@@ -396,6 +396,134 @@ function wifi_get_connect_sta_list()
 	end
 end
 
+
+
+
+function dhcp_get_server_ip()
+
+	print("dhcp_get_server_ip")
+	local ret = dhcp.dhcp_get_server_ip()
+
+	if  nil ~= ret 
+	then
+		print("dhcp server ip = ", ret)
+	else
+		print("get  dhcp server ip fail")
+		print("usepage:dhcp_get_server_ip")
+	end
+end
+
+
+function dhcp_set_server_ip()
+	local ret = dhcp.dhcp_set_server_ip(tostring(arg[2]))
+	
+	if ret
+	then
+		print("set server ip success")
+	else
+		print("set server ip fail")
+	end
+	
+end
+
+
+function dhcp_get_server_mask()
+
+	print("dhcp_get_server_mask")
+	local ret = dhcp.dhcp_get_server_mask()
+
+	if  nil ~= ret 
+	then
+		print("dhcp server mask = ", ret)
+	else
+		print("get  dhcp server mask fail")
+		print("usepage:dhcp_get_server_mask")
+	end
+end
+
+
+function dhcp_set_server_mask()
+	local ret = dhcp.dhcp_set_server_mask(tostring(arg[2]))
+	
+	if ret
+	then
+		print("set server mask success")
+	else
+		print("set server mask fail")
+	end
+	
+end
+
+
+function dhcp_get_ip_range()
+
+	print("dhcp_get_ip_range")
+	local start,endp = dhcp.dhcp_get_ip_range()
+
+	if  nil ~= start 
+	then
+		print("dhcp ip range = ", start, "-", endp)
+	else
+		print("get  dhcp ip range fail")
+		print("usepage:dhcp_get_ip_range")
+	end
+end
+
+
+function dhcp_set_ip_range()
+	local ret = dhcp.dhcp_set_ip_range(tostring(arg[2]), tonumber(arg[3]))
+	
+	if ret
+	then
+		print("set set ip range success")
+	else
+		print("set set ip range fail")
+	end
+end
+
+
+function dhcp_get_lease_time()
+
+	print("dhcp_get_lease_time")
+	local lease_time = dhcp.dhcp_get_lease_time()
+
+	if  nil ~= lease_time 
+	then
+		print("dhcp lease_time = ", lease_time, "hour")
+	else
+		print("get  lease_time fail")
+		print("usepage:dhcp_get_lease_time")
+	end
+end
+
+
+function dhcp_set_lease_time()
+	local ret = dhcp.dhcp_set_lease_time(tonumber(arg[2]))
+	
+	if ret
+	then
+		print("set leasetime success")
+	else
+		print("set leasetime fail")
+	end
+end
+
+function dhcp_get_client_list()
+	print("dhcp_get_client_list")
+	local ret = dhcp.dhcp_get_client_list()
+
+	
+	for key, value in pairs(ret)
+	do
+		
+		for k,v in pairs(value)
+		do
+			print(k,"=",v)
+		end
+		
+	end
+end
+
 local api_func = {
 	["wifi_get_dev"]=wifi_get_dev,
 	["wifi_get_hidden_ssid"]=wifi_get_hidden_ssid,
@@ -432,7 +560,25 @@ local api_func = {
 	["wifi_stop_all"]=wifi_stop_all,
 	
 	
-	["wifi_get_connect_sta_list"]=wifi_get_connect_sta_list
+	["wifi_get_connect_sta_list"]=wifi_get_connect_sta_list,
+	["dhcp_get_server_ip"]=dhcp_get_server_ip,
+	["dhcp_set_server_ip"]=dhcp_set_server_ip,
+	["dhcp_get_server_mask"]=dhcp_get_server_mask,
+	["dhcp_set_server_mask"]=dhcp_set_server_mask,
+
+	["dhcp_get_ip_range"]=dhcp_get_ip_range,
+	["dhcp_set_ip_range"]=dhcp_set_ip_range,
+	
+	["dhcp_get_lease_time"]=dhcp_get_lease_time,
+	["dhcp_set_lease_time"]=dhcp_set_lease_time,
+	["dhcp_get_client_list"]=dhcp_get_client_list,
+	
+	["dhcp_start"]=dhcp.dhcp_start,
+	["dhcp_stop"]=dhcp.dhcp_stop,
+	["dhcp_restart"]=dhcp.dhcp_restart,
+	["dhcp_enable"]=dhcp.dhcp_enable,
+	["dhcp_disable"]=dhcp.dhcp_disable,
+	["dhcp_reload"]=dhcp.dhcp_reload,
 }
 
 
