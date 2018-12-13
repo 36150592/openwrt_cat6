@@ -6,8 +6,16 @@ local wifi = require "tz.wifi"
 
 function wifi_get_dev()
 	print("in wifi_get_dev")
-	wifi.wifi_get_dev()
+	local array = wifi.wifi_get_dev()
+	for i = 1,table.maxn(array) do 
+		temp = array[i]
+		
+		print('<------------',i,'------>')
+		for k,v in pairs(temp) do
+			print(k," = ", v)
+		end
 
+	end
 end
 
 function wifi_get_hidden_ssid()

@@ -280,19 +280,6 @@ end
 --.type	 = 	wifi-device
 --txpower	 = 	100
 --.anonymous	 = 	false
-function show_dev(dev)
-	for i = 1,table.maxn(dev) do 
-		temp = dev[i]
-		
-		print('<------------',i,'------>')
-		for k,v in pairs(temp) do
-			print(k," = ", v)
-		end
-
-	end
-
-end
-
 
 module.device = {
 	["band"]	 = 	nil,
@@ -431,7 +418,8 @@ function module.wifi_get_dev()
 
 
     
-	show_dev(dev_array)
+	--show_dev(dev_array)
+	return dev_array
 	
 end
 
