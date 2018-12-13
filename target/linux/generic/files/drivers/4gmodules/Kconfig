@@ -24,4 +24,10 @@ config 4G_MODULE_QUECTEL
     ---help---
     it support EC20 and so on
 
+config 4G_MODULE_BOARDMOBI_906
+    tristate "BoardMobi BM906 SUPPORT"
+    default m
+    ---help---
+    it support BM906 ,and we will get P520AGibiNet.ko
+
 endif

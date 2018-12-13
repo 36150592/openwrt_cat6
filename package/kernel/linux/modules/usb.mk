@@ -1569,3 +1569,19 @@ define KernelPackage/usb3/description
 endef
 
 $(eval $(call KernelPackage,bm806))
+
+
+define KernelPackage/bm906
+  TITLE:=Support for BM906 4G modules.
+  DEPENDS:=
+  KCONFIG:= CONFIG_4G_MODULE_BOARDMOBI_906
+  FILES:=$(LINUX_DIR)/drivers/4gmodules/BoardMobi_906/bm_gobi_net_906.ko
+#  AUTOLOAD:=$(call AutoLoad,54,$(XHCI_AUTOLOAD),1)
+  $(call AddDepends/usb)
+endef
+
+define KernelPackage/usb3/description
+ Kernel support for USB3 (XHCI) controllers
+endef
+
+$(eval $(call KernelPackage,bm906))
