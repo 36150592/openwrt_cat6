@@ -1,16 +1,14 @@
-#ifndef _STRUCTS_H_
-#define _STRUCTS_H_
 /*===========================================================================
 FILE:
    Structs.h
 
 DESCRIPTION:
-   Declaration of structures used by the Qualcomm Linux USB Network driver
+   Declaration of structures used by the QTI Linux USB Network driver
    
 FUNCTIONS:
    none
 
-Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+Copyright (c) 2011,2015 The Linux Foundation. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -54,8 +52,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <linux/cdev.h>
 #include <linux/kthread.h>
 #include <linux/poll.h>
-#include <linux/ctype.h>
-#include <linux/byteorder/generic.h>
+#include <linux/module.h>
+
+#define MAX_MUX_DEVICES 1
+
 
 #if (LINUX_VERSION_CODE <= KERNEL_VERSION( 2,6,24 ))
    #include "usbnet.h"
@@ -76,11 +76,13 @@ POSSIBILITY OF SUCH DAMAGE.
       printk( KERN_INFO "GobiNet::%s " format, __FUNCTION__, ## arg ); \
    } \
 
-#define BIG_ENDIAN  0
+//#define BIG_ENDIAN  0
+#define CONFIG_DHCP 
+
 // Used in recursion, defined later below
 struct sGobiUSBNet;
 
-
+struct sQMIDev;
 
 /*=========================================================================*/
 // Struct sReadMemList
@@ -111,7 +113,7 @@ typedef struct sReadMemList
 typedef struct sNotifyList
 {
    /* Function to be run when data becomes available */
-   void                  (* mpNotifyFunct)(struct sGobiUSBNet *, u16, void *);
+   void                  (* mpNotifyFunct)(struct sGobiUSBNet *, u16, void *, struct sQMIDev *);
    
    /* Transaction ID */
    u16                   mTransactionID;
@@ -201,8 +203,67 @@ typedef struct sURBSetupPacket
 #define DEFAULT_READ_URB_LENGTH 0x1000
 
 
+/*=========================================================================*/
+// Struct sAutoPM
+//
+//    Structure used to manage AutoPM thread which determines whether the
+//    device is in use or may enter autosuspend.  Also submits net 
+//    transmissions asynchronously.
+/*=========================================================================*/
+typedef struct sAutoPM
+{
+   /* Thread for atomic autopm function */
+   struct task_struct *       mpThread;
+
+   /* Signal for completion when it's time for the thread to work */
+   struct completion          mThreadDoWork;
+
+   /* Time to exit? */
+   bool                       mbExit;
+
+   /* List of URB's queued to be sent to the device */
+   sURBList *                 mpURBList;
+
+   /* URB list lock (for adding and removing elements) */
+   spinlock_t                 mURBListLock;
+
+   /* Length of the URB list */
+   atomic_t                   mURBListLen;
+   
+   /* Active URB */
+   struct urb *               mpActiveURB;
+
+   /* Active URB lock (for adding and removing elements) */
+   spinlock_t                 mActiveURBLock;
+   
+   /* Duplicate pointer to USB device interface */
+   struct usb_interface *     mpIntf;
+
+} sAutoPM;
 
 
+
+#ifdef CONFIG_DHCP
+/*=========================================================================*/
+// Struct sAutoPM
+//
+//    Structure used to manage AutoPM thread which determines whether the
+//    device is in use or may enter autosuspend.  Also submits net 
+//    transmissions asynchronously.
+/*=========================================================================*/
+typedef struct sAutoDhcp
+{
+   /* Thread for atomic autopm function */
+   struct task_struct *       mpThread;
+
+   /* Signal for completion when it's time for the thread to work */
+   struct completion          mThreadDoWork;
+
+   /* Time to exit? */
+   bool                       mbExit;
+
+} sAutoDhcp;
+#endif
 
 /*=========================================================================*/
 // Struct sQMIDev
@@ -248,6 +309,22 @@ typedef struct sQMIDev
    /* Transaction ID associated with QMICTL "client" */
    atomic_t                   mQMICTLTransactionID;
 
+   /* Transaction ID associated with QMI "client" */
+   unsigned short             mQMITransactionID;
+
+   /*MuxId*/
+   unsigned char             MuxId;
+
+   unsigned int               IPv4Addr;
+
+   unsigned int               IPv4SubnetMask;
+
+   unsigned int               IPv4Gateway;
+
+   unsigned int               IPv4PrimaryDNS;
+
+   unsigned int               IPv4SecondaryDNS;
+   
 } sQMIDev;
 
 /*=========================================================================*/
@@ -274,7 +351,7 @@ typedef struct sEndpoints
 /*=========================================================================*/
 // Struct sGobiUSBNet
 //
-//    Structure that defines the data associated with the Qualcomm USB device
+//    Structure that defines the data associated with the QTI USB device
 /*=========================================================================*/
 typedef struct sGobiUSBNet
 {
@@ -290,7 +367,7 @@ typedef struct sGobiUSBNet
    /* Pointers to usbnet_open and usbnet_stop functions */
    int                  (* mpUSBNetOpen)(struct net_device *);
    int                  (* mpUSBNetStop)(struct net_device *);
-   
+
    /* Reason(s) why interface is down */
    /* Used by Gobi*DownReason */
    unsigned long          mDownReason;
@@ -299,20 +376,33 @@ typedef struct sGobiUSBNet
 #define DRIVER_SUSPENDED      2
 #define NET_IFACE_STOPPED     3
 
+    bool mdm9x07; 
+    bool mdm9x40; 
+   bool big_endian;
    /* QMI "device" status */
    bool                   mbQMIValid;
-
+   bool                   mbderegisterQMI;
    /* QMI "device" memory */
    sQMIDev                mQMIDev;
 
+   /* QMI "device" memory for MUXING*/
+   sQMIDev                mQMIMUXDev[MAX_MUX_DEVICES];
+
    /* Device MEID */
-   char                   mMEID[16];//14 bit is enough
-   
-    /* QMI VERSION */
-   char                   mQmiVer[12];
-   
+   char                   mMEID[14];
+
    /* AutoPM thread */
- //  sAutoPM                mAutoPM;
+   sAutoPM                mAutoPM;
+#ifdef CONFIG_DHCP
+   sAutoDhcp                mAutoDhcp;
+   unsigned short       wds_client;
+#endif
+   /*QMAP DL Aggregation information */
+   unsigned int      ULAggregationMaxDatagram;
+   unsigned int    ULAggregationMaxSize;
+
+   /*WDS Connect/Disconnect kobj*/
+   struct kobject *kobj_gobi;
 
 } sGobiUSBNet;
 
@@ -326,9 +416,14 @@ typedef struct sQMIFilpStorage
 {
    /* Client ID */
    u16                  mClientID;
-   
+
    /* Device pointer */
    sGobiUSBNet *        mpDev;
 
+   /* QMIDevice */
+   sQMIDev *QMIDev;
+
 } sQMIFilpStorage;
-#endif
+
+
+

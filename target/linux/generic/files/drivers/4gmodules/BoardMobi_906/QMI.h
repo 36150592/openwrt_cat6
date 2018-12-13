@@ -1,11 +1,9 @@
-#ifndef _QMI_H_
-#define _QMI_H_
 /*===========================================================================
 FILE:
    QMI.h
 
 DESCRIPTION:
-   Qualcomm QMI driver header
+   QTI QMI driver header
    
 FUNCTIONS:
    Generic QMUX functions
@@ -40,7 +38,7 @@ FUNCTIONS:
       QMIWDSEventResp
       QMIDMSGetMEIDResp
 
-Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+Copyright (c) 2011,2015 The Linux Foundation. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -78,11 +76,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #define QMICTL 0
 #define QMIWDS 1
 #define QMIDMS 2
+#define QMIWDA 0x1A
 
-//#define u8        unsigned char
-//#define u16       unsigned short
-//#define u32       unsigned int
-//#define u64       unsigned long long
+#define u8        unsigned char
+#define u16       unsigned short
+#define u32       unsigned int
+#define u64       unsigned long long
 
 #define bool      u8
 #define true      1
@@ -126,13 +125,17 @@ typedef struct sQMUX
 int ParseQMUX(
    u16 *    pClientID,
    void *   pBuffer,
-   u16      buffSize );
+   u16      buffSize,
+   bool big_endian);
+
 
 // Fill buffer with QMUX headers
 int FillQMUX(
    u16      clientID,
    void *   pBuffer,
-   u16      buffSize );
+   u16      buffSize,
+   bool big_endian);
+
 
 /*=========================================================================*/
 // Generic QMI functions
@@ -181,6 +184,17 @@ u16 QMIWDSGetPKGSRVCStatusReqSize( void );
 // Get size of buffer needed for QMUX + QMIDMSGetMEIDReq
 u16 QMIDMSGetMEIDReqSize( void );
 
+// Get size of buffer needed for QMUX + QMIWDASetDataFormatReq
+u16 QMIWDASetDataFormatReqSize( void );
+u16 QMIWDASetDataFormatReqSize_9x07( void );
+
+u16 QMIWDASetDataFormatReqSettingsSize( void );
+
+u16 QMIWDSStartNetworkReqSize(void);
+u16 QMIWDSGetRuntimeSettingsReqSize(void);
+u16 QMIWDSGetPktSrvcStatusReqSize(void);
+u16 QMIWDSStopNetworkReqSize( void );
+
 /*=========================================================================*/
 // Fill Buffers with QMI requests
 /*=========================================================================*/
@@ -223,6 +237,53 @@ int QMIDMSGetMEIDReq(
    u16      buffSize,
    u16      transactionID );
 
+// Fill buffer with QMI WDA QMAP Request
+int QMIWDASetDataFormatReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID,
+   sGobiUSBNet * pDev);
+int QMIWDASetDataFormatReq_9x07(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID,
+   sGobiUSBNet * pDev);
+
+int QMIWDASetDataFormatReqSettings(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID );
+
+
+
+int QMIWDSStartNetworkReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID );
+
+int QMIWDSGetRuntimeSettingsReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID );
+
+int QMIWDSSetIPFamilyPrefReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID );
+
+int QMIWDSBindMuxPortReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID,
+   sGobiUSBNet *pDev,
+   sQMIDev *QMIDev);
+
+
+int QMIWDSGetPktSrvcStatusReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID );
+
 /*=========================================================================*/
 // Parse data from QMI responses
 /*=========================================================================*/
@@ -254,10 +315,52 @@ int QMIWDSEventResp(
    bool *   pbLinkState,
    bool *   pbReconfigure );
 
+int QMIWDASetDataFormatResp(
+   void *   pBuffer,
+   u16      buffSize,
+   u32 *    ULDatagram,
+   u32 *    ULDatagramSize );
+
+
 // Parse the QMI DMS Get Serial Numbers Resp
 int QMIDMSGetMEIDResp(
    void *   pBuffer,
    u16      buffSize,
    char *   pMEID,
    int      meidSize );
-#endif
+
+int QMIWDSStartNetworkResp(
+   void *   pBuffer,
+   u16      buffSize,
+   void *   pkt_data_handle,
+   int      meidSize );
+
+
+int QMIWDSGetRuntimeSettingsResp(
+   sGobiUSBNet *pDev,
+   void *   pBuffer,
+   u16      buffSize,
+   sQMIDev *QMIDev);
+
+char QMIWDSGetPktSrvcStatusResp(
+   void *   pBuffer,
+   u16      buffSize);
+
+int QMIWDSStopNetworkReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID ,
+   unsigned int pkt_data_handle);
+
+
+int ConfigureQMAP(sGobiUSBNet *pDev);
+
+int PreparePacket(struct usbnet *dev, struct sk_buff *skb, gfp_t flags);
+
+void ProcessARP(struct usbnet *dev, struct sk_buff *skb);
+
+void ArpResponse(struct usbnet *dev, struct sk_buff *skb);
+
+unsigned short GetTransactionID(sQMIDev *QMIDev);
+
+

@@ -3,7 +3,7 @@ FILE:
    QMI.c
 
 DESCRIPTION:
-   Qualcomm QMI driver code
+   QTI QMI driver code
    
 FUNCTIONS:
    Generic QMUX functions
@@ -29,7 +29,7 @@ FUNCTIONS:
       QMIWDSEventResp
       QMIDMSGetMEIDResp
 
-Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+Copyright (c) 2011,2015 The Linux Foundation. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -60,19 +60,15 @@ POSSIBILITY OF SUCH DAMAGE.
 //---------------------------------------------------------------------------
 // Include Files
 //---------------------------------------------------------------------------
-#include <linux/module.h>
-#include <linux/init.h>
-#include <linux/ctype.h>
-#include <linux/kernel.h>
-#include <linux/byteorder/generic.h>
-
+#include "QMIDevice.h"
 #include "QMI.h"
-#include "Structs.h"
-
-
 /*=========================================================================*/
 // Get sizes of buffers needed by QMI requests
 /*=========================================================================*/
+
+#if 0
+extern int RmnetIF;
+#endif
 
 /*===========================================================================
 METHOD:
@@ -164,6 +160,40 @@ u16 QMIWDSGetPKGSRVCStatusReqSize( void )
    return sizeof( sQMUX ) + 7;
 }
 
+u16 QMIWDSStartNetworkReqSize( void )
+{
+   return sizeof( sQMUX ) + 7;
+}
+u16 QMIWDASetDataFormatReqSettingsSize( void )
+{
+   return sizeof( sQMUX ) + 11;
+}
+u16 QMIWDASetDataFormatReqSize_9x07( void )
+{
+   return sizeof( sQMUX ) + 57;
+}
+u16 QMIWDASetDataFormatReqSize( void )
+{
+   return sizeof( sQMUX ) + 43;
+}
+
+u16 QMIWDSGetRuntimeSettingsReqSize( void )
+{
+   return sizeof( sQMUX ) + 14;
+}
+
+u16 QMIWDSGetPktSrvcStatusReqSize(void)
+{
+   return sizeof( sQMUX ) + 7;
+}
+
+u16 QMIWDSStopNetworkReqSize( void )
+{
+   return sizeof( sQMUX ) + 14;
+}
+
+
+
 /*===========================================================================
 METHOD:
    QMIDMSGetMEIDReqSize (Public Method)
@@ -202,7 +232,8 @@ RETURN VALUE:
 int ParseQMUX(
    u16 *    pClientID,
    void *   pBuffer,
-   u16      buffSize )
+   u16      buffSize,
+   bool big_endian)
 {
    sQMUX * pQMUXHeader;
    
@@ -213,25 +244,29 @@ int ParseQMUX(
 
    // QMUX Header
    pQMUXHeader = (sQMUX *)pBuffer;
-   
-  // pQMUXHeader->mLength = le16_to_cpu(pQMUXHeader->mLength);
 
-   if ((pQMUXHeader->mTF != 1)
-   || ( pQMUXHeader->mLength != le16_to_cpu(buffSize - 1))
-   || ( pQMUXHeader->mCtrlFlag != 0x80) )
+   if (pQMUXHeader->mTF != 1
+   ||  pQMUXHeader->mLength != cpu_to_le16(buffSize - 1)
+   ||  pQMUXHeader->mCtrlFlag != 0x80 )
    {
       return -EINVAL;
    }
 
    // Client ID   
-#if BIG_ENDIAN
-   *pClientID = (pQMUXHeader->mQMIClientID) 
-              + (pQMUXHeader->mQMIService << 8);
-#else
-    *pClientID = (pQMUXHeader->mQMIClientID << 8)
-                 + pQMUXHeader->mQMIService;
-#endif
-   
+ //  *pClientID = (pQMUXHeader->mQMIClientID << 8) 
+ //             + pQMUXHeader->mQMIService;
+
+if(big_endian)
+{
+	  *pClientID = (pQMUXHeader->mQMIClientID) 
+				 + (pQMUXHeader->mQMIService << 8);
+}
+else
+{
+	   *pClientID = (pQMUXHeader->mQMIClientID << 8)
+					+ pQMUXHeader->mQMIService;
+}
+
    return sizeof( sQMUX );
 }
 
@@ -254,7 +289,8 @@ RETURN VALUE:
 int FillQMUX(
    u16      clientID,
    void *   pBuffer,
-   u16      buffSize )
+   u16      buffSize,
+   bool big_endian)
 {
    sQMUX * pQMUXHeader;
 
@@ -271,13 +307,20 @@ int FillQMUX(
    pQMUXHeader->mCtrlFlag = 0;
 
    // Service and Client ID   
-#if BIG_ENDIAN
-	pQMUXHeader->mQMIService = clientID >> 8;
-   pQMUXHeader->mQMIClientID = clientID & 0xff;
-#else
-   pQMUXHeader->mQMIService = clientID & 0xff;
-   pQMUXHeader->mQMIClientID = clientID >> 8;
-#endif
+ //  pQMUXHeader->mQMIService = clientID & 0xff;
+  // pQMUXHeader->mQMIClientID = clientID >> 8;
+
+if(big_endian)
+{
+	   pQMUXHeader->mQMIService = clientID >> 8;
+	  pQMUXHeader->mQMIClientID = clientID & 0xff;
+}
+else
+{
+	  pQMUXHeader->mQMIService = clientID & 0xff;
+	  pQMUXHeader->mQMIClientID = clientID >> 8;
+}
+
    return 0;
 }
 
@@ -555,11 +598,10 @@ int QMICTLReadyReq(
    // Transaction ID
    *(u8 *)(pBuffer + sizeof( sQMUX ) + 1) = transactionID;
    // Message ID
-   *(u16 *)(pBuffer + sizeof( sQMUX ) + 2) = cpu_to_le16(0x0021);
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 2) =cpu_to_le16( 0x0021);
    // Size of TLV's
    *(u16 *)(pBuffer + sizeof( sQMUX ) + 4) = cpu_to_le16(0x0000);
 
-   // success
    return sizeof( sQMUX ) + 6;
 }
 
@@ -603,13 +645,203 @@ int QMIWDSSetEventReportReq(
       // Size
       *(u16 *)(pBuffer + sizeof( sQMUX ) + 8) = cpu_to_le16(0x0005);
       // Stats period
-      *(u8 *)(pBuffer + sizeof( sQMUX ) + 10)  = 0x20;
+      *(u8 *)(pBuffer + sizeof( sQMUX ) + 10)  = 0x01;
       // Stats mask
       *(u32 *)(pBuffer + sizeof( sQMUX ) + 11)  = cpu_to_le32(0x000000ff);
 
    // success
    return sizeof( sQMUX ) + 15;
 }
+int QMIWDASetDataFormatReqSettings(
+      void *   pBuffer,
+      u16      buffSize,
+      u16      transactionID )
+{
+   if (pBuffer == 0 || buffSize < QMIWDASetDataFormatReqSettingsSize() )
+   {
+      return -ENOMEM;
+   }
+
+   // QMI WDA SET DATA FORMAT REQ
+   // Request
+   *(u8 *)(pBuffer + sizeof( sQMUX ))  = 0x00;
+   // Transaction ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 1) = cpu_to_le16(transactionID);
+   // Message ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 3) = cpu_to_le16(0x002B);
+   // Size of TLV's
+   //*(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = 0x001C;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = cpu_to_le16(0x0004);
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 7)  = 0x10;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 8) = cpu_to_le16(0x0001);
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 10)  = 0x01;
+
+   // success
+   return sizeof( sQMUX ) + 11;
+}
+
+
+/*===========================================================================
+METHOD:
+   QMIWDASetDataFormatReq(Public Method)
+
+DESCRIPTION:
+   Negotiating QMAP UL Data Aggregation protocol
+
+PARAMETERS
+   pBuffer         [ 0 ] - Buffer to be filled
+   buffSize        [ I ] - Size of pBuffer
+   transactionID   [ I ] - Transaction ID
+
+RETURN VALUE:
+   int - Positive for resulting size of pBuffer
+         Negative errno for error
+===========================================================================*/
+int QMIWDASetDataFormatReq_9x07(
+      void *   pBuffer,
+      u16      buffSize,
+      u16      transactionID,
+      sGobiUSBNet * pDev)
+{
+   if (pBuffer == 0 || buffSize < QMIWDASetDataFormatReqSize() )
+   {
+      return -ENOMEM;
+   }
+
+   // QMI WDA SET DATA FORMAT REQ
+   // Request
+   *(u8 *)(pBuffer + sizeof( sQMUX ))  = 0x00;
+   // Transaction ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 1) = cpu_to_le16(transactionID);
+   // Message ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 3) = cpu_to_le16(0x0020);
+   // Size of TLV's
+   //*(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = 0x001C;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = cpu_to_le16(0x0032);
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 7)  = 0x10;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 8) = cpu_to_le16(0x0001);
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 10)  = 0x00;
+   // Link Layer protocol
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 11)  = 0x11;
+   // Size
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 12) = cpu_to_le16(0x0004);
+   // IP is enabled
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 14) = cpu_to_le32(0x00000001);
+   // UL Data aggregation protocol
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 18)  = 0x12;
+   // Size
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 19) = cpu_to_le16(0x0004);
+   // UL QMAP is enabled
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 21) = cpu_to_le32(0x00000005);
+
+   // DL Data aggregation protocol
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 25)  = 0x13;
+   // Size
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 26) = cpu_to_le16(0x0004);
+   // DL QMAP is enabled
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 28) = cpu_to_le32(0x00000005);
+   // DL Data aggregation Max datagrams
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 32)  = 0x15;
+   // Size
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 33) = cpu_to_le16(0x0004);
+   // Datagram is set as 32768
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 35) = cpu_to_le32(0x00000020);
+   // DL Data aggregation Max datagrams
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 39)  = 0x16;
+   // Size
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 40) = cpu_to_le16(0x0004);
+   // Datagram is set as 32768
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 42) = cpu_to_le32(0x00008000);
+
+   // DL Data aggregation Max datagrams
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 46)  = 0x17;
+   // Size
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 47) = cpu_to_le16(0x0008);
+   // Datagram is set as 32768
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 49) = cpu_to_le32(0x00000002);
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 53) = cpu_to_le32(pDev->mpEndpoints->mIntfNum);
+   // success
+   return sizeof( sQMUX ) + 57;
+}
+
+/*===========================================================================
+METHOD:
+   QMIWDASetDataFormatReq(Public Method)
+
+DESCRIPTION:
+   Negotiating QMAP UL Data Aggregation protocol
+
+PARAMETERS
+   pBuffer         [ 0 ] - Buffer to be filled
+   buffSize        [ I ] - Size of pBuffer
+   transactionID   [ I ] - Transaction ID
+
+RETURN VALUE:
+   int - Positive for resulting size of pBuffer
+         Negative errno for error
+===========================================================================*/
+int QMIWDASetDataFormatReq(
+      void *   pBuffer,
+      u16      buffSize,
+      u16      transactionID,
+      sGobiUSBNet * pDev)
+{
+   if (pBuffer == 0 || buffSize < QMIWDASetDataFormatReqSize() )
+   {
+      return -ENOMEM;
+   }
+
+   // QMI WDA SET DATA FORMAT REQ
+   // Request
+   *(u8 *)(pBuffer + sizeof( sQMUX ))  = 0x00;
+   // Transaction ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 1) = cpu_to_le16(transactionID);
+   // Message ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 3) = cpu_to_le16(0x0020);
+   // Size of TLV's
+   //*(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = 0x001C;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = cpu_to_le16(0x0024);
+   
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 7)  = 0x10;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 8) = cpu_to_le16(0x0001);
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 10)  = 0x00;
+   // Link Layer protocol
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 11)  = 0x11;
+   // Size
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 12) = cpu_to_le16(0x0004);
+   // IP is enabled
+   if(!pDev->mdm9x07)
+   {
+   	*(u32 *)(pBuffer + sizeof( sQMUX ) + 14) = cpu_to_le32(0x00000001);
+   }
+   else
+   {
+	   *(u32 *)(pBuffer + sizeof( sQMUX ) + 14) = cpu_to_le32(0x00000002);
+   }
+   // UL Data aggregation protocol
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 18)  = 0x12;
+   // Size
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 19) = cpu_to_le16(0x0004);
+   // UL QMAP is enabled
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 21) = cpu_to_le32(0x00000000);
+
+   // DL Data aggregation protocol
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 25)  = 0x13;
+   // Size
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 26) = cpu_to_le16(0x0004);
+   // DL QMAP is enabled
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 28) = cpu_to_le32(0x00000000);
+  
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 32)  = 0x17;
+   // Size
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 33) = cpu_to_le16(0x0008);
+   // Datagram is set as 32768
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 35) = cpu_to_le32(0x00000002);
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 39) = cpu_to_le32(pDev->mpEndpoints->mIntfNum);
+   // success
+   return sizeof( sQMUX ) + 43;
+}
+
 
 /*===========================================================================
 METHOD:
@@ -724,7 +956,6 @@ int QMICTLGetClientIDResp(
 
    if (pBuffer == 0 || buffSize < offset)
    {
-	  printk( "%s;;; buffSize = %d,offset=%d.\n", __func__,buffSize, offset);
       return -ENOMEM;
    }
 
@@ -734,21 +965,18 @@ int QMICTLGetClientIDResp(
    result = GetQMIMessageID( pBuffer, buffSize );
    if (result != 0x22)
    {
-	   printk( "%s;;; get client ID result=%d.\n", __func__,result);
       return -EFAULT;
    }
 
    result = ValidQMIMessage( pBuffer, buffSize );
    if (result != 0)
    {
-	   printk( "%s;;; ValidQMIMessage result=%d.\n", __func__,result);
       return -EFAULT;
    }
 
    result = GetTLV( pBuffer, buffSize, 0x01, pClientID, 2 );
    if (result != 2)
    {
-	    printk( "%s;;; GetTLV result=%d.\n", __func__,result);
       return -EFAULT;
    }
 
@@ -887,7 +1115,7 @@ int QMIWDSEventResp(
       GetTLV( pBuffer, buffSize, 0x1A, (void*)pRXBytesOk, 8 );
    }
    // QMI WDS Get PKG SRVC Status Resp
-   else if (result == 0x22)
+   else if ((result == 0x22)|| (result == 0x20))
    {
       result = GetTLV( pBuffer, buffSize, 0x01, &pktStatusRead[0], 2 );
       // 1 or 2 bytes may be received
@@ -919,6 +1147,7 @@ int QMIWDSEventResp(
          return result;
       }
    }
+
    else
    {
       return -EFAULT;
@@ -980,7 +1209,400 @@ int QMIDMSGetMEIDResp(
    {
       return -EFAULT;
    }
+   return 0;
+}
+
+int QMIWDASetDataFormatResp(
+   void *   pBuffer,
+   u16      buffSize,
+   u32 *    ULDatagram,
+   u32 *    ULDatagramSize )
+{
+   int result;
+
+   // Ignore QMUX and SDU
+   u8 offset = sizeof( sQMUX ) + 3;
+
+   if (pBuffer == 0 || buffSize < offset ||
+   ULDatagram == 0
+   || ULDatagramSize == 0)
+   {
+      return -ENOMEM;
+   }
+
+   pBuffer = pBuffer + offset;
+   buffSize -= offset;
+
+   result = GetQMIMessageID( pBuffer, buffSize );
+   if (result != 0x20)
+   {
+      return -EFAULT;
+   }
+
+   result = ValidQMIMessage( pBuffer, buffSize );
+   if (result != 0)
+   {
+      return -EFAULT;
+   }
+
+   result = GetTLV( pBuffer, buffSize, 0x15, (void*)ULDatagram, 4 );
+   if (result != 4)
+   {
+      return -EFAULT;
+   }
+
+   result = GetTLV( pBuffer, buffSize, 0x16, (void*)ULDatagramSize, 4 );
+   if (result != 4)
+   {
+      return -EFAULT;
+   }
 
    return 0;
 }
+int QMIWDSStartNetworkReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID )
+{
+   if (pBuffer == 0)
+   {
+      return -ENOMEM;
+   }
+
+   // QMI WDS Get PKG SRVC Status REQ
+   // Request
+   *(u8 *)(pBuffer + sizeof( sQMUX ))  = 0x00;
+   // Transaction ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 1) = cpu_to_le16(transactionID);
+   // Message ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 3) = cpu_to_le16(0x0020);
+   // Size of TLV's
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = cpu_to_le16(0x0000);
+
+   // success
+   return sizeof( sQMUX ) + 7;
+}
+
+int QMIWDSStartNetworkResp(
+   void *   pBuffer,
+   u16      buffSize,
+   void *   pkt_data_handle,
+   int      meidSize )
+{
+   int result;
+
+   // Ignore QMUX and SDU
+   u8 offset = sizeof( sQMUX ) + 3;
+
+   pBuffer = pBuffer + offset;
+   buffSize -= offset;
+
+   result = GetQMIMessageID( pBuffer, buffSize );
+   if (result != 0x20)
+   {
+      printk("GetQMIMessageID failed\n");
+      return -EFAULT;
+   }
+
+   result = ValidQMIMessage( pBuffer, buffSize );
+   if (result != 0)
+   {
+      printk("ValidQMIMessage failed\n");
+      return -EFAULT;
+   }
+
+   result = GetTLV( pBuffer, buffSize, 0x1, pkt_data_handle, 4 );
+   if (result < 0 )
+   {
+      printk("GetTLV\n");
+      return result;
+   }
+
+   return 0;
+}
+
+int QMIWDSGetRuntimeSettingsReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID )
+{
+   if (pBuffer == 0)
+   {
+      return -ENOMEM;
+   }
+
+   // Request
+   *(u8 *)(pBuffer + sizeof( sQMUX ))  = 0x00;
+   // Transaction ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 1) = cpu_to_le16(transactionID);
+   // Message ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 3) = cpu_to_le16(0x002D);
+   // Size of TLV's
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = cpu_to_le16(0x0007);
+
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 7)  = 0x10;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 8)  = cpu_to_le16(0x0004);
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 10)  = cpu_to_le32(0x00002310);
+   // success
+   return sizeof( sQMUX ) + 14;
+}
+
+int QMIWDSGetPktSrvcStatusReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID )
+{
+   if (pBuffer == 0)
+   {
+      return -ENOMEM;
+   }
+
+   // QMI WDS Get PKG SRVC Status REQ
+   // Request
+   *(u8 *)(pBuffer + sizeof( sQMUX ))  = 0x00;
+   // Transaction ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 1) = cpu_to_le16(transactionID);
+   // Message ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 3) = cpu_to_le16(0x0022);
+   // Size of TLV's
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = cpu_to_le16(0x0000);
+
+   // success
+   return sizeof( sQMUX ) + 7;
+
+}
+
+
+char QMIWDSGetPktSrvcStatusResp(
+   void *   pBuffer,
+   u16      buffSize)
+{
+   int result;
+   char status;
+   // Ignore QMUX and SDU
+   u8 offset = sizeof( sQMUX ) + 3;
+
+   pBuffer = pBuffer + offset;
+   buffSize -= offset;
+
+   result = GetQMIMessageID( pBuffer, buffSize );
+   if (result != 0x22)
+   {
+      printk("GetQMIMessageID failed\n");
+      return -EFAULT;
+   }
+
+   result = ValidQMIMessage( pBuffer, buffSize );
+   if (result != 0)
+   {
+      printk("ValidQMIMessage failed\n");
+      return -EFAULT;
+   }
+
+   result = GetTLV( pBuffer, buffSize, 0x1, (void*)&status, 1 );
+   if (result < 0 )
+   {
+      printk("GetTLV\n");
+      return result;
+   }
+
+   return status;
+}
+
+
+int QMIWDSStopNetworkReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID ,
+   unsigned int pkt_data_handle)
+{
+   if (pBuffer == 0)
+   {
+      return -ENOMEM;
+   }
+
+   // QMI WDS Get PKG SRVC Status REQ
+   // Request
+   *(u8 *)(pBuffer + sizeof( sQMUX ))  = 0x00;
+   // Transaction ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 1) = cpu_to_le16(transactionID);
+   // Message ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 3) = cpu_to_le16(0x0021);
+   // Size of TLV's
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = cpu_to_le16(0x0007);
+
+
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 7) = 0x01;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 8) = cpu_to_le16(0x0004);
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 10) = cpu_to_le32(pkt_data_handle);
+
+
+   // success
+   return sizeof( sQMUX ) + 14;
+}
+
+
+
+
+void PrintIPAddr(char *msg, unsigned int addr)
+{
+   printk("%s : %d.%d.%d.%d",
+        msg,
+        addr >> 24,
+        (addr >> 16) & 0xff,
+        (addr >> 8) & 0xff,
+        (addr ) & 0xff
+        );
+}
+
+int QMIWDSGetRuntimeSettingsResp(
+   sGobiUSBNet *pDev,
+   void *   pBuffer,
+   u16      buffSize,
+   sQMIDev *QMIDev)
+{
+   int result;
+   unsigned int addr;
+
+   // Ignore QMUX and SDU
+   u8 offset = sizeof( sQMUX ) + 3;
+
+   pBuffer = pBuffer + offset;
+   buffSize -= offset;
+
+   result = GetQMIMessageID( pBuffer, buffSize );
+   if (result != 0x2D)
+   {
+      printk("GetQMIMessageID failed\n");
+      return -EFAULT;
+   }
+
+   result = ValidQMIMessage( pBuffer, buffSize );
+   if (result != 0)
+   {
+      printk("ValidQMIMessage failed\n");
+      return -EFAULT;
+   }
+
+   result = GetTLV( pBuffer, buffSize, 0x1E, (void*)&addr, 4 );
+   if (result > 0 ) 
+   {
+      PrintIPAddr("\nIPv4 Addr : ", addr);
+      QMIDev->IPv4Addr = le32_to_cpu(addr);
+	  printk("IP address : %x\n", QMIDev->IPv4Addr);
+   }
+
+   result = GetTLV( pBuffer, buffSize, 0x21, (void*)&addr, 4 );
+   if (result > 0 ) 
+   {
+      PrintIPAddr("\nMask : ", addr);
+      QMIDev->IPv4SubnetMask = le32_to_cpu(addr);
+   }
+
+   result = GetTLV( pBuffer, buffSize, 0x20, (void*)&addr, 4 );
+   if (result > 0 ) 
+   {
+      PrintIPAddr("\nGateway : ", addr);
+      QMIDev->IPv4Gateway = le32_to_cpu(addr);
+   }
+
+   result = GetTLV( pBuffer, buffSize, 0x15, (void*)&addr, 4 );
+   if (result > 0 ) 
+   {
+      PrintIPAddr("\nPrimary DNS : ", addr);
+      QMIDev->IPv4PrimaryDNS = le32_to_cpu(addr);
+   }
+
+   result = GetTLV( pBuffer, buffSize, 0x16, (void*)&addr, 4 );
+   if (result > 0 ) 
+   {
+      PrintIPAddr("\nSecondary DNS : ", addr);
+      QMIDev->IPv4SecondaryDNS = le32_to_cpu(addr);
+   }
+
+   return 0;
+}
+
+int QMIWDSSetIPFamilyPrefReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID )
+{
+   if (pBuffer == 0)
+   {
+      return -ENOMEM;
+   }
+
+   // QMI WDS Set Ip family pref REQ
+   // Request
+   *(u8 *)(pBuffer + sizeof( sQMUX ))  = 0x00;
+   // Transaction ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 1) = cpu_to_le16(transactionID);
+   // Message ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 3) = cpu_to_le16(0x004D);
+   // Size of TLV's
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = cpu_to_le16(0x0004);
+   // IP pref msg id, len and value as IPv4
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 7)  = 0x01;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 8)  = cpu_to_le16(0x0001);
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 10)  = 0x04; /*IPv4*/
+
+   // success
+   return sizeof( sQMUX ) + 11;
+}
+
+int QMIWDSBindMuxPortReq(
+   void *   pBuffer,
+   u16      buffSize,
+   u16      transactionID,
+   sGobiUSBNet *pDev,
+   sQMIDev *QMIDev)
+{
+   if (pBuffer == 0)
+   {
+      return -ENOMEM;
+   }
+
+   // QMI WDS BIND_MUX_DATA_PORT
+
+   // Request
+   *(u8 *)(pBuffer + sizeof( sQMUX ))  = 0x00;
+   // Transaction ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 1) = cpu_to_le16(transactionID);
+   // Message ID
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 3) = cpu_to_le16(0x00a2);
+   // Size of TLV's
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 5) = cpu_to_le16(0x0016);
+   // ep type, len as 8 and value as HSUSB, Ifc number as 4
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 7)  = 0x10;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 8)  = cpu_to_le16(0x0008);
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 10)  = cpu_to_le32(0x00000002); //HSUSB
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 14)  = cpu_to_le32(pDev->mpEndpoints->mIntfNum); //Interface Num
+   // muxid , value is 0x81
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 18)  = 0x11;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 19)  = cpu_to_le16(0x0001);
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 21)  = QMIDev->MuxId;
+
+   // client type as tethered
+   *(u8 *)(pBuffer + sizeof( sQMUX ) + 22)  = 0x13;
+   *(u16 *)(pBuffer + sizeof( sQMUX ) + 23)  = cpu_to_le16(0x0004);
+   *(u32 *)(pBuffer + sizeof( sQMUX ) + 25)  = cpu_to_le32(0x00000001); //teathered
+
+
+   // success
+   return sizeof( sQMUX ) + 29;
+}
+
+
+unsigned short GetTransactionID(sQMIDev *QMIDev)
+{
+   unsigned short transactionID = atomic_add_return( 1, (atomic_t *)&QMIDev->mQMITransactionID );
+   if (transactionID == 0)
+   {
+	  transactionID = atomic_add_return( 1, (atomic_t *)&QMIDev->mQMITransactionID);
+   }
+   return transactionID;
+}
+
+
 
