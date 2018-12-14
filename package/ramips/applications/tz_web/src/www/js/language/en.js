@@ -877,8 +877,8 @@ MENU.setting.wan = "WAN Settings";
 MENU.setting.wizard = "Configuration Wizard";
 MENU.setting.wlan = "WLAN Settings";
 MENU.settingWifi.head = "Wi-Fi Settings";
-MENU.settingWifi.wifi = "Wi-Fi Settings";
-
+MENU.settingWifi.wifi = "WiFi-2.4G Settings";
+MENU.settingWifi.wifi5g = "WiFi-5G Settings";
 MENU.setting.phone = "PHONE Settings";
 
 MENU.sms.add = "New SMS";
@@ -1440,8 +1440,92 @@ wirelessconfightml.prompt.txPowerCheckMsg2 = "TX power value is not correct, in 
 wirelessconfightml.prompt.wepDefaultPasswdEmpty = "ATTENTION: You must input default WEP password.";
 wirelessconfightml.prompt.wepLengthErrorFormat = "ATTENTION: The length of {0} must be {1} bytes(ASCII) or {2} bytes(HEX)";
 wirelessconfightml.tab_menu.item1 = "Wi-Fi Settings";
+wirelessconfightml.tab_menu.connectedList = "Connected List";
 wirelessconfightml.tab_menu.item2 = "Indoor Device Wireless Parameter List";
 wirelessconfightml.tab_menu.wps = "WPS Settings";
+
+wlan5ghtml.tab_menu.basicConfig =  "Basic Config";
+wlan5ghtml.tab_menu.connectedList = "Connected List";
+
+
+wlan5ghtml.form1.cmt = 'example';
+wlan5ghtml.form1.wifiFunction = 'Wi-Fi Function:';
+wlan5ghtml.form1.enable ='Enable';
+wlan5ghtml.form1.ssidBd = 'SSID Broadcast::';
+wlan5ghtml.form1.wmm = 'WMM:';
+wlan5ghtml.form1.ssid = 'SSID:';
+wlan5ghtml.form1.channel = 'channel:';
+wlan5ghtml.form1.auto = 'auto';
+wlan5ghtml.form1.channel36 = '36 – 5180MHz';
+wlan5ghtml.form1.channel40 = '40 – 5200MHz';
+wlan5ghtml.form1.channel44 = '44 – 5220MHz';
+wlan5ghtml.form1.channel48 = '48 – 5240MHz';
+wlan5ghtml.form1.channel52 = '52 – 5260MHz';
+wlan5ghtml.form1.channel56 = '56 – 5280MHz';
+wlan5ghtml.form1.channel60 = '60 – 5300MHz';
+wlan5ghtml.form1.channel64 = '64 – 5320MHz';
+wlan5ghtml.form1.channel149 = '149 – 5745MHz';
+wlan5ghtml.form1.channel153 = '153 – 5765MHz';
+wlan5ghtml.form1.channel157 = '157 – 5785MHz';
+wlan5ghtml.form1.channel161 = '161 – 5805MHz';
+wlan5ghtml.form1.channel165 = '165 – 5825MHz';
+wlan5ghtml.form1.Mode = 'Mode:';
+wlan5ghtml.form1.na = '11A';
+wlan5ghtml.form1.ac = '11NA';
+wlan5ghtml.form1.an_ac = '11AC';
+wlan5ghtml.form1.bandWidth = 'Bandwidth:';
+wlan5ghtml.form1.bandWidth20 = '20MHz';
+wlan5ghtml.form1.bandWidth40 = '40MHz';
+wlan5ghtml.form1.bandWidth80 = '80MHz';
+wlan5ghtml.form1.none = 'none';
+wlan5ghtml.form1.authenticationType = 'Authentication Type:';
+wlan5ghtml.form1.openSys = 'Open System';
+wlan5ghtml.form1.wpa_psk = 'WPA-PSK';
+wlan5ghtml.form1.wpa2_psk = 'WPA2-PSK';
+wlan5ghtml.form1.wpa_wpa2_psk = 'WPA/WPA2-PSK';
+wlan5ghtml.form1.encryptAlgorithmTh = 'Encrypt Algorithm:';
+wlan5ghtml.form1.tkip = 'TKIP';
+wlan5ghtml.form1.aes = 'AES';
+wlan5ghtml.form1.tkip_aes = 'TKIP/AES';
+wlan5ghtml.form1.key ='Key:';
+wlan5ghtml.form1.btnSave = 'Save';
+wlan5ghtml.form1.length8_32 ='Range:8~32';
+wlan5ghtml.form1.notNull = 'value cannot be null';
+
+
+wlan5ghtml.helper.title1 = 'Wi-Fi';
+wlan5ghtml.helper.item1 = 'Disabled Wi-Fi, network only use wired connections. Default enabled';
+wlan5ghtml.helper.title2 = 'SSID broadcast';
+wlan5ghtml.helper.item2 = 'Enable SSID broadcasting, other wireless devices can search SSID ; Disabled SSID broadcast, you can not search SSID, but by manual input SSID to connected,  default enabled.';
+wlan5ghtml.helper.wmmTh = 'WMM';
+wlan5ghtml.helper.wmmTd = 'Enable Wi-Fi WMM when selected. Default enabled.';
+wlan5ghtml.helper.title3 = 'SSID';
+wlan5ghtml.helper.item3 = 'SSID can be simply understood as the name of the wireless network, the fuselage and packaging logo visible this default SSID name. SSID name consists of a maximum of 32 characters consisting of letters and numbers, case-sensitive.';
+wlan5ghtml.helper.title4 = 'Channel';
+wlan5ghtml.helper.item4 = 'Settings the channel used by the wireless router, the default is auto.';
+wlan5ghtml.helper.title5 = ' Mode';
+wlan5ghtml.helper.item5 = 'Set the 5G working mode used by wireless router, and default to "11A"';
+wlan5ghtml.helper.title6 = 'Authentication Type';
+wlan5ghtml.helper.item6 = 'WIFI connection selection of security forms, no verification, WPA-PSK, WPA2-PSK';
+wlan5ghtml.helper.title6_2 ='Encryption Algorithm';
+wlan5ghtml.helper.item6_2 ='Selecting security algorithms for encrypting wireless data, options include TKIP/AES, TKIP, AES. ';
+wlan5ghtml.helper.title7 = 'Security Key';
+wlan5ghtml.helper.item7 = 'Set a wireless network password, the password length is 8~63 characters.';
+wlan5ghtml.helper.title8 = 'TX Power';
+wlan5ghtml.helper.item8 = 'Professionals settings, users generally do not change.';
+wlan5ghtml.helper.title8_2 = 'Max Station';
+wlan5ghtml.helper.item8_2 = 'The maximum number of users connected to this device. The default value is <span class="max_station">32</span>.';
+wlan5ghtml.helper.title9 = 'The indoor device wireless parameter list';
+wlan5ghtml.helper.item9 = 'Click the Edit button, can enter the edit page.</br>' +
+'Note: IP is red on behalf of indoor section and outdoor section IP are the same(Proposed changes for different IP), you cannot directly access the Web configuration page of the indoor section through this IP, if you need to visit the indoor Web configuration page, please disconnect the indoor section and outdoor section connections.';
+wlan5ghtml.helper.title10 = 'Matters needing attention';
+wlan5ghtml.helper.item10 = '<li>1. MAC: Not editable' +
+'<li>2. IP: Editable, defaults to the outdoor device of IP</li>' +
+'<li>3. SSID: Editable(not less than 4 characters), defaults to the outdoor device of SSID</li>' +
+'<li>4. Channel: Selectable, defaults to the outdoor device of Channel</li>'	 +
+'<li>5. TX Power: Editable(Range:1~23), defaults to the outdoor device of TX Power</li>';
+
+
 
 LANGUAGE_FLUX_MOUNT = "Month Usage";
 

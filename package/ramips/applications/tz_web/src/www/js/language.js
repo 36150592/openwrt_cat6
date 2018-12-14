@@ -173,5 +173,9 @@ wirelessconfightml.macInfoContainer = {};
 wirelessconfightml.prompt = {};
 wirelessconfightml.tab_menu = {};
 
+var wlan5ghtml = {};
+wlan5ghtml.tab_menu = {};
+wlan5ghtml.form1 = {};
+wlan5ghtml.helper = {};
 
 

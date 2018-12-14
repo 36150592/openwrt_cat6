@@ -17,70 +17,36 @@
 <script type="text/javascript" src="js/underscore-min.js"></script>
 <script type="text/javascript" src="js/language_list.js?t=000000"></script>
 <script type="text/javascript" src="js/language.js?t=000000"></script>
-<script type="text/javascript" src="js/language/cn.js?t=000000"></script>
+<script type="text/javascript" src="js/language/en.js?t=000000"></script>
 <script type="text/javascript" src="js/helper.js?t=000000"></script>
 <script type="text/javascript" src="js/main.js?t=000000"></script>
 <script type="text/javascript">
 
 $(document).ready(function() {
-    var path = window.location.search;
-    var theIndex = path.indexOf("?");
-    var sessionId = null;
-    if (theIndex >= 0) {
-    	var queryString = path.substring(theIndex + 1).split("&");
-        for (var i = 0; i < queryString.length; i++) {
-            var theArray = queryString[i].split("=");
-            if (theArray.length == 2 && theArray[0] == "sessionId") {
-            	sessionId = theArray[1];
-                break;
-            }
+
+
+    
+    function index() {
+        var loginName = CookieUtil.getCookie('loginName');
+        var sessionId = CookieUtil.getCookie("sessionId");
+        if(loginName && sessionId){
+            Page.sessionId = sessionId;
+            $('#container').load('html/home.html');
+        }else {
+            location.href = Page.getUrl(Url.LOGIN);
         }
     }
-    if (sessionId == null) {
-    	sessionId = CookieUtil.getCookie("sessionId");
-    }
-    Page.sessionId = sessionId || "";
-    
-    //var isAdmin = false;
-    function init() {
-    	Page.getHtml('html/home.html', 0, function(data) {
-			if (data.indexOf('"message":"NO_AUTH"') > 0) {
-				location.href = Page.getUrl(Url.LOGIN);
-			} else {
-				$('#container').html(data);
-			}
-		});
-    }
-    
-    Page.postJSON({
-		json: { cmd: RequestCmd.INIT_PAGE },
-		success: function(data) {
-			console.log("init page success");
-			console.log(data);
-			/*
-			Page.isRuKuVersion = (data.isRuku == '1');
-        	Page.setSupported(ConvertUtil.parseHex(data.supported || 0));
-        	Page.setUnsupported(ConvertUtil.parseHex(data.unsupported || 0));
-        	Page.setItemHide(ConvertUtil.parseHex(data.itemHide));
-        	Page.setItemDisable(ConvertUtil.parseHex(data.itemDisable));
-            Page.lock_band_hide = (data.lock_band_hide == "1");
-        	Page.isAdmin = (data.userType == "1");
 
-			Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue(data.languageList) || "3E");
-			var language = data.language.toUpperCase();
-			if (Page.requireChangeLang(language)) {
-				Page.language = language;
-				$("script[src^='js/language/']").remove();
-				$("script[src^='js/main']").remove();
-				$.getScript('js/language/' + language.toLowerCase() + '.js', function() {
-					$.getScript('js/main.js', init);
-				});
-			} else {
-				//init();
-			}
-			*/
-		}
-	});
+    Page.postJSON({
+        json: { cmd: RequestCmd.INIT_PAGE },
+        success: function(data) {
+            var ReturnData = data.data;
+            Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue(ReturnData.languageList) || "3E");
+            Page.language = ReturnData.language.toUpperCase();
+            index();
+        }
+    });
+
 
 
 });
@@ -90,9 +56,9 @@ function closeBox() {
 }
 </script>
 </head>
-<body>
+<body >
 <a id="top" style="display:none;">TOP</a>
 <div id="container" style="display:none;"></div>
-<p>hello world</p>
+
 </body>
 </html>

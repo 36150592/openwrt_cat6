@@ -230,6 +230,7 @@ var MenuItem = {
 	QUICK_SETTINGS: { cmd: RequestCmd.BASIC_CONFIG, url: "html/config/quickSettings.html" },
 	BASIC_CONFIG: { cmd: RequestCmd.BASIC_CONFIG, url: "html/basic/basicConfig.html" },
 	WIRELESS_CONFIG: { cmd: RequestCmd.WIRELESS_CONFIG, url: "html/config/wirelessConfig.html" },
+    WLAN_5G_CONFIG: { cmd: RequestCmd.WLAN_5G_CONFIG, url: "html/config/wlan5gConfig.html" },
 	PHONE_CONFIG: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/config/phoneConfig.html" },
 
 	NETWORK_CONFIG: { cmd: RequestCmd.NETWORK_CONFIG, url: "html/config/networkConfig.html" },
@@ -1505,20 +1506,29 @@ var Page = {
             	cmd: RequestCmd.CHANGE_LANGUAGE,
                 method: JSONMethod.POST,
                 sessionId: "",
+				languageOld: Page.language,
                 languageSelect: languageSelect
             },
             success: function(data) {
-            },
-            complete: function() {
-            	var href = location.href;
-            	if(href.indexOf('#') > -1){
-            		href = href.substring(0, href.indexOf('#'));
-            	}
-            	if(href.indexOf('?') > -1){
-            		href = href.substring(0, href.indexOf('?'));
-            	}
-            	location.href = Page.getUrl(href);
+                	var href = location.href;
+                	if(href.indexOf('#') > -1){
+                		href = href.substring(0, href.indexOf('#'));
+                	}
+                	if(href.indexOf('?') > -1){
+                		href = href.substring(0, href.indexOf('?'));
+                	}
+                	location.href = Page.getUrl(href);
             }
+            // complete: function() {
+            // 	var href = location.href;
+            // 	if(href.indexOf('#') > -1){
+            // 		href = href.substring(0, href.indexOf('#'));
+            // 	}
+            // 	if(href.indexOf('?') > -1){
+            // 		href = href.substring(0, href.indexOf('?'));
+            // 	}
+            // 	location.href = Page.getUrl(href);
+            // }
         });
     },
     requireChangeLang: function(language) {
@@ -1684,42 +1694,43 @@ var Page = {
 
 	initPage: function(isLogin) {
 		var $header = $('#header');
-		if (!Page.hasGetLogo) {
-			Page.postJSON({
-				json: { cmd: RequestCmd.INIT_PAGE },
-				success: function(data) {
-					Page.hasGetLogo = true;
-					Page.enableChannelOneToFour = (data.channelOneToFour == "yes");
-					Page.disableChannelEnds = (data.hideChannel12And13 == "yes");
-					var logoPath = (data.logoPath || "").trim();
-					if (logoPath != "NULL" && logoPath.length > 0) {
-						var background = String.format("url(/images/{0})", logoPath);
-						$header.css({
-							"background-image": background,
-							"background-repeat": "no-repeat"
-						});
-					} else {
-						if (data.isLogoExists == "1") {
-							$header.addClass("header_logo");
-						} else {
-							$header.addClass("header_default");
-						}
-					}
-					if (data.deviceType == 'NULL') {
-						data.deviceType = '';
-					}
-					Page.displayedVersion = data.displayedVersion;
-					if (Page.displayedVersion == 'NULL') {
-						Page.displayedVersion = '';
-					}
-					//Page.setTitle(data.displayedTitle, data.deviceType);
-					document.title = "Phone Router";
-				}
-			});
-			//if (!isLogin) {
-			//	Page.killSearchPlmn();
-			//}
-		}
+		// if (!Page.hasGetLogo) {
+		// 	Page.postJSON({
+		// 		json: { cmd: RequestCmd.INIT_PAGE },
+		// 		success: function(data) {
+		// 			Page.hasGetLogo = true;
+		// 			Page.enableChannelOneToFour = (data.channelOneToFour == "yes");
+		// 			Page.disableChannelEnds = (data.hideChannel12And13 == "yes");
+		// 			var logoPath = (data.logoPath || "").trim();
+		// 			if (logoPath != "NULL" && logoPath.length > 0) {
+		// 				var background = String.format("url(/images/{0})", logoPath);
+		// 				$header.css({
+		// 					"background-image": background,
+		// 					"background-repeat": "no-repeat"
+		// 				});
+		// 			} else {
+		// 				if (data.isLogoExists == "1") {
+		// 					$header.addClass("header_logo");
+		// 				} else {
+		// 					$header.addClass("header_default");
+		// 				}
+		// 			}
+		// 			if (data.deviceType == 'NULL') {
+		// 				data.deviceType = '';
+		// 			}
+		// 			Page.displayedVersion = data.displayedVersion;
+		// 			if (Page.displayedVersion == 'NULL') {
+		// 				Page.displayedVersion = '';
+		// 			}
+		// 			//Page.setTitle(data.displayedTitle, data.deviceType);
+		// 			document.title = "Phone Router";
+		// 		}
+		// 	});
+		// 	//if (!isLogin) {
+		// 	//	Page.killSearchPlmn();
+		// 	//}
+		// }
+        document.title = "Phone Router";
 		var headerH = 68, footerH = 30;
 		var w = Math.max(document.documentElement.clientWidth, 1000);
 		var h = Math.max(document.documentElement.clientHeight - headerH - footerH, 450);
@@ -1798,10 +1809,12 @@ var Page = {
 		url = url.replace(".html", "Helper.html");
 
 		var $helper = $('#helper');
-		Page.getHtml(url, Page.menuItem.cmd, function(data) {
-        	$helper.html(data);
-        	Page.setHelperStyle($helper);
-		});
+		// Page.getHtml(url, Page.menuItem.cmd, function(data) {
+        	// $helper.html(data);
+        	// Page.setHelperStyle($helper);
+		// });
+        $helper.load(url);
+        Page.setHelperStyle($helper);
 	},
 	setHelperInfo: function(_this, name) {
 		var $desc = $('#helper_' + (name || _this.name));
@@ -2911,19 +2924,19 @@ var StatusUtil = {
     		$wan1 = $('#wan1');
 
         function loop() {
-            Page.postJSON({
-                json: {
-                    cmd: RequestCmd.GET_SYS_STATUS,
-                    method: JSONMethod.GET,
-                    sessionId: ""
-                },
-                success: function(data) {
-                	sysStatus = data;
-                },
-                complete: function() {
-                    setTimeout(loop, 5000);
-                    if (sysStatus == null ) return ;//|| !sysStatus.tozedinds) return;
-                    
+         //   Page.postJSON({
+         //        json: {
+         //            cmd: RequestCmd.GET_SYS_STATUS,
+         //            method: JSONMethod.GET,
+         //            sessionId: ""
+         //        },
+         //        success: function(data) {
+         //        	sysStatus = data;
+         //        },
+         //       complete: function() {
+         //           setTimeout(loop, 5000);
+         //           if (sysStatus == null ) return ;//|| !sysStatus.tozedinds) return;
+                    var sysStatus = {"wifiOpen":"0","cardType":"0","web_signal":"","tozedinds":""};
                     Page.enableWiFi = sysStatus.wifiOpen ;
                     /*
                     if (!Page.isItemHide(ItemHideTable.WIFI) && Page.isSupported(ItemUnsupportedTable.DISPLAY_WIFI)) {
@@ -3027,8 +3040,8 @@ var StatusUtil = {
                     	connectStatusHtml = String.format('<span class="connect_status">{0}</span>&nbsp;', lteConnectStatus);
                     }
                     $('#timeinfo').html(String.format('{0}{1}', connectStatusHtml, systime));
-                }
-            });
+           //     }
+         //   });
         }
 
         loop();
@@ -3354,7 +3367,8 @@ function getOpenInfo() {
  	}
 	
     function createTable(routerInfo, lteInfo, noRefresh) {
-    	var supportedLte = Page.isSupported(ItemSupportedTable.DISPLAY_LTE_STATUS, true) && !Page.isItemHide(ItemHideTable.LTE_STATUS_INFO);
+    	//var supportedLte = Page.isSupported(ItemSupportedTable.DISPLAY_LTE_STATUS, true) && !Page.isItemHide(ItemHideTable.LTE_STATUS_INFO);
+        var supportedLte = true;
     	var lte_info_id = '#lte_info';
     	var lte_info_advanced_id = '#lte_info_advanced';
     	var wan_info_id = supportedLte ? '#wan_info' : '#wan_info2';
@@ -3372,7 +3386,7 @@ function getOpenInfo() {
 	var vsinr,vrsrp,vrssi;
     	if (supportedLte) {
 	        names.push(DOC.device.imsi);
-	        names.push(DOC.lte.plmn)
+	        names.push(DOC.lte.plmn);
 	        names.push(lteNames.phyCellId);
 	        names.push(lteNames.sinr);
 	        names.push(lteNames.rsrp);
@@ -3664,7 +3678,7 @@ function getOpenInfo() {
         });
     }
     
-    getRouterInfo();
+    //getRouterInfo();
 	createTable(theRouterInfo, theLteInfo, true);
 };
 

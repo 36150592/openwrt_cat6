@@ -874,7 +874,8 @@ MENU.setting.wan = "WAN配置";
 MENU.setting.wizard = "配置向导";
 MENU.setting.wlan = "WLAN配置";
 MENU.settingWifi.head = "Wi-Fi配置";
-MENU.settingWifi.wifi = "Wi-Fi配置";
+MENU.settingWifi.wifi = "WiFi-2.4G配置";
+MENU.settingWifi.wifi5g = "WiFi-5G配置";
 MENU.setting.phone = "话机设置";
 MENU.sms.add = "新建短信";
 MENU.sms.drafts = "草稿箱";
@@ -1435,7 +1436,89 @@ wirelessconfightml.prompt.txPowerCheckMsg2 = "发射功率数值不正确,取值
 wirelessconfightml.prompt.wepDefaultPasswdEmpty = "温馨提示：必须输入默认WEP密钥";
 wirelessconfightml.prompt.wepLengthErrorFormat = "温馨提示：{0}长度必须为{1}字节(ASCII)或{2}字节(16进制)";
 wirelessconfightml.tab_menu.item1 = "Wi-Fi设置";
+wirelessconfightml.tab_menu.connectedList = "连接客户端列表";
 wirelessconfightml.tab_menu.item2 = "分机无线参数列表";
 wirelessconfightml.tab_menu.wps = "WPS配置";
+
+wlan5ghtml.tab_menu.basicConfig =  "基本配置";
+wlan5ghtml.tab_menu.connectedList = "连接客户端列表";
+
+
+wlan5ghtml.form1.cmt = '示例';
+wlan5ghtml.form1.wifiFunction = 'Wi-Fi功能:';
+wlan5ghtml.form1.enable ='开启';
+wlan5ghtml.form1.ssidBd = 'SSID广播:';
+wlan5ghtml.form1.wmm = 'WMM:';
+wlan5ghtml.form1.ssid = '无线网络标识(SSID):';
+wlan5ghtml.form1.channel = '信道:';
+wlan5ghtml.form1.auto = '自动';
+wlan5ghtml.form1.channel36 = '36 – 5180MHz';
+wlan5ghtml.form1.channel40 = '40 – 5200MHz';
+wlan5ghtml.form1.channel44 = '44 – 5220MHz';
+wlan5ghtml.form1.channel48 = '48 – 5240MHz';
+wlan5ghtml.form1.channel52 = '52 – 5260MHz';
+wlan5ghtml.form1.channel56 = '56 – 5280MHz';
+wlan5ghtml.form1.channel60 = '60 – 5300MHz';
+wlan5ghtml.form1.channel64 = '64 – 5320MHz';
+wlan5ghtml.form1.channel149 = '149 – 5745MHz';
+wlan5ghtml.form1.channel153 = '153 – 5765MHz';
+wlan5ghtml.form1.channel157 = '157 – 5785MHz';
+wlan5ghtml.form1.channel161 = '161 – 5805MHz';
+wlan5ghtml.form1.channel165 = '165 – 5825MHz';
+wlan5ghtml.form1.Mode = '工作模式:';
+wlan5ghtml.form1.na = '11A';
+wlan5ghtml.form1.ac = '11NA';
+wlan5ghtml.form1.an_ac = '11AC';
+wlan5ghtml.form1.bandWidth = '带宽:';
+wlan5ghtml.form1.bandWidth20 = '20MHz';
+wlan5ghtml.form1.bandWidth40 = '40MHz';
+wlan5ghtml.form1.bandWidth80 = '80MHz';
+wlan5ghtml.form1.none = 'none';
+wlan5ghtml.form1.authenticationType = '认证类型:';
+wlan5ghtml.form1.openSys = '开放系统';
+wlan5ghtml.form1.wpa_psk = 'WPA-PSK';
+wlan5ghtml.form1.wpa2_psk = 'WPA2-PSK';
+wlan5ghtml.form1.wpa_wpa2_psk = 'WPA/WPA2-PSK';
+wlan5ghtml.form1.encryptAlgorithmTh = '加密算法:';
+wlan5ghtml.form1.tkip = 'TKIP';
+wlan5ghtml.form1.aes = 'AES';
+wlan5ghtml.form1.tkip_aes = 'TKIP/AES';
+wlan5ghtml.form1.key ='密钥:';
+wlan5ghtml.form1.btnSave = '保存';
+wlan5ghtml.form1.length8_32 ='8-32个字符';
+wlan5ghtml.form1.notNull = '不能为空';
+
+
+wlan5ghtml.helper.title1 = 'WiFi功能';
+wlan5ghtml.helper.item1 = '选中时开启无线路由器Wi-Fi功能；不选中时关闭无线路由器Wi-Fi功能,网络只能使用有线方式连接.默认开启.';
+wlan5ghtml.helper.title2 = 'SSID广播';
+wlan5ghtml.helper.item2 = '选中时开启SSID广播,其他无线设备可以通过搜索网络搜索到本机的SSID；不选中时关闭SSID广播,不能搜索到本机的SSID,但是通过手工输入SSID,其他客户端可以连接上.默认开启.';
+wlan5ghtml.helper.wmmTh = 'WMM';
+wlan5ghtml.helper.wmmTd = '选中时开启Wi-Fi WMM；不选中时关闭Wi-Fi WMM.默认开启.';
+wlan5ghtml.helper.title3 = '无线网络标识(SSID)';
+wlan5ghtml.helper.item3 = 'SSID可以简单理解为无线网络的名称,机身及包装标识可见此SSID默认名称.SSID名称由最多不超过32个字符的字母和数字组成,区分大小写.';
+wlan5ghtml.helper.title4 = '信道';
+wlan5ghtml.helper.item4 = '设置无线路由器使用的信道,默认为“自动”,无线路由器将自动搜索当前可用的最佳信道.您也可以指定无线网络工作的信道.';
+wlan5ghtml.helper.title5 = '工作模式';
+wlan5ghtml.helper.item5 = '设置无线路由器使用的5G工作模式,默认为“11A”.';
+wlan5ghtml.helper.title6 = '认证类型';
+wlan5ghtml.helper.item6 = 'WIFI连接选用的安全形式，无验证、WPA-PSK、WPA2-PSK';
+wlan5ghtml.helper.title6_2 = '加密算法';
+wlan5ghtml.helper.item6_2 = '挑选对无线数据进行加密的安全算法，选项有TKIP/AES、TKIP、AES。';
+wlan5ghtml.helper.title7 = '安全密钥';
+wlan5ghtml.helper.item7 = '设置无线连接的网络密码,密码长度为8~63个字符.';
+wlan5ghtml.helper.title8 = '发射功率';
+wlan5ghtml.helper.item8 = '专业人员设置项,用户一般不用更改.';
+wlan5ghtml.helper.title8_2 = '最大连接用户数';
+wlan5ghtml.helper.item8_2 = '允许连接到此设备的最大用户数，默认值为<span class="max_station">32</span>.';
+wlan5ghtml.helper.title9 = '分机无线参数列表';
+wlan5ghtml.helper.item9 = '<span id="wifiIDUHelper" style="color:red;">点击编辑按钮，可进入编辑页面，编辑室内机常用设置，但是以下三项设置请登录室内机网页进行设置: <br />1) 基于MAC地址的接入控制和WLAN接口的基本安全性要求； <br />2) 64位/128位WEP加密功能；<br />3) 接入用户限定(可设定WLAN接入用户数)。<br /><br /></span>IP为红色代表分机与主机IP相同(建议修改为不同的IP)，此时你不能直接通过此IP访问分机的Web配置页面，如果需要访问分机Web配置页面，请断开分机与主机的连接。';
+wlan5ghtml.helper.title10 = '注意事项';
+wlan5ghtml.helper.item10 = '<li>1、MAC:不可编辑.</li>' +
+    '<li>2、IP: 可编辑, 默认采用主机的IP</li>' +
+    '<li>3、SSID: 可编辑(不能少于4个字符), 默认采用主机的SSID</li>' +
+    '<li>4、信道: 可选择, 默认采用主机的信道</li>'	+
+    '<li>5、发射功率: 可编辑(取值范围1-23), 默认采用主机的发射功率</li>';
+
 
 LANGUAGE_FLUX_MOUNT = "本月流量";
