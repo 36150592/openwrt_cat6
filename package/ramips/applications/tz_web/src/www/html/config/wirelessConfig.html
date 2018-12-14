@@ -1,0 +1,175 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        TempUtil.render('tabsitems-template', 'tabsitems', wirelessconfightml.tab_menu);
+        TempUtil.render('wlform1-template', 'form1', wirelessconfightml.form1);
+
+        var $lis = $("ul.tabs a");
+        var $boxes = $("div.tab_boxes > div");
+        var $security = $('#security_config');
+        var $pwd = $('#pwd');
+        var $wpa = $('.wpa').hide();
+
+        $security.change(setCtrlsState);
+
+        function setCtrlsState() {
+            switch($security.val()) {
+                case SecurityMode.NONE:
+                    $pwd.val('');
+                    $wpa.hide();
+                    break;
+                default:
+                    $wpa.show();
+                    break;
+            }
+        }
+
+        $lis.click(function() {
+            $lis.removeClass("current");
+            $(this).addClass("current");
+            var pannelIndex = $lis.index(this);
+            $boxes.eq(pannelIndex).show().siblings().hide();
+            $('#helper' + pannelIndex).show().siblings().hide();
+
+            switch (pannelIndex) {
+                case 0:
+                    Page.getHelperPage('html/config/wirelessConfig.html');
+					 $('.helper_box').show();
+                    break;
+                case 1:
+					$('.helper_box').hide();
+                    break;
+            }
+        });
+
+        $lis.eq(0).click();
+    });
+</script>
+<div class="detail_box">
+    <div class="tab_menu">
+        <ul class="tabs" id="tabsitems">
+            <script type="text/template" id="tabsitems-template">
+                <li id="walnInfo" ><a href="javascript:;"><%- item1 %></a></li>
+                <li ><a href="javascript:;"><%- connectedList %></a></li>
+            </script>
+        </ul>
+    </div>
+    <div class="tab_menu_bottom"></div>
+    <div class="main_box">
+        <div class="tab_boxes" >
+           <div>
+            <form id="form1">
+                <script type="text/template" id="wlform1-template">
+                    <table class="detail" cellspacing="0">
+                        <tr>
+                            <th><%- wifiFunction %></th>
+                            <td>
+                                <input type="checkbox" id="wifiOpen" name="wifiOpen" /><%- open %>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><%- ssidBd %></th>
+                            <td>
+                                <input type="checkbox" id="broadcast" name="broadcast" /><%- open %>
+                            </td>
+                        </tr>
+                        <tr class="wifi_wmm">
+                            <th><%- wmm %></th>
+                            <td>
+                                <input type="checkbox" id="wmm" name="wmm" /><%- open %>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th><%- ssid %></th>
+                            <td><input type="text" id="ssid" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
+                        </tr>
+
+                        <tr>
+                            <th><%- txPower %></th>
+                            <td>
+                                <input type="text" id="txPower" name="txPower" maxlength="4" class="txt2" />&nbsp;dBm<span class="cmt">(<%- txPowerCmt %>)</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th><%- maxStation %></th>
+                            <td>
+                                <input type="text" id="maxStation" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <!--信道-->
+                            <th><%- channel %></th>
+                            <td><select id="channel" name="channel">
+                                <option value="auto"><%- auto %></option>
+                                <option value="1" class="ch_opt">1</option>
+                                <option value="2" class="ch_opt">2</option>
+                                <option value="3" class="ch_opt">3</option>
+                                <option value="4" class="ch_opt">4</option>
+                                <option value="5">5</option>
+                                <option value="6" selected="selected">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12" class="ch_opt2">12</option>
+                                <option value="13" class="ch_opt2">13</option>
+                            </select></td>
+                        </tr>
+
+                        <tr>
+                            <th><%- wifiMode %></th>
+                            <td><select id="wifiWorkMode" name="wifiWorkMode">
+                                <option value="m11ng"  selected="selected"><%- m11ng %></option>
+                                <option value="m11b"><%- m11b %></option>
+                                <option value="m11g"><%- m11g %></option>
+                                <option value="m11bg"><%- m11bg %></option>
+                                <option value="m11n"><%- m11n %></option>
+                                <option value="m11nSingleFixed" class="opt_wifi_mode"><%- m11nSingleFixed %></option>
+                                <option value="m11nSingleFixedMax" class="opt_wifi_mode"><%- m11nSingleFixedMax %></option>
+                                <option value="m11nDoubleFixed" class="opt_wifi_mode"><%- m11nDoubleFixed %></option>
+                                <option value="m11nDoubleFixedMax" class="opt_wifi_mode"><%- m11nDoubleFixedMax %></option>
+                            </select></td>
+                        </tr>
+
+
+                        <tr>
+                            <th><%- secure %></th>
+                            <td>
+                                <select name="security_config" id="security_config">
+                                    <option value="OPEN"><%- none %></option>
+                                    <option value="WPA2PSK">WPA2PSK[AES]<%- recommend %></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr class="wpa">
+                            <th class="th_title"><%- key %></th>
+                            <td>
+                                <input type="text" maxlength="64" value="" name="pwd" id="pwd" class="normal" autocomplete="off" /> &nbsp;<span class="cmt"><%- keycmt %></span>
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <th>&nbsp;</th>
+                            <td><input type="button" id="btnSave" value="<%- btnSave %>" /></td>
+                        </tr>
+                    </table>
+                </script>
+             </form>
+           </div>
+           <div>
+               <span>测试</span>
+           </div>
+        </div>
+    </div>
+    <div class="helper_box" >
+        <div id="helper"></div>
+    </div>
+
+    <span style="clear:both"></span>
+</div>

@@ -1,0 +1,233 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render('#container', '#index_template', DOC);
+
+        var menus = [];
+        var infoMenu = new MenuHead("info_menu", MENU.info.head);
+        infoMenu.push(new MenuBody("SYS_INFO", (Page.isRuKuVersion ? MENU.info.home : "") + MENU.info.device));
+//	infoMenu.push(new MenuBody("DEVICE_INFO", MENU.info.version));
+//	infoMenu.push(new MenuBody("CLIENT_LIST", MENU.info.client));
+
+        var settingMenu = new MenuHead("manage_menu", MENU.setting.head);
+		settingMenu.push(new MenuBody("NETWORK_CONFIG", MENU.setting.dhcp));
+        settingMenu.push(new MenuBody("WIRELESS_CONFIG", MENU.settingWifi.wifi));
+		settingMenu.push(new MenuBody("WLAN_5G_CONFIG", MENU.settingWifi.wifi5g));
+
+        menus.push(infoMenu);
+		menus.push(settingMenu);
+        $('#menu').html(MenuUtil.create(menus));
+
+        /* LANGUAGE BEGIN */
+        var $languageSelect = $('#languageSelect');
+        $languageSelect.html(Page.getLanguageList(Page.language)).change(function() {
+            Page.changeLanguage($languageSelect);
+        });
+        /* LANGUAGE END */
+
+        function setMenuItem(itemId) {
+            var $lis = $('#menu li');
+            $lis.removeClass('current');
+            $('#' + itemId).parent().addClass('current');
+        }
+
+        $('#menu').accordion({
+            header: 'h3',
+            autoheight: false,
+            duration: 150
+        });
+        $('#menu h3').hover(function() {
+            $(this).not('.selected').addClass('hover');
+        }, function() {
+            $(this).removeClass('hover');
+        });
+
+        Page.$iframe = $('#right');
+        Page.initPage();
+        $(window).resize(function(){
+            Page.initPage();
+        });
+
+        $('#logout').click(function() {
+//            Page.postJSON({
+//                json: {
+//                    cmd: RequestCmd.LOGOUT,
+//                    method: JSONMethod.POST
+//                },
+//                success: function(data) {
+//                    CookieUtil.deleteCookie("sessionId");
+//                    CookieUtil.deleteCookie("sessionId");
+//                    location.href = Page.getUrl(Url.LOGIN);
+//                }
+//            });
+            CookieUtil.deleteCookie("sessionId");
+            CookieUtil.deleteCookie("sessionId");
+            location.href = Page.getUrl(Url.LOGIN);
+        });
+
+        var apnGuideClick = false;
+        $('#menu h3').bind('click', function(e){
+            if (!apnGuideClick && Page.apnGuide) {
+                apnGuideClick = true;
+                $('#BASIC_CONFIG').click();
+            } else {
+                $(this).next().find("a").eq(0).click();
+            }
+        });
+
+        $('#menu li a').bind('click', function(e) {
+            var id = this.id;
+            var item = MenuItem[id];
+            if (item != null) {
+                if (item.cmd == RequestCmd.SYS_REBOOT) {
+                    SysUtil.rebootDevice(RENOOTTYPE.NORMAL_REBOOT, PROMPT.confirm.reboot);
+                } else {
+                    if (item == Page.menuItem) {
+                        if (item == MenuItem.LTE_INFO) {
+                            if (!Page.isOK) return false;
+                            Page.isOK = false;
+                        }
+                    }
+
+                    setMenuItem(id);
+                    Page.menuItem = item;
+                    Page.$iframe.load(item.url);
+                    //Page.get(item.url);
+                }
+            }
+        });
+
+        $('#smsInfo').click(function() {
+            var htmlVal = $(this).html();
+            if( htmlVal.indexOf("newsms") > -1) {
+                $('#SMS_RECEIVE').click();
+            } else {
+                return false;
+            }
+
+        });
+
+        $('#onlineHelp').click(function() {
+            $('#SYS_HELPER').click();
+        });
+
+        $('#btnClose').click(function() {
+            $('#info_box').hide();
+            $('#mask').hide();
+            $('#progress_box').hide();
+        });
+
+        function getVersionInfo(callback) {
+            // 获取模块版本信息
+            Page.postJSON({
+                json: { cmd: RequestCmd.DEVICE_VERSION_INFO },
+                success: function(data) {
+                    Page.module = data.module;
+                    Page.modelVersion = data.modversion;
+                    Page.imei = data.imei;
+                    Page.maxAllowedStation = (data.maxAllowedStation == "NULL") ? "32" : data.maxAllowedStation;
+                    Page.hideLockCell = (data.enableHideLockCell == "yes" && data.hideLockCell == "yes");
+                    Page.closeManage = (data.closeManage == "true");
+                    Page.supportL3Bridge = (data.supportL3Bridge == "true");
+                    if (Page.closeManage) {
+                        var clientIp = (data.clientIp || "");
+                        var host = window.location.host.replace(/\.\d+$/g, "");
+                        if (clientIp.indexOf(host) < 0) {
+                            Page.closeManage = false;
+                        }
+                    }
+                    Page.enableWiFi = (data.enableWiFi == "true");
+
+                    var build = data.build;
+                    if (build.length >= 10) {
+                        var version = ' Version: ' + build.substring(2, 10).replace(/\-/g, '.');
+                        var $footer = $('#spanFooter');
+                        if ($footer.text().indexOf('Version:') < 0) {
+                            var copyright = (data.copyright || '').replaceQuote();
+                            if (copyright == 'NULL') copyright = '';
+                            $footer.text(copyright + $footer.text());
+                        }
+                    }
+                },
+                complete: function() {
+                    if ($.isFunction(callback)) {
+                        callback();
+                    }
+                }
+            });
+        }
+
+        // 获取是否为入库版本
+        StatusUtil.getSysStatus();
+        $('#menu h3').eq(0).next().find("a").eq(0).click();
+        $('#container').show();
+    });
+</script>
+<script type="text/template" id="index_template">
+    <div id="header">
+        <div id="closeInternet"></div>
+        <div id="userinfo">
+            <!-- LANGUAGE -->
+            <select id="languageSelect" name="languageSelect"></select>
+            <a id="logout" href="javascript:;"><%- link.logout %></a>&nbsp;
+            <!-- HELP -->
+            <a id="onlineHelp" href="javascript:;" style="display:none;"><%- link.help %></a>
+        </div>
+        <div id="timeinfo"></div>
+        <div id="header_right"></div>
+        <div id="siginfo">
+            <table cellpadding="0" cellspacing="4">
+                <tr>
+                    <td id="simInfo"></td>
+                    <td id="wifiInfo"></td>
+                    <td id="netInfo"></td>
+                    <td id="lteUsbInfo"></td>
+                    <td id="lan1" style="display:none;"></td>
+                    <td id="lan2" style="display:none;"></td>
+                    <td id="lan3" style="display:none;"></td>
+                    <td id="lan4" style="display:none;"></td>
+                    <td id="wan1" style="display:none;"></td>
+                    <!-- SMS_INFO -->
+                    <td id="smsInfo"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div id="main">
+        <div id="left">
+            <div id="left_t"></div>
+            <div id="left_m">
+                <div id="menu"></div>
+            </div>
+            <div id="left_b"></div>
+        </div>
+
+        <div id="right"></div>
+    </div>
+
+    <div id="footer">
+        <span id="spanFooter"><%- copyright %></span>
+    </div>
+
+    <div id="mask"></div>
+
+    <div id="info_box">
+        <div id="info_head"></div>
+        <div id="info_close"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
+        <div id="info_tab_head"></div>
+        <div id="info_body">
+            <div id="info_main"></div>
+        </div>
+    </div>
+
+
+    <div id="progress_box">
+        <div id="progress_info"></div>
+        <div id="progress_bar">
+            <div id="progress_status"></div>
+        </div>
+    </div>
+    <div id="edit_box"></div>
+</script>

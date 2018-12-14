@@ -1,0 +1,99 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        TempUtil.render('tabsitems-template', 'tabsitems', networkconfightml.tab_menu);
+        TempUtil.render('networkform1-template', 'form1', networkconfightml.form1);
+        TempUtil.render('networkipMacEdit-template', 'ipMacEdit', networkconfightml.ipMacEdit);
+
+
+        var $lis = $("ul.tabs a");
+        var $boxes = $("div.tab_boxes > div");
+
+
+        $lis.click(function() {
+            $lis.removeClass("current");
+            $(this).addClass("current");
+            var pannelIndex = $lis.index(this);
+            $boxes.eq(pannelIndex).show().siblings().hide();
+            $('#helper' + pannelIndex).show().siblings().hide();
+
+            switch (pannelIndex) {
+                case 0:
+                    Page.getHelperPage('html/config/networkConfig.html');
+                    $('.helper_box').show();
+                    break;
+                case 1:
+                    $('.helper_box').hide();
+                    break;
+
+            }
+        });
+
+        $lis.eq(0).click();
+    });
+</script>
+
+<div class="detail_box">
+    <div class="tab_menu">
+        <ul class="tabs" id="tabsitems">
+            <script type="text/template" id="tabsitems-template">
+                <li><a href="javascript:;"><%- item1 %></a></li>
+                <li><a href="javascript:;"><%- item2 %></a></li>
+            </script>
+        </ul>
+    </div>
+    <div class="tab_menu_bottom"></div>
+    <div>
+        <div class="tab_boxes">
+            <div class="main_box">
+                <form id="form1">
+                    <script type="text/template" id="networkform1-template">
+                        <table class="detail" cellspacing="0"><tr>
+                            <th><%- th1 %></th>
+                            <td><input type="text" id="lanIp" name="lanIp" class="normal inputs_lan"/></td></tr>
+
+                            <tr>
+                                <th><%- th2 %></th>
+                                <td><input type="text" id="netMask" name="netMask" class="normal inputs_lan"/></td></tr>
+
+                            <tr class="nat">
+                                <th><%- th3 %></th>
+                                <td>
+                                    <input type="checkbox" id="dhcpServer" name="dhcpServer" value="1" checked="checked" class="inputs_lan" /><%- td3 %>
+                                </td>
+                            </tr>
+                            <tr class="nat dhcp">
+                                <th><%- th4 %></th>
+                                <td>
+                                    <input type="text" id="ipBegin" name="ipBegin" class="txt4 inputs_lan"/> -
+                                    <input type="text" id="ipEnd" name="ipEnd" class="txt4 inputs_lan"/></td></tr>
+                            <tr class="nat dhcp">
+                                <th><%- th5 %></th>
+                                <td>
+                                    <input type="text" id="expireTime" name="expireTime" class="txt2 inputs_lan"/>&nbsp;<%- td5 %></td>
+                            </tr>
+                            <tr id="trSaveLan">
+                                <th>&nbsp;</th>
+                                <td><input type="button" id="btnSaveLan" value="<%- btnSave %>"/></td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+            </div>
+            <div id="ipMacEdit">
+                <script type="text/template" id="networkipMacEdit-template">
+                    <div id="ipBinds"><%- ipBinds %></div>
+                    <div id="divBtns" style="margin-top:5px;">
+                        <input id="btnAddIp" type="button" value="<%- btnAddIp %>" />
+                        <input id="btnDeleteAll" type="button" value="<%- btnDeleteAll %>" />
+                    </div>
+                </script>
+            </div>
+        </div>
+    </div>
+    <div class="helper_box" style="display:none;">
+        <div id="helper"></div>
+    </div>
+    <span style="clear:both"></span>
+</div>

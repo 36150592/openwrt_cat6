@@ -1,0 +1,156 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        TempUtil.render('tabsitems-template', 'tabsitems', wlan5ghtml.tab_menu);
+        TempUtil.render('wlform1-template', 'form1', wlan5ghtml.form1);
+
+        var $lis = $("ul.tabs a");
+        var $boxes = $("div.tab_boxes > div");
+    
+        $lis.click(function () {
+            $lis.removeClass("current");
+            $(this).addClass("current");
+            var pannelIndex = $lis.index(this);
+            $boxes.eq(pannelIndex).show().siblings().hide();
+            switch (pannelIndex) {
+                case 0:
+                    Page.getHelperPage('html/config/wlan5gConfig.html');
+                    $('.helper_box').show();
+                    break;
+                case 1:
+                    //$('#showContainer').load('html/config/connectedList5G.html');
+                    $('.helper_box').hide();
+                    break;
+            }
+        });
+
+        $lis.eq(0).click();
+    });
+</script>
+
+<div class="detail_box">
+    <div class="tab_menu">
+        <ul class="tabs" id="tabsitems">
+            <script type="text/template" id="tabsitems-template">
+                <li id="walnInfo"><a href="javascript:void(0);"><%- basicConfig %></a></li>
+                <li id="connectedList"><a href="javascript:void(0);"><%- connectedList %></a></li>
+            </script>
+        </ul>
+    </div>
+    <div class="tab_menu_bottom"></div>
+    <div class="main_box">
+        <div class="tab_boxes">
+           <div>
+            <form id="form1">
+                <script type="text/template" id="wlform1-template">
+                    <table class="detail" cellspacing="0">
+                        <tr>
+                            <th><%- wifiFunction %></th>
+                            <td>
+                                <input type="checkbox" id="wifiOpen" name="wifiOpen" /><%- enable %>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><%- ssidBd %></th>
+                            <td>
+                                <input type="checkbox" id="broadcast" name="broadcast" /><%- enable %>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><%- wmm %></th>
+                            <td>
+                                <input type="checkbox" id="wmm" name="wmm" /><%- enable %>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><%- ssid %></th>
+                            <td><input type="text" id="ssid" name="ssid" class="normal" maxlength="64"/></td>
+                        </tr>
+                        <tr>
+                            <th><%- channel %></th>
+                            <td><select id="channel" name="channel">
+                                <option value="auto"><%- auto %></option>
+                                <option value="36"><%- channel36 %></option>
+                                <option value="40"><%- channel40 %></option>
+                                <option value="44"><%- channel44 %></option>
+                                <option value="48"><%- channel48 %></option>
+                                <!--
+                                                    <option value="52"><%- channel52 %></option>
+                                                    <option value="56"><%- channel56 %></option>
+                                                    <option value="60"><%- channel60 %></option>
+                                                    <option value="64"><%- channel64 %></option>
+                                -->
+                                <option value="149"><%- channel149 %></option>
+                                <option value="153"><%- channel153 %></option>
+                                <option value="157"><%- channel157 %></option>
+                                <option value="161"><%- channel161 %></option>
+                                <option value="165"><%- channel165 %></option>
+                            </select></td>
+                        </tr>
+                        <tr>
+                            <th><%- Mode %></th>
+                            <td>
+                                <select id="wifiWorkMode" name="wifiWorkMode">
+                                    <option value="11A"><%- na %></option>
+                                    <option value="11NA"><%- ac %></option>
+                                    <option value="11AC"><%- an_ac %></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr id="bandWidthTr">
+                            <th><%- bandWidth %></th>
+                            <td>
+                                <select name="bandWidth" id="bandWidth">
+                                    <!--<option value="11A"><%- bandWidth20 %></option>
+                                    <option value="11NA"><%- bandWidth40 %></option>
+                                    <option value="11AC"><%- bandWidth80 %></option>-->
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><%- authenticationType %></th>
+                            <td>
+                                <select name="authenticationType" id="authenticationType">
+                                    <option value="none"><%- openSys %></option>
+                                    <option value="psk"><%- wpa_psk %></option>
+                                    <option value="psk2"><%- wpa2_psk %></option>
+                                    <option value="psk-mixed"><%- wpa_wpa2_psk %></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><%- encryptAlgorithmTh %></th>
+                            <td>
+                                <input type="radio" value="tkip" name="encryptAlgorithm"/>
+                                &nbsp;<span><%- tkip %></span>
+                                <input type="radio" value="ccmp" name="encryptAlgorithm"/>
+                                &nbsp;<span><%- aes %></span>
+                                <input type="radio" value="tkip+ccmp" name="encryptAlgorithm"/>
+                                &nbsp;<span><%- tkip_aes %></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><%- key %></th>
+                            <td>
+                                <input type="text" name="key" maxlength="63" id="key"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>&nbsp;</th>
+                            <td><input type="button" id="btnSave" value="<%- btnSave %>"/></td>
+                        </tr>
+                    </table>
+                </script>
+            </form>
+        </div>
+        <div>
+            <span>测试</span>
+        </div>
+       </div>
+    </div>
+    <div class="helper_box">
+        <div id="helper"></div>
+    </div>
+    <span style="clear:both"></span>
+</div>

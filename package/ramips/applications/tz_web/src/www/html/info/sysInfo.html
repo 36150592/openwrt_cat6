@@ -1,0 +1,506 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var currentId = Page.currentId;
+        var count = 0, DEFAULT_TOZEDIND = "-1 -1 -1 -1 -1 -1 -1 -1 -1 -1";
+        var supportSMS = (Page.isSupported(ItemUnsupportedTable.DISPLAY_SMS));
+
+        function getPinPukWarning(reqPin, reqPuk) {
+            if (reqPin == 1) {
+                if (reqPuk == 1)
+                    warning = PROMPT.tips.pinPukSet;
+                else
+                    warning = PROMPT.tips.pinSet;
+            } else if (reqPuk == 1) {
+                warning = PROMPT.tips.pukSet;
+            } else {
+                warning = "";
+            }
+
+            if (Page.isSimLocked && warning != "") {
+                warning = PROMPT.tips.simLocked;
+            }
+
+            return warning;
+        }
+
+        function loop() {
+            if(currentId != Page.currentId) return;
+
+            if(count % 5 == 0) {
+                loadPage();
+            }
+            if (count % 7 == 0 && Page.enableWiFi) {
+                loadWlanPage();
+                loadLtePage();
+            }
+            count++;
+
+            setTimeout(loop, 1000);
+        }
+
+        function getCardState(flag){
+            var stateComment;
+            if(flag == 0){
+                stateComment = DOC.status.noSim;
+            } else if(flag == 1) {
+                stateComment = DOC.status.existSim;
+            } else {
+                stateComment = DOC.status.invalid;
+            }
+
+            return stateComment;
+        }
+
+        function getPINState(flag){
+            var stateComment;
+            if(flag == 0){
+                stateComment = DOC.status.noreqPin;
+            } else if(flag == 1) {
+                stateComment = DOC.status.repPin;
+            } else {
+                stateComment = DOC.status.invalid;
+            }
+
+            return stateComment;
+        }
+
+        function getPUKState(flag){
+            var stateComment;
+            if(flag == 0){
+                stateComment = DOC.status.noreqPuk;
+            } else if(flag == 1) {
+                stateComment = DOC.status.reqPuk;
+            } else {
+                stateComment = DOC.status.invalid;
+            }
+
+            return stateComment;
+        }
+
+        function loadPage() {
+          //  Page.postJSON({
+         //       json: { cmd: RequestCmd.SYS_INFO },
+         //       success: function(data) {
+				          var data =  {"success":true,"cmd":0,"uptime":" 16:00:35 up 1 day, 16:48,  load average: 0.53, 1.02, 0.75 ","connectStatus":"connect","wanIp":"","wanMaskIp":"",
+              "wanGateway":"","wanDNS":"","wanDNS_2":"","wanMac":"00:00:00:00:00:00","wanTxBytes":"0","wanRxBytes":"0","wanRxPackets":"0","wanTxPackets":"0",
+              "flux_month_total":"","wanIPV6":"","wanGateway_IPV6":"","wanDNS_3":"","wanDNS_4":"","enableWiFi":"false"};
+                    var names_run = [], names_lte = [], names_sim = [], names_net = [], names_lan = [], names_wan = [];
+
+                    names_run.push(DOC.lbl.runtime);
+                    names_run.push(DOC.lbl.loadAvg);
+
+                    names_sim.push(DOC.lbl.usim);
+                    names_sim.push(DOC.lbl.pinCode);
+                    names_sim.push(DOC.lbl.pukCode);
+
+                    if (supportSMS && !Page.isModulP500() && !Page.isModulMC2716() && !Page.isModuleC5300V() ) {
+                        names_sim.push(DOC.lbl.simSms);
+                        names_sim.push(DOC.lbl.terminalSms);
+                    }
+
+                    Page.isNULLToSpace = true;
+
+                    var values_run = [], values_lte = [], values_sim = [], values_net = [], values_lan = [], values_wan = [];
+                    /*
+                     values.push(FormatUtil.formatField(data.name));
+                     values.push(data.build);
+                     values.push(FormatUtil.formatField(data.version));
+                     values.push(FormatUtil.formatField(data.hwversion));
+                     */
+                    var runInfo = ConvertUtil.parseUptime(data.uptime.trim(), DOC.unit);
+                    values_run.push(runInfo.runTime);
+                    values_run.push(runInfo.runStatus);
+
+                    var tozedind = data.tozedind ? data.tozedind : DEFAULT_TOZEDIND;
+                    var tozedinds = tozedind.split(' ');
+                    var dialMode = data.dialMode;
+                    var connectStatus = data.connectStatus;
+
+                    /* NET_INFO_BEGIN */
+                    var pinState = getPINState(tozedinds[1]);
+                    var pukState = getPUKState(tozedinds[2]);
+                    var warning = getPinPukWarning(tozedinds[1], tozedinds[2]);
+                    var stateInfo = "";
+                    if (warning != "") {
+                        stateInfo = String.format('<span style="color:red;"> &nbsp;{0}</span>', warning);
+                    }
+                    values_sim.push(getCardState(tozedinds[0]));
+                    values_sim.push(pinState);
+                    values_sim.push(pukState);
+
+                    if (supportSMS && !Page.isModulP500() && !Page.isModulMC2716() && !Page.isModuleC5300V() ) {
+                        var smsCount = data.smsCount || "0,0,0,0" ;
+                        if(!(/\d+\,\d+\,\d+\,\d+/.test(smsCount))){
+                            smsCount = "0,0,0,0";
+                        }
+                        var smsCounts = smsCount.split(',');
+                        values_sim.push(String.format("{0}/{1}", smsCounts[0], smsCounts[1]));
+                        values_sim.push(String.format("{0}/{1}", smsCounts[2], smsCounts[3]));
+                    }
+
+                    names_net.push(DOC.lbl.dialMode);
+                    names_net.push(DOC.lbl.dialState);
+
+                    if(dialMode == DialMode.MANUALLY){
+                        values_net.push(DOC.lbl.manualDial);
+                    } else {
+                        values_net.push(DOC.lbl.autoDial);
+                    }
+
+                    if(connectStatus == ConnectStatus.CONNECT){
+                        values_net.push(String.format("<div id=\"connectPrompt\" class=\"cmt\">{0}&nbsp;&nbsp;<button id=\"net_disconnect\">{1}</button></div>",
+                            DOC.status.connected, DOC.btn.disconnect) );
+                    } else {
+                        values_net.push(String.format("<div id=\"connectPrompt\" class=\"cmt\">{0}&nbsp;&nbsp;<button id=\"net_connect\">{1}</button></div>",
+                            DOC.status.disconnected, DOC.btn.connect));
+                    }
+
+                    names_net.push(DOC.lbl.netMode);
+                    names_net.push(DOC.lbl.signal);
+                    names_net.push(DOC.lbl.signalLevel);
+                    names_net.push(DOC.lbl.regState);
+                    names_net.push(DOC.lbl.plmn);
+
+                    if (!Page.isModulP500()) {
+                        names_net.push(DOC.lbl.psReg);
+                        names_net.push(DOC.lbl.epsReg);
+                    } else {
+                        names_net.push(DOC.lbl.psReg.replace('PS', 'PS/EPS'));
+                    }
+
+                    var netState = StatusUtil.getNetState(tozedinds[3], tozedinds[7], tozedinds[8], tozedinds[9]);
+                    var singalLevel = tozedinds[3];
+                    // 网络都注册失败时显示未知
+                    if (!StatusUtil.isAnyRegSuccess(tozedinds[5], tozedinds[6], tozedinds[7])) {
+                        netState = "?";
+                        singalLevel = 0;
+                    }
+                    values_net.push(netState);
+                    values_net.push(StatusUtil.formatSingalLevel(singalLevel));
+                    values_net.push(FormatUtil.formatField(data.rssi));
+
+                    var csRegState = tozedinds[5];
+                    if (Page.isModulL1761() && data.lteModuleMode == "3") {
+                        // 4G Only
+                        csRegState = "0";
+                    }
+                    values_net.push(StatusUtil.getRegState(csRegState));
+
+                    var plmn = FormatUtil.formatField(data.plmn);
+                    values_net.push(FormatUtil.formatPLMN(plmn));
+
+                    if (!Page.isModulP500()) {
+                        values_net.push(StatusUtil.getRegState(tozedinds[6], tozedinds[7]));
+                        values_net.push(netState == "3G" ? DOC.status.noreg : StatusUtil.getRegState(tozedinds[7]));
+                    } else {
+                        // 默认使用PS的注册状态，如果EPS注册成功，则使用EPS的注册状态
+                        var psEpsRegState = tozedinds[6];
+                        if (StatusUtil.isRegSuccess(tozedinds[7])) {
+                            psEpsRegState = tozedinds[7];
+                        }
+                        values_net.push(StatusUtil.getRegState(psEpsRegState));
+                    }
+                    /* NET_INFO_END */
+
+                    names_lan.push(DOC.net.mac);
+                    names_lan.push(DOC.net.ip);
+                    names_lan.push(DOC.net.mask);
+
+                    values_lan.push(FormatUtil.formatField(data.lanMac));
+
+                    Page.lanIp = FormatUtil.formatField(data.lanIP);
+                    values_lan.push(Page.lanIp);
+                    values_lan.push(FormatUtil.formatField(data.lanMaskIp));
+                    var lanIPV6 = FormatUtil.formatField(data.lanIPV6);
+                    if(lanIPV6 != ""){
+                        names_lan.push(DOC.net.ipv6);
+                        values_lan.push(lanIPV6);
+                    }
+                    names_lan.push(DOC.net.dhcpServer);
+                    var dhcp = $.trim(data.dhcpServer);
+                    if(dhcp == DHCPServer.CLOSED){
+                        values_lan.push(DOC.status.closed);
+                    } else {
+                        values_lan.push(DOC.status.opened);
+                    }
+
+                    //names_wan.push(DOC.net.mac);
+                    names_wan.push(DOC.net.ip);
+                    //names_wan.push(DOC.net.mask);
+                    //names_wan.push(DOC.net.gateway);
+                    names_wan.push(DOC.net.dns1);
+                    names_wan.push(DOC.net.dns2);
+
+                    if(connectStatus == ConnectStatus.CONNECT){
+                        //values_wan.push(FormatUtil.formatField(data.wanMac));
+                        values_wan.push(FormatUtil.formatField(data.wanIp));
+                        //values_wan.push(FormatUtil.formatField(data.wanMaskIp));
+                        //values_wan.push(FormatUtil.formatField(data.wanGateway));
+                        if(FormatUtil.formatField(data.wanIP) == ''){
+                            values_wan.push(FormatUtil.formatField("NULL"));
+                            values_wan.push(FormatUtil.formatField("NULL"));
+                        } else {
+                            values_wan.push(FormatUtil.formatField(data.wanDNS));
+                            values_wan.push(FormatUtil.formatField(data.wanDNS_2));
+                        }
+                    } else {
+                        values_wan.push('');
+                        values_wan.push('');
+                        values_wan.push('');
+                        values_wan.push('');
+                        values_wan.push('');
+                        values_wan.push('');
+                    }
+
+                    if(FormatUtil.formatField(data.wanIPV6) != ''){
+                        names_wan.push(DOC.net.ipv6);
+                        //names_wan.push(DOC.net.gatewayv6);
+                        //names_wan.push(DOC.net.dns3);
+                        //names_wan.push(DOC.net.dns4);
+
+                        if(connectStatus == ConnectStatus.CONNECT){
+                            values_wan.push(FormatUtil.formatField(data.wanIPV6));
+                            //values_wan.push(FormatUtil.formatField(data.wanGateway_IPV6));
+                            //values_wan.push(FormatUtil.formatField(data.wanDNS_3));
+                            //values_wan.push(FormatUtil.formatField(data.wanDNS_4));
+                        } else {
+                            values_wan.push('');
+                            values_wan.push('');
+                            values_wan.push('');
+                            values_wan.push('');
+                        }
+                    }
+
+                    names_wan.push(LANGUAGE_FLUX_MOUNT);
+
+                    names_wan.push(DOC.net.rxPackets);
+                    names_wan.push(DOC.net.rxBytes);
+                    names_wan.push(DOC.net.txPackets);
+                    names_wan.push(DOC.net.txBytes);
+
+                    //names_wan.push(DOC.lbl.manageTime);
+                    values_wan.push(FormatUtil.formatField(data.flux_month_total));
+                    values_wan.push(FormatUtil.formatField(data.wanRxPackets));
+                    values_wan.push(FormatUtil.formatField(data.wanRxBytes));
+                    values_wan.push(FormatUtil.formatField(data.wanTxPackets));
+                    values_wan.push(FormatUtil.formatField(data.wanTxBytes));
+                    /*var manageTime = parseInt(data.manageTime.trim());
+                     var theUptime = parseInt(data.theUptime.trim());
+                     if (!isNaN(manageTime) && !isNaN(theUptime)) {
+                     var millseconds = new Date().getTime() - (theUptime - manageTime) * 1000;
+                     var manageDate = new Date(millseconds);
+                     values_wan.push(manageDate.format("yyyy-mm-dd HH:MM:ss"));
+                     } else {
+                     values_wan.push(data.manageTime);
+                     }*/
+
+                    var run_html = Page.createTable(DOC.title.run, names_run, values_run, names_run.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+
+                    /* NET_INFO_BEGIN */
+                    var	sim_html = Page.createTable(DOC.title.sim + stateInfo, names_sim, values_sim, names_sim.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    var	net_html = Page.createTable(DOC.title.network, names_net, values_net, names_net.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    /* NET_INFO_END */
+
+                    var	wan_html = Page.createTable(DOC.title.wan, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    var	lan_html = Page.createTable(DOC.title.lan, names_lan, values_lan, names_lan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+
+                    $('#run_info').html(run_html);
+
+                    /* NET_INFO_BEGIN */
+                    $('#net_info').html(net_html);
+                    $('#sim_info').html(sim_html);
+                    /* NET_INFO_END */
+
+                    $('#wan_info').html(wan_html);
+                    $('#lan_info').html(lan_html);
+
+                    Page.setStripeTable();
+                    Page.isNULLToSpace = false;
+          //      }
+          //  });
+        }
+
+        function loadWlanPage() {
+            Page.postJSON({
+                json: { cmd: RequestCmd.WIRELESS_INFO },
+                success: function(data) {
+                    var wirelessHtml = "";
+                    if (data.message) {
+                        wirelessHtml = Page.createTable(DOC.title.wlan + '-' + data.message, [], [], 0, 0);
+                    } else {
+                        var names = [DOC.net.mac,
+                            DOC.wlan.ssid,
+                            DOC.wlan.channel,
+                            DOC.wlan.frequency,
+                            DOC.wlan.wifi,
+                            DOC.wlan.ssidBroadcast,
+                            //DOC.wlan.txPower,
+                            DOC.wlan.secMode];
+
+                        var values = [];
+
+                        values.push(FormatUtil.formatField(data.wirelessMac));
+                        values.push(FormatUtil.formatField(data.ssid));
+
+                        values.push(FormatUtil.formatField(data.channel));
+                        values.push(FormatUtil.formatField(data.frequency, "GHz"));
+
+                        var wifiOpen = data.wifiOpen;
+                        if(wifiOpen == 0){
+                            values.push(DOC.status.closed);
+                        } else {
+                            values.push(DOC.status.opened);
+                        }
+
+                        var ssidBroadcast = FormatUtil.formatField($.trim(data.ssidBroadcast));
+                        if(ssidBroadcast == 1){
+                            values.push(DOC.status.closed);
+                        } else {
+                            values.push(DOC.status.opened);
+                        }
+
+                        //values.push(FormatUtil.formatField(data.txPower, "dBm"));
+                        //var securityType = SecurityJSON.getSecurityType(data);
+                        values.push(data.AuthMode);// + data.EncrypType);
+
+                        wirelessHtml = Page.createTable(DOC.title.wlan, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    }
+                    $('#wlan_info').html(wirelessHtml);
+                    Page.setStripeTable("#wlan_info");
+
+                }
+            });
+        }
+
+        function loadLtePage() {
+            Page.postJSON({
+                json: { method: JSONMethod.POST, cmd: RequestCmd.GET_LTE_STATUS },
+                success: function(data) {
+                    var lteHtml = "";
+                    if (data.message) {
+                        lteHtml = Page.createTable(DOC.title.lte + '-' + data.message, [], [], 0, 0);
+                    } else {
+                        lteInfo = data;
+                        var vsinr,vrsrp,vrssi;
+                        //sinr, rsrp, rssi earfcn rsrq
+                        var names = [DOC.lte.plmn,
+                            DOC.lte.sinr,
+                            DOC.lte.rsrp,
+                            DOC.lte.rssi,
+                            DOC.lte.rsrq,
+                            DOC.lte.freqPoint,
+                            DOC.lte.globalCellId,
+                            DOC.lte.enodeB,
+                            DOC.lte.phyCellId,
+                            DOC.lte.volteRegisterStatus,
+                            TAB.advance.roaming];
+                        var values = [];
+
+                        if(lteInfo.sinr2!=null)
+                        {
+                            vsinr=(parseInt(lteInfo.sinr,10)+parseInt(lteInfo.sinr2,10))/2;
+                        }
+                        else if(lteInfo.sinr!=null)
+                        {
+                            vsinr=lteInfo.sinr;
+                        }
+                        else
+                        {
+                            vsinr=0;
+                        }
+                        if(lteInfo.rsrp2!=null)
+                        {
+                            vrsrp=(parseInt(lteInfo.rsrp,10)+parseInt(lteInfo.rsrp2,10))/2;
+                        }
+                        else if(lteInfo.rsrp!=null)
+                        {
+                            vrsrp=lteInfo.rsrp;
+                        }
+                        else
+                        {
+                            vrsrp=0;
+                        }
+                        if(lteInfo.rssi2!=null)
+                        {
+                            vrssi=(parseInt(lteInfo.rssi,10)+parseInt(lteInfo.rssi2,10))/2;
+                        }
+                        else if(lteInfo.rssi!=null)
+                        {
+                            vrssi=lteInfo.rssi;
+                        }
+                        else
+                        {
+                            vrssi=0;
+                        }
+
+                        values.push(FormatUtil.formatField(lteInfo.lte_plmn || loading));
+                        values.push(lteInfo.sinr ? FormatUtil.formatField(vsinr, 'dB') : loading);
+                        values.push(lteInfo.rsrp ? FormatUtil.formatField(vrsrp, 'dBm') : loading);
+                        values.push(FormatUtil.formatField(vrssi, 'dBm'));
+                        values.push(lteInfo.rsrq ? FormatUtil.formatField(lteInfo.rsrq, 'dB') : loading);
+                        values.push(FormatUtil.formatField(lteInfo.freq || loading));
+                        values.push(FormatUtil.formatField(lteInfo.globalCellId || loading));
+                        values.push(FormatUtil.formatField(lteInfo.lte_enodebid || loading));
+                        values.push(FormatUtil.formatField(lteInfo.phyCellId || loading));
+                        values.push(FormatUtil.formatField(lteInfo.volteRegister || loading));
+                        values.push(FormatUtil.formatField(lteInfo.simcard_roam || loading));
+                        lteHtml = Page.createTable(DOC.title.lteInfo, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    }
+                    $('#lte_info').html(lteHtml);
+                    Page.setStripeTable("#lte_info");
+                }
+            });
+        }
+
+        loop();
+
+        /* NET_INFO_BEGIN */
+        $('#net_info').click(function(e){
+            if(e.target.id == "net_connect"){
+                if(!AlertUtil.confirm(PROMPT.confirm.connect)){
+                    return false;
+                }
+
+                Page.postJSON({
+                    json: { cmd: RequestCmd.NET_CONNECT },
+                    success: function() {},
+                    complete: function() {
+                        count = 2;
+                        Page.connectStatus = true;
+                        $('#connectPrompt').html(PROMPT.status.connecting);
+                    }
+                });
+            } else if(e.target.id == "net_disconnect"){
+                if(!AlertUtil.confirm(PROMPT.confirm.disconnect)){
+                    return false;
+                }
+                Page.postJSON({
+                    json:{ cmd: RequestCmd.NET_DISCONNECT },
+                    success: function() {},
+                    complete: function() {
+                        count = 2;
+                        Page.connectStatus = false;
+                        $('#connectPrompt').html(PROMPT.status.disconnecting);
+                    }
+                });
+            }
+        });
+        /* NET_INFO_END */
+    });
+</script>
+
+<div class="detail_box">
+    <div id="run_info"></div>
+
+    <!-- NET_INFO_BEGIN -->
+    <div id="net_info"></div>
+    <div id="sim_info"></div>
+    <!-- NET_INFO_END -->
+
+    <div id="wan_info"></div>
+    <!-- div id="lan_info"></div> -->
+    <div id="wlan_info"></div>
+    <div id="lte_info"></div>
+</div>
