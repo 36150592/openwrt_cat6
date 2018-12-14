@@ -17,7 +17,7 @@ TARGET_LDFLAGS += $(if $(CONFIG_USE_GLIBC),-lrt)
 define Package/alien
   SECTION:=MTK Properties
   CATEGORY:=MTK Properties
-  DEPENDS:=+libffi
+  DEPENDS:=+libffi +lua +luci
   TITLE:=lua C lib helper
   SUBMENU:=Applications
 endef
