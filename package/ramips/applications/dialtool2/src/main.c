@@ -20,6 +20,7 @@
 #include "common.h"
 #include "include.h"
 #include "logger.h"
+#include "bm906.h"
 #include "bm806.h"
 #include "ec20.h"
 #include "serial.h"
@@ -41,6 +42,7 @@ int global_sleep_interval_long=0;
 const MDI* modules_info_summary[]=
 {
 	&bm806_moduleinfo,
+	&bm906_moduleinfo,
 	&ec20_moduleinfo,
 	&sim7000c_moduleinfo,
 	&ar9500_moduleinfo,
@@ -375,6 +377,7 @@ int install_module_driver(char* driver_name)
 {
 	char buffer[1024];
 	int status;
+	//snprintf(buffer,sizeof(buffer),"modprobe %s",driver_name);
 	snprintf(buffer,sizeof(buffer),"modprobe %s",driver_name);
 	status=system(buffer);
 	if(-1==status)
@@ -819,7 +822,7 @@ int main(int argc,char *argv[] )
 	global_system_info.module_info.get_moduleinfo(&global_system_info.module_info);
 	cmd_echo("0",USB_SERIAL_STATUS);
 	//system("echo ready >> /tmp/test");
-//	log_info("imei:%s\n",global_system_info.module_info.imei);
+	log_info("imei:%s\n",global_system_info.module_info.imei);
 	if(FALSE==get_version("/etc/dialogtool2_version",&global_system_info))
 	{
 		char buffer_tmp[1024];

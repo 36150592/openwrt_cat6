@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "bm906.h"
 #include "bm806.h"
 #include "ec20.h"
 #include "include.h"
@@ -51,6 +52,17 @@ void update_306a(void)
 		cmd_echo("318","/proc/tozed_gpio/led");
 	
 }
+
+MP bm906_306A=
+{
+	"QL900",
+	"TZ7.823.306A",
+	"/tmp/.module_bm906_is_used",
+	init_306a,
+	update_306a,
+	&process_bm906,
+};
+
 
 MP bm806U_T1_306A=
 {
@@ -143,6 +155,7 @@ MP lt10_306A=
 
 MP* project_info_summary[]=
 {
+	&bm906_306A,
 	&bm806U_C1_306A,
 	&bm806U_T1_306A,
 	&bm806U_E1_306A,
