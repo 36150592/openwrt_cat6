@@ -58,6 +58,14 @@ set network.$1.netmask='255.255.255.0'
 set network.$1.ip6assign='60'
 EOF
 		;;
+
+    4g) uci -q batch <<EOF 
+set network.$1.proto='dhcp'        
+set networktwork.$1='interface'                      
+set network.$1.force_link=1                     
+set network.$1.ifname='$ifname'                 
+EOF                 
+        ;; 
 	wan) uci -q batch <<EOF
 set network.$1.proto='dhcp'
 delete network.wan6

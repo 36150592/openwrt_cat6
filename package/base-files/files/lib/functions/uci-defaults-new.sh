@@ -52,6 +52,14 @@ ucidef_set_interface_lan() {
 	json_select ..
 }
 
+ucidef_set_interface_4g() {
+	local if_4g=$1
+
+	json_select_object network
+	_ucidef_set_interface 4g $if_4g
+	json_select ..
+}
+
 ucidef_set_interfaces_lan_wan() {
 	local lan_if=$1
 	local wan_if=$2

@@ -47,7 +47,7 @@ setup_interface() {
     else
           echo "nameserver 8.8.8.8 " >> "/etc/resolv.conf"
     fi
-	                                                             
+    /etc/init.d/firewall restart	                                                             
 }
 
 
