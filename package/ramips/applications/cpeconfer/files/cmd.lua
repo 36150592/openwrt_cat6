@@ -2,7 +2,62 @@
 
 local wifi = require "tz.wifi"
 local dhcp = require "tz.dhcp"
+local modem = require "tz.modem"
+local network = require "tz.network"
+local sim = require "tz.sim"
 
+function sim_get_status()
+
+	print("in sim_get_status")
+	local info = sim.sim_get_status()
+	for k,v in pairs(info) do 
+			print(k,"=", v)
+	end
+
+end
+
+
+function network_get_wan_info()
+
+	print("in network_get_wan_info")
+	local info = network.network_get_wan_info()
+	for k,v in pairs(info) do 
+			print(k,"=", v)
+	end
+
+end
+
+
+function network_get_4g_net_info()
+
+	print("in network_get_4g_net_info")
+	local info = network.network_get_4g_net_info()
+	for k,v in pairs(info) do 
+			print(k,"=", v)
+	end
+
+end
+
+
+function modem_get_status()
+
+	print("in modem_get_status")
+	local status = modem.modem_get_status()
+	for k,v in pairs(status) do 
+			print(k,"=", v)
+	end
+
+end
+
+function modem_get_info()
+
+	print("in modem_get_info")
+	local info = modem.modem_get_info()
+	for k,v in pairs(info) do 
+			print(k,"=", v)
+	end
+
+end
 
 function wifi_get_dev()
 	print("in wifi_get_dev")
@@ -561,24 +616,34 @@ local api_func = {
 	
 	
 	["wifi_get_connect_sta_list"]=wifi_get_connect_sta_list,
+
+	--dhcp
 	["dhcp_get_server_ip"]=dhcp_get_server_ip,
 	["dhcp_set_server_ip"]=dhcp_set_server_ip,
 	["dhcp_get_server_mask"]=dhcp_get_server_mask,
 	["dhcp_set_server_mask"]=dhcp_set_server_mask,
-
 	["dhcp_get_ip_range"]=dhcp_get_ip_range,
 	["dhcp_set_ip_range"]=dhcp_set_ip_range,
-	
 	["dhcp_get_lease_time"]=dhcp_get_lease_time,
 	["dhcp_set_lease_time"]=dhcp_set_lease_time,
 	["dhcp_get_client_list"]=dhcp_get_client_list,
-	
 	["dhcp_start"]=dhcp.dhcp_start,
 	["dhcp_stop"]=dhcp.dhcp_stop,
 	["dhcp_restart"]=dhcp.dhcp_restart,
 	["dhcp_enable"]=dhcp.dhcp_enable,
 	["dhcp_disable"]=dhcp.dhcp_disable,
 	["dhcp_reload"]=dhcp.dhcp_reload,
+
+	--modem
+	["modem_get_status"] = modem_get_status,
+	["modem_get_info"] = modem_get_info,
+
+	--network
+	["network_get_wan_info"] = network_get_wan_info,
+	["network_get_4g_net_info"] = network_get_4g_net_info,
+
+	--sim
+	["sim_get_status"] = sim_get_status
 }
 
 
