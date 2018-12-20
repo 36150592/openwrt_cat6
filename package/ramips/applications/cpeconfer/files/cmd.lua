@@ -5,11 +5,37 @@ local dhcp = require "tz.dhcp"
 local modem = require "tz.modem"
 local network = require "tz.network"
 local sim = require "tz.sim"
+local system = require "tz.system"
+
+function system_get_status()
+
+	print("in system_get_status")
+	local info = system.system_get_status()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+
+	for k,v in pairs(info) do 
+			print(k,"=", v)
+	end
+
+end
 
 function sim_get_status()
 
 	print("in sim_get_status")
 	local info = sim.sim_get_status()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
 	for k,v in pairs(info) do 
 			print(k,"=", v)
 	end
@@ -21,6 +47,13 @@ function network_get_wan_info()
 
 	print("in network_get_wan_info")
 	local info = network.network_get_wan_info()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
 	for k,v in pairs(info) do 
 			print(k,"=", v)
 	end
@@ -32,6 +65,13 @@ function network_get_4g_net_info()
 
 	print("in network_get_4g_net_info")
 	local info = network.network_get_4g_net_info()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
 	for k,v in pairs(info) do 
 			print(k,"=", v)
 	end
@@ -43,6 +83,13 @@ function modem_get_status()
 
 	print("in modem_get_status")
 	local status = modem.modem_get_status()
+
+	if nil == status 
+	then
+		print("status is nil")
+		return
+	end
+
 	for k,v in pairs(status) do 
 			print(k,"=", v)
 	end
@@ -53,6 +100,13 @@ function modem_get_info()
 
 	print("in modem_get_info")
 	local info = modem.modem_get_info()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
 	for k,v in pairs(info) do 
 			print(k,"=", v)
 	end
@@ -643,7 +697,10 @@ local api_func = {
 	["network_get_4g_net_info"] = network_get_4g_net_info,
 
 	--sim
-	["sim_get_status"] = sim_get_status
+	["sim_get_status"] = sim_get_status,
+
+	--system
+	["system_get_status"] = system_get_status
 }
 
 

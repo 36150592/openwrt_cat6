@@ -190,6 +190,10 @@ local function get_statistics(ifname)
 	return tx_p,rx_p,tx_b,rx_b
 end
 
+-- get wan net info
+-- input:none
+-- return:
+-- 		the struct of net_info , nil if no ip on the net interface
 function network_module.network_get_wan_info()
 	local info = network_module.net_info:new(nil,nil)
 
@@ -201,9 +205,20 @@ function network_module.network_get_wan_info()
 	info["mac"] = get_mac(ifname)
 	info["first_dns"],info["second_dns"] = get_dns()
 	info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"] = get_statistics(ifname)
+
+	if nil == info["ipaddr"]
+	then
+		debug("no ip was assign to the wan interface,return nil")
+		return nil
+	end
+
 	return info
 end
 
+-- get 4g net info
+-- input:none
+-- return:
+-- 		the struct of net_info , nil if no ip on the net interface
 function network_module.network_get_4g_net_info()
 
 	local info = network_module.net_info:new(nil,nil)
@@ -216,6 +231,13 @@ function network_module.network_get_4g_net_info()
 	info["mac"] = get_mac(ifname)
 	info["first_dns"],info["second_dns"] = get_dns()
 	info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"] = get_statistics(ifname)
+
+	if nil == info["ipaddr"]
+	then
+		debug("no ip was assign to the 4g interface,return nil")
+		return nil
+	end
+
 	return info
 end
 

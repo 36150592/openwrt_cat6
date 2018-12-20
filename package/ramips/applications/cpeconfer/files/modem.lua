@@ -215,6 +215,10 @@ local function match_device_key(key)
 	return false
 end
 
+-- get modem status information
+-- input:none
+-- return:
+--		the struct of modem_status 
 function modem_module.modem_get_status()
 	local f = nil
 	local status = nil
@@ -283,6 +287,10 @@ local function get_device_type()
 	return nil
 end
 
+-- get 4g module information
+-- input:none
+-- return:
+--		the struct of modem_device
 function modem_module.modem_get_info()
 	local f = nil
 	local info = nil
