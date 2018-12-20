@@ -6,6 +6,27 @@ local modem = require "tz.modem"
 local network = require "tz.network"
 local sim = require "tz.sim"
 local system = require "tz.system"
+local device = require "tz.device"
+
+function device_get_info()
+	
+	print("in device_get_info")
+	local info = device.device_get_info()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+
+	for k,v in pairs(info) do 
+			print(k,"=", v)
+	end
+
+
+
+end
 
 function system_get_status()
 
@@ -700,7 +721,10 @@ local api_func = {
 	["sim_get_status"] = sim_get_status,
 
 	--system
-	["system_get_status"] = system_get_status
+	["system_get_status"] = system_get_status,
+
+	--device
+	["device_get_info"] = device_get_info
 }
 
 
