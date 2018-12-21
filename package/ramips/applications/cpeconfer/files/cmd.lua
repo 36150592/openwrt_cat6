@@ -7,6 +7,196 @@ local network = require "tz.network"
 local sim = require "tz.sim"
 local system = require "tz.system"
 local device = require "tz.device"
+local firewall = require "tz.firewall"
+
+
+function firewall_set_default_action()
+
+	firewall.firewall_set_default_action(arg[2])
+end
+
+
+function firewall_get_port_redirect()
+
+	print("in firewall_get_port_redirect")
+	local info = firewall.firewall_get_port_redirect_list()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			for key,value in pairs(v) do
+				print(key,"=",value)
+			end
+	end
+
+end
+
+function firewall_set_port_redirect()
+		print("in firewall_set_port_redirect")
+		local ports={
+		{["dest_addr"]=nil, ["dest_port"]="90", ["protocol"]='tcp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8080', ["comment"]="test port redirect1"},
+		{["dest_addr"]='192.168.2.131', ["dest_port"]="80", ["protocol"]='udp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8090', ["comment"]="test port redirect2"},
+		{["dest_addr"]='192.168.2.131', ["dest_port"]="22", ["protocol"]='all', ["redirect_addr"]='192.168.2.1',["redirect_port"]='80', ["comment"]="test port redirect3"}
+		}
+
+		if firewall.firewall_set_port_redirect_list(ports)
+		then
+			print("set success")
+		else
+			print("set fail")
+		end
+end
+
+
+
+function firewall_get_port_filter()
+
+	print("in firewall_get_port_filter")
+	local info = firewall.firewall_get_port_filter_list()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			for key,value in pairs(v) do
+				print(key,"=",value)
+			end
+	end
+end
+
+function firewall_set_port_filter()
+		print("in firewall_set_port_filter")
+		local ports={
+		{["port"]='4545',["protocol"]='tcp', ["action"]='ACCEPT', ["comment"]="test port filter1"},
+		{["port"]='1902',["protocol"]='udp', ["action"]='DROP', ["comment"]="test port filter2"},
+		{["port"]='907',["protocol"]='all',["action"]='DROP', ["comment"]="test port filter3"}
+		}
+
+		if firewall.firewall_set_port_filter_list(ports)
+		then
+			print("set success")
+		else
+			print("set fail")
+		end
+end
+
+
+function firewall_get_ip_filter()
+
+	print("in firewall_get_ip_filter")
+	local info = firewall.firewall_get_ip_filter_list()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			for key,value in pairs(v) do
+				print(key,"=",value)
+			end
+	end
+
+end
+
+function firewall_set_ip_filter()
+		print("in firewall_set_ip_filter")
+		local ips={
+		{["ipaddr"]='192.168.3.6', ["action"]='ACCEPT', ["comment"]="test ip filter"},
+		{["ipaddr"]='192.168.4.6', ["action"]='DROP', ["comment"]="test ip filter"}
+
+		}
+
+		if firewall.firewall_set_ip_filter_list(ips)
+		then
+			print("set success")
+		else
+			print("set fail")
+		end
+end
+
+
+function firewall_get_url_filter()
+
+	print("in firewall_get_url_filter")
+	local info = firewall.firewall_get_url_filter_list()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			for key,value in pairs(v) do
+				print(key,"=",value)
+			end
+	end
+
+end
+
+function firewall_set_url_filter()
+		print("in firewall_set_url_filter")
+		local urls={
+		{["url"]='sina.cn', ["action"]='ACCEPT', ["comment"]="test url filter"},
+		{["url"]='baidu.com', ["action"]='DROP', ["comment"]="test url filter"}
+
+		}
+
+		if firewall.firewall_set_url_filter_list(urls)
+		then
+			print("set success")
+		else
+			print("set fail")
+		end
+end
+
+
+function firewall_get_mac_filter()
+
+	print("in firewall_get_mac_filter")
+	local info = firewall.firewall_get_mac_filter_list()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			for key,value in pairs(v) do
+				print(key,"=",value)
+			end
+	end
+
+end
+
+
+
+function firewall_set_mac_filter()
+		print("in firewall_set_mac_filter")
+		local macs={
+		{["mac"]='aa:bb:cc:11:22:33', ["action"]='DROP', ["comment"]="test mac filter"},
+		{["mac"]='aa:bb:cc:11:22:34', ["action"]='DROP', ["comment"]="test mac filter"}
+
+		}
+
+		if firewall.firewall_set_mac_filter_list(macs)
+		then
+			print("set success")
+		else
+			print("set fail")
+		end
+end
+
 
 function device_get_info()
 	
@@ -23,8 +213,6 @@ function device_get_info()
 	for k,v in pairs(info) do 
 			print(k,"=", v)
 	end
-
-
 
 end
 
@@ -724,7 +912,26 @@ local api_func = {
 	["system_get_status"] = system_get_status,
 
 	--device
-	["device_get_info"] = device_get_info
+	["device_get_info"] = device_get_info,
+
+	--firewall
+	["firewall_set_mac_filter"] = firewall_set_mac_filter,
+	["firewall_get_mac_filter"] = firewall_get_mac_filter,
+	["firewall_set_url_filter"] = firewall_set_url_filter,
+	["firewall_get_url_filter"] = firewall_get_url_filter,
+	["firewall_set_ip_filter"] = firewall_set_ip_filter,
+	["firewall_get_ip_filter"] = firewall_get_ip_filter,
+	["firewall_get_port_filter"] = firewall_get_port_filter,
+	["firewall_set_port_filter"] = firewall_set_port_filter,
+	["firewall_get_port_redirect"] = firewall_get_port_redirect,
+	["firewall_set_port_redirect"] = firewall_set_port_redirect,
+
+	["firewall_get_default_action"] = firewall.firewall_get_default_action,
+	["firewall_set_default_action"] = firewall_set_default_action,
+	["firewall_start"] = firewall.firewall_start,
+	["firewall_stop"] = firewall.firewall_stop,
+	["firewall_restart"] = firewall.firewall_restart,
+	["firewall_clear_all_rules"] = firewall.firewall_clear_all_user_rule 
 }
 
 
