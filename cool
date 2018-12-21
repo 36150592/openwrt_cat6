@@ -9,6 +9,7 @@ export ECHO_STYLE_02="\033[42;34;1m"  # red background, yellow foregound bold
 #fix build kerenl when set chinese  as system language.
 export LANG="en_US.UTF-8"
 export LANGUAGE="en"
+export TOPDIR=`pwd`
 
 #echo -e "${ECHO_STYLE_01}echo command terminal style example${ECHO_STYLE_00}"
 
@@ -43,6 +44,18 @@ check_ubuntu_version()
 	fi
 }
 
+download_flag=.flag_download_something_2018_12_20
+download_something()
+{
+	if [ ! -f ${download_flag} ]; then
+		touch ${download_flag}
+		wget ftp://192.168.1.123/openwrt_cat6/s21/some-bin/factory.bin -O project/s21/bin/factory.bin
+		wget ftp://192.168.1.123/openwrt_cat6/s21/some-bin/old-all.bin -O project/s21/bin/old-all.bin
+			
+	fi
+}
+
+download_something
 load_compile_count
 check_bash
 check_ubuntu_version
@@ -52,7 +65,7 @@ if [ "$1" = "" ] ; then
 echo ****************************主菜单****************************
 echo cpe
 echo "默认mt7621 cat6模块"
-echo "  1:   mt7621 cat6模块"
+echo "  1:   s21 (mt7621 cat6模块)"
 echo other:
 echo "  y:   看看每个人在当前分支上的提交次数吧"
 echo "  z:   看看每个月的提交次数吧"
@@ -63,12 +76,12 @@ else
 line=$1
 fi
 
-if [ "$line" = "" ] ; then
-        line="1"
+if [ "$line" = "" ]; then
+	line="1"
 fi
 
-if [ "$line" = "1" ] || [ "$line" = "7621_cat6" ] ; then
-        make V=99
+if [ "$line" = "1" -o "$line" = "s21" ] ; then
+	project=s21
 elif [ "$line" = "y" ] ; then
         git log --pretty='%aN' | sort | uniq -c | sort -k1 -n -r
         echo ------------------------------------------------
@@ -85,7 +98,56 @@ else
         exit
 fi
 
+
+echo "The project is ${project}"
+
+
+if [ "$2" = "" ]; then
+	echo ****************************编译选项****************************
+	echo "默认快速编译"
+	echo "  1:   快速编译"
+	echo "  2:   完全编译"
+	echo "  a:   配置openwrt编译选项"
+	echo "  b:   配置kernel"
+	echo "  q:   quit"
+	read options
+	
+	if [ "$options" = "" ]; then
+		options=1
+	fi
+else
+	options=$2
+fi
+
+echo "options is" $options
+
 compile_result="fail"
+
+if [ "$options" = "1" ]; then
+	echo "快速编译"
+	cp config/default_openwrt_${project}_config .config
+	cp config/default_kernel_${project}_config target/linux/ramips/mt7621/config-3.18
+	make V=99
+elif [ "$options" = "2" ]; then
+	echo "完全编译(暂时不支持)"
+elif [ "$options" = "a" ]; then
+        echo "配置openwrt编译选项"
+	cp config/default_openwrt_${project}_config .config
+	make menuconfig
+	cp .config config/default_openwrt_${project}_config
+	exit
+elif [ "$options" = "b" ]; then
+        echo "配置kernel"
+	cp config/default_kernel_${project}_config target/linux/ramips/mt7621/config-3.18
+	make kernel_menuconfig
+	cp target/linux/ramips/mt7621/config-3.18 config/default_kernel_${project}_config
+	exit
+elif [ "$options" = "q" ]; then
+	exit
+else
+        echo "不支持这种编译选项"
+	exit
+fi
 
 if [ "$?" = "0" ] ; then
         compile_result="ok"
@@ -94,16 +156,22 @@ else
         fail_count=$(($fail_count+1))
 fi
 
-if [ $compile_result = "ok" ]; then
-	if [ "$line" = "1" ] || [ "$line" = "7621_cat6" ] ; then
-		mkdir -p image/7621_cat6
-		cp -f bin/ramips/openwrt-ramips-mt7621-sxx-u-boot.bin image/7621_cat6/ 
-		cp -f bin/ramips/openwrt-ramips-mt7621-zbt-wg2626-squashfs-sysupgrade.bin image/7621_cat6/
-		rm image/7621_cat6/firmware.bin -rf
-		tr '\000' '\377' < /dev/zero | dd of=image/7621_cat6/firmware.bin bs=1024 count=16384 2>/dev/null
-		dd if=image/7621_cat6/openwrt-ramips-mt7621-sxx-u-boot.bin of=image/7621_cat6/firmware.bin conv=notrunc 2>/dev/null
-		dd if=image/7621_cat6/openwrt-ramips-mt7621-zbt-wg2626-squashfs-sysupgrade.bin of=image/7621_cat6/firmware.bin conv=notrunc bs=64k seek=5 2>/dev/null
+echo "compile_result is" $compile_result
 
+if [ $compile_result = "ok" ]; then
+	if [ "$options" = "1" ] || [ "$options" = "2" ] ; then
+#		mkdir -p image/7621_cat6
+#		cp -f bin/ramips/openwrt-ramips-mt7621-sxx-u-boot.bin image/7621_cat6/ 
+#		cp -f bin/ramips/openwrt-ramips-mt7621-zbt-wg2626-squashfs-sysupgrade.bin image/7621_cat6/
+#		rm image/7621_cat6/firmware.bin -rf
+#		tr '\000' '\377' < /dev/zero | dd of=image/7621_cat6/firmware.bin bs=1024 count=16384 2>/dev/null
+#		dd if=image/7621_cat6/openwrt-ramips-mt7621-sxx-u-boot.bin of=image/7621_cat6/firmware.bin conv=notrunc 2>/dev/null
+#		dd if=image/7621_cat6/openwrt-ramips-mt7621-zbt-wg2626-squashfs-sysupgrade.bin of=image/7621_cat6/firmware.bin conv=notrunc bs=64k seek=5 2>/dev/null
+#		cp image/7621_cat6/begin.bin image/7621_cat6/olduboot_newfirmware.bin -f
+#		tr '\000' '\377' < /dev/zero | dd of=image/7621_cat6/emptyfirmware.bin bs=1024 count=6144 2>/dev/null
+#		dd if=image/7621_cat6/emptyfirmware.bin of=image/7621_cat6/olduboot_newfirmware.bin conv=notrunc bs=64k seek=5 2>/dev/null
+#		dd if=image/7621_cat6/openwrt-ramips-mt7621-zbt-wg2626-squashfs-sysupgrade.bin of=image/7621_cat6/olduboot_newfirmware.bin conv=notrunc bs=64k seek=5 2>/dev/null
+		. project/s21/formImage.sh
 	fi
 fi
 
