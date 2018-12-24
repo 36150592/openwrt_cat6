@@ -375,6 +375,9 @@ int set_dial_func_set(GD* p,GSI* q)
 
 int install_module_driver(char* driver_name)
 {
+#ifdef DEBUG
+	return 0;
+#endif
 	char buffer[1024];
 	int status;
 	//snprintf(buffer,sizeof(buffer),"modprobe %s",driver_name);

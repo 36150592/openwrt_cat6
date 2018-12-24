@@ -11,7 +11,7 @@
 //#include "boardtype_306A.h"
 extern int global_sleep_interval_long;
 extern CSA scan_att_configs;
-#define TEMP_DEBUG
+//#define TEMP_DEBUG
 
 #if 0
 struct ASBM806
@@ -3078,9 +3078,9 @@ void bm906_get_moduleinfo(MDI* p)
 			}
 		}while(reply_count!=0);
 
-		//log_info("%s_%d:Getting info %s %d\n",__FUNCTION__,__LINE__,buffer_recv,strlen(buffer_recv));
+		log_info("%s_%d:Getting info %s %d\n",__FUNCTION__,__LINE__,buffer_recv + bytes_n - out_flag,strlen(buffer_recv + bytes_n - out_flag));
 		
-		str_ptr=strstr(buffer_recv,"Manufacturer:");
+		str_ptr=strstr(buffer_recv + bytes_n - out_flag,"Manufacturer:");
 		
 		if(NULL!=str_ptr)
 		{
@@ -3101,7 +3101,7 @@ void bm906_get_moduleinfo(MDI* p)
 			continue;
 		}
 		
-		str_ptr=strstr(buffer_recv,"Model:");
+		str_ptr=strstr(buffer_recv + bytes_n - out_flag,"Model:");
 		if(NULL!=str_ptr)
 		{
 			tmp_ptr=str_ptr+strlen("Model:");
@@ -3120,7 +3120,7 @@ void bm906_get_moduleinfo(MDI* p)
 			continue;
 		}
 
-		str_ptr=strstr(buffer_recv,"Revision:");
+		str_ptr=strstr(buffer_recv + bytes_n - out_flag,"Revision:");
 		if(NULL!=str_ptr)
 		{
 			tmp_ptr=str_ptr+strlen("Revision:");
@@ -3139,7 +3139,7 @@ void bm906_get_moduleinfo(MDI* p)
 			continue;
 		}
 
-		str_ptr=strstr(buffer_recv,"IMEI:");
+		str_ptr=strstr(buffer_recv + bytes_n - out_flag,"IMEI:");
 		if(NULL!=str_ptr)
 		{
 			tmp_ptr=str_ptr+strlen("IMEI:");

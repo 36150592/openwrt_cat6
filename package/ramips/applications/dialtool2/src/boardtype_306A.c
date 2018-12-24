@@ -55,7 +55,7 @@ void update_306a(void)
 
 MP bm906_306A=
 {
-	"QL900",
+	"BM906",
 	"TZ7.823.306A",
 	"/tmp/.module_bm906_is_used",
 	init_306a,
