@@ -614,10 +614,12 @@ Date.prototype.format = function(mask, utc) {
 			if (url == null) {
 				$body.hide();
 			} else {
-				Page.getHtml(url, items[index].cmd, function(data) {
-					opts.tabChanged(index);
-					$body.html(data).show();
-				});
+				// Page.getHtml(url, items[index].cmd, function(data) {
+				// 	opts.tabChanged(index);
+				// 	$body.html(data).show();
+				// });
+                opts.tabChanged(index);
+                $body.load(url);
 			}
 	    });
 	    

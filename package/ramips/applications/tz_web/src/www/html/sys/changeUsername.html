@@ -1,0 +1,72 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+
+        var rules = {
+                oldUsername: { required: true },
+                newUsername: { required: true, rangelength: [2, 20] },
+                newUsername2: { required: true, rangelength: [2, 20], equalTo: '#newUsername' }
+            },
+            messages = {
+                oldUsername: { required: CHECK.required.oldUsername },
+                newUsername: { required: CHECK.required.newUsername, rangelength: CHECK.range.username },
+                newUsername2: { required: CHECK.required.duplicateNewUsername, rangelength: CHECK.range.username, equalTo: CHECK.format.usernameNotSame }
+            };
+
+        var $btnSave = $('#btnSave');
+
+        $btnSave.click(function(){
+            var $form = $('#form1');
+            if(!CheckUtil.checkForm($form, rules, messages)){
+                return false;
+            }
+            var json = JSON.parmsToJSON($form);
+
+            Page.postJSON({
+                $id: $btnSave,
+                json: {
+                    cmd: RequestCmd.CHANGE_USERNAME,
+                    method: JSONMethod.POST,
+                    username: json.oldUsername,
+                    newUsername: json.newUsername
+                },
+                success: function(data) {
+                    $('#oldUsername').val('');
+                    $('#newUsername').val('');
+                    $('#newUsername2').val('');
+                    AlertUtil.alertMsg(PROMPT.saving.changeUsername);
+                }
+            });
+        });
+
+    });
+</script>
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="form1">
+            <table class="detail" cellspacing="0">
+                <tr>
+                    <th><%- sys.oldUsername %><%- colon %></th>
+                    <td><input type="text" id="oldUsername" name="oldUsername" class="normal" maxlength="20" /></td>
+                </tr>
+                <tr>
+                    <th><%- sys.newUsername %><%- colon %></th>
+                    <td><input type="text" id="newUsername" name="newUsername" class="normal" maxlength="20" /></td>
+                </tr>
+                <tr>
+                    <th><%- sys.duplicateNewUsername %><%- colon %></th>
+                    <td><input type="text" id="newUsername2" name="newUsername2" class="normal" maxlength="20" /></td>
+                </tr>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td><input type="button" id="btnSave" value="<%- btn.save %>"/></td>
+                </tr>
+            </table>
+        </form>
+    </script>
+</div>
+

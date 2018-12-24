@@ -7,16 +7,22 @@
         var menus = [];
         var infoMenu = new MenuHead("info_menu", MENU.info.head);
         infoMenu.push(new MenuBody("SYS_INFO", (Page.isRuKuVersion ? MENU.info.home : "") + MENU.info.device));
-//	infoMenu.push(new MenuBody("DEVICE_INFO", MENU.info.version));
+    	infoMenu.push(new MenuBody("DEVICE_INFO", MENU.info.version));
 //	infoMenu.push(new MenuBody("CLIENT_LIST", MENU.info.client));
 
-        var settingMenu = new MenuHead("manage_menu", MENU.setting.head);
+        var settingMenu = new MenuHead("setting_menu", MENU.setting.head);
 		settingMenu.push(new MenuBody("NETWORK_CONFIG", MENU.setting.dhcp));
         settingMenu.push(new MenuBody("WIRELESS_CONFIG", MENU.settingWifi.wifi));
 		settingMenu.push(new MenuBody("WLAN_5G_CONFIG", MENU.settingWifi.wifi5g));
+		
+		var sysMenu = new MenuHead("manage_menu", MENU.sys.manage);
+        sysMenu.push(new MenuBody("SYS_SET", MENU.sys.settings));
+        sysMenu.push(new MenuBody("SYS_LOG", MENU.sys.sysLog));
+        sysMenu.push(new MenuBody("SYS_UPDATE", MENU.sys.firmwareUpdate));
 
         menus.push(infoMenu);
 		menus.push(settingMenu);
+		menus.push(sysMenu);
         $('#menu').html(MenuUtil.create(menus));
 
         /* LANGUAGE BEGIN */

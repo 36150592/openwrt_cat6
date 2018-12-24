@@ -1,0 +1,79 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+
+        function loadPage() {
+            Page.postJSON({
+                json: { cmd: RequestCmd.DEVICE_VERSION_INFO },
+                success: function(datas) {
+                var data = {"name":"","version":"","certificationVer":"","displayedVersion":"","hwversionCfg":"","hwversion":"","configVer":"","modversion":"",
+                        "time":"","module":"","deviceId":"","modsoftversion":"","modhardwareversion":"","imei":"","imsi":"","iccid":""};
+                    var names = [], names_lte = [];
+                    var device = DOC.device;
+                    names.push(device.name);
+                  //  names.push(device.buildTime);
+                    names.push(device.softwarVersion);
+                    names.push(device.hardwareVersion);
+                    names.push(device.configVersion);
+                 //   names.push(device.deviceId);
+
+
+
+                    names_lte.push(device.modemVersion);
+                    names_lte.push(device.modsoftversion);
+                    names_lte.push(device.modhardwareversion);
+                    names_lte.push(device.imei);
+                    names_lte.push(device.imsi);
+                    names_lte.push(device.iccid);
+
+                    //names_lte.push(device.lanMac);
+                    Page.isNULLToSpace = true;
+                    var data2 = datas.data;
+                    var values = [], values_lte = [];
+
+                    values.push(FormatUtil.formatField(data2.device.type));
+                 //   values.push(FormatUtil.formatField(data2.device.build));
+
+                    //values.push(data.build);
+                    var swVer1 = FormatUtil.formatField(Page.getDeviceVersion(data.name, data.version)),
+                        swVer2 = FormatUtil.formatField(data.certificationVer);
+                    values.push(FormatUtil.formatField(Page.displayedVersion || swVer2));
+
+                    var hwversion = data.hwversionCfg;
+                    if (hwversion == "NULL" || hwversion.length == 0) {
+                        hwversion = data.hwversion;
+                    }
+                    values.push(FormatUtil.formatField(data2.device.hwversion));
+                    values.push(FormatUtil.formatField(data2.device.version));
+                  //  values.push(FormatUtil.formatField(data.deviceId));
+
+
+                    values_lte.push(FormatUtil.formatField(data2.modem.type));
+                    values_lte.push(FormatUtil.formatField(data2.modem.softver));
+                    values_lte.push(FormatUtil.formatField(data2.modem.hardware));
+                    values_lte.push(FormatUtil.formatField(data2.modem.imei));
+                    values_lte.push(FormatUtil.formatField(data2.sim.imsi));
+                    values_lte.push(FormatUtil.formatField(data2.sim.iccid));
+
+                    //values_lte.push(FormatUtil.formatField(data.mac));
+
+                    var sys_html = Page.createTable(DOC.title.device, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    var lte_html = Page.createTable(DOC.title.lte, names_lte, values_lte, names_lte.length, 1);
+
+                    $('#sys_info').html(sys_html);
+                    $('#lte_info').html(lte_html);
+                    Page.setStripeTable();
+                    Page.isNULLToSpace = false;
+                }
+            });
+        }
+
+        loadPage();
+    });
+</script>
+
+<div class="detail_box">
+    <div id="sys_info"></div>
+    <div id="lte_info"></div>
+</div>

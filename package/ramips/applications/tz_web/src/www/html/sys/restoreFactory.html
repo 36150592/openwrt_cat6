@@ -1,0 +1,71 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+
+        var $btnSave = $('#btnSave');
+        $btnSave.bind('click', function() {
+            if (!confirm(PROMPT.confirm.restoreFactory)) return;
+
+            var datas = null;
+            SysUtil.showProgress(150, PROMPT.status.restoringFactory,
+                function() {
+                    return datas != null;
+                },
+                function() {
+                    closeBox();
+                    /*
+                     if (!Page.isSupported(ItemUnsupportedTable.NOT_SUPPORT_PROMPT_REBOOT_WHEN_RESTORE_DEFAULT_CONFIGS, false)) {
+                     AlertUtil.alertMsg(PROMPT.status.restoreFactorySuccess);
+                     closeBox();
+                     } else {
+                     SysUtil.reboot({
+                     rebootType: RENOOTTYPE.RESTORE_SETTING,
+                     msg: PROMPT.status.restoreFactorySuccess,
+                     callback: function(canceled) {
+                     if (canceled) {
+                     SysUtil.restoreRebootCancel();
+                     } else {
+                     location.reload();
+                     }
+                     closeBox();
+                     }
+                     });
+                     }
+                     */
+                }
+            );
+
+            setTimeout(function() {
+                datas = {};
+                $btnSave.enable();
+            }, 40000);
+
+            Page.postJSON({
+                $id: $btnSave,
+                json: {
+                    cmd: RequestCmd.RESTORE_DEFAULT,
+                    method: JSONMethod.POST
+                },
+                success: function(data) {
+                    datas = data;
+                }
+            });
+        });
+
+    });
+</script>
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <table class="detail" cellspacing="0">
+            <tr>
+                <th><%- sys.restoreFactory %><%- colon %></th>
+                <td><input type="button" id="btnSave" value="<%- btn.restoreFactory %>"/></td>
+            </tr>
+        </table>
+    </script>
+</div>
+

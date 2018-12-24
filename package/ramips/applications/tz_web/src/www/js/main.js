@@ -869,6 +869,26 @@ var ConvertUtil = {
             runStatus = RegExp.$3;
         }
         return { runTime: runTime, runStatus: runStatus };
+    },
+
+    timeStamp:function(StatusMinute){
+    var day=parseInt(StatusMinute/60/24);
+    var hour=parseInt(StatusMinute/60%24);
+    var min= parseInt(StatusMinute % 60);
+    StatusMinute="";
+     if (day > 0)
+       {
+        StatusMinute= day + "天 ";
+       }
+     if (hour>0)
+       {
+        StatusMinute += hour + "小时 ";
+       }
+      if (min>0)
+      {
+        StatusMinute += parseFloat(min) + "分钟 ";
+      }
+      return StatusMinute;
     }
 };
 
@@ -1899,19 +1919,17 @@ var Page = {
         	json.language = Page.language;
         }
 
-    	if (!(json.cmd == RequestCmd.LOGIN || json.cmd == RequestCmd.GET_DEVICE_NAME)) {
-        	json.sessionId = Page.sessionId; //CookieUtil.getCookie("username");
-    	}
+    	// if (!(json.cmd == RequestCmd.LOGIN || json.cmd == RequestCmd.GET_DEVICE_NAME)) {
+        	// json.sessionId = Page.sessionId; //CookieUtil.getCookie("username");
+    	// }
 
-		if (Page.isTest) {
-			return;
-        } else {
-        	var $id = settings.$id;
-        	if ($id) {
-        		$id.disable();
-        	}
+        	// var $id = settings.$id;
+        	// if ($id) {
+        	// 	$id.disable();
+        	// }
 
         	$.ajax({
+                async:false,
         		url: settings.url,
     			type: 'POST',
     			timeout: settings.timeout,
@@ -1923,40 +1941,40 @@ var Page = {
                 },
         		success: function(datas) {
         			try {
-        				var data;
-        				if (json.cmd == RequestCmd.FIND_AP && datas.indexOf("ssids") > 0) {
-        					// 单独解析FIND_AP
-        					data = {};
-        					data.success = true;
-        					data.cmd = RequestCmd.FIND_AP;
-        					data.macs = ConvertUtil.parseFindAp(datas, "macs");
-        					data.ssids = ConvertUtil.parseFindAp(datas, "ssids");
-        					data.frequencys = ConvertUtil.parseFindAp(datas, "frequencys");
-        					data.singalLevels = ConvertUtil.parseFindAp(datas, "singalLevels");
-        					data.encryptionKeys = ConvertUtil.parseFindAp(datas, "encryptionKeys");
-        					data.encryptionModes = ConvertUtil.parseFindAp(datas, "encryptionModes");
-        					data.groupCiphers = ConvertUtil.parseFindAp(datas, "groupCiphers");
-        					data.pairwiseCiphers = ConvertUtil.parseFindAp(datas, "pairwiseCiphers");
-        					data.authenticationSuites = ConvertUtil.parseFindAp(datas, "authenticationSuites");
-        				} else {
-        					if (!settings.returnHtml) {
-                    			data = SysUtil.parseJSON(datas);
-        					} else {
-                				// 返回HTML不用解析
-        						data = datas;
-        					}
-        				}
+        				var data = SysUtil.parseJSON(datas);
+        				// if (json.cmd == RequestCmd.FIND_AP && datas.indexOf("ssids") > 0) {
+        				// 	// 单独解析FIND_AP
+        				// 	data = {};
+        				// 	data.success = true;
+        				// 	data.cmd = RequestCmd.FIND_AP;
+        				// 	data.macs = ConvertUtil.parseFindAp(datas, "macs");
+        				// 	data.ssids = ConvertUtil.parseFindAp(datas, "ssids");
+        				// 	data.frequencys = ConvertUtil.parseFindAp(datas, "frequencys");
+        				// 	data.singalLevels = ConvertUtil.parseFindAp(datas, "singalLevels");
+        				// 	data.encryptionKeys = ConvertUtil.parseFindAp(datas, "encryptionKeys");
+        				// 	data.encryptionModes = ConvertUtil.parseFindAp(datas, "encryptionModes");
+        				// 	data.groupCiphers = ConvertUtil.parseFindAp(datas, "groupCiphers");
+        				// 	data.pairwiseCiphers = ConvertUtil.parseFindAp(datas, "pairwiseCiphers");
+        				// 	data.authenticationSuites = ConvertUtil.parseFindAp(datas, "authenticationSuites");
+        				// } else {
+        				// 	if (!settings.returnHtml) {
+                    		// 	data = SysUtil.parseJSON(datas);
+        				// 	} else {
+                			// 	// 返回HTML不用解析
+        				// 		data = datas;
+        				// 	}
+        				// }
 
-    					if (!settings.returnHtml) {
+    					//if (!settings.returnHtml) {
 	        				if (data.cmd == undefined) return;
 
 	            			if (data.success) {
 	            				settings.success(data);
 	            			} else {
-	            				if (data.message == "NO_AUTH") {
-	            			   	    location.href = Page.getUrl(Url.LOGIN);
-	            					return;
-	            				}
+	            				// if (data.message == "NO_AUTH") {
+	            			   	//     location.href = Page.getUrl(Url.LOGIN);
+	            				// 	return;
+	            				// }
 	            				if ($.isFunction(settings.fail)) {
 	            					settings.fail(data);
 	            				} else {
@@ -1964,9 +1982,9 @@ var Page = {
 	            						AlertUtil.alertMsg(data.message);
 	            				}
 	            			}
-    					} else {
-    						settings.success(data);
-    					}
+    					//} else {
+    					//	settings.success(data);
+    				//	}
         			} catch(ex) {
         				//AlertUtil.alertMsg("[EXCEPTION]" + ex.message);
         			}
@@ -1977,13 +1995,18 @@ var Page = {
     				}
         		},
         		complete: function() {
-        			settings.complete();
-        			if ($id) {
-    					$id.enable();
-        			}
+        			if($.isFunction(settings.complete))
+					{
+                        settings.complete();
+					}
+
+        			// if ($id) {
+    					// $id.enable();
+        			// }
         		}
         	});
-        }
+
+
 	},
     defaultSetting: {
         url: Url.DEFAULT_CGI,
@@ -2370,6 +2393,15 @@ var Page = {
 		var $id = "#" + eleId;
 		$($id).val(value);
     },
+    setFormFieldValue2:function (eleId, value) {
+        if(typeof(value) == undefined || !eleId){
+            return;
+        }
+        var $id = "#" + eleId;
+        $($id).val(value);
+        $($id).attr('old',value);
+    },
+	
     getDifferentJson: function(oldJson, newJson) {
     	var mustKeys = ",cmd,subcmd,method,sessionId,language";
     	var json = {};

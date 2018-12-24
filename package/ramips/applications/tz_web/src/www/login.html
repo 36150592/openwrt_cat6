@@ -55,7 +55,7 @@
                         return false;
                     }
 
-                    $btnLogin.disable();
+               //     $btnLogin.disable();
                     var loginSuccess = false;
                     var sessionId = getSessionId();
                     //var option = { expireHours: 1, path: "/", domain: location.hostname };
@@ -83,9 +83,9 @@
 
                     },
                     complete: function() {
-                        if (!loginSuccess) {
-                            $btnLogin.enable();
-                        }
+                      //  if (!loginSuccess) {
+                      //      $btnLogin.enable();
+                      //  }
                     }
                 });
                 });

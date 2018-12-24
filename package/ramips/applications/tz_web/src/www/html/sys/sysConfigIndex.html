@@ -1,0 +1,34 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+
+        var tabs = TAB.sys;
+        var items = [];
+
+        items.push({title: tabs.changePasswd, url: 'html/sys/changePasswd.html'});
+
+        items.push({title: tabs.changeUsername, url: 'html/sys/changeUsername.html'});
+
+        items.push({title: tabs.restoreFactory, url: 'html/sys/restoreFactory.html'});
+
+        items.push({title: tabs.timeSetting, url: 'html/sys/timeSetting.html'});
+
+        items.push({title: tabs.exportOrLoadConfig, url: 'html/sys/exportOrLoadConfig.html'});
+
+
+
+        $('#detail_container').pannel({
+            items: items,
+            init: function($lis) {
+                $lis.eq(0).click();
+            },
+            tabChanging: function(index) {
+                Page.currentIndex = index;
+            }
+        });
+    });
+</script>
+
+<div class="detail_box" id="detail_container"></div>
+

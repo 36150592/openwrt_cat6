@@ -1,0 +1,127 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+
+        var isExportConfigDisable = Page.isItemDisable(ItemDisableTable.EXPORT_CONFIG);
+        if (isExportConfigDisable) {
+            $('#trExportConfig').detach();
+        } else {
+            var $btnExportConfig = $('#btnExportConfig');
+            $btnExportConfig.bind('click', function() {
+                if (isExportConfigDisable) return;
+
+                Page.postJSON({
+                    $id: $btnExportConfig,
+                    json: { cmd: RequestCmd.CONFIG_EXPORT },
+                    success: function(data) {
+                        var url = '/cfg_export.conf';
+                        $('#exportDelegate').text(DOC.link.clickMeDownload).prop("href", url).show();
+                    }
+                });
+            });
+
+        }
+
+        var $btnLoadConfig = $('#btnLoadConfig');
+        $btnLoadConfig.bind('click', function() {
+            var $form = $('#form1');
+            var url = String.format("{0}?cmd={1}&method=POST&sessionId={2}&language={3}", Url.DEFAULT_CGI,
+                RequestCmd.SYS_UPDATE, Page.sessionId, Page.language);
+
+            var datas = null, returnDatas = null, configFile = null;
+            $form.ajaxSubmit({
+                url: url,
+                type: 'POST',
+                beforeSubmit: function() {
+                    if ($('#configFile').val() == "") {
+                        AlertUtil.alertMsg(CHECK.required.cfgFile);
+                        return false;
+                    }
+                    configFile = $('#configFile').val();
+
+                    if (/[\\\/]/.test(configFile)) {
+                        var matchs = configFile.match(/(.*)?[\\\/](.*)/);
+                        configFile = matchs[2];
+                    }
+
+                    if (!confirm(PROMPT.confirm.loadCfg + configFile)) {
+                        return false;
+                    }
+                    SysUtil.showProgress(ProgressTime.UPLOAD_FILE, PROMPT.status.loadingCfg,
+                        function() {
+                            return datas != null;
+                        },
+                        function() {
+                            if (datas.success) {
+                                //AlertUtil.alertMsg(PROMPT.saving.loadCfg);
+                                SysUtil.reboot({
+                                    rebootType: RENOOTTYPE.RESTORE_SETTING,
+                                    hideConfirm:true
+                                });
+                                setTimeout(function(){
+                                    closeBox();
+                                },50000);
+                            } else {
+                                SysUtil.processMsg(datas.message);
+                                closeBox();
+                            }
+
+                        }
+                    );
+
+                    return true;
+                },
+                success: function(data, statusText) {
+                    try {
+                        returnDatas = SysUtil.parseJSON(data);
+                        if (!returnDatas.success) {
+                            datas = returnDatas;
+                        } else {
+                            Page.postJSON({
+                                json: { cmd: RequestCmd.CONFIG_LOADER, configFile: configFile},
+                                success: function(data) {
+                                    datas = data;
+                                },
+                                fail: function(data) {
+                                    datas = data;
+                                }
+                            });
+                        }
+                    } catch(ex) {
+                        datas = { success: false, message: PROMPT.status.parseJsonFail };
+                    }
+                },
+                error: function(responseText, statusText) {
+                    datas = { success: false, message: responseText };
+                }
+            });
+        });
+
+    });
+</script>
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="form1" enctype="multipart/form-data" method="post">
+            <table class="detail" cellspacing="0">
+                <tr id="trExportConfig">
+                    <th><%- sys.exportCfg %><%- colon %></th>
+                    <td>
+                        <input type="button" id="btnExportConfig" value="<%- btn.exportCfg %>"/><a id="exportDelegate" style="display:none;"></a>
+                    </td>
+                </tr>
+                <tr>
+                    <th><%- sys.selectCfgFile %><%- colon %></th>
+                    <td>
+                        <input type="file" id="configFile" name="configFile" value="<%- btn.browse %>" size="40" />
+                        <input type="button" id="btnLoadConfig" value="<%- btn.loadCfg %>"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </script>
+</div>
+
