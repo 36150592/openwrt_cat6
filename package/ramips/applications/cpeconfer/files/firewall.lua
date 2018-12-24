@@ -128,6 +128,17 @@ function firewall_module.port_redirect:new(o,obj)
 	
 end
 
+local function reserve_array(array)
+
+	local new_array = {}
+
+	for i = 1,table.maxn(array)
+	do
+		new_array[table.maxn(array) - i + 1] = array[i]
+	end
+
+	return new_array
+end
 
 
 local function format_delete_item_cmd(item_str)
@@ -135,7 +146,7 @@ local function format_delete_item_cmd(item_str)
 end
 
 local function format_set_mac_filter_cmd(mac,action,comment) 
-	return string.format("echo 'iptables -A FORWARD -m mac --mac-source %s -j %s ##%s##%s##%s##%s' >> %s", mac, action, FIREWALL_MAC_FILTER_PREX, mac, action, comment, FIREWALL_CUSTOM_CONFIG_FILE) 
+	return string.format("echo 'iptables -I FORWARD -m mac --mac-source %s -j %s ##%s##%s##%s##%s' >> %s", mac, action, FIREWALL_MAC_FILTER_PREX, mac, action, comment, FIREWALL_CUSTOM_CONFIG_FILE) 
 end
 
 local function format_get_mac_filter_cmd() 
@@ -143,7 +154,7 @@ local function format_get_mac_filter_cmd()
 end
 
 local function format_set_url_filter_cmd(url,action,comment)
-	return string.format("echo 'iptables -A FORWARD -m string --string %s --algo bm -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+	return string.format("echo 'iptables -I FORWARD -m string --string %s --algo bm -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 end
 
 local function format_get_url_filter_cmd() 
@@ -152,10 +163,10 @@ end
 
 local function format_set_ip_filter_cmd(ip,action,comment)
 
-	local cmd1 = string.format("echo 'iptables  -A FORWARD -s %s  -j %s ##%s##%s##%s##%s##1' >> %s ;",
+	local cmd1 = string.format("echo 'iptables  -I FORWARD -s %s  -j %s ##%s##%s##%s##%s##1' >> %s ;",
 								 ip, action, FIREWALL_IP_FILTER_PREX, ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 
-	local cmd2 = string.format("echo 'iptables  -A FORWARD -d %s  -j %s ##%s##%s##%s##%s##2' >> %s ;",
+	local cmd2 = string.format("echo 'iptables  -I FORWARD -d %s  -j %s ##%s##%s##%s##%s##2' >> %s ;",
 								 ip, action, FIREWALL_IP_FILTER_PREX, ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 	return string.format("%s%s",cmd1,cmd2)
 end
@@ -191,16 +202,16 @@ local function format_set_port_redirect_cmd(protocol,dest_addr,dest_port,redirec
 		local cmd1 ,cmd2
 		if nil == dest_addr
 		then 
-		cmd1 = string.format("echo 'iptables -t nat -A PREROUTING  -p tcp --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
+		cmd1 = string.format("echo 'iptables -t nat -I PREROUTING  -p tcp --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
 								 dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 
-		cmd2 = string.format("echo 'iptables -t nat -A PREROUTING  -p udp --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
+		cmd2 = string.format("echo 'iptables -t nat -I PREROUTING  -p udp --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
 								 dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 		else
-		cmd1 = string.format("echo 'iptables -t nat -A PREROUTING  -p tcp -d %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
+		cmd1 = string.format("echo 'iptables -t nat -I PREROUTING  -p tcp -d %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
 								 dest_addr, dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 
-		cmd2 = string.format("echo 'iptables -t nat -A PREROUTING  -p udp -d %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
+		cmd2 = string.format("echo 'iptables -t nat -I PREROUTING  -p udp -d %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
 								 dest_addr, dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 		
 		end
@@ -210,12 +221,12 @@ local function format_set_port_redirect_cmd(protocol,dest_addr,dest_port,redirec
 	else
 		if nil == dest_addr
 		then
-			return string.format("echo 'iptables -t nat -A PREROUTING  -p %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
+			return string.format("echo 'iptables -t nat -I PREROUTING  -p %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
 								 protocol, dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 
 		else
 
-		return string.format("echo 'iptables -t nat -A PREROUTING  -p %s -d %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
+		return string.format("echo 'iptables -t nat -I PREROUTING  -p %s -d %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
 								 protocol, dest_addr, dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 
 
@@ -354,7 +365,7 @@ function firewall_module.firewall_get_mac_filter_list()
 
 	end
 
-	return mac_filter_list
+	return reserve_array(mac_filter_list)
 end
 
 -- set mac filter
@@ -376,15 +387,18 @@ function firewall_module.firewall_set_mac_filter_list(filter_list)
 		return nil
 	end
 
+	local array = reserve_array(filter_list)
+
+
 	if nil == execute_cmd(format_delete_item_cmd(FIREWALL_MAC_FILTER_PREX))
 	then
 		debug("execute clear cmd fail")
 		return false
 	end
 
-	for i=1,table.maxn(filter_list)
+	for i=1,table.maxn(array)
 	do
-		local temp = filter_list[i]
+		local temp = array[i]
 
 		if check_action(temp["action"]) and check_mac(temp["mac"])
 		then
@@ -405,7 +419,7 @@ end
 function firewall_module.firewall_get_url_filter_list()
 
 	local data = execute_cmd(format_get_url_filter_cmd())
-	local mac_filter_list = {}
+	local url_filter_list = {}
 	if nil == data
 	then
 		debug("execute get  url filter cmd fail")
@@ -426,11 +440,11 @@ function firewall_module.firewall_get_url_filter_list()
 		temp["url"] = array[3]
 		temp["action"] = array[4]
 		temp["comment"] = array[5]
-		mac_filter_list[i] = temp
+		url_filter_list[i] = temp
 
 	end
 
-	return mac_filter_list
+	return reserve_array(url_filter_list)
 end
 
 -- set url filter
@@ -452,15 +466,17 @@ function firewall_module.firewall_set_url_filter_list(filter_list)
 		return nil
 	end
 
+	local array = reserve_array(filter_list)
+
 	if nil == execute_cmd(format_delete_item_cmd(FIREWALL_URL_FILTER_PREX))
 	then
 		debug("execute clear cmd fail")
 		return false
 	end
 
-	for i=1,table.maxn(filter_list)
+	for i=1,table.maxn(array)
 	do
-		local temp = filter_list[i]
+		local temp = array[i]
 
 		if check_action(temp["action"]) 
 		then
@@ -513,7 +529,7 @@ function firewall_module.firewall_get_ip_filter_list()
 
 	end
 
-	return ip_filter_list
+	return reserve_array(ip_filter_list)
 end
 
 -- set ip filter
@@ -535,15 +551,17 @@ function firewall_module.firewall_set_ip_filter_list(filter_list)
 		return nil
 	end
 
+	local array = reserve_array(filter_list)
+
 	if nil == execute_cmd(format_delete_item_cmd(FIREWALL_IP_FILTER_PREX))
 	then
 		debug("execute clear cmd fail")
 		return false
 	end
 
-	for i=1,table.maxn(filter_list)
+	for i=1,table.maxn(array)
 	do
-		local temp = filter_list[i]
+		local temp = array[i]
 
 		if check_action(temp["action"]) and check_ip(temp["ipaddr"])
 		then
@@ -595,7 +613,7 @@ function firewall_module.firewall_get_port_filter_list()
 
 	end
 
-	return port_filter_list
+	return reserve_array(port_filter_list)
 end
 
 -- set port filter
@@ -617,15 +635,17 @@ function firewall_module.firewall_set_port_filter_list(filter_list)
 		return nil
 	end
 
+	local array = reserve_array(filter_list)
+
 	if nil == execute_cmd(format_delete_item_cmd(FIREWALL_PORT_FILTER_PREX))
 	then
 		debug("execute clear cmd fail")
 		return false
 	end
 
-	for i=1,table.maxn(filter_list)
+	for i=1,table.maxn(array)
 	do
-		local temp = filter_list[i]
+		local temp = array[i]
 
 		if check_action(temp["action"]) and check_protocol(temp["protocol"])
 		then
@@ -680,7 +700,7 @@ function firewall_module.firewall_get_port_redirect_list()
 
 	end
 
-	return port_redirect_list
+	return reserve_array(port_redirect_list)
 end
 
 -- set port redirect 
@@ -702,15 +722,17 @@ function firewall_module.firewall_set_port_redirect_list(redirect_list)
 		return nil
 	end
 
+	local array = reserve_array(redirect_list)
+
 	if nil == execute_cmd(format_delete_item_cmd(FIREWALL_PORT_REDIRECT_PREX))
 	then
 		debug("execute clear cmd fail")
 		return false
 	end
 
-	for i=1,table.maxn(redirect_list)
+	for i=1,table.maxn(array)
 	do
-		local temp = redirect_list[i]
+		local temp = array[i]
 
 		if  check_protocol(temp["protocol"]) and check_ip(temp["redirect_addr"])
 		then
