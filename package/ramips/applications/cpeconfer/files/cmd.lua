@@ -714,7 +714,18 @@ function wifi_get_connect_sta_list()
 	end
 end
 
+function dhcp_get_enable_status()
 
+	print("dhcp_get_enable_status")
+	local ret = dhcp.dhcp_get_enable_status()
+
+	if  ret 
+	then
+		print("dhcp server is enable")
+	else
+		print("dhcp server is disable")
+	end
+end
 
 
 function dhcp_get_server_ip()
@@ -896,6 +907,7 @@ local api_func = {
 	["dhcp_enable"]=dhcp.dhcp_enable,
 	["dhcp_disable"]=dhcp.dhcp_disable,
 	["dhcp_reload"]=dhcp.dhcp_reload,
+	["dhcp_get_enable_status"]=dhcp_get_enable_status,
 
 	--modem
 	["modem_get_status"] = modem_get_status,

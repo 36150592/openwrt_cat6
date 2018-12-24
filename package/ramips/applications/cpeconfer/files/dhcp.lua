@@ -32,6 +32,26 @@ function dhcp_module.dhcp_disable()
 	return os.execute("/etc/init.d/dnsmasq disable ")
 end
 
+-- get the dhcp server if enable
+-- input:none
+-- return:
+--		true if enable  false disable
+
+function dhcp_module.dhcp_get_enable_status()
+	local f = io.popen("ls /etc/rc.d/ | grep S*dnsmasq | wc -l")
+
+	local temp = f:read()
+
+	debug("dhcp server status = ", temp)
+
+	if "1" == temp
+	then
+		return true
+	end
+
+	return false
+end
+
 
 function dhcp_module.dhcp_reload()
 	os.execute("ubus call network reload ")
