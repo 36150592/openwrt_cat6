@@ -41,6 +41,7 @@ check_ubuntu_version()
 	ubuntu_version=`cat /etc/issue | awk '{print $2}' | awk -F '.' '{print $1}'`
 	if [ "${ubuntu_version}" != "14" ]; then
 		echo  $hyphen_e "\033[;31m 请使用ubuntu14.04来编译程序 \033[0m"
+		exit
 	fi
 }
 
@@ -58,7 +59,6 @@ download_something()
 download_something
 load_compile_count
 check_bash
-check_ubuntu_version
 
 date_start=$(date +%s)
 if [ "$1" = "" ] ; then
@@ -80,6 +80,7 @@ if [ "$line" = "" ]; then
 	line="1"
 fi
 
+
 if [ "$line" = "1" -o "$line" = "s21" ] ; then
 	project=s21
 elif [ "$line" = "y" ] ; then
@@ -99,6 +100,7 @@ else
 fi
 
 
+check_ubuntu_version
 echo "The project is ${project}"
 
 
