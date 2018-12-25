@@ -40,15 +40,7 @@ define Package/cpeconfer/install
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_BIN) ./files/cmd.lua $(1)/bin/cpeconfer
 	$(INSTALL_DIR) $(1)/usr/lib/lua/tz
-	$(INSTALL_DATA) ./files/wifi.lua $(1)/usr/lib/lua/tz
-	$(INSTALL_DATA) ./files/dhcp.lua $(1)/usr/lib/lua/tz
-	$(INSTALL_DATA) ./files/util.lua $(1)/usr/lib/lua/tz
-	$(INSTALL_DATA) ./files/firewall.lua $(1)/usr/lib/lua/tz
-	$(INSTALL_DATA) ./files/modem.lua $(1)/usr/lib/lua/tz
-	$(INSTALL_DATA) ./files/network.lua $(1)/usr/lib/lua/tz
-	$(INSTALL_DATA) ./files/sim.lua $(1)/usr/lib/lua/tz
-	$(INSTALL_DATA) ./files/system.lua $(1)/usr/lib/lua/tz
-	$(INSTALL_DATA) ./files/device.lua $(1)/usr/lib/lua/tz
+	$(INSTALL_DATA) ./files/*.lua $(1)/usr/lib/lua/tz
 endef
 
 

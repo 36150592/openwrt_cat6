@@ -1,5 +1,6 @@
 local module = {}
 
+require("io")
 local DEBUG=require("debug")
 function module.debug(...)
 	arg = { ... } 
@@ -47,5 +48,14 @@ function module.sleep(n)
    while os.clock() - t0 <= n do end
 
 end
+
+function module.is_file_exist(FileName) 
+	local f = io.open(FileName,"r")
+	if(f == nil )then
+		return false
+	end
+	f:close()
+	return true
+end 
 
 return module
