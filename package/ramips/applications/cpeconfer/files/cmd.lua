@@ -714,6 +714,35 @@ function wifi_get_connect_sta_list()
 	end
 end
 
+function wifi_get_connect_sta_number()
+	print("wifi_get_connect_sta_number")
+	local ret = wifi.wifi_get_connect_sta_number(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("connect sta number = ", ret)
+	else
+		print("get connect sta number fail")
+		print("usepage:wifi_get_connect_sta_number wifi_id")
+	end
+
+end
+
+function wifi_set_connect_sta_number()
+	print("wifi_set_connect_sta_number")
+	local ret = wifi.wifi_set_connect_sta_number(tonumber(arg[2]),tonumber(arg[3]))
+
+	if   ret 
+	then
+		print("set connect sta number success")
+	else
+		print("set connect sta number fail")
+		print("usepage:wifi_set_connect_sta_number wifi_id  number")
+	end
+
+end
+
+
 function dhcp_get_enable_status()
 
 	print("dhcp_get_enable_status")
@@ -888,7 +917,8 @@ local api_func = {
 	["wifi_stop"]=wifi_stop,
 	["wifi_stop_all"]=wifi_stop_all,
 	
-	
+	["wifi_get_connect_sta_number"] = wifi_get_connect_sta_number,
+	["wifi_set_connect_sta_number"] = wifi_set_connect_sta_number,
 	["wifi_get_connect_sta_list"]=wifi_get_connect_sta_list,
 
 	--dhcp

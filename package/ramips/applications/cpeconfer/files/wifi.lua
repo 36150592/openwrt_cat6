@@ -391,7 +391,7 @@ function wifi_module.wifi_start(wifi_id)
     return os.execute("wifi start " .. dev_type)
 end
 
-function wifi_module.wifi_start_all(wifi_id)
+function wifi_module.wifi_start_all()
      return os.execute("wifi  ")
 end
 function wifi_module.wifi_restart(wifi_id)
@@ -534,7 +534,7 @@ end
 --txpower
 -- input:
 --		wifi_id(number) -->get by wifi_get_dev
---		txpower(number) [0 ,100]
+--		txpower(number) [0 ,100] wifi tx power in percent
 -- return:boolean
 --		true if success  false if fail
 function wifi_module.wifi_set_txpower(wifi_id,txpower)
@@ -583,7 +583,7 @@ end
 
 -- get hidden ssid config 
 -- input:
--- 		wifi_id  get by wifi_get_dev\
+-- 		wifi_id  get by wifi_get_dev
 -- return: string value as follow
 -- 		0:disable
 -- 		1:enable
@@ -810,7 +810,7 @@ end
 --		boolean true if success false if fail
 function wifi_module.wifi_set_connect_sta_number(wifi_id,number)
     debug("set connect sta number")
-  	if type(encry_algorithms) ~= "number" 
+  	if type(number) ~= "number" 
 	then 
 		debug(" not number,input error")
 		return false
