@@ -2950,6 +2950,7 @@ CONFIG_PACKAGE_sendat=y
 # CONFIG_PACKAGE_switch is not set
 CONFIG_PACKAGE_tz_web=y
 CONFIG_PACKAGE_uci2dat=y
+CONFIG_PACKAGE_unzip=y
 # CONFIG_PACKAGE_wapid is not set
 # CONFIG_PACKAGE_watchdog is not set
 # CONFIG_PACKAGE_wpa-supplicant-20 is not set
