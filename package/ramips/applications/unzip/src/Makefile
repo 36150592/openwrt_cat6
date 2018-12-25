@@ -159,6 +159,8 @@ SYSTEMS9 = vax v7 wombat xenix xos
 
 # By default, print help on which makefile targets to try.  (The SYSTEM
 # variable is no longer supported; use "make <target>" instead.)
+tozed: generic
+	@echo "target unzip"
 help:
 	@echo ""
 	@echo "  If you're not sure about the characteristics of your system, try typing"

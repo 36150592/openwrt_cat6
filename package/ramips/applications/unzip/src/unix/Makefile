@@ -280,13 +280,13 @@ unzipsdocs:	unzips docs
 # make utilities if default:  change "unzip$E:" to "unzip$E:&"
 
 unzip$E:	$(OBJS) $(LIBBZ2)	# add `&' for parallel makes
-	$(LD) $(LF) -L$(IZ_BZIP2) $(LOBJS) $(L_BZ2) $(LF2)
+	$(CC) $(LF) -L$(IZ_BZIP2) $(LOBJS) $(L_BZ2) $(LF2)
 
 unzipsfx$E:	$(OBJX)			# add `&' for parallel makes
-	$(LD) $(SL) $(LOBJX) $(SL2)
+	$(CC) $(SL) $(LOBJX) $(SL2)
 
 funzip$E:	$(OBJF)			# add `&' for parallel makes
-	$(LD) $(FL) $(OBJF) $(FL2)
+	$(CC) $(FL) $(OBJF) $(FL2)
 
 zipinfo$E:	unzip$E			# `&' is pointless here...
 	@echo\
