@@ -1,0 +1,68 @@
+#!/bin/sh
+
+UPDATE_SYSTEM_STATUS_SUCCESS=/tmp/.update_system_success
+UPDATE_SYSTEM_STATUS_FAIL=/tmp/.update_system_fail
+UPDATE_SYSTEM_STATUS_ING=/tmp/.update_system_ing
+
+TARGET_PACKAGE=$1
+
+WORK_STATION=/tmp/update_station/system/
+zip_pwd=tz18c6
+
+
+go_exit()
+{
+	rm ${UPDATE_SYSTEM_STATUS_ING} -f
+	if [ "$1" = "success" ]; then
+		rm ${UPDATE_SYSTEM_STATUS_FAIL} -f
+		touch ${UPDATE_SYSTEM_STATUS_SUCCESS}
+	else
+		rm ${UPDATE_SYSTEM_STATUS_SUCCESS} -f
+		touch ${UPDATE_SYSTEM_STATUS_FAIL}
+	fi
+	exit
+}
+
+
+touch ${UPDATE_SYSTEM_STATUS_ING}
+
+if [ "${TARGET_PACKAGE}" = "" -o ! -f ${TARGET_PACKAGE} ]; then
+	echo "the target package is not exist"
+	go_exit
+fi
+
+mkdir -p ${WORK_STATION}
+rm -rf ${WORK_STATION}/*
+
+#解压到升级目录
+unzip -P ${zip_pwd} ${TARGET_PACKAGE} -d ${WORK_STATION}
+
+#check configDir
+
+##config update
+
+
+
+#check firmware md5sum
+cd ${WORK_STATION}
+if [ ! -f md5sum.txt ]; then
+	go_exit
+fi
+
+md5_value_in_file=`cat md5sum.txt | awk '{print $1}'` 
+
+system_firmware=`ls | grep firmware | grep bin`
+
+md5_value_by_cal=`md5sum ${system_firmware} | awk '{print $1}'`
+
+if [ "${md5_value_in_file}" != "${md5_value_by_cal}" ]; then
+	echo "md5sum fail"
+	go_exit
+fi
+
+echo "md5sum success"
+
+##firmware update
+sysupgrade ${WORK_STATION}/${system_firmware}
+
+

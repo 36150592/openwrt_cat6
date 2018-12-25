@@ -2,13 +2,16 @@
 
 echo "topdir=" $TOPDIR
 echo "project=" $project
+zip_pwd=tz18c6
 
-TZ_SOFTWARE_VERSION=0.01
 
-## target
 cd $TOPDIR
 
+SOFTWARE_VERSION=`cat project/s21/key-message | grep software_version | awk -F "=" '{print $2}'`
+echo "Soft=${SOFTWARE_VERSION}"
+
 mkdir -p image/${project}/update
+rm -rf image/${project}/update/*
 
 cp -f project/s21/bin/factory.bin image/${project}/factory.bin
 cp -f project/s21/bin/old-all.bin image/${project}/old-all.bin
@@ -31,4 +34,9 @@ tr '\000' '\377' < /dev/zero | dd of=imag/${project}/emptyfirmware.bin bs=1024 c
 dd if=image/${project}/emptyfirmware.bin of=image/${project}/olduboot_newfirmware.bin conv=notrunc bs=64k seek=5 2>/dev/null
 dd if=image/${project}/new_firmware-kernel-fs.bin of=image/7621_cat6/olduboot_newfirmware.bin conv=notrunc bs=64k seek=5 2>/dev/null
 
+#update package
+cp image/${project}/new_firmware-kernel-fs.bin image/${project}/update/firmware-kernel-fs-v${SOFTWARE_VERSION}.bin
+cp project/s21/system_updateit image/${project}/update/updateit
+md5sum image/${project}/update/firmware-kernel-fs-v${SOFTWARE_VERSION}.bin >> image/${project}/update/md5sum.txt
+cd image/${project}/update && zip -P ${zip_pwd} ${project}_v${SOFTWARE_VERSION}.bin firmware-kernel-fs-v${SOFTWARE_VERSION}.bin updateit md5sum.txt
 
