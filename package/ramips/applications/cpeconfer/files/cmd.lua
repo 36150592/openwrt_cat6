@@ -697,6 +697,54 @@ function wifi_stop_all()
 	end
 end	
 
+function wifi_is_start()
+	print("wifi_is_start")
+	local ret = wifi.wifi_is_start(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("wifi is started")
+	else
+		print("wifi is stoped")
+	end
+end
+
+function wifi_enable()
+	print("wifi_enable")
+	local ret = wifi.wifi_enable(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("wifi enable succes")
+	else
+		print("wifi enable fail")
+	end
+end
+
+function wifi_disable()
+	print("wifi_disable")
+	local ret = wifi.wifi_disable(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("wifi_disable succes")
+	else
+		print("wifi_disable fail")
+	end
+end
+
+function wifi_get_enable_status()
+	print("wifi_get_enable_status")
+	local ret = wifi.wifi_get_enable_status(tonumber(arg[2]))
+
+	if  "0" == ret
+	then
+		print("wifi is  enable")
+	else
+		print("wifi is disable")
+	end
+end
+
 
 function wifi_get_connect_sta_list()
 	print("wifi_get_connect_sta_list")
@@ -916,6 +964,14 @@ local api_func = {
 
 	["wifi_stop"]=wifi_stop,
 	["wifi_stop_all"]=wifi_stop_all,
+
+	["wifi_is_start"]=wifi_is_start,
+	["wifi_enable"]=wifi_enable,
+
+	["wifi_disable"]=wifi_disable,
+	["wifi_get_enable_status"]=wifi_get_enable_status,
+
+
 	
 	["wifi_get_connect_sta_number"] = wifi_get_connect_sta_number,
 	["wifi_set_connect_sta_number"] = wifi_set_connect_sta_number,

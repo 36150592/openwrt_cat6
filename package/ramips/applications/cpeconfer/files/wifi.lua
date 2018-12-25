@@ -380,7 +380,7 @@ function wifi_module.wifi_get_dev()
 	
 end
 
-
+-- wifi must be enable status when use this interface
 function wifi_module.wifi_start(wifi_id)
 	local section_name = common_get_section_name_by_index(wifi_id)
 	local dev_type = x:get(WIFI_CONFIG_FILE, section_name,"type")
@@ -391,9 +391,12 @@ function wifi_module.wifi_start(wifi_id)
     return os.execute("wifi start " .. dev_type)
 end
 
+-- wifi must be enable status when use this interface
 function wifi_module.wifi_start_all()
      return os.execute("wifi  ")
 end
+
+-- wifi must be enable status when use this interface
 function wifi_module.wifi_restart(wifi_id)
 	local section_name = common_get_section_name_by_index(wifi_id)
 	local dev_type = x:get(WIFI_CONFIG_FILE, section_name,"type")
@@ -426,6 +429,53 @@ function wifi_module.wifi_stop_all()
    	return os.execute("wifi  down")
 end
 
+-- enable wifi self boot 
+-- input:wifi id get by wifi_get_dev
+-- return: true if success false if fail
+function wifi_module.wifi_enable(wifi_id)
+	debug("set wifi self start at boot")
+    -- set the ifame section
+	local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	return common_config_set(section_name, "disabled", "", 0)
+end
+
+-- is the wifi start of stop
+-- input:wifi_id get by wifi_get_dev
+-- return:true if wifi is started false if wifi is stoped
+function wifi_module.wifi_is_start(wifi_id)
+
+	debug("wifi_is_start")
+	local section_name = common_get_ifame_section_name_by_index(wifi_id)
+    local ifname = x:get(WIFI_CONFIG_FILE, section_name, "ifname")
+	local f = io.popen(string.format("iwconfig %s | grep ESSID | wc -l", ifname))
+	local res = f:read()
+
+	if "1" == res
+	then
+		return true
+	end
+
+	return false
+end
+
+-- disable wifi self boot 
+-- input:wifi id get by wifi_get_dev
+-- return: true if success false if fail
+function wifi_module.wifi_disable(wifi_id)
+	debug("disable wifi self start at boot")
+    -- set the ifame section
+	local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	return common_config_set(section_name, "disabled", "", 1)
+end
+
+-- get wifi self boot config
+--input:wifi id get by wifi_get_dev
+--return:
+--		1:disable
+--		0:enable
+function wifi_module.wifi_get_enable_status(wifi_id)
+	return  common_config_get(wifi_id, "disabled", "")
+end
 
 --get ssid
 -- input:
