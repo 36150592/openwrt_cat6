@@ -683,6 +683,31 @@ static int usb_id2dev(char* dev_name, char *id, int len)
 }
 
 
+static int read_memory(char *shellcmd, char *out, int size) {
+
+	FILE *stream;
+	char buffer[size];
+    memset(buffer, 0, sizeof(buffer));
+
+	stream = popen(shellcmd, "r");
+	if(stream != NULL){
+        fread(buffer, sizeof(char), sizeof(buffer), stream);
+        pclose(stream);
+
+		memcpy(out, buffer, strlen(buffer) + 1);
+
+		return 0;
+	} else {
+		out[0] = '\0';
+	}
+
+	return -1;
+}
+
+
+#define modem_in_usb2_0 "1"
+#define modem_in_usb3_0 "2"
+
 int main(int argc,char *argv[] )
 {
 	IDPV * ids_module=&global_system_info.module_info.module_serial;		//store module pid and vid
@@ -695,6 +720,9 @@ int main(int argc,char *argv[] )
 	unsigned int baudrate=115200;
 	char config_file_name[64]={0};
 	int i;
+
+	char* vendor_id_file = NULL;
+	char* product_id_file = NULL;
 	
 	//printf("compile at %s %s\n", __DATE__,__TIME__);
 	openlog(argv[0],  LOG_PID, 0);  
@@ -715,14 +743,44 @@ int main(int argc,char *argv[] )
 	log_info("%s %d\n",__FUNCTION__,__LINE__);
 	fill_config(config_file_name,cfg);
 	init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
+
+	while(1)
+	{
+		char cmd[512] = "dmesg | grep ttyUSB | grep -v DT | grep ttyUSB0 | awk '{print $4}' | awk -F \"-\" '{print $1}'";
+		char usbx_flag[8] = "";
+		read_memory(cmd, usbx_flag,sizeof(usbx_flag));
+		if(usbx_flag[0])
+		{
+			if( strncmp(usbx_flag, modem_in_usb2_0, 1) == 0 )
+			{
+				//usb2.0
+				product_id_file = PRODUCTID_MT7621_FILE_2_0;
+				vendor_id_file = VENDORID_MT7621_FILE_2_0;
+				break;
+			}
+			else if( strncmp(usbx_flag, modem_in_usb3_0, 1) == 0 )
+			{
+				//usb3.0 
+				product_id_file = PRODUCTID_MT7621_FILE_3_0;
+				vendor_id_file = VENDORID_MT7621_FILE_3_0;
+				break;
+			}
+			
+			log_info("%s %d: wait ttyUSBx...\n",__FUNCTION__,__LINE__);
+			sleep(3);
+		}
+		
+	}
+
+	
 	printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>enable_pin = %s\n",configs.enable_pin.Value);
 	while(1)
 	{
 		static int checkPvCounts = 0;
 		static int outWhile = 0;
 		//get  pid and vid of the device
-		ids_module->idVendor=get_value(VENDORID_MT7621_FILE,16);
-		ids_module->idProduct=get_value(PRODUCTID_MT7621_FILE,16);
+		ids_module->idVendor=get_value(vendor_id_file,16);
+		ids_module->idProduct=get_value(product_id_file,16);
 		/*
 		** make sure we get right idProduct and idVendor
 		**/

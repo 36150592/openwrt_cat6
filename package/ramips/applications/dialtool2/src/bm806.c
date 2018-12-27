@@ -500,7 +500,7 @@ const MDI bm806_moduleinfo=
 const MDI bm806_moduleinfo=
 {
 	{TZ_VENDOR_P500_ID,TZ_PRODUCT_P500V3},
-	"1-1:1.2",
+	"1-2:1.2",
 	bm806_get_moduleinfo,
 	"0",
 	"0",
