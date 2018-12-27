@@ -151,8 +151,8 @@ typedef enum
 	    #define PRODUCTID_9341_FILE	"/sys/bus/usb/devices/1-1.4/idProduct"
 #endif
 #endif
-    #define VENDORID_MT7621_FILE	"/sys/devices/platform/xhci-hcd/usb1/1-1/idVendor"
-    #define PRODUCTID_MT7621_FILE	"/sys/devices/platform/xhci-hcd/usb1/1-1/idProduct"
+#define VENDORID_MT7621_FILE	"/sys/devices/platform/xhci-hcd/usb2/2-1/idVendor"
+#define PRODUCTID_MT7621_FILE	"/sys/devices/platform/xhci-hcd/usb2/2-1/idProduct"
 
 #define UDHCPC_PIDFILE_PATH "/tmp/.udhcpc.pid"
 #define SYSTEM_INFO_STATIC		"/tmp/.system_info_static"

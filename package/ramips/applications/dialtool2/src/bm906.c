@@ -484,7 +484,7 @@ static const char* bm906_hardware_summary[]=
 const MDI bm906_moduleinfo=
 {
 	{TZ_VERDOR_S21_ID,TZ_PRODUCT_S21V1},
-	"1-1:1.2",
+	"2-1:1.2",
 	bm906_get_moduleinfo,
 	"0",
 	"0",
