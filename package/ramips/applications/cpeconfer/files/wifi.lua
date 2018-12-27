@@ -191,7 +191,7 @@ local function common_config_get(wifi_id, option, dat_option)
 
 	if ( nil == value )
 	then
-		if   dev_type ~= nil
+		if   dev_type ~= nil and nil ~= dat_option and "" ~= dat_option
 		then
 		
 			debug(" is nil,get  from dat file ")
@@ -202,7 +202,7 @@ local function common_config_get(wifi_id, option, dat_option)
 			value = res
 			
 		else
-			debug("dev_type = nil and nil = nil, can not get")
+			debug("dev_type = nil and dat_option = nil, can not get")
 			return nil
 		end
 	end
@@ -247,12 +247,10 @@ wifi_module.device = {
 	["mode"]	 = 	nil,
 	["wifi_id"]	 = 	nil,
 	["dev_name"]	 = 	nil,
-	["wifi_id"]	 = 	nil,
 	["ssid"]	 = 	nil,
 	["encryption"] = nil,
 	["interface_name"] = nil,
 	["hidden_ssid"] = nil,
-	["password"] = nil,
 	["password"] = nil,
 	["encry_algorithms"] = nil,
 	["connect_sta_number"] = nil,
@@ -274,7 +272,6 @@ function wifi_module.device:new(o,obj)
 	self["mode"]	 = 	obj["mode"] or nil
 	self["wifi_id"]	 = 	obj["wifi_id"] or nil
 	self["dev_name"]	 = 	obj["dev_name"] or nil
-	self["wifi_id"]	 = 	obj["wifi_id"] or nil
 	self["ssid"]	 = 	obj["ssid"] or nil
 	self["encryption"] = obj["encryption"] or nil
 	self["interface_name"] = obj["interface_name"] or nil	
@@ -473,8 +470,25 @@ end
 --return:
 --		1:disable
 --		0:enable
+--		nil:get fail
 function wifi_module.wifi_get_enable_status(wifi_id)
-	return  common_config_get(wifi_id, "disabled", "")
+	local section_name = common_get_ifame_section_name_by_index(wifi_id)
+
+	if nil == section_name 
+	then
+		debug("error:can not get section name ")
+		return nil
+	end
+
+	local ret = x:get(WIFI_CONFIG_FILE, section_name, "disabled")
+
+	if nil == ret
+	then
+		debug("ret is nil ,return default value")
+		return "0"
+	end
+
+	return ret
 end
 
 --get ssid

@@ -37,15 +37,17 @@ config wifi-device      mt7612e
 	option country	CN
 	option channel  149
 	option autoch   0
-
+    option mode     14
+    
 config wifi-iface
     option device   mt7612e
     option ifname   rai0
     option network  lan
     option mode     ap
     option ssid     $ssid
-    option encryption none
-
+    option encryption psk2+ccmp
+    option key      12345678
+    option maxassoc 20     
 EOF
 
 }
