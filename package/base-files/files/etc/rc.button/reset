@@ -1,43 +1,15 @@
 #!/bin/sh
 #
 # ***************
-#
-#  作者   周连朋
-#  email: 455697020@qq.com
-#  
-#
-
+#fengyz@tz
 [ "${ACTION}" = "released" ] || exit 0
-
-. /lib/functions.sh
 
 logger "$BUTTON pressed for $SEEN seconds"
 
 if [ "$SEEN" -lt 1 ]
 then
-	echo "reset" > /tmp/resetbutton
-
-		
-
-        Isrun=$(ps | grep telnetd | grep -v grep | wc -l ) 2>/dev/null  
-
-        if [ $Isrun -eq 0 ];then
-
-        echo "run telnetd" > /dev/console
-
-        /usr/sbin/telnetd -p 6168 -F -l /bin/login.sh &
-        else
-
-        echo "telnet is running" > /dev/console
-
-        fi
-
-	wps_pbc
-
-	#echo "reset test ture" > /dev/console
-#	echo "REBOOT" > /dev/console
-#	sync
-#	reboot
+	echo "REBOOT" > /dev/console
+	reboot
 elif [ "$SEEN" -gt 5 ]
 then
 	echo "FACTORY RESET" > /dev/console

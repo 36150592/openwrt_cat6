@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+#fengyz @ tz 
+[ "${ACTION}" = "released" ] || exit 0
+
+logger "$BUTTON pressed for $SEEN seconds"
+
+echo "wps key pressed " > /dev/console
+
+return 0

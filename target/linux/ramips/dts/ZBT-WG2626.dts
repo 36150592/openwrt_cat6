@@ -101,9 +101,20 @@
 
 		reset {
 			label = "reset";
-			gpios = <&gpio0 18 1>;
+			gpios = <&gpio0 13 1>;
 			linux,code = <0x198>;
 		};
+    	BTN_0 {
+			label = "wlan";
+			gpios = <&gpio0 15 1>;
+			linux,code = <0x100>;
+		};
+        wps {
+			label = "wps";
+			gpios = <&gpio0 18 1>;
+			linux,code = <0x211>;
+		};
+
 	};
 
 	gpio-leds {
