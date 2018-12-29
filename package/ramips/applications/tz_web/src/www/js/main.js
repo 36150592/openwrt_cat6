@@ -1480,6 +1480,7 @@ NOT_SUPPORT_TELNET_SETTINGS: (45)
 };
 
 var Page = {
+	AUTH:"",
 	isTest: false,
 	isNULLToSpace: false,
 	connectStatus: true,
@@ -3415,8 +3416,12 @@ function getOpenInfo() {
         	wlanNames = DOC.wlan;
 
         var html;
-	var vsinr,vrsrp,vrssi;
+
     	if (supportedLte) {
+            var status = routerInfo.status;
+            var divice = routerInfo.divice;
+            var system = routerInfo.system;
+            var wifidate = routerInfo.wifi;
 	        names.push(DOC.device.imsi);
 	        names.push(DOC.lte.plmn);
 	        names.push(lteNames.phyCellId);
@@ -3433,62 +3438,23 @@ function getOpenInfo() {
 	        names_advanced.push(TAB.advance.roaming);
 	        names_advanced.push(DOC.device.imei);
 
-	        values.push(FormatUtil.formatField(routerInfo.imsi || loading));
-	        values.push(FormatUtil.formatField(lteInfo.lte_plmn || loading));
-	        values.push(FormatUtil.formatField(lteInfo.phyCellId || loading));
-		if(lteInfo.sinr2!=null)
-		{
-			vsinr=(parseInt(lteInfo.sinr,10)+parseInt(lteInfo.sinr2,10))/2;
-		}
-		else if(lteInfo.sinr!=null)
-		{
-			vsinr=lteInfo.sinr;
-		}
-		else
-		{
-			vsinr=0;
-		}
-		if(lteInfo.rsrp2!=null)
-		{
-			vrsrp=(parseInt(lteInfo.rsrp,10)+parseInt(lteInfo.rsrp2,10))/2;
-		}
-		else if(lteInfo.rsrp!=null)
-		{
-			vrsrp=lteInfo.rsrp;
-		}
-		else
-		{
-			vrsrp=0;
-		}
-		if(lteInfo.rssi2!=null)
-		{
-			vrssi=(parseInt(lteInfo.rssi,10)+parseInt(lteInfo.rssi2,10))/2;
-		}
-		else if(lteInfo.rssi!=null)
-		{
-			vrssi=lteInfo.rssi;
-		}
-		else
-		{
-			vrssi=0;
-		}
+	        values.push(FormatUtil.formatField(status.imsi || loading));
+	        values.push(FormatUtil.formatField(status.plmn || loading));
+	        values.push(FormatUtil.formatField(status.cell_id || loading));
 
-		values.push(lteInfo.sinr ? FormatUtil.formatField(vsinr, 'dB') : loading);
-	        values.push(lteInfo.rsrp ? FormatUtil.formatField(vrsrp, 'dBm') : loading);
-		values.push(lteInfo.rssi ? FormatUtil.formatField(vrssi, 'dBm') : loading);
-	        //values.push(lteInfo.sinr ? FormatUtil.formatField(lteInfo.sinr, 'dB') : loading);
-	        //values.push(lteInfo.rsrp ? FormatUtil.formatField(lteInfo.rsrp, 'dBm') : loading);
-		//values.push(lteInfo.rssi ? FormatUtil.formatField(lteInfo.rssi, 'dBm') : loading);
-	        //values.push(lteInfo.txpower ? FormatUtil.formatField(lteInfo.txpower, 'dBm') : loading);
+		values.push(status.sinr ? FormatUtil.formatField(status.sinr, 'dB') : loading);
+	    values.push(status.rsrp ? FormatUtil.formatField(status.rsrp, 'dBm') : loading);
+		values.push(status.rssi ? FormatUtil.formatField(status.rssi, 'dBm') : loading);
+		//values.push(lteInfo.txpower ? FormatUtil.formatField(lteInfo.txpower, 'dBm') : loading);
 
 	        //values_advanced.push(lteInfo.tm ? FormatUtil.formatField('tm ' + lteInfo.tm) : loading);
 	        values_advanced.push(FormatUtil.formatField(lteInfo.freq || loading));
-	        values_advanced.push(lteInfo.rsrq ? FormatUtil.formatField(lteInfo.rsrq, 'dB') : loading);
+	        values_advanced.push(status.rsrq ? FormatUtil.formatField(status.rsrq, 'dB') : loading);
 	        values_advanced.push(FormatUtil.formatField(lteInfo.globalCellId || loading));
-	        values_advanced.push(FormatUtil.formatField(lteInfo.lte_enodebid || loading));
+	        values_advanced.push(FormatUtil.formatField(status.enodebid || loading));
 	        values_advanced.push(FormatUtil.formatField(lteInfo.volteRegister || loading));
 	        values_advanced.push(FormatUtil.formatField(lteInfo.simcard_roam || loading));
-	        values_advanced.push(FormatUtil.formatField(routerInfo.imei || loading));
+	        values_advanced.push(FormatUtil.formatField(divice.imei || loading));
 	        
 	        html = Page.createTable(DOC.title.lteInfoBasic, names, values, names.length, 1);
 	        $('#device_check').show();
@@ -3507,11 +3473,11 @@ function getOpenInfo() {
         names.push(DOC.device.modemVersion);
         
         values = [];
-        var runInfo = ConvertUtil.parseUptime((routerInfo.uptime || '').trim(), DOC.unit);
-        values.push(runInfo.runTime);
+        var runtime = ConvertUtil.timeStamp(system.runtime);
+        values.push(runtime);
         //values.push(FormatUtil.formatField(Page.getDeviceVersion(routerInfo.name, routerInfo.version) || loading));certificationVer
-        values.push(FormatUtil.formatField( routerInfo.certificationVer|| loading));
-        values.push(FormatUtil.formatField(routerInfo.modversion || loading));
+        values.push(FormatUtil.formatField( divice.hardware|| loading));
+        values.push(FormatUtil.formatField(divice.type || loading));
         
         html = Page.createTable(DOC.title.router, names, values, names.length, 1);
         $('#router_info').html(html);
@@ -3568,20 +3534,20 @@ function getOpenInfo() {
 	        //names.push(wlanNames.secMode);
 	        
 	        values = [];
-	        values.push(FormatUtil.formatField(routerInfo.ssid || loading));
-	        values.push(FormatUtil.formatField(routerInfo.channel || loading));
+	        values.push(FormatUtil.formatField(wifidate.ssid || loading));
+	        values.push(FormatUtil.formatField(wifidate.channel || loading));
 	        //values.push(FormatUtil.formatField(ConvertUtil.frequencyToChannel(routerInfo.frequency) || loading));
 	        
-	        var wifiOpen = routerInfo.wifiOpen;
-	        if(wifiOpen == WiFi.CLOSED) {
-	        	values.push(DOC.status.closed);
-	        } else if(wifiOpen == WiFi.OPENED) {
+	        var wifiOpen = wifidate.status;
+	        if(wifiOpen == "0") {
 	        	values.push(DOC.status.opened);
+	        } else if(wifiOpen == "1") {
+	        	values.push(DOC.status.closed);
 	        } else {
 	        	values.push(loading);
 	        }
 	        //values.push(String.format('<span id="spanWiFiCount">{0}</span>', Page.wifiUserCount == null ? '' : Page.wifiUserCount.toString()));
-	        values.push(FormatUtil.formatField(routerInfo.sta_count || loading))
+	        values.push(FormatUtil.formatField(routerInfo.sta_count || loading));
 	        /*var securityType = SecurityJSON.getSecurityType(routerInfo);
 			if (routerInfo.secMode) {
 			    values.push(securityType);
@@ -3592,10 +3558,6 @@ function getOpenInfo() {
 	        html = Page.createTable(DOC.title.wlan, names, values, names.length, 1);
 	        $(wlan_info_id).html(html);
 	        Page.setStripeTable(wlan_info_id);
-        }
- 		
-        if (!noRefresh) {
-        	setTimeout(getRouterInfo, 10000);
         }
     }
     
@@ -3694,25 +3656,26 @@ function getOpenInfo() {
     function getRouterInfo() {
     	Page.postJSON({
             json: { cmd: RequestCmd.ROUTER_INFO },
-            success: function(routerInfo) {
+            success: function(datas) {
             	// save
-            	theRouterInfo = routerInfo;
+				console.log(datas);
+            	theRouterInfo = datas.data;
             	
-            	getLteInfo(routerInfo);
-            	createTable(routerInfo, theLteInfo, true);
+            //	getLteInfo(routerInfo);
+            	createTable(theRouterInfo, theLteInfo, true);
             },
             fail: function() {
-                getLteInfo(theRouterInfo);
+              //  getLteInfo(theRouterInfo);
             },
             error: function() {
-                getLteInfo(theRouterInfo);
+              //  getLteInfo(theRouterInfo);
             }
         });
     }
     
-    //getRouterInfo();
-	createTable(theRouterInfo, theLteInfo, true);
-};
+    getRouterInfo();
+	//createTable(theRouterInfo, theLteInfo, true);
+}
 
 function MenuHead(css, text, bodys) {
 	this.css = css;

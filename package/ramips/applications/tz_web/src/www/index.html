@@ -17,20 +17,23 @@
 <script type="text/javascript" src="js/underscore-min.js"></script>
 <script type="text/javascript" src="js/language_list.js?t=000000"></script>
 <script type="text/javascript" src="js/language.js?t=000000"></script>
-<script type="text/javascript" src="js/language/en.js?t=000000"></script>
+<script type="text/javascript" src="js/language/cn.js?t=000000"></script>
 <script type="text/javascript" src="js/helper.js?t=000000"></script>
 <script type="text/javascript" src="js/main.js?t=000000"></script>
 <script type="text/javascript">
 
 $(document).ready(function() {
-
-
-    
+  
+  
     function index() {
-        var loginName = CookieUtil.getCookie('loginName');
-        var sessionId = CookieUtil.getCookie("sessionId");
+        //var loginName = CookieUtil.getCookie('loginName');
+        //var sessionId = CookieUtil.getCookie("sessionId");
+		var auth = CookieUtil.getCookie("auth");
+		var sessionId = sessionStorage['sessionId'];
+        var loginName = sessionStorage['loginName'];
         if(loginName && sessionId){
             Page.sessionId = sessionId;
+			Page.AUTH = auth;
             $('#container').load('html/home.html');
         }else {
             location.href = Page.getUrl(Url.LOGIN);
