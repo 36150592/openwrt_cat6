@@ -61,6 +61,7 @@ CHECK.required.netmask = "子网掩码不能为空";
 CHECK.required.newPasswd = "请输入新密码";
 CHECK.required.newPin = "请输入新PIN码";
 CHECK.required.newUsername = "请输入新用户名";
+CHECK.required.noChanges = "未做任何修改";
 CHECK.required.noEmpty = "不能为空";
 CHECK.required.noticeInterval = "周期通知间隔不能为空";
 CHECK.required.oldPasswd = "请输入旧密码";

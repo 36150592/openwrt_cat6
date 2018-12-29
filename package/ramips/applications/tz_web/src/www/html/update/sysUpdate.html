@@ -1,0 +1,195 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+
+    $(document).ready(function() {
+        var needreboot=1;
+        var showText = sysupdatehtml.prompt;
+        Page.render();
+        Page.setStripeTable();
+
+        var theUpdateFileName = "";
+        var $btnUpload = $('#btnUpload');
+        var datas;
+        $btnUpload.bind('click', function() {
+            SysUtil.upload($('#form1'), $('#fp'), "system", function(fileName) {
+                theUpdateFileName = fileName;
+                closeBox();
+            });
+        });
+
+        function update() {
+            var isOk = false;
+            datas = null;
+            SysUtil.showProgress(ProgressTime.UPDATE_PARTIAL, PROMPT.status.updating,
+                function() {
+                    return datas != null || isOk;
+                },
+                function() {
+                    if (datas.success) {
+                        Page.writeTime(0);
+                        if(needreboot==1){
+                            SysUtil.reboot({
+                                rebootType: RENOOTTYPE.RESTORE_SETTING,
+                                // msg: PROMPT.status.updateSuccess,
+                                hideConfirm:true
+                            });
+
+                            //  AlertUtil.alertMsg(PROMPT.status.updateSuccess);
+                            //	   location.reload();
+                        }
+                        else
+                        {
+                            AlertUtil.alertMsg(PROMPT.status.updateSuccess);
+                            location.reload();
+                        }
+                    } else {
+                        var msg = datas.message;
+                        var index = msg.indexOf(':');
+                        if (index >= 0 && index < 3) {
+                            msg = msg.substring(index + 1);
+                        }
+                        SysUtil.processMsg(msg);
+                        closeBox();
+                    }
+                }
+            );
+            setTimeout(function(){
+                closeBox();
+            },220000);
+
+        }
+
+        $('#btnUpdatePartial').bind('click', function() {
+            if (Page.isTestUser) {
+                if (theUpdateFileName == "") {
+                    AlertUtil.alertMsg(CHECK.required.uploadFile);
+                    return false;
+                }
+            }
+
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.UPDATE_PARTIAL,
+                    updateType: UpdateType.CLIENT,
+                    method: JSONMethod.POST,
+                    fileName: theUpdateFileName
+                },
+                success: function(data) {
+                    console.log("success" + data);
+                    if (data.success) {
+                        datas = data;
+                    }
+                    else
+                    {
+                        datas = data;
+                    }
+                },
+                fail: function(data) {
+                    console.log("fail" + data);
+                    datas = data;
+                }
+            });
+
+            update();
+        });
+
+        function beginUpdate() {
+            update();
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.REMOTE_UPGRADE,
+                    method: JSONMethod.POST,
+                    subcmd: 3
+                },
+                success: function(data) {
+                    var msg = data.message;
+                    if (!msg.startsWith("0:")) {
+                        datas = data;
+                        datas.success = false;
+                    }
+                },
+                fail: function(data) {
+                    datas = data;
+                }
+            });
+        }
+
+        var $btnUpdate = $('#btnUpdate');
+        $btnUpdate.bind('click', function() {
+            Page.postJSON({
+                $id: $btnUpdate,
+                json: {
+                    cmd: RequestCmd.REMOTE_UPGRADE,
+                    method: JSONMethod.POST,
+                    subcmd: 2
+                },
+                success: function(data) {
+                    var msg = data.message;
+                    if(msg.indexOf("needreboot1")>0)
+                    {
+                        needreboot=1;
+                    }
+                    else
+                    {
+                        needreboot=0;
+                    }
+
+                    //去掉needrebootx这样的信息
+                    msg=msg.replace( /needreboot\d/,"" );
+
+                    if (msg.startsWith("7:")) {
+                        AlertUtil.alertMsg(PROMPT.status.hasUpdated);
+                    } else if (msg.startsWith("12:")) {
+                        if (AlertUtil.confirm(PROMPT.status.updatingAvailable)) {
+                            beginUpdate();
+                        }
+                    } else {
+                        var index = msg.indexOf(':');
+                        if (index >= 0 && index < 3) {
+                            msg = msg.substring(index + 1);
+                        }
+                        AlertUtil.alertMsg(msg);
+                    }
+                }
+            });
+        });
+    });
+
+</script>
+
+<div class="detail_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <div class="detail"><%- title.localUpdate %></div>
+        <table class="detail" cellspacing="0">
+            <tr>
+                <th><%- sys.selectUpdateFile %><%- colon %></th>
+                <td>
+                    <form id="form1" enctype="multipart/form-data" method="post">
+                        <input type="file" id="fp" name="fp" value="<%- btn.browse %>" size="40" />
+                        <input type="button" id="btnUpload" value="<%- btn.upload %>"/>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <th></th>
+                <td><input type="button" id="btnUpdatePartial" value="<%- btn.update %>"/></td>
+            </tr>
+        </table>
+        <div class="detail"  style="display:none;"><%- title.remoteUpdate %></div>
+        <form id="remoteForm" enctype="multipart/form-data" method="post"  style="display:none;">
+            <table class="detail" cellspacing="0">
+                <tr>
+                    <th><%- lbl.fotaUrl %><%- colon %></th>
+                    <td><!-- FOTA_URL --></td>
+                </tr>
+                <tr>
+                    <th></th>
+                    <td>
+                        <input type="button" id="btnUpdate" value="<%- btn.update %>"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </script>
+</div>

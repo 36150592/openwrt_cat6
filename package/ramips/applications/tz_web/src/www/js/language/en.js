@@ -61,6 +61,7 @@ CHECK.required.netmask = "Subnet mask can not be empty";
 CHECK.required.newPasswd = "Please enter new password";
 CHECK.required.newPin = "Please enter the new PIN";
 CHECK.required.newUsername = "Please enter new username";
+CHECK.required.noChanges = "no changes made";
 CHECK.required.noEmpty = "can not be empty.";
 CHECK.required.noticeInterval = "Periodic inform interval can not be empty";
 CHECK.required.oldPasswd = "Please enter previous password";
