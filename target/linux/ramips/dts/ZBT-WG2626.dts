@@ -120,10 +120,55 @@
 	gpio-leds {
 		compatible = "gpio-leds";
 
-		status {
-			label = "zbt-wg2626:green:status";
+		signal1 {
+			label = "blue:signal1";
+			gpios = <&gpio0 25 1>;
+		};
+
+        signal2 {
+			label = "blue:signal2";
 			gpios = <&gpio0 24 1>;
 		};
+
+        signal3 {
+			label = "blue:signal3";
+			gpios = <&gpio0 23 1>;
+		};
+        signal4 {
+			label = "blue:signal4";
+			gpios = <&gpio0 22 1>;
+		};
+        signal5 {
+			label = "blue:signal5";
+			gpios = <&gpio0 26 1>;
+		};
+        modem-red {
+			label = "red:status";
+			gpios = <&gpio0 27 1>;
+		};
+        modem-blue {
+			label = "blue:status";
+			gpios = <&gpio1 1 1>;
+		};
+        wifi-5g {
+			label = "blue:wifi-5g";
+			gpios = <&gpio0 28 1>;
+		};
+
+        wifi {
+			label = "blue:wifi";
+			gpios = <&gpio0 29 1>;
+		};
+
+        wps {
+			label = "blue:wps";
+			gpios = <&gpio0 30 1>;
+		};
+        phone {
+			label = "blue:phone";
+			gpios = <&gpio0 31 1>;
+		};
+
 	};
 
 	pinctrl {
