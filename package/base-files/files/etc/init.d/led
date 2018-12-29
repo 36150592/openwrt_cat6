@@ -92,8 +92,8 @@ load_led() {
 }
 
 start() {
-	[ -e /sys/class/leds/ ] && {
-		config_load system
-		config_foreach load_led led
-	}
+	[ -e /sys/class/leds/ ] && [ -f /bin/led_process ] && {
+                led_process &           
+    }
+
 }
