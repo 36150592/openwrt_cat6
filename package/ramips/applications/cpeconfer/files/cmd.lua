@@ -8,6 +8,73 @@ local sim = require "tz.sim"
 local system = require "tz.system"
 local device = require "tz.device"
 local firewall = require "tz.firewall"
+local led = require "tz.led"
+
+function led_set_signal()
+
+	if led.led_set_signal(tonumber(arg[2]))
+	then
+		print("set signal success")
+	else
+		print("set signal fail")
+	end
+
+end
+
+function led_set_normal()
+	if led.led_set_normal(arg[2])
+	then
+		print("led_set_normal success")
+	else
+		print("led_set_normal fail")
+	end
+end
+
+function led_set_exception()
+	if led.led_set_exception(arg[2])
+	then
+		print("led_set_exception success")
+	else
+		print("led_set_exception fail")
+	end
+end
+
+function led_set_wifi()
+	if led.led_set_wifi(arg[2])
+	then
+		print("led_set_wifi success")
+	else
+		print("led_set_wifi fail")
+	end
+end
+
+function led_set_wifi_5g()
+	if led.led_set_wifi_5g(arg[2])
+	then
+		print("led_set_wifi_5g success")
+	else
+		print("led_set_wifi_5g fail")
+	end
+end
+
+
+function led_set_wps()
+	if led.led_set_wps(arg[2])
+	then
+		print("led_set_wps success")
+	else
+		print("led_set_wps fail")
+	end
+end
+
+function led_set_phone()
+	if led.led_set_phone(arg[2])
+	then
+		print("led_set_phone success")
+	else
+		print("led_set_phone fail")
+	end
+end
 
 
 function firewall_set_default_action()
@@ -1029,7 +1096,19 @@ local api_func = {
 	["firewall_start"] = firewall.firewall_start,
 	["firewall_stop"] = firewall.firewall_stop,
 	["firewall_restart"] = firewall.firewall_restart,
-	["firewall_clear_all_rules"] = firewall.firewall_clear_all_user_rule 
+	["firewall_clear_all_rules"] = firewall.firewall_clear_all_user_rule,
+
+
+	--led
+	["led_set_normal"] = led_set_normal,
+	["led_set_exception"] = led_set_exception,
+	["led_set_wifi"] = led_set_wifi,
+	["led_set_wifi_5g"] = led_set_wifi_5g,
+	["led_set_phone"] = led_set_phone,
+	["led_set_wps"] = led_set_wps,
+	["led_set_signal"] = led_set_signal,
+	["led_all_off"] = led.led_all_off,
+	["led_all_on"] = led.led_all_on
 }
 
 
