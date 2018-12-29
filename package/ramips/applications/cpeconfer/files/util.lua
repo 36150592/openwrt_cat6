@@ -2,27 +2,26 @@ local module = {}
 
 require("io")
 local DEBUG=require("debug")
+
 function module.debug(...)
 	arg = { ... } 
- 	local info = DEBUG.getinfo( 2, "nSl")
+	local log_str = ""
+	local info = DEBUG.getinfo( 2, "nSl")
 	for k,v in pairs(info) do
 		if k == "name" or k == "source"
 		then
-			io.write(v)
+			log_str = log_str .. tostring(v)
 		elseif k == "currentline"
 		then
-			io.write(":")
-			io.write(v)
-			io.write(" ")
+			log_str = log_str .. ":" .. tostring(v) .. " "
 		end
 		
 	end
 
 	for k,v in pairs(arg) do
-		io.write(v)
-		io.write(" ")
+		log_str = log_str .. tostring(v) .. " "
 	end
-	io.write("\n")
+	os.execute(string.format("logger %s", log_str))
 end
 
 function module.split(szFullString, szSeparator)  
