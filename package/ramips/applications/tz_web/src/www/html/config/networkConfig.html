@@ -10,6 +10,8 @@
         var $lis = $("ul.tabs a");
         var $boxes = $("div.tab_boxes > div");
         var $btnSaveLan = $('#btnSaveLan');
+        var $dhcp = $('tr.dhcp');
+        var $chkDHCP = $('#dhcpServer');
         var ipMacs = [], firstRequest = true;
 
         var disableEdit = false;
@@ -67,6 +69,15 @@
                         success: function(datas) {
                             console.log(datas);
                             var data = datas.data;
+                            var dstatus = data.status ? '1' : '0';
+                            if (dstatus == DHCPServer.CLOSED) {
+                                $chkDHCP.prop("checked", false);
+                                $dhcp.hide();
+                            } else {
+                                $chkDHCP.prop("checked", true);
+                                $dhcp.show();
+                            }
+							$chkDHCP.attr('old',dstatus);
                             var lanIp = FormatUtil.formatField(data.lanIp);
                             var netMask = FormatUtil.formatField(data.netMask);
                             Page.setFormFieldValue("lanIp", lanIp);
@@ -110,6 +121,15 @@
 
         $lis.eq(0).click();
 
+        $chkDHCP.click(function() {
+            if ($(this).prop("checked")) {
+                $dhcp.show();
+              //  $ipBegin.focus();
+            } else {
+                $dhcp.hide();
+            }
+        });
+
         var lan_rules = {
             lanIp : {required: true, gateway: true},
             netMask : {required: true, ip: true},
@@ -127,49 +147,68 @@
         };
 
         $btnSaveLan.click(function(){
+			$(this).attr("disabled",true);
+			var count = 0;
             var $form = $('#form1');
             if(!CheckUtil.checkForm($form, lan_rules, lan_messages)){
+				$(this).attr("disabled",false);
                 return false;
             }
             var json = JSON.parmsToJSON($form);
+			json.dhcpServer = json.dhcpServer ? '1' : '0';
+			
             if(json.dhcpServer == DHCPServer.OPENED){
                 if(!CheckUtil.checkNetSegment(json.lanIp, json.netMask, json.ipBegin)){
                     AlertUtil.alertMsg(showText.ipCheckMsg4);
+					$(this).attr("disabled",false);
                     return false;
                 }
                 if(!CheckUtil.checkNetSegment(json.lanIp, json.netMask, json.ipEnd)){
                     AlertUtil.alertMsg(showText.ipCheckMsg5);
+					$(this).attr("disabled",false);
                     return false;
                 }
-            }
-            json.expireTime = json.expireTime ;
+				if(json.ipBegin ==  $("#ipBegin").attr('old')  && json.ipEnd ==  $("#ipEnd").attr('old')){
+					delete json["ipBegin"];
+					delete json["ipEnd"];
+					count += 2;
+               }else {
+                json.limitNum = json.ipEnd.replace(/\./g,'') - json.ipBegin.replace(/\./g,'') + 1;
+               }
+				if(json.expireTime ==  $("#expireTime").attr('old')){
+                delete json["expireTime"];
+				count++;
+				}
+				
+            }else{
+					delete json["ipBegin"];
+					delete json["ipEnd"];
+					delete json["expireTime"];
+					count += 3;
+			}
+        
+			if(json.dhcpServer == $("#dhcpServer").attr('old')){
+			       delete json["dhcpServer"];
+				   count++;
+			}
 
             if(json.lanIp ==  $("#lanIp").attr('old')){
                 delete json["lanIp"];
+				count++;
             }
             if(json.netMask ==  $("#netMask").attr('old')){
                 delete json["netMask"];
+				count++;
             }
-            if(json.ipBegin ==  $("#ipBegin").attr('old')  && json.ipEnd ==  $("#ipEnd").attr('old')){
-                delete json["ipBegin"];
-                delete json["ipEnd"];
-
-            }else {
-                json.limitNum = json.ipEnd.replace(/\./g,'') - json.ipBegin.replace(/\./g,'') + 1;
+			
+			if(count == 6){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+				$(this).attr("disabled",false);
+                return false;
             }
-            if(json.expireTime ==  $("#expireTime").attr('old')){
-                delete json["expireTime"];
-            }
-
-
-
+			
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_CONFIG;
-            json.network = Network.LAN;
-            if(!json.dhcpServer) {
-                json.dhcpServer = DHCPServer.CLOSED;
-            }
-
 
             if(json.lanIp ) {
                 var isOk = false;
@@ -196,7 +235,7 @@
                     $lis.eq(0).click();
                 }
             });
-
+			$(this).attr("disabled",false);
         });
 
     });

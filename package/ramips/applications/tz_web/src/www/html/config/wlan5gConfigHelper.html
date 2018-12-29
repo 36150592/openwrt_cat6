@@ -2,7 +2,8 @@
 
 <script type="text/javascript">
     $(document).ready(function(){
-        TempUtil.render('helperContainer-template', 'helperContainer', wlan5ghtml.helper);
+        var helper = $.extend({}, wlan5ghtml.helper, wlan5ghtml.form1);
+        TempUtil.render('helperContainer-template', 'helperContainer',helper);
 
     });
 </script>
