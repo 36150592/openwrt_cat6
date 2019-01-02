@@ -3006,7 +3006,7 @@ void bm906_get_moduleinfo(MDI* p)
 	buffer_recv=(char *)m_malloc(RECV_BUFF_SIZE);
 	char* ptr_tmp=buffer_recv;
 	char* ptr_tmp1=NULL;
-
+	int retry = 3;
 	
 	//cfun=0, 1 to reset modem
 	memset(buffer_recv,0,RECV_BUFF_SIZE);
@@ -3015,9 +3015,24 @@ void bm906_get_moduleinfo(MDI* p)
 	util_send_cmd(global_dialtool.dev_handle,"at+cfun=1\r",&global_dialtool.pthread_moniter_flag);
 	sleep(1);
 	read(global_dialtool.dev_handle,buffer_recv,RECV_BUFF_SIZE);
-	printf(">>>>>>>>>>>>>>>>>>>>>>cfun: receive: %s\n",buffer_recv);
-	if(!strstr(buffer_recv,"OK"))
+	log_info(">>>>>>>>>>>>>>>>>>>>>>cfun: receive: %s\n",buffer_recv);
+	while(!strstr(buffer_recv,"OK") && --retry)
 	{
+		log_info("restart cfun fail,now retry %d", retry);
+		//system("/etc/rc.d/rc.reset_module");
+		//exit(-1);
+
+		memset(buffer_recv,0,RECV_BUFF_SIZE);
+		util_send_cmd(global_dialtool.dev_handle,"at+cfun=0\r",&global_dialtool.pthread_moniter_flag);
+		sleep(1);
+		util_send_cmd(global_dialtool.dev_handle,"at+cfun=1\r",&global_dialtool.pthread_moniter_flag);
+		sleep(1);
+		read(global_dialtool.dev_handle,buffer_recv,RECV_BUFF_SIZE);
+	}
+
+	if(0 == retry)
+	{
+		log_info("restart cfun fail,now reset the module");
 		system("/etc/rc.d/rc.reset_module");
 		exit(-1);
 	}
