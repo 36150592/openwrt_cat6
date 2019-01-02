@@ -280,10 +280,13 @@ local function get_device_type()
 
 		if "ModuleType" == strs[1]
 		then
+		    io.close(f)
 			return strs[2]
 		end
 		res = f:read()
 	end
+
+	io.close(f)
 	return nil
 end
 

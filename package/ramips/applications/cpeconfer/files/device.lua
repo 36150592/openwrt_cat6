@@ -75,6 +75,8 @@ function device_module.device_get_info()
 			value = f_value:read()
 		end
 
+		io.close(f_key)
+		io.close(f_value)
 		return info
 end
 

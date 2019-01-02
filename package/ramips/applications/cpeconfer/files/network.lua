@@ -155,13 +155,14 @@ local function get_dns()
     	dns1 = f:read()
     	if nil == dns1 or string.match(dns1,"%d+%.%d+%.%d+%.%d+") == nil or "127.0.0.1" == dns1
     	then 
+			io.close(f)
     		debug("no dns found")
     		return nil,nil
     	end
     end
 
     dns2 = f:read()
-    f = io.popen(cmd)
+    io.close(f)
     return dns1,dns2
 end
 

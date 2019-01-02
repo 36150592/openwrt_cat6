@@ -131,6 +131,7 @@ local function common_config_set(wifi, option, dat_option, value)
 			debug("cmd = ", cmd)
 			local t = io.popen(cmd)
 			local res = t:read("*all")
+			io.close(t)
 			return true
 		
 	end
@@ -200,7 +201,7 @@ local function common_config_get(wifi_id, option, dat_option)
 			local t = io.popen(cmd)
 			local res = t:read("*all")
 			value = res
-			
+			io.close(t)
 		else
 			debug("dev_type = nil and dat_option = nil, can not get")
 			return nil
@@ -446,6 +447,7 @@ function wifi_module.wifi_is_start(wifi_id)
     local ifname = x:get(WIFI_CONFIG_FILE, section_name, "ifname")
 	local f = io.popen(string.format("iwconfig %s | grep ESSID | wc -l", ifname))
 	local res = f:read()
+	io.close(f)
 
 	if "1" == res
 	then

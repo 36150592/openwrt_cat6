@@ -46,9 +46,11 @@ function dhcp_module.dhcp_get_enable_status()
 
 	if "1" == temp
 	then
+		io.close(f)
 		return true
 	end
 
+	io.close(f)
 	return false
 end
 
@@ -404,7 +406,8 @@ function dhcp_module.dhcp_get_client_list()
 	
 		res = f:read()
 	end
-	
+
+    io.close(f)
 	return client_list
 end
 

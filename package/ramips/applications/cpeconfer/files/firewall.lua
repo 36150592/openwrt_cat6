@@ -260,6 +260,7 @@ local function execute_cmd(cmd)
 
 	if nil == temp
 	then
+		io.close(f)
 		return "success"
 	end
 
