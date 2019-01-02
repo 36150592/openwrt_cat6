@@ -20,7 +20,7 @@ local function common_get_section_name_by_index(wifi_id)
 
 	assert(type(wifi_id) == "number", "wifi_id is not a number")
 
-	debug("wifi_id = ", wifi_id)
+	--debug("wifi_id = ", wifi_id)
 	
 	local value = nil
 	local dev_type = nil
@@ -33,7 +33,7 @@ local function common_get_section_name_by_index(wifi_id)
 
 	for k,v in pairs(all_config) do
 		if wifi_id == v[".index"] then
-			debug("get index == wifi_id")
+			--debug("get index == wifi_id")
 			if nil == v[".name"]
 			then
 				debug("error:device type is nil. ")
@@ -55,7 +55,7 @@ end
 local function common_get_ifame_section_name_by_index(wifi_id)
 	assert(type(wifi_id) == "number", "wifi_id is not a number")
 
-	debug("wifi_id = ", wifi_id)
+	--debug("wifi_id = ", wifi_id)
 
 	
 	local value = nil
@@ -69,7 +69,7 @@ local function common_get_ifame_section_name_by_index(wifi_id)
 
 	for k,v in pairs(all_config) do
 		if wifi_id == v[".index"] then
-			debug("get index == wifi_id")
+			--debug("get index == wifi_id")
 			dev_type = v["type"]
 			for key, value in pairs(all_config) do
 				if dev_type == value["device"] then
@@ -150,7 +150,7 @@ end
 local function common_config_get(wifi_id, option, dat_option)
 	assert(type(wifi_id) == "number", "wifi_id is not a number")
 
-	debug("wifi_id = ", wifi_id)
+	--debug("wifi_id = ", wifi_id)
 
 	if nil == option 
 	then
@@ -169,7 +169,7 @@ local function common_config_get(wifi_id, option, dat_option)
 
 	for k,v in pairs(all_config) do
 		if wifi_id == v[".index"] then
-			debug("get index == wifi_id")
+			--debug("get index == wifi_id")
 			value = x:get(WIFI_CONFIG_FILE, k, option)
 			dev_type = v["type"]
 			if nil == value then
@@ -194,7 +194,7 @@ local function common_config_get(wifi_id, option, dat_option)
 		if   dev_type ~= nil and nil ~= dat_option and "" ~= dat_option
 		then
 		
-			debug(" is nil,get  from dat file ")
+			--debug(" is nil,get  from dat file ")
 			local cmd = string.format("grep %s %s/%s/%s.dat  | cut -d'=' -f 2", dat_option, WIFI_DRIVE_CONFIG_DIR, dev_type, dev_type)
 			debug("cmd = ", cmd)
 			local t = io.popen(cmd)
@@ -328,8 +328,8 @@ function wifi_module.wifi_get_dev()
 			temp1 = dev_array[j]
 
 			
-			print("device = ", s["device"])
-			print("temp1_device = ", temp1["type"])
+			--print("device = ", s["device"])
+			--print("temp1_device = ", temp1["type"])
 			if (s["device"] == temp1["type"]) 
 			then
 				p_dev =dev_array[j]
@@ -441,7 +441,7 @@ end
 -- return:true if wifi is started false if wifi is stoped
 function wifi_module.wifi_is_start(wifi_id)
 
-	debug("wifi_is_start")
+	--debug("wifi_is_start")
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
     local ifname = x:get(WIFI_CONFIG_FILE, section_name, "ifname")
 	local f = io.popen(string.format("iwconfig %s | grep ESSID | wc -l", ifname))
@@ -459,7 +459,7 @@ end
 -- input:wifi id get by wifi_get_dev
 -- return: true if success false if fail
 function wifi_module.wifi_disable(wifi_id)
-	debug("disable wifi self start at boot")
+	--debug("disable wifi self start at boot")
     -- set the ifame section
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
 	return common_config_set(section_name, "disabled", "", 1)
@@ -748,10 +748,10 @@ end
 function wifi_module.wifi_get_encryption(wifi_id)
 	local encry_all = common_config_get(wifi_id, "encryption", "AuthMode")
 
-	debug("encry_all = ", encry_all)
+	--debug("encry_all = ", encry_all)
 	local start, endp = string.find(encry_all, "+")
 
-    debug("start = ", start, "endp = ", endp)
+    --debug("start = ", start, "endp = ", endp)
     -- no encryption type return directly
     if nil == start 
     then
@@ -808,7 +808,7 @@ function wifi_module.wifi_get_encryption_type(wifi_id)
 
 	local start, endp = string.find(encry_all, "+")
 
-    debug("start = ", start, "endp = ", endp)
+    --debug("start = ", start, "endp = ", endp)
 
 	if nil == start
 	then 
@@ -817,7 +817,7 @@ function wifi_module.wifi_get_encryption_type(wifi_id)
 
 	local encry_type = string.sub(encry_all, start+1)
 
-	debug("encry_type = ", encry_type)
+	--debug("encry_type = ", encry_type)
 
 	return encry_type
 end
@@ -969,13 +969,13 @@ local function get_sta_mac_table(ifname,sta_list)
 	local cmd = nil
 	local t = nil
 	cmd = string.format("iwpriv %s show stainfo ", ifname)
-	debug("cmd1 = ", cmd)
+	--debug("cmd1 = ", cmd)
 	
 	t = io.popen(cmd)
 	io.close(t)
 	sleep(1)
 	cmd = string.format("dmesg | tail -n 100")
-	debug("cmd2 = ", cmd)
+	--debug("cmd2 = ", cmd)
 	t = io.popen(cmd)
 	local res = nil
 
@@ -986,7 +986,7 @@ local function get_sta_mac_table(ifname,sta_list)
 		if nil ~= start
 		then
 			
-			debug("get sta mac table at ", start)
+			--debug("get sta mac table at ", start)
 			
 			while(res ~= nil)
 			do
@@ -1020,9 +1020,9 @@ local function get_sta_mac_table(ifname,sta_list)
 					print(v,"=",k)
 				end]]--
 				
-				debug("MAC = ", s_array[1])
-				debug("RSSI = ", s_array[7])
-				debug("RATE = ", s_array[14])
+				--debug("MAC = ", s_array[1])
+				--debug("RSSI = ", s_array[7])
+				--debug("RATE = ", s_array[14])
 
 				if string.len(s_array[1]) == 17 and string.find(s_array[1], ':') > 0
 				then
@@ -1038,7 +1038,7 @@ local function get_sta_mac_table(ifname,sta_list)
 					end
 					if flag == false
 					then
-						debug("flag = false ,new Station")
+						--debug("flag = false ,new Station")
 						local temp_sta = Station:new(nil,nil)
 						temp_sta["mac"] = s_array[1]
 						temp_sta["rate"] = s_array[14]
@@ -1061,13 +1061,13 @@ local function get_sta_count_info(ifname,sta_list)
 	local cmd = nil
 	local t = nil
 	cmd = string.format("iwpriv %s show stacountinfo ", ifname)
-	debug("cmd1 = ", cmd)
+	--debug("cmd1 = ", cmd)
 	t = io.popen(cmd)
 	io.close(t)
 	sleep(1)
 	
 	cmd = string.format("dmesg | tail -n 100")
-	debug("cmd2 = ", cmd)
+	--debug("cmd2 = ", cmd)
 	t = io.popen(cmd)
 	local res = nil
 
@@ -1079,7 +1079,7 @@ local function get_sta_count_info(ifname,sta_list)
 		if nil ~= start
 		then
 			
-			debug("get sta count table at", start)
+			--debug("get sta count table at", start)
 			while(res ~= nil)
 			do
 				res = t:read()
@@ -1106,16 +1106,16 @@ local function get_sta_count_info(ifname,sta_list)
 				res = string.gsub(res, ' ', '#')
 
 				local s_array = split(res,'#')
-				debug(res)
+				--debug(res)
 				--[[for k,v in pairs(s_array)
 				do
 					print(k,"=",v)
 				end]]--
 				
-				debug("tx packets = ", s_array[3])
-				debug("rx packets = ", s_array[4])
-				debug("tx bytes= ", s_array[5])
-				debug("rx bytes= ", s_array[6])
+				--debug("tx packets = ", s_array[3])
+				--debug("rx packets = ", s_array[4])
+				--debug("tx bytes= ", s_array[5])
+				--debug("rx bytes= ", s_array[6])
 
 				if string.len(s_array[1]) == 17
 				then
@@ -1159,7 +1159,7 @@ end
 
 --connect sta list
 function wifi_module.wifi_get_connect_sta_list(wifi_id)
-	debug("wifi_get_connect_sta_list")
+	--debug("wifi_get_connect_sta_list")
     local section_name = common_get_ifame_section_name_by_index(wifi_id)
     local ifname = x:get(WIFI_CONFIG_FILE, section_name, "ifname")
 	local dev_name = x:get(WIFI_CONFIG_FILE, section_name, "device")
