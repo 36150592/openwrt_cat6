@@ -196,7 +196,7 @@ local function common_config_get(wifi_id, option, dat_option)
 		then
 		
 			--debug(" is nil,get  from dat file ")
-			local cmd = string.format("grep %s %s/%s/%s.dat  | cut -d'=' -f 2", dat_option, WIFI_DRIVE_CONFIG_DIR, dev_type, dev_type)
+			local cmd = string.format("grep ^%s %s/%s/%s.dat  | cut -d'=' -f 2", dat_option, WIFI_DRIVE_CONFIG_DIR, dev_type, dev_type)
 			debug("cmd = ", cmd)
 			local t = io.popen(cmd)
 			local res = t:read("*all")
@@ -710,7 +710,22 @@ end
 -- 40 -->40M
 -- 20+40 -->20/40M
 function wifi_module.wifi_get_ht_mode(wifi_id)
-   return common_config_get(wifi_id, "ht", "HT_BW")
+   	local ret =  common_config_get(wifi_id, "ht", "HT_BW")
+
+   	if "1" == ret
+   	then
+   		return "20+40"
+   	elseif "2"  == ret
+   	then
+   		return "40"
+   	elseif "0" == ret
+   	then
+   		return "20"
+   	else
+   		return ret
+   	end
+
+
 end
 
 --set HT mode
