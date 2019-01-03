@@ -1127,8 +1127,8 @@ var SysUtil = {
         }
 	},
 	upload: function($form, $file, command, callback) {
-		var url = String.format("{0}?cmd={1}&method=POST&sessionId={2}&language={3}", Url.DEFAULT_CGI, RequestCmd.SYS_UPDATE, Page.sessionId, Page.language);
-			
+		//var url = String.format("{0}?cmd={1}&method=POST&sessionId={2}&language={3}", Url.DEFAULT_CGI, RequestCmd.SYS_UPDATE, Page.sessionId, Page.language);
+			var url = String.format("{0}?cmd={1}&method=POST",  '/cgi-bin/lua1.cgi', RequestCmd.SYS_UPDATE);
 		//var url = "xml_action.cgi?Action=Upload&file=upgrade&command=" + command;
 		
         var datas = null;
@@ -3453,7 +3453,15 @@ function getOpenInfo() {
 	        values_advanced.push(FormatUtil.formatField(lteInfo.globalCellId || loading));
 	        values_advanced.push(FormatUtil.formatField(status.enodebid || loading));
 	        values_advanced.push(FormatUtil.formatField(lteInfo.volteRegister || loading));
-	        values_advanced.push(FormatUtil.formatField(lteInfo.simcard_roam || loading));
+			var roam = loading;
+            if(status.roam_status){
+            	if(status.roam_status == 0){
+            		roam = "无漫游";
+				}else if(status.roam_status == 0){
+                    roam = "漫游";
+				}
+			}
+            values_advanced.push(FormatUtil.formatField(roam));
 	        values_advanced.push(FormatUtil.formatField(divice.imei || loading));
 	        
 	        html = Page.createTable(DOC.title.lteInfoBasic, names, values, names.length, 1);

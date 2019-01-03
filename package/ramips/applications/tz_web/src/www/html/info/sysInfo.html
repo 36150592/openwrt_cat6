@@ -4,7 +4,7 @@
     $(document).ready(function() {
         var currentId = Page.currentId;
         var count = 0;
-
+        var dataMac = "";
 
         function getPinPukWarning(reqPin, reqPuk){
             if (reqPin == 1) {
@@ -99,8 +99,8 @@
             }
             return { pinState: pinState, pukState: pukState };
         }
-		
-		function getNetState(flag) {
+
+        function getNetState(flag) {
             var state = "?";
             if(flag == -1){
                 state = "?";
@@ -113,137 +113,79 @@
             }
             return state;
         }
-		
-		 function getRegState(flag) {
-           var csRegState ="", psRegState ="";
-           switch(flag) {
-               case 0:
-                   csRegState = "无服务";
-                   psRegState = "无服务";
-                   break;
-               case 1:
-                   csRegState = "服务";
-                   psRegState = "无服务";
-                   break;
-               case 2:
-                   csRegState = "服务";
-                   psRegState = "无服务";
-                   break;
-               case 3:
-                   csRegState = "服务";
-                   psRegState = "服务";
-                   break;
-               default:
-                   csRegState = "未注册,并处于搜索状态";
-                   psRegState = "未注册,并处于搜索状态";
-                   break;
-           }
+
+        function getRegState(flag) {
+            var csRegState ="", psRegState ="";
+            switch(flag) {
+                case 0:
+                    csRegState = "无服务";
+                    psRegState = "无服务";
+                    break;
+                case 1:
+                    csRegState = "服务";
+                    psRegState = "无服务";
+                    break;
+                case 2:
+                    csRegState = "服务";
+                    psRegState = "无服务";
+                    break;
+                case 3:
+                    csRegState = "服务";
+                    psRegState = "服务";
+                    break;
+                default:
+                    csRegState = "未注册,并处于搜索状态";
+                    psRegState = "未注册,并处于搜索状态";
+                    break;
+            }
             return { csRegState: csRegState, psRegState: psRegState };
         }
-		
+
         function loadPage() {
 
             Page.postJSON({
                 json: { cmd: RequestCmd.SYS_INFO },
                 success: function(datas) {
-                    var data =  {"success":true,"cmd":0,"uptime":" 16:00:35 up 1 day, 16:48,  load average: 0.53, 1.02, 0.75 ","connectStatus":"connect","wanIp":"","wanMaskIp":"",
-                        "wanGateway":"","wanDNS":"","wanDNS_2":"","wanMac":"00:00:00:00:00:00","wanTxBytes":"0","wanRxBytes":"0","wanRxPackets":"0","wanTxPackets":"0",
-                        "pinLock":"0","pukLock":0,"isSimExist":"","smsCount":"1,1,1,1","eregStat":"","regStat":"","gregStat":"","ps_cs":"","lanMac":"","lanIP":"","lanMaskIp":"","lanIPV6":"",
-                        "wanIP":"","flux_month_total":"","wanIPV6":"","wanGateway_IPV6":"","wanDNS_3":"","wanDNS_4":"","enableWiFi":"false"};
 
                     var data2 = datas.data;
                     console.log(data2);
                     var data_system = data2.system;
                     var data_sim = data2.sim;
-					var data_lan = data2.lan;
-					var data_modem = data2.modem;
+                    var data_lan = data2.lan;
+                    var data_modem = data2.modem;
+                    var data_wan = data2.network;
+                    dataMac = data_wan.mac || "-";
 
+                    Page.isNULLToSpace = true;
 
-                    var names_run = [], names_lte = [], names_sim = [], names_net = [], names_lan = [], names_wan = [];
+                    var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
+                    var values_run = [], values_sim = [], values_net = [], values_lan = [], values_wan = [], values_lte = [];
                     names_run.push(DOC.lbl.runtime);
                     names_run.push(DOC.lbl.loadAvg);
 //                    names_run.push(run_text.currentSys);
                     names_run.push(DOC.lbl.memory);
 
+                    var runtime = ConvertUtil.timeStamp(data_system.runtime);
+                    values_run.push(runtime);
+                    values_run.push(data_system.cpu_average1 + ", " + data_system.cpu_average5 + ", " + data_system.cpu_average15);
+                    values_run.push(data_system.mem_total + "KB");
+
                     names_sim.push(DOC.lbl.usim);
                     names_sim.push(DOC.lbl.pinCode);
                     names_sim.push(DOC.lbl.pukCode);
 
-                    names_sim.push(DOC.lbl.simSms);
-                    names_sim.push(DOC.lbl.terminalSms);
-
-                    Page.isNULLToSpace = true;
-
-                    var values_run = [], values_lte = [], values_sim = [], values_net = [], values_lan = [], values_wan = [];
-                    /*
-                     values.push(FormatUtil.formatField(data.name));
-                     values.push(data.build);
-                     values.push(FormatUtil.formatField(data.version));
-                     values.push(FormatUtil.formatField(data.hwversion));
-                     */
-                    var runtime = ConvertUtil.timeStamp(data_system.runtime);
-                    values_run.push(runtime);
-                    values_run.push(data_system.cpu_average1 + ", " + data_system.cpu_average5 + ", " + data_system.cpu_average15);
-					values_run.push(data_system.mem_total + "KB");
-
-//                    var currentSys = data.currentSys, currentSysText = '';
-//                    if (currentSys == '1') {
-                    //                       currentSysText = run_text.viceSys;
-                    //                   } else {
-                    //                       currentSysText = run_text.mainSys;
-//                    }
-//                    values_run.push(currentSysText);
-//                    values_run.push(data.memory);
-
-
-//                    var pinLock = parseInt(data.pinLock, 10);
-//                    var pukLock = parseInt(data.pukLock, 10);
-//                    // var pinTime = parseInt(data.pinTime, 10);
-//                    var pinState = getPINState(pinLock);
-//                    var pukState = getPUKState(pukLock);
-//                    var warning = getPinPukWarning( pinLock, pukLock);
-//                    var moduleType = data.moduleType;
-//
-//                    var warningTime = getAutomaticWarning(pinTime);
-//                    var warningTime2 = getModuleWarning(moduleType);
                     var stateInfo = "";
-//                    if(pinLock == 1){
-//                        if (warning != "") {
-//                            stateInfo = String.format('<span style="color:red;"> &nbsp;{0}</span>', warning);
-//                        }
-//                    }
                     var pinPukStateInfo = getPinPukState(data_sim.card_status);
                     values_sim.push(getCardState(data_sim.is_sim_exist));
                     values_sim.push(pinPukStateInfo.pinState);
                     values_sim.push(pinPukStateInfo.pukState);
 
-                    //  if (supportSMS && !Page.isModulP500() && !Page.isModulMC2716() && !Page.isModuleC5300V() && !Page.isModulLT10()) {
-                    var smsCount = data.smsCount || "0,0,0,0" ;
-                    if(!(/\d+\,\d+\,\d+\,\d+/.test(smsCount))){
-                        smsCount = "0,0,0,0";
-                    }
-                    var smsCounts = smsCount.split(',');
-                    values_sim.push(String.format("{0}/{1}", smsCounts[0], smsCounts[1]));
-                    values_sim.push(String.format("{0}/{1}", smsCounts[2], smsCounts[3]));
-                    //  }
-
-                    var dialMode = data.dialMode;
-                    var connectStatus = data.connectStatus;
-
                     names_net.push(DOC.lbl.dialMode);
                     names_net.push(DOC.lbl.dialState);
 
-                    if(dialMode == DialMode.MANUALLY){
-                        values_net.push(DOC.lbl.manualDial);
-                    } else {
-                        values_net.push(DOC.lbl.autoDial);
-                    }
+                    values_net.push(DOC.lbl.manualDial);
+                    values_net.push(DOC.status.connected);
 
-                    if(connectStatus == ConnectStatus.CONNECT){
-                        values_net.push(String.format(DOC.status.connected));
-                    } else {
-                        values_net.push(String.format(DOC.status.disconnected));
-                    }
 
                     names_net.push(DOC.lbl.netMode);
                     names_net.push(DOC.lbl.signal);
@@ -254,41 +196,37 @@
                     names_net.push(DOC.lbl.epsReg);
 
                     //var netState = StatusUtil.getNetState(data.signalLevel, data.eregStat, data.act, 0);
-					var netState = getNetState(data_modem.act);
-					var singalLevel = data_modem.signal_lvl;
-                    
+                    var netState = getNetState(data_modem.act);
+                    var singalLevel = data_modem.signal_lvl;
+
                     // 网络都注册失败时显示未知
-                   // if (!StatusUtil.isAnyRegSuccess(data.regStat, data.gregStat, data.eregStat)) {
-                      //  netState = "?";
-                      //  singalLevel = 0;
-                   // }
+                    // if (!StatusUtil.isAnyRegSuccess(data.regStat, data.gregStat, data.eregStat)) {
+                    //  netState = "?";
+                    //  singalLevel = 0;
+                    // }
                     values_net.push(netState);
                     values_net.push(StatusUtil.formatSingalLevel(singalLevel));
-                    values_net.push(FormatUtil.formatField(data_modem.rsrp));
+                    values_net.push(data_modem.rsrp);
 
-                    var plmn = FormatUtil.formatField(data_modem.plmn);
-                    values_net.push(FormatUtil.formatPLMN(plmn));
-					
-					var ps_cs = parseInt(data.ps_cs, 10);
+                    values_net.push(FormatUtil.formatPLMN(data_modem.plmn));
+
+                    var ps_cs = parseInt(data_modem.ps_cs, 10);
                     var regState = getRegState(ps_cs);
-					values_net.push(regState.csRegState);
+                    values_net.push(regState.csRegState);
                     values_net.push(regState.psRegState);
-                    values_net.push(netState == "3G" ? DOC.status.noreg : StatusUtil.getRegState(data.eregStat));
+                  //  values_net.push(netState == "3G" ? DOC.status.noreg : StatusUtil.getRegState(data.eregStat));
+                    values_net.push("-");
 
                     names_lan.push(DOC.net.mac);
                     names_lan.push(DOC.net.ip);
                     names_lan.push(DOC.net.mask);
 
-                    values_lan.push(FormatUtil.formatField(data.lanMac));
+                    values_lan.push(dataMac);
 
-                    Page.lanIp = FormatUtil.formatField(data_lan.lanIp);
+                    Page.lanIp = data_lan.lanIp;
                     values_lan.push(Page.lanIp);
-                    values_lan.push(FormatUtil.formatField(data_lan.netMask));
-                    var lanIPV6 = FormatUtil.formatField(data.lanIPV6);
-                    if(lanIPV6 != ""){
-                        names_lan.push(DOC.net.ipv6);
-                        values_lan.push(lanIPV6);
-                    }
+                    values_lan.push(data_lan.netMask);
+
                     names_lan.push(DOC.net.dhcpServer);
                     var dhcp = data_lan.status ? '1' : '0';
                     if(dhcp == DHCPServer.CLOSED){
@@ -304,55 +242,29 @@
                     names_wan.push(DOC.net.dns1);
                     names_wan.push(DOC.net.dns2);
 
-                    if(connectStatus == ConnectStatus.CONNECT){
-                        values_wan.push(FormatUtil.formatField(data.wanMac));
-                        values_wan.push(FormatUtil.formatField(data.wanIP));
-                        values_wan.push(FormatUtil.formatField(data.wanMaskIp));
-                        values_wan.push(FormatUtil.formatField(data.wanGateway));
-                        if(FormatUtil.formatField(data.wanIP) == ''){
-                            values_wan.push(FormatUtil.formatField("NULL"));
-                            values_wan.push(FormatUtil.formatField("NULL"));
-                        } else {
-                            values_wan.push(FormatUtil.formatField(data.wanDNS));
-                            values_wan.push(FormatUtil.formatField(data.wanDNS_2));
-                        }
+
+                    values_wan.push(data_wan.mac);
+                    values_wan.push(data_wan.ipaddr);
+                    values_wan.push(data_wan.netmask);
+                    values_wan.push(data_wan.gateway);
+                    if(data_wan.ipaddr == undefined){
+                            values_wan.push("NULL");
+                            values_wan.push("NULL");
                     } else {
-                        values_wan.push('');
-                        values_wan.push('');
-                        values_wan.push('');
-                        values_wan.push('');
-                        values_wan.push('');
-                        values_wan.push('');
+                            values_wan.push(data_wan.first_dns);
+                            values_wan.push(data_wan.second_dns);
                     }
-
-                    if(FormatUtil.formatField(data.wanIPV6) != ''){
-                        names_wan.push(DOC.net.ipv6);
-                        names_wan.push(DOC.net.gatewayv6);
-                        names_wan.push(DOC.net.dns3);
-                        names_wan.push(DOC.net.dns4);
-
-                        if(connectStatus == ConnectStatus.CONNECT){
-                            values_wan.push(FormatUtil.formatField(data.wanIPV6));
-                            values_wan.push(FormatUtil.formatField(data.wanGateway_IPV6));
-                            values_wan.push(FormatUtil.formatField(data.wanDNS_3));
-                            values_wan.push(FormatUtil.formatField(data.wanDNS_4));
-                        } else {
-                            values_wan.push('');
-                            values_wan.push('');
-                            values_wan.push('');
-                            values_wan.push('');
-                        }
-                    }
+                    
                     names_wan.push(DOC.net.rxPackets);
                     names_wan.push(DOC.net.rxBytes);
                     names_wan.push(DOC.net.txPackets);
                     names_wan.push(DOC.net.txBytes);
                     // names_wan.push(wan_text.manageTime);
 
-                    values_wan.push(FormatUtil.formatField(data.wanRxPackets));
-                    values_wan.push(FormatUtil.formatField(data.wanRxBytes));
-                    values_wan.push(FormatUtil.formatField(data.wanTxPackets));
-                    values_wan.push(FormatUtil.formatField(data.wanTxBytes));
+                    values_wan.push(data_wan.rx_packets);
+                    values_wan.push(data_wan.rx_bytes);
+                    values_wan.push(data_wan.tx_packets);
+                    values_wan.push(data_wan.tx_bytes);
                     // var manageTime = parseInt(data.manageTime.trim());
                     // var theUptime = parseInt(data.theUptime.trim());
                     // if (!isNaN(manageTime) && !isNaN(theUptime)) {
@@ -387,142 +299,188 @@
 
         }
 
-        function getWlanSecMode(encKey, wpa, wpaKeyMgmt, wpaPairwise)
+        function getWlanSecMode(encry)
         {
             var secMode;
 
-            if(encKey == "on")
-            {
-                if(wpaKeyMgmt == "WPA-PSK")
-                {
-
-                    if(wpaPairwise == "CCMP")
-                        wpaPairwise = "AES";
-
-                    if(wpa == "3")
-                        secMode = "WPA-PSK/WPA2-PSK" + "[" + wpaPairwise + "]";
-                    else if(wpa == "2")
-                        secMode = "WPA2-PSK" + "[" + wpaPairwise + "]";
-                    else if(wpa == "1")
-                        secMode = "WPA-PSK" + "[" + wpaPairwise + "]";
-                    else
-                        secMode = "None";
-                }
-                else
+            switch (encry){
+                case "none" :
                     secMode = "None";
+                    break;
+                case "wep" :
+                    secMode = "wep";
+                    break;
+                case "psk" :
+                    secMode = "wpa-psk";
+                    break;
+                case "psk2" :
+                    secMode = "wpa2-psk";
+                    break;
+                case "mixed" :
+                    secMode = "wpa/wpa2-psk";
+                    break;
             }
-            else
-            {
-                secMode = "None";
+
+            return secMode;
+        }
+
+        function getWlanMode(mode) {
+            var secMode;
+            switch (mode){
+                case 0 :
+                    secMode = "legacy 11b/g mixed";
+                    break;
+                case 1 :
+                    secMode = "legacy 11b only";
+                    break;
+                case 2 :
+                    secMode = "legacy 11a only";
+                    break;
+                case 3 :
+                    secMode = "legacy 11a/b/g mixed";
+                    break;
+                case 4 :
+                    secMode = "legacy 11g only";
+                    break;
+                case 5 :
+                    secMode = "11abgn mixed";
+                    break;
+                case 6 :
+                    secMode = "11N";
+                    break;
+                case 7 :
+                    secMode = "11gn mixed";
+                    break;
+                case 8 :
+                    secMode = "11an mixed";
+                    break;
+                case 9 :
+                    secMode = "11bgn mixed";
+                    break;
+                case 10 :
+                    secMode = "11AGN mixed";
+                    break;
+                case 11 :
+                    secMode = "11N ";
+                    break;
+                case 14 :
+                    secMode = "11A/AN/AC";
+                    break;
+                case 15 :
+                    secMode = "11 AN/AC";
+                    break;
             }
 
             return secMode;
         }
 
         function loadWlanPage() {
-		Page.postJSON({
+            Page.postJSON({
                 json: {cmd: 101},
                 success: function (datas) {
-            var data = {"mode":"Master","accessPoint":"","essid":"","wirelessMac":"","ssidBroadcast":"","encKey":"","wpa":"","wpaKeyMgmt":"","wpaPairwise":"","frequency":"","txPower":""};
-            data.message ="WLAN未开启";
-            var wirelessHtml = "";
-            if (data.mode.trim() == "NULL") {
-                wirelessHtml = Page.createTable(DOC.title.wlan2g + '-' + data.message, [], [], 0, 0);
-            } else {
-                var names = [];
-                var values = [];
-                var data2 = datas.data;
-                names.push(DOC.wlan.currentMode);
-                values.push(DOC.wlan.ApMode);
+                    var data = {"mode":"Master","message":"WLAN未开启"};
+                    var wirelessHtml = "";
+                    if (data.mode.trim() == "NULL") {
+                        wirelessHtml = Page.createTable(DOC.title.wlan2g + '-' + data.message, [], [], 0, 0);
+                    } else {
+                        var names = [];
+                        var values = [];
+                        var data2 = datas.data;
+                        names.push(DOC.wlan.currentMode);
+                        var mode = getWlanMode(parseInt(data2.mode));
+                        values.push(mode);
 
-                names.push(DOC.wlan.wifi);
-                if(data2.status == "0"){
-                      values.push(DOC.status.opened);
-                } else {
-                      values.push(DOC.status.closed);
-                }
+                        names.push(DOC.wlan.wifi);
+                        if(data2.status == "0"){
+                            values.push(DOC.status.opened);
+                        } else {
+                            values.push(DOC.status.closed);
+                        }
 
-                names.push(DOC.wlan.ssid);
-                values.push(FormatUtil.formatField(data2.ssid));
+                        names.push(DOC.wlan.ssid);
+                        values.push(data2.ssid);
 
-                names.push(DOC.net.mac);
-                values.push(FormatUtil.formatField(data.wirelessMac));
+                        names.push(DOC.net.mac);
+                        values.push(dataMac);
 
-                names.push(DOC.wlan.ssidBroadcast);
-                if(data2.hidden == "1"){
-                    values.push(DOC.status.opened);
-                } else {
-                    values.push(DOC.status.closed);
-                }
+                        names.push(DOC.wlan.ssidBroadcast);
+                        if(data2.hidden == "1"){
+                            values.push(DOC.status.opened);
+                        } else {
+                            values.push(DOC.status.closed);
+                        }
 
-                names.push(DOC.wlan.secMode);
-				if(data2.encryption == "none"){
-                            values.push("无");
+                        names.push(DOC.wlan.secMode);
+                        if(data2.encryption == "none"){
+                            values.push("None");
                         }else {
                             values.push("WPA2PSK[AES]");
+                        }
+                        //values.push(FormatUtil.formatField(getWlanSecMode(data.encKey.trim(), data.wpa.trim(), data.wpaKeyMgmt.trim(), data.wpaPairwise.trim())));
+
+                        names.push(DOC.wlan.channel);
+                        values.push(data2.channel);
+
+                        names.push(DOC.wlan.txPower);
+                        values.push(FormatUtil.formatField(data2.txpower, "dBm"));
+
+                        wirelessHtml = Page.createTable(DOC.title.wlan2g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    }
+                    $('#wlan_info').html(wirelessHtml);
+                    Page.setStripeTable("#wlan_info");
                 }
-                //values.push(FormatUtil.formatField(getWlanSecMode(data.encKey.trim(), data.wpa.trim(), data.wpaKeyMgmt.trim(), data.wpaPairwise.trim())));
-
-                names.push(DOC.wlan.channel);
-                values.push(data2.channel);
-
-                names.push(DOC.wlan.txPower);
-                values.push(FormatUtil.formatField(data2.txpower, "dBm"));
-
-                wirelessHtml = Page.createTable(DOC.title.wlan2g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
-            }
-            $('#wlan_info').html(wirelessHtml);
-            Page.setStripeTable("#wlan_info");
-			}
-			});
+            });
 
         }
 
         function loadWlan5gPage() {
-            var data = {"mode":"Master","accessPoint":"","essid":"","wirelessMac":"","ssidBroadcast":"","encKey":"","wpa":"","wpaKeyMgmt":"","wpaPairwise":"","frequency":"","txPower":""};
-            data.message ="WLAN未开启";
-            var wlan5gHtml = "";
-            if (data.mode.trim() == "NULL") {
-                wlan5gHtml = Page.createTable(DOC.title.wlan5g + data.message, [], [], 0, 0);
-            } else {
-                var names = [];
-                var values = [];
+            Page.postJSON({
+                json: {cmd: 201},
+                success: function (datas) {
+                    var data = {"mode":"Master","message":"WLAN未开启"};
+                    var wlan5gHtml = "";
+                    if (data.mode.trim() == "NULL") {
+                        wlan5gHtml = Page.createTable(DOC.title.wlan5g + data.message, [], [], 0, 0);
+                    } else {
+                        var names = [];
+                        var values = [];
+                        var data2 = datas.data;
+                        names.push(DOC.wlan.currentMode);
+                        values.push(DOC.wlan.ApMode);
 
-                names.push(DOC.wlan.currentMode);
-                values.push(DOC.wlan.ApMode);
+                        names.push(DOC.wlan.wifi);
+                        if(data2.status == "0")
+                            values.push(DOC.status.opened);
+                        else
+                            values.push(DOC.status.closed);
 
-                names.push(DOC.wlan.wifi);
-                if(CheckUtil.checkMac(data.accessPoint.trim()))
-                    values.push(DOC.status.opened);
-                else
-                    values.push(DOC.status.closed);
+                        names.push(DOC.wlan.ssid);
+                        values.push(data2.ssid);
 
-                names.push(DOC.wlan.ssid);
-                values.push(FormatUtil.formatField(data.essid.trim()));
+                        names.push(DOC.net.mac);
+                        values.push(dataMac);
 
-                names.push(DOC.net.mac);
-                values.push(FormatUtil.formatField(data.wirelessMac.trim()));
+                        names.push(DOC.wlan.ssidBroadcast);
+                        if(data2.hidden == "1"){
+                            values.push(DOC.status.opened);
+                        } else {
+                            values.push(DOC.status.closed);
+                        }
 
-                names.push(DOC.wlan.ssidBroadcast);
-                if(data.ssidBroadcast.trim() == "1"){
-                    values.push(DOC.status.closed);
-                } else {
-                    values.push(DOC.status.opened);
+                        names.push(DOC.wlan.secMode);
+                        values.push(getWlanSecMode(data2.encryption));
+
+                        names.push(DOC.wlan.channel);
+                        values.push(data2.channel);
+
+                        names.push(DOC.wlan.txPower);
+                        values.push(FormatUtil.formatField(data2.txpower, "dBm"));
+                        wlan5gHtml = Page.createTable(DOC.title.wlan5g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    }
+                    $('#wlan_5g_info').html(wlan5gHtml);
+                    Page.setStripeTable("#wlan_5g_info");
                 }
-
-                names.push(DOC.wlan.secMode);
-                values.push(FormatUtil.formatField(getWlanSecMode(data.encKey.trim(), data.wpa.trim(), data.wpaKeyMgmt.trim(), data.wpaPairwise.trim())));
-
-                names.push(DOC.wlan.channel);
-                values.push(FormatUtil.formatField(ConvertUtil.frequencyToChannel(data.frequency.trim()) + " / " + data.frequency.trim() + "GHz"));
-
-                names.push(DOC.wlan.txPower);
-                values.push(FormatUtil.formatField(data.txPower.trim(), "dBm"));
-
-                wlan5gHtml = Page.createTable(DOC.title.wlan5g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
-            }
-            $('#wlan_5g_info').html(wlan5gHtml);
-            Page.setStripeTable("#wlan_5g_info");
+            });
 
         }
 

@@ -2,21 +2,21 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-
+        var loading = '-';
         function loadPage() {
             Page.postJSON({
                 json: { cmd: RequestCmd.DEVICE_VERSION_INFO },
                 success: function(datas) {
-                var data = {"name":"","version":"","certificationVer":"","displayedVersion":"","hwversionCfg":"","hwversion":"","configVer":"","modversion":"",
+                    var data = {"name":"","version":"","certificationVer":"","displayedVersion":"","hwversionCfg":"","hwversion":"","configVer":"","modversion":"",
                         "time":"","module":"","deviceId":"","modsoftversion":"","modhardwareversion":"","imei":"","imsi":"","iccid":""};
                     var names = [], names_lte = [];
                     var device = DOC.device;
                     names.push(device.name);
-                  //  names.push(device.buildTime);
+                    //  names.push(device.buildTime);
                     names.push(device.softwarVersion);
                     names.push(device.hardwareVersion);
                     names.push(device.configVersion);
-                 //   names.push(device.deviceId);
+                    //   names.push(device.deviceId);
 
 
 
@@ -32,29 +32,26 @@
                     var data2 = datas.data;
                     var values = [], values_lte = [];
 
-                    values.push(FormatUtil.formatField(data2.device.type));
-                 //   values.push(FormatUtil.formatField(data2.device.build));
+                    values.push(data2.device.type || loading);
+                    //   values.push(FormatUtil.formatField(data2.device.build));
 
                     //values.push(data.build);
-                    var swVer1 = FormatUtil.formatField(Page.getDeviceVersion(data.name, data.version)),
-                        swVer2 = FormatUtil.formatField(data.certificationVer);
-                    values.push(FormatUtil.formatField(Page.displayedVersion || swVer2));
+//                    var swVer1 = FormatUtil.formatField(Page.getDeviceVersion(data.name, data.version)),
+//                        swVer2 = FormatUtil.formatField(data.certificationVer);
+                  //  values.push(FormatUtil.formatField(Page.displayedVersion || swVer2));
 
-                    var hwversion = data.hwversionCfg;
-                    if (hwversion == "NULL" || hwversion.length == 0) {
-                        hwversion = data.hwversion;
-                    }
-                    values.push(FormatUtil.formatField(data2.device.hwversion));
-                    values.push(FormatUtil.formatField(data2.device.version));
-                  //  values.push(FormatUtil.formatField(data.deviceId));
+                    values.push(loading);
+                    values.push(data2.device.hwversion || loading);
+                    values.push(data2.device.version || loading);
+                    //  values.push(FormatUtil.formatField(data.deviceId));
 
 
-                    values_lte.push(FormatUtil.formatField(data2.modem.type));
-                    values_lte.push(FormatUtil.formatField(data2.modem.softver));
-                    values_lte.push(FormatUtil.formatField(data2.modem.hardware));
-                    values_lte.push(FormatUtil.formatField(data2.modem.imei));
-                    values_lte.push(FormatUtil.formatField(data2.sim.imsi));
-                    values_lte.push(FormatUtil.formatField(data2.sim.iccid));
+                    values_lte.push(data2.modem.type || loading);
+                    values_lte.push(data2.modem.softver || loading);
+                    values_lte.push(data2.modem.hardware || loading);
+                    values_lte.push(data2.modem.imei || loading);
+                    values_lte.push(data2.sim.imsi || loading);
+                    values_lte.push(data2.sim.iccid || loading);
 
                     //values_lte.push(FormatUtil.formatField(data.mac));
 

@@ -81,33 +81,35 @@
 
         var apnGuideClick = false;
         $('#menu h3').bind('click', function(e){
-            if (!apnGuideClick && Page.apnGuide) {
-                apnGuideClick = true;
-                $('#BASIC_CONFIG').click();
-            } else {
-                $(this).next().find("a").eq(0).click();
-            }
+            //if (!apnGuideClick && Page.apnGuide) {
+              //  apnGuideClick = true;
+               // $('#BASIC_CONFIG').click();
+           // } else {
+            //    $(this).next().find("a").eq(0).click();
+           // }
+		   
+		    $(this).next().find("a").eq(0).click();
         });
 
         $('#menu li a').bind('click', function(e) {
             var id = this.id;
             var item = MenuItem[id];
             if (item != null) {
-                if (item.cmd == RequestCmd.SYS_REBOOT) {
-                    SysUtil.rebootDevice(RENOOTTYPE.NORMAL_REBOOT, PROMPT.confirm.reboot);
-                } else {
-                    if (item == Page.menuItem) {
-                        if (item == MenuItem.LTE_INFO) {
-                            if (!Page.isOK) return false;
-                            Page.isOK = false;
-                        }
-                    }
+               // if (item.cmd == RequestCmd.SYS_REBOOT) {
+               //     SysUtil.rebootDevice(RENOOTTYPE.NORMAL_REBOOT, PROMPT.confirm.reboot);
+               // } else {
+                //    if (item == Page.menuItem) {
+                 //       if (item == MenuItem.LTE_INFO) {
+               //             if (!Page.isOK) return false;
+                 //           Page.isOK = false;
+                //        }
+                //    }
 
                     setMenuItem(id);
-                    Page.menuItem = item;
+                  //  Page.menuItem = item;
                     Page.$iframe.load(item.url);
                     //Page.get(item.url);
-                }
+               // }
             }
         });
 

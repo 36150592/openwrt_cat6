@@ -9,11 +9,13 @@ local modem = require "tz.modem"
 local device = require "tz.device"
 local network = require "tz.network"
 
+
+
+local WEB_PATH = "/tz_www"
 print("Contenttype:text/html\n")
 
 data1=io.read();
 tz_req = cjson.decode(data1);
-
 
 
 function login()
@@ -81,9 +83,9 @@ end
 function change_language()
 	local oldLanguage = string.lower(tz_req["languageOld"])
     local newLanguage = string.lower(tz_req["languageSelect"])
-	shellcmd = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' /usr/tzwww/login.html",oldLanguage,newLanguage)
-	shellcmd1 = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' /usr/tzwww/index.html",oldLanguage,newLanguage)
-	shellcmd2 = string.format("sed -i 's/\"Language\":\"%s\"/\"Language\":\"%s\"/g' /usr/tzwww/config.json",oldLanguage,newLanguage)
+	shellcmd = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/login.html",oldLanguage,newLanguage,WEB_PATH)
+	shellcmd1 = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/index.html",oldLanguage,newLanguage,WEB_PATH)
+	shellcmd2 = string.format("sed -i 's/\"Language\":\"%s\"/\"Language\":\"%s\"/g' %s/config.json",oldLanguage,newLanguage,WEB_PATH)
 	
 	os.execute(shellcmd)
 	os.execute(shellcmd1)
@@ -105,6 +107,10 @@ function get_sysinfo()
 	data_array["modem"] = modem.modem_get_status()
 	data_array["sim"] = sim.sim_get_status()
 	data_array["network"] = network.network_get_wan_info()
+	if nil == data_array["network"]
+	  then
+	    data_array["network"] = network.network_get_4g_net_info()
+	end
 	data_lan["lanIp"] = dhcp.dhcp_get_server_ip()
 	data_lan["netMask"] = dhcp.dhcp_get_server_mask()
 	data_lan["status"] = dhcp.dhcp_get_enable_status()
@@ -396,9 +402,12 @@ function set_wifi5()
 	local wmm = tonumber(tz_req["wmm"])
 	local ssid = tz_req["ssid"]
 	local channel = tz_req["channel"]
+	local mode = tonumber(tz_req["wifiWorkMode"])
+	local ht = tz_req["bandWidth"]
 	local authenticationType = tz_req["authenticationType"]
 	local encryptAlgorithm = tz_req["encryptAlgorithm"]
 	local key = tz_req["key"]
+	
 	
 	if(nil ~= wifiOpen)
 	then
@@ -474,6 +483,24 @@ function set_wifi5()
 				tz_answer["setChannel"] = false
 			end
 	end  
+	
+	if(nil ~= mode)
+	 then
+		ret = wifi.wifi_set_mode(id, mode)	
+			if(not ret)
+				then
+				tz_answer["setMOde"] = false
+			end
+	end
+	
+	if(nil ~= ht)
+	 then
+		ret = wifi.wifi_set_ht_mode(id, ht)	
+			if(not ret)
+				then
+				tz_answer["setHtMOde"] = false
+			end
+	end
 	
 	if(nil ~= authenticationType)
 	 then
@@ -627,6 +654,7 @@ function get_routerinfo()
 	local data_wifi = array[1]
 	local id = array[1]['wifi_id']
 	data_wifi['status'] = wifi.wifi_get_enable_status(id)
+	data_wifi['ssid'] = wifi.wifi_get_ssid(id)
 	data_array["wifi"] = data_wifi
 	
 	tz_answer["success"] = true
@@ -635,10 +663,21 @@ function get_routerinfo()
 	print(result_json)
 end
 
+function update_sys()
+
+    local tz_answer = {}
+	tz_answer["cmd"] = 5   
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 local switch = {
      [0] = get_sysinfo,
      [2] = set_wifi,
 	 [3] = set_dhcp,
+	 [5] = update_sys,
 	 [43] = get_diviceinfo,
      [80] = iniPage,
 	 [97] = change_language,
