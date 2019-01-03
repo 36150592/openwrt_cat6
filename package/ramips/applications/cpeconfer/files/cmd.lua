@@ -318,6 +318,44 @@ function sim_get_status()
 
 end
 
+function sim_pin_lock_enable()
+	print("in sim_pin_lock_enable")
+	local ret = sim.sim_pin_lock_enable(arg[2])
+
+	if ret
+	then
+		print("enable pin lock success")
+		return 
+	end
+
+	print("enable pin lock fail")
+end
+
+function sim_pin_lock_disable()
+	print("in sim_pin_lock_disable")
+	local ret = sim.sim_pin_lock_disable(arg[2])
+
+	if ret
+	then
+		print("disable pin lock success")
+		return 
+	end
+
+	print("disable pin lock fail")
+end
+
+function sim_pin_unlock()
+	print("in sim_pin_unlock")
+	local ret = sim.sim_pin_unlock(tostring(arg[2]))
+
+	if ret
+	then
+		print(" pin unlock success")
+		return 
+	end
+
+	print("pin unlock fail")
+end
 
 function network_get_wan_info()
 
@@ -1072,6 +1110,9 @@ local api_func = {
 
 	--sim
 	["sim_get_status"] = sim_get_status,
+	["sim_pin_lock_enable"] = sim_pin_lock_enable,
+	["sim_pin_lock_disable"] = sim_pin_lock_disable,
+	["sim_pin_unlock"] = sim_pin_unlock,
 
 	--system
 	["system_get_status"] = system_get_status,
