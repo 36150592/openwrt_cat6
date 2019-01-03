@@ -1,0 +1,13 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2010 Jo-Philipp Wich
+
+START=50
+STOP=75
+
+start(){
+    /bin/mini_httpd -C /tz_www/mini_httpd.conf  &
+}
+
+stop(){
+    ps | grep mini_httpd | grep -v grep | cut -d' ' -f 2 | xargs kill -9
+}

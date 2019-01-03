@@ -43,6 +43,8 @@ TARGET_CFLAGS += \
 define Package/mini_httpd-1.19/install
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mini_httpd $(1)/bin
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/mini_httpd.init $(1)/etc/init.d/mini_httpd
 
 endef
 
