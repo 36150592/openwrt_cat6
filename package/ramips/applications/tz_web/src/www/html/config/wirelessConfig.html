@@ -35,13 +35,11 @@
             $('#helper' + pannelIndex).show().siblings().hide();
 
             switch (pannelIndex) {
-                case 0:
-                    Page.getHelperPage('html/config/wirelessConfig.html');
-                    $('.helper_box').show();
+                case 0:               
                     Page.postJSON({
                         json: { cmd: 101 },
                         success: function(datas) {
-                            console.log(datas);
+                           // console.log(datas);
                             var data = datas.data;
                              if(data.status == 0){
                                 $wifiOpen.prop('checked', true);
@@ -79,6 +77,8 @@
 
                         }
                     });
+					Page.getHelperPage('html/config/wirelessConfig.html');
+                    $('.helper_box').show();
                     break;
                 case 1:
                     $('.helper_box').hide();
