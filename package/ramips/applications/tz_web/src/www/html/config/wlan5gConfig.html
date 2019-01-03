@@ -19,8 +19,6 @@
             $('#helper' + pannelIndex).show().siblings().hide();
             switch (pannelIndex) {
                 case 0:
-                    Page.getHelperPage('html/config/wlan5gConfig.html');
-                    $('.helper_box').show();
                     Page.postJSON({
                         json: { cmd: 201 },
                         success: function(datas) {
@@ -47,10 +45,11 @@
                             }
                             $wmm.attr('old',data.wmm ||  0);
 
-                            
+
                             Page.setFormFieldValue2("channel", data.channel);
                             Page.setFormFieldValue2("ssid", data.ssid);
-//                            Page.setFormFieldValue2("wifiWorkMode", data.mode);
+                            Page.setFormFieldValue2("wifiWorkMode", data.mode);
+                            Page.setFormFieldValue2("bandWidth", data.ht);
                             Page.setFormFieldValue2("authenticationType", data.encryption);
 //                            if(data.encryption == 'none'){
 //                                $wpa.hide();
@@ -58,13 +57,15 @@
 //                                $wpa.show();
 //                                Page.setFormFieldValue2("pwd", data.pwd);
 //                            }
-							
-							$("input[name='encryptAlgorithm'][value=" + data.enType +"]").attr("checked",true);
-							$('#encryptAlgorithm').attr('old',data.enType);
-							Page.setFormFieldValue2("key", data.pwd);
+
+                            $("input[name='encryptAlgorithm'][value=" + data.enType +"]").attr("checked",true);
+                            $('#encryptAlgorithm').attr('old',data.enType);
+                            Page.setFormFieldValue2("key", data.pwd);
 
                         }
                     });
+                    Page.getHelperPage('html/config/wlan5gConfig.html');
+                    $('.helper_box').show();
                     break;
                 case 1:
                     //$('#showContainer').load('html/config/connectedList5G.html');
@@ -94,8 +95,8 @@
             }
             var json = JSON.parmsToJSON($form);
             console.log(json);
-			
-			if(json.key == $('#key').attr('old')){
+
+            if(json.key == $('#key').attr('old')){
                 delete json["key"];
                 count++;
             }else {
@@ -129,26 +130,30 @@
                 delete json["channel"];
                 count++;
             }
-//            if(json.wifiWorkMode ==  $("#wifiWorkMode").attr('old')){
-//                delete json["wifiWorkMode"];
-//                count++;
-//            }
+            if(json.wifiWorkMode ==  $("#wifiWorkMode").attr('old')){
+                delete json["wifiWorkMode"];
+                count++;
+            }
+            if(json.bandWidth ==  $("#bandWidth").attr('old')){
+                delete json["bandWidth"];
+                count++;
+            }
             if(json.authenticationType == $("#authenticationType").attr('old')){
                 delete json["authenticationType"];
                 count++;
             }
-			
-			if(json.encryptAlgorithm == $('#encryptAlgorithm').attr('old'))
+
+            if(json.encryptAlgorithm == $('#encryptAlgorithm').attr('old'))
             {
                 delete json["encryptAlgorithm"];
                 count++;
             }
-//            if(count == 10){
-//                AlertUtil.alertMsg(CHECK.required.noChanges);
-//                $(this).attr("disabled",false);
-//                return false;
-//            }
-//
+            if(count == 10){
+			    AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+           }
+
             json.cmd = 202;
             console.log(json);
             Page.postJSON({
@@ -230,9 +235,9 @@
                                 <th><%- Mode %></th>
                                 <td>
                                     <select id="wifiWorkMode" name="wifiWorkMode">
-                                        <option value="11A"><%- na %></option>
-                                        <option value="11NA"><%- ac %></option>
-                                        <option value="11AC"><%- an_ac %></option>
+                                        <option value="11"><%- na %></option>
+                                        <option value="14"><%- ac %></option>
+                                        <option value="15"><%- an_ac %></option>
                                     </select>
                                 </td>
                             </tr>
@@ -240,9 +245,9 @@
                                 <th><%- bandWidth %></th>
                                 <td>
                                     <select name="bandWidth" id="bandWidth">
-                                        <option value="11A"><%- bandWidth20 %></option>
-                                        <option value="11NA"><%- bandWidth40 %></option>
-                                        <option value="11AC"><%- bandWidth80 %></option>
+                                        <option value="20"><%- bandWidth20 %></option>
+                                        <option value="40"><%- bandWidth40 %></option>
+                                        <option value="20+40"><%- bandWidth80 %></option>
                                     </select>
                                 </td>
                             </tr>
@@ -250,7 +255,7 @@
                                 <th><%- authenticationType %></th>
                                 <td>
                                     <select name="authenticationType" id="authenticationType">
-                                        <option value="none"><%- openSys %></option>							
+                                        <option value="none"><%- openSys %></option>
                                         <option value="psk"><%- wpa_psk %></option>
                                         <option value="psk2"><%- wpa2_psk %></option>
                                         <option value="mixed"><%- wpa_wpa2_psk %></option>
@@ -260,17 +265,17 @@
                             <tr>
                                 <th><%- encryptAlgorithmTh %></th>
                                 <td>
-								 <label id="encryptAlgorithm">
-									<input type="radio" value="none" name="encryptAlgorithm"/>
-                                    &nbsp;<span><%- auto %></span>
-                                    <input type="radio" value="tkip" name="encryptAlgorithm"/>
-                                    &nbsp;<span><%- tkip %></span>
-                                    <input type="radio" value="ccmp" name="encryptAlgorithm"/>
-                                    &nbsp;<span><%- aes %></span>
-                                    <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
-                                    &nbsp;<span><%- tkip_aes %></span>
+                                    <label id="encryptAlgorithm">
+                                        <input type="radio" value="none" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- auto %></span>
+                                        <input type="radio" value="tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip %></span>
+                                        <input type="radio" value="ccmp" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- aes %></span>
+                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip_aes %></span>
                                 </td>
-								 </label>
+                                </label>
                             </tr>
                             <tr>
                                 <th><%- key %></th>
