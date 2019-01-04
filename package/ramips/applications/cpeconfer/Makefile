@@ -21,6 +21,7 @@ define Package/cpeconfer
   SECTION:=MTK Properties
   CATEGORY:=MTK Properties
   TITLE:=Cpeconfer
+  DEPENDS:=+libpthread +lua
   SUBMENU:=Applications
 endef
 
@@ -29,11 +30,13 @@ define Package/cpeconfer/description
 endef
 
 define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./src/* $(PKG_BUILD_DIR)/
 endef
 
-define Build/Compile
-	
-endef
+#define Build/Compile
+#	make		
+#endef
 
 
 define Package/cpeconfer/install
@@ -41,6 +44,9 @@ define Package/cpeconfer/install
 	$(INSTALL_BIN) ./files/cmd.lua $(1)/bin/cpeconfer
 	$(INSTALL_DIR) $(1)/usr/lib/lua/tz
 	$(INSTALL_DATA) ./files/*.lua $(1)/usr/lib/lua/tz
+	$(INSTALL_DIR) $(1)/usr/lib/lua
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/luatzlib.so $(1)/usr/lib/lua
+
 endef
 
 

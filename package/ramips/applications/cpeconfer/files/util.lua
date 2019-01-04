@@ -3,6 +3,9 @@ local module = {}
 require("io")
 local DEBUG=require("debug")
 
+local tzlib = require("luatzlib")
+tzlib.remove_stderr()
+
 function module.debug(...)
 	arg = { ... } 
 	local log_str = ""
