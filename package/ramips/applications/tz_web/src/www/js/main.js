@@ -3399,16 +3399,13 @@ function getOpenInfo() {
  		});
  	}
 	
-    function createTable(routerInfo, lteInfo, noRefresh) {
-    	//var supportedLte = Page.isSupported(ItemSupportedTable.DISPLAY_LTE_STATUS, true) && !Page.isItemHide(ItemHideTable.LTE_STATUS_INFO);
+    function createTable(routerInfo) {
         var supportedLte = true;
     	var lte_info_id = '#lte_info';
     	var lte_info_advanced_id = '#lte_info_advanced';
     	var wan_info_id = supportedLte ? '#wan_info' : '#wan_info2';
     	var wlan_info_id = supportedLte ? '#wlan_info' : '#wlan_info2';
 
-    	//lteInfo = $.extend({}, lteInfo, theLteInfo);
-        //var tozedinds = StatusUtil.parseInds(sysInfo.tozedind);
         var names = [], values = [];
         var names_advanced = [], values_advanced = [];
         var lteNames = DOC.lte,
@@ -3416,18 +3413,29 @@ function getOpenInfo() {
         	wlanNames = DOC.wlan;
 
         var html;
-
     	if (supportedLte) {
             var status = routerInfo.status;
             var divice = routerInfo.divice;
             var system = routerInfo.system;
             var wifidate = routerInfo.wifi;
+            var network = routerInfo.network;
+
 	        names.push(DOC.device.imsi);
 	        names.push(DOC.lte.plmn);
 	        names.push(lteNames.phyCellId);
 	        names.push(lteNames.sinr);
 	        names.push(lteNames.rsrp);
 			names.push(lteNames.rssi);
+
+
+            values.push(status.imsi || loading);
+            values.push(status.plmn || loading);
+            values.push(status.cell_id || loading);
+
+            values.push(status.sinr ? FormatUtil.formatField(status.sinr, 'dB') : loading);
+            values.push(status.rsrp ? FormatUtil.formatField(status.rsrp, 'dBm') : loading);
+            values.push(status.rssi ? FormatUtil.formatField(status.rssi, 'dBm') : loading);
+            //values.push(lteInfo.txpower ? FormatUtil.formatField(lteInfo.txpower, 'dBm') : loading);
 
 	        //names_advanced.push(lteNames.tm);
 	        names_advanced.push(lteNames.freqPoint);
@@ -3438,21 +3446,12 @@ function getOpenInfo() {
 	        names_advanced.push(TAB.advance.roaming);
 	        names_advanced.push(DOC.device.imei);
 
-	        values.push(FormatUtil.formatField(status.imsi || loading));
-	        values.push(FormatUtil.formatField(status.plmn || loading));
-	        values.push(FormatUtil.formatField(status.cell_id || loading));
-
-		values.push(status.sinr ? FormatUtil.formatField(status.sinr, 'dB') : loading);
-	    values.push(status.rsrp ? FormatUtil.formatField(status.rsrp, 'dBm') : loading);
-		values.push(status.rssi ? FormatUtil.formatField(status.rssi, 'dBm') : loading);
-		//values.push(lteInfo.txpower ? FormatUtil.formatField(lteInfo.txpower, 'dBm') : loading);
-
 	        //values_advanced.push(lteInfo.tm ? FormatUtil.formatField('tm ' + lteInfo.tm) : loading);
-	        values_advanced.push(FormatUtil.formatField(lteInfo.freq || loading));
+	        values_advanced.push(loading);
 	        values_advanced.push(status.rsrq ? FormatUtil.formatField(status.rsrq, 'dB') : loading);
-	        values_advanced.push(FormatUtil.formatField(lteInfo.globalCellId || loading));
-	        values_advanced.push(FormatUtil.formatField(status.enodebid || loading));
-	        values_advanced.push(FormatUtil.formatField(lteInfo.volteRegister || loading));
+	        values_advanced.push(loading);
+	        values_advanced.push(status.enodebid || loading);
+	        values_advanced.push(loading);
 			var roam = loading;
             if(status.roam_status){
             	if(status.roam_status == 0){
@@ -3461,15 +3460,15 @@ function getOpenInfo() {
                     roam = "漫游";
 				}
 			}
-            values_advanced.push(FormatUtil.formatField(roam));
-	        values_advanced.push(FormatUtil.formatField(divice.imei || loading));
-	        
+            values_advanced.push(roam);
+	        values_advanced.push(divice.imei || loading);
+
 	        html = Page.createTable(DOC.title.lteInfoBasic, names, values, names.length, 1);
 	        $('#device_check').show();
 	        $(lte_info_id).html(html);
 	        //$(lte_info_id).css({ 'color': '#F18906' });
 	        Page.setStripeTable(lte_info_id);
-	        
+
 	        html = Page.createTable(DOC.title.lteInfoAdvanced, names_advanced, values_advanced, names_advanced.length, 1);
 	        $(lte_info_advanced_id).html(html);
 	        Page.setStripeTable(lte_info_advanced_id);
@@ -3481,11 +3480,11 @@ function getOpenInfo() {
         names.push(DOC.device.modemVersion);
         
         values = [];
-        var runtime = ConvertUtil.timeStamp(system.runtime);
+        var runtime = ConvertUtil.timeStamp(system.runtime || 0);
         values.push(runtime);
         //values.push(FormatUtil.formatField(Page.getDeviceVersion(routerInfo.name, routerInfo.version) || loading));certificationVer
-        values.push(FormatUtil.formatField( divice.hardware|| loading));
-        values.push(FormatUtil.formatField(divice.type || loading));
+        values.push(divice.hardware|| loading);
+        values.push(divice.type || loading);
         
         html = Page.createTable(DOC.title.router, names, values, names.length, 1);
         $('#router_info').html(html);
@@ -3493,22 +3492,22 @@ function getOpenInfo() {
         
         names = [];
         names.push(netNames.ip);
-        //names.push(netNames.mask);
+        names.push(netNames.mask);
         names.push(netNames.dns1);
         names.push(netNames.dns2);
         //names.push(netNames.gateway);
-        names.push(netNames.ipv6);
+        //names.push(netNames.ipv6);
         //names.push(netNames.gatewayv6);
         //names.push(netNames.dns3);
         //names.push(netNames.dns4);
         
         values = [];
-        values.push(FormatUtil.formatField(routerInfo.wanIp || loading));
-        //values.push(FormatUtil.formatField(routerInfo.wanMaskIp || loading));
-        values.push(FormatUtil.formatField(routerInfo.wanDNS || loading));
-        values.push(FormatUtil.formatField(routerInfo.wanDNS_2 || loading));
+        values.push(network.ipaddr || loading);
+        values.push(network.netmask || loading);
+        values.push(network.first_dns || loading);
+        values.push(network.second_dns || loading);
         //values.push(FormatUtil.formatField(routerInfo.wanGateway || loading));
-        values.push(FormatUtil.formatField(routerInfo.wanIpv6 || loading));
+        //values.push(FormatUtil.formatField(network.wanIpv6 || loading));
         //values.push(FormatUtil.formatField(routerInfo.wanGatewayIpv6 || loading));
         //values.push(FormatUtil.formatField(routerInfo.wanDNS_3 || loading));
         //values.push(FormatUtil.formatField(routerInfo.wanDNS_4 || loading));
@@ -3517,17 +3516,17 @@ function getOpenInfo() {
         $(wan_info_id).html(html);
         Page.setStripeTable(wan_info_id);
 
-        names = [];
-        names.push(netNames.ip);
-        names.push(netNames.mask);
-        names.push(netNames.ipBegin);
-        names.push(netNames.ipEnd);
-        
-        values = [];
-        values.push(FormatUtil.formatField(routerInfo.lanIp || loading));
-        values.push(FormatUtil.formatField(routerInfo.lanMaskIp || loading));
-        values.push(FormatUtil.formatField(routerInfo.ipBegin || loading));
-        values.push(FormatUtil.formatField(routerInfo.ipEnd || loading));
+        // names = [];
+        // names.push(netNames.ip);
+        // names.push(netNames.mask);
+        // names.push(netNames.ipBegin);
+        // names.push(netNames.ipEnd);
+        //
+        // values = [];
+        // values.push(FormatUtil.formatField(routerInfo.lanIp || loading));
+        // values.push(FormatUtil.formatField(routerInfo.lanMaskIp || loading));
+        // values.push(FormatUtil.formatField(routerInfo.ipBegin || loading));
+        // values.push(FormatUtil.formatField(routerInfo.ipEnd || loading));
         
         //html = Page.createTable(DOC.title.lan, names, values, names.length, 1);
         //$(lan_info_id).html(html);
@@ -3538,14 +3537,14 @@ function getOpenInfo() {
 	        names.push(wlanNames.ssid);
 	        names.push(wlanNames.channel);
 	        names.push(wlanNames.wifi);
-	        names.push(DOC.lbl.connectedDevicesViaWiFi);
+	       // names.push(DOC.lbl.connectedDevicesViaWiFi);
 	        //names.push(wlanNames.secMode);
-	        
+
 	        values = [];
-	        values.push(FormatUtil.formatField(wifidate.ssid || loading));
-	        values.push(FormatUtil.formatField(wifidate.channel || loading));
+	        values.push(wifidate.ssid || loading);
+	        values.push(wifidate.channel || loading);
 	        //values.push(FormatUtil.formatField(ConvertUtil.frequencyToChannel(routerInfo.frequency) || loading));
-	        
+
 	        var wifiOpen = wifidate.status;
 	        if(wifiOpen == "0") {
 	        	values.push(DOC.status.opened);
@@ -3555,134 +3554,41 @@ function getOpenInfo() {
 	        	values.push(loading);
 	        }
 	        //values.push(String.format('<span id="spanWiFiCount">{0}</span>', Page.wifiUserCount == null ? '' : Page.wifiUserCount.toString()));
-	        values.push(FormatUtil.formatField(routerInfo.sta_count || loading));
+	        //values.push(FormatUtil.formatField(routerInfo.sta_count || loading));
 	        /*var securityType = SecurityJSON.getSecurityType(routerInfo);
 			if (routerInfo.secMode) {
 			    values.push(securityType);
 			} else {
 			    values.push(loading);
 			}*/
-	        
+
 	        html = Page.createTable(DOC.title.wlan, names, values, names.length, 1);
 	        $(wlan_info_id).html(html);
 	        Page.setStripeTable(wlan_info_id);
         }
-    }
-    
-    var SEPARATOR = '$', FIELD_SEPARATOR = '@',
-		SYSTEM_MODE = 'System Mode',
-		OPERATION_MODE = 'Operation Mode',
-		PLMN = 'MCC MNC',
-		LAC_TAC = 'TAC/LAC',
-		SERVING_CELLID = 'Serving CellID',
-		PHYSICAL_CELLID = 'Physical CellID',
-		CURRENT_BAND = 'Frequency Band',
-		EARFCN = 'EARFCN/ARFCN',
-		DOWNLINK_BANDWIDTH = 'Downlink Bandwidth',
-		UPLINK_BANDWIDTH = 'Uplink Bandwidth',
-		RSRQ = 'RSRQ', RSRP = 'RSRP',RSRP2 = 'RSRP2',
-		RSSI = 'RSSI',RSSI2 = 'RSSI2', SINR = 'SINR',SINR2 = 'SINR2',
-		TZTRANSMODE = 'TZTRANSMODE',
-		TZTA = 'TZTA',
-		TZTXPOWER = 'TZTXPOWER';
-    
-    function getLteInfo(routerInfo) {
-    	Page.isOpenPage = true;
-    	/*
-    	//为什么要在首页中得到这个网页?
-    	Page.getHtml(MenuItem.CLIENT_LIST.url, MenuItem.CLIENT_LIST.cmd, function(data) {
-    		$('#client_info_hidden').html(data);
-    	});
-    	*/
-    	if (!Page.isSupported(ItemSupportedTable.DISPLAY_LTE_STATUS, true) || Page.isItemHide(ItemHideTable.LTE_STATUS_INFO)) {
-        	createTable(routerInfo, {}, true);
-        	return;
-    	}
-    	
-    	Page.postJSON({
-	        json: {
-	    		method: JSONMethod.POST,
-	    		cmd: RequestCmd.GET_LTE_STATUS
-	    	},
-	        success: function(data) {
-	        	/*
-	    		var lteInfo = {};
-	        	var phyCellId = '';
-        		var items = data.message.split(SEPARATOR);
-		        for (var i = 0; i < items.length; i++) {
-			        var item = items[i].split(FIELD_SEPARATOR);
-			        if (item.length == 2) {
-				        switch(item[0]) {
-				        case EARFCN: lteInfo.freq = item[1]; break;
-				        case CURRENT_BAND: lteInfo.band = item[1]; break;
-				        case RSRP: lteInfo.rsrp = item[1]; break;
-					case RSRP2: lteInfo.rsrp2 = item[1]; break;
-				        case RSRQ: lteInfo.rsrq = item[1]; break;
-				        case SINR: lteInfo.sinr = item[1]; break;
-					case SINR2: lteInfo.sinr2 = item[1]; break;
-					case RSSI: lteInfo.rssi = item[1]; break;
-					case RSSI2: lteInfo.rssi2 = item[1]; break;
-				        
-				        case SERVING_CELLID:
-					        phyCellId = parseInt(item[1], 10);
-							if (!isNaN(phyCellId)) {
-                                lteInfo.globalCellId = phyCellId.toString( 16 ).toUpperCase();
-								Page.cellId = phyCellId % 256;
-				        		Page.enodeId = (phyCellId - Page.cellId) / 256;
-				    			
-				        		lteInfo.enodeBId = String.format('{0}/{1}', Page.enodeId, Page.cellId);
-				    		} else {
-                                lteInfo.globalCellId = phyCellId;
-				    			lteInfo.enodeBId = phyCellId;
-				    		}
-					        break;
-				        
-				        case PHYSICAL_CELLID: lteInfo.phyCellId = item[1]; break;
-					        
-				        case DOWNLINK_BANDWIDTH: lteInfo.bandWidth = item[1]; break;
-				        case TZTRANSMODE: lteInfo.tm = item[1]; break;
-				        case TZTA: lteInfo.tzta = item[1]; break;
-				        case TZTXPOWER: lteInfo.txpower = item[1]; break;
-				        
-				        default: break;
-				        }
-				    }
-			    }
-				*/
-		        theLteInfo = data;
-            	createTable(routerInfo, theLteInfo);
-	        },
-            fail: function() {
-            	createTable(routerInfo, theLteInfo);
-            },
-            error: function() {
-            	createTable(routerInfo, theLteInfo);
-            }
-    	});
     }
 
     function getRouterInfo() {
     	Page.postJSON({
             json: { cmd: RequestCmd.ROUTER_INFO },
             success: function(datas) {
-            	// save
 				console.log(datas);
             	theRouterInfo = datas.data;
             	
             //	getLteInfo(routerInfo);
-            	createTable(theRouterInfo, theLteInfo, true);
+            	createTable(theRouterInfo);
             },
             fail: function() {
-              //  getLteInfo(theRouterInfo);
+                createTable(theRouterInfo);
             },
             error: function() {
-              //  getLteInfo(theRouterInfo);
+                createTable(theRouterInfo);
             }
         });
     }
-    
+
     getRouterInfo();
-	//createTable(theRouterInfo, theLteInfo, true);
+
 }
 
 function MenuHead(css, text, bodys) {

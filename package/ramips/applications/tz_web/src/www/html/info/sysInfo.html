@@ -4,8 +4,8 @@
     $(document).ready(function() {
         var currentId = Page.currentId;
         var count = 0;
-        var dataMac = "";
-
+        var dataMac = "-";
+        var loading = '-';
         function getPinPukWarning(reqPin, reqPuk){
             if (reqPin == 1) {
                 if (reqPuk == 1)
@@ -49,7 +49,7 @@
         }
 
         function getCardState(flag){
-            var stateComment;
+            var stateComment = '?';
             if(flag == 0){
                 stateComment = DOC.status.noSim;
             } else if(flag == 1) {
@@ -86,7 +86,7 @@
         }
 
         function getPinPukState(flag) {
-            var pinState="",pukState="";
+            var pinState="?",pukState="?";
             if(flag == 0){
                 pinState = DOC.status.noreqPin;
                 pukState = DOC.status.noreqPuk;
@@ -115,7 +115,7 @@
         }
 
         function getRegState(flag) {
-            var csRegState ="", psRegState ="";
+            var csRegState ="?", psRegState ="?";
             switch(flag) {
                 case 0:
                     csRegState = "无服务";
@@ -165,10 +165,10 @@
 //                    names_run.push(run_text.currentSys);
                     names_run.push(DOC.lbl.memory);
 
-                    var runtime = ConvertUtil.timeStamp(data_system.runtime);
+                    var runtime = ConvertUtil.timeStamp(data_system.runtime || 0);
                     values_run.push(runtime);
-                    values_run.push(data_system.cpu_average1 + ", " + data_system.cpu_average5 + ", " + data_system.cpu_average15);
-                    values_run.push(data_system.mem_total + "KB");
+                    values_run.push(data_system.cpu_average1 || loading + ", " + data_system.cpu_average5 || loading + ", " + data_system.cpu_average15 || loading);
+                    values_run.push(data_system.mem_total ? FormatUtil.formatField(data_system.mem_total, 'KB') : loading);
 
                     names_sim.push(DOC.lbl.usim);
                     names_sim.push(DOC.lbl.pinCode);
@@ -206,7 +206,7 @@
                     // }
                     values_net.push(netState);
                     values_net.push(StatusUtil.formatSingalLevel(singalLevel));
-                    values_net.push(data_modem.rsrp);
+                    values_net.push(data_modem.rsrp || loading);
 
                     values_net.push(FormatUtil.formatPLMN(data_modem.plmn));
 
@@ -224,8 +224,8 @@
                     values_lan.push(dataMac);
 
                     Page.lanIp = data_lan.lanIp;
-                    values_lan.push(Page.lanIp);
-                    values_lan.push(data_lan.netMask);
+                    values_lan.push(data_lan.lanIp || loading);
+                    values_lan.push(data_lan.netMask || loading);
 
                     names_lan.push(DOC.net.dhcpServer);
                     var dhcp = data_lan.status ? '1' : '0';
@@ -243,16 +243,16 @@
                     names_wan.push(DOC.net.dns2);
 
 
-                    values_wan.push(data_wan.mac);
-                    values_wan.push(data_wan.ipaddr);
-                    values_wan.push(data_wan.netmask);
-                    values_wan.push(data_wan.gateway);
+                    values_wan.push(data_wan.mac || loading);
+                    values_wan.push(data_wan.ipaddr || loading);
+                    values_wan.push(data_wan.netmask || loading);
+                    values_wan.push(data_wan.gateway || loading);
                     if(data_wan.ipaddr == undefined){
                             values_wan.push("NULL");
                             values_wan.push("NULL");
                     } else {
-                            values_wan.push(data_wan.first_dns);
-                            values_wan.push(data_wan.second_dns);
+                            values_wan.push(data_wan.first_dns || loading);
+                            values_wan.push(data_wan.second_dns || loading);
                     }
                     
                     names_wan.push(DOC.net.rxPackets);
@@ -261,10 +261,10 @@
                     names_wan.push(DOC.net.txBytes);
                     // names_wan.push(wan_text.manageTime);
 
-                    values_wan.push(data_wan.rx_packets);
-                    values_wan.push(data_wan.rx_bytes);
-                    values_wan.push(data_wan.tx_packets);
-                    values_wan.push(data_wan.tx_bytes);
+                    values_wan.push(data_wan.rx_packets || loading);
+                    values_wan.push(data_wan.rx_bytes || loading);
+                    values_wan.push(data_wan.tx_packets || loading);
+                    values_wan.push(data_wan.tx_bytes || loading);
                     // var manageTime = parseInt(data.manageTime.trim());
                     // var theUptime = parseInt(data.theUptime.trim());
                     // if (!isNaN(manageTime) && !isNaN(theUptime)) {
@@ -369,6 +369,9 @@
                 case 15 :
                     secMode = "11 AN/AC";
                     break;
+                default :
+                    secMode = "ap";
+                    break;
             }
 
             return secMode;
@@ -398,7 +401,7 @@
                         }
 
                         names.push(DOC.wlan.ssid);
-                        values.push(data2.ssid);
+                        values.push(data2.ssid || loading);
 
                         names.push(DOC.net.mac);
                         values.push(dataMac);
@@ -419,10 +422,11 @@
                         //values.push(FormatUtil.formatField(getWlanSecMode(data.encKey.trim(), data.wpa.trim(), data.wpaKeyMgmt.trim(), data.wpaPairwise.trim())));
 
                         names.push(DOC.wlan.channel);
-                        values.push(data2.channel);
+                        values.push(data2.channel || loading);
 
                         names.push(DOC.wlan.txPower);
-                        values.push(FormatUtil.formatField(data2.txpower, "dBm"));
+                        values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
+
 
                         wirelessHtml = Page.createTable(DOC.title.wlan2g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
                     }
@@ -455,7 +459,7 @@
                             values.push(DOC.status.closed);
 
                         names.push(DOC.wlan.ssid);
-                        values.push(data2.ssid);
+                        values.push(data2.ssid || loading);
 
                         names.push(DOC.net.mac);
                         values.push(dataMac);
@@ -471,10 +475,11 @@
                         values.push(getWlanSecMode(data2.encryption));
 
                         names.push(DOC.wlan.channel);
-                        values.push(data2.channel);
+                        values.push(data2.channel || loading);
 
                         names.push(DOC.wlan.txPower);
-                        values.push(FormatUtil.formatField(data2.txpower, "dBm"));
+                        values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
+
                         wlan5gHtml = Page.createTable(DOC.title.wlan5g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
                     }
                     $('#wlan_5g_info').html(wlan5gHtml);

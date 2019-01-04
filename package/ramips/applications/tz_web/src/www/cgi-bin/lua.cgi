@@ -103,13 +103,13 @@ end
 function get_sysinfo()
 	local data_array = {}
 	local data_lan = {}
-    data_array["system"]  = system.system_get_status()
-	data_array["modem"] = modem.modem_get_status()
-	data_array["sim"] = sim.sim_get_status()
-	data_array["network"] = network.network_get_wan_info()
+    data_array["system"]  = system.system_get_status() or ''
+	data_array["modem"] = modem.modem_get_status() or ''
+	data_array["sim"] = sim.sim_get_status() or ''
+	data_array["network"] = network.network_get_wan_info() 
 	if nil == data_array["network"]
 	  then
-	    data_array["network"] = network.network_get_4g_net_info()
+	    data_array["network"] = network.network_get_4g_net_info() or ''
 	end
 	data_lan["lanIp"] = dhcp.dhcp_get_server_ip()
 	data_lan["netMask"] = dhcp.dhcp_get_server_mask()
@@ -126,9 +126,9 @@ end
 
 function get_diviceinfo()
 	local data_array = {}
-	data_array["sim"] = sim.sim_get_status()
-	data_array["modem"] = modem.modem_get_info()
-	data_array["device"] = device.device_get_info()
+	data_array["sim"] = sim.sim_get_status() or ''
+	data_array["modem"] = modem.modem_get_info() or ''
+	data_array["device"] = device.device_get_info() or ''
     local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 43;
@@ -646,10 +646,14 @@ function get_routerinfo()
 	local tz_answer = {}
 	tz_answer["cmd"] = 133   
 	local data_array = {}
-	data_array["status"] = modem.modem_get_status() or ""
-	data_array["divice"] = modem.modem_get_info() or ""
-	data_array["system"]  = system.system_get_status() or ""
-	
+	data_array["status"] = modem.modem_get_status() or ''
+	data_array["divice"] = modem.modem_get_info() or ''
+	data_array["system"]  = system.system_get_status() or ''
+	data_array["network"] = network.network_get_wan_info()
+	if nil == data_array["network"]
+    	then
+    	   data_array["network"] = network.network_get_4g_net_info() or ''
+    end
 	local array = wifi.wifi_get_dev()
 	local data_wifi = array[1]
 	local id = array[1]['wifi_id']
