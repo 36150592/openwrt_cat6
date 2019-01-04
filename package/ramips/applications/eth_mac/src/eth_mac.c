@@ -288,7 +288,7 @@ int main(int argc,char **argv)
                 goto Fail;
             break;
         case 'w':
-            if (argc < 4)
+            if (argc != 9)
                 goto CmdFail;
             if (mtd_write(argv[2], argv+3) < 0)
                 goto Fail;
@@ -307,6 +307,10 @@ int main(int argc,char **argv)
                 goto Fail;
 			break;
 		case 't':
+
+			if(argc < 5 || argc != atoi(argv[3]) + 4 )
+				goto CmdFail;
+			
 			 if (mtd_write_own(strtol(argv[2],NULL,16), argv+4, atoi(argv[3])) < 0)
                 goto Fail;
 			break;
