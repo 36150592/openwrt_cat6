@@ -11,15 +11,17 @@
 #include <generated/autoconf.h>
 
 #define MTD_FACTORY     "/dev/mtd2"
-#if defined (CONFIG_RALINK_RT6855A) || defined (CONFIG_RALINK_MT7621)
+#if defined (CONFIG_RALINK_RT6855A) || defined (CONFIG_RALINK_MT7621) || defined (CONFIG_SOC_MT7621)
 #define LAN_OFFSET    0xE000
 #define WAN_OFFSET    0xE006
 #else
 #define LAN_OFFSET    0x28
 #define WAN_OFFSET    0x2E
-#define WLAN_OFFSET   0x04
+//#define WLAN_OFFSET   0x04
 #endif
 
+#define WLAN_OFFSET   0x04
+#define WLAN_5g_OFFSET 0x8004
 #define MACADDR_LEN     6
 #define WIFIRF_LEN  512
 
@@ -45,6 +47,53 @@ struct mtd_info_user
     unsigned int eccsize;
 };
 
+int mtd_read_own(int offset, int size)
+{
+    int fd = open(MTD_FACTORY, O_RDWR | O_SYNC);
+    int i = 0;
+    unsigned char *buf = NULL;
+
+    if(fd < 0)
+    {
+        printf("Could not open mtd device: %s\n", MTD_FACTORY);
+        return -1;
+    }
+
+	if(offset < 0 || size <= 0 )
+	{
+		printf("input error:offset >= 0 and size >0\n");
+		return -1;
+    }
+
+	buf = (unsigned char *)malloc(size * sizeof(unsigned char));
+
+	if(NULL == buf)
+	{
+		printf("malloc memory error\n");
+		return -1;
+	}
+	
+	lseek(fd, offset, SEEK_SET);
+    if(read(fd, buf, size) != MACADDR_LEN)
+    {
+        printf("read() failed\n");
+        close(fd);
+        return -1;
+    }
+    for (i = 0; i < size; i++)
+    {
+        printf("%02X", buf[i]);
+        if (i < MACADDR_LEN-1)
+            printf(":");
+        else
+            printf("\n");
+    }
+    close(fd);
+	free(buf);
+    return 0;
+}
+
+
 int mtd_read(char *side)
 {
     int fd = open(MTD_FACTORY, O_RDWR | O_SYNC);
@@ -61,8 +110,10 @@ int mtd_read(char *side)
         lseek(fd, WLAN_OFFSET, SEEK_SET);
     else if (!strcmp(side, "wan"))
         lseek(fd, WAN_OFFSET, SEEK_SET);
-    else
+    else if (!strcmp(side, "lan"))
         lseek(fd, LAN_OFFSET, SEEK_SET);
+	else
+		lseek(fd, WLAN_5g_OFFSET, SEEK_SET);
     if(read(fd, mac_addr, MACADDR_LEN) != MACADDR_LEN)
     {
         printf("read() failed\n");
@@ -126,8 +177,10 @@ int mtd_write(char *side, char **value)
         ptr = buf + WLAN_OFFSET;
     else if (!strcmp(side, "wan"))
         ptr = buf + WAN_OFFSET;
-    else
+    else if (!strcmp(side, "lan")) 
         ptr = buf + LAN_OFFSET;
+	else
+		ptr = buf + WLAN_5g_OFFSET;
     for (i = 0; i < MACADDR_LEN; i++, ptr++)
         *ptr = strtoul(value[i], NULL, 16);
     lseek(fd, 0, SEEK_SET);
@@ -146,11 +199,78 @@ write_fail:
     return -1;
 }
 
+int mtd_write_own(int offset, char **value, int size)
+{
+    int sz = 0;
+    int i;
+    struct mtd_info_user mtdInfo;
+    struct erase_info_user mtdEraseInfo;
+    int fd = open(MTD_FACTORY, O_RDWR | O_SYNC);
+    unsigned char *buf, *ptr;
+    if(fd < 0)
+    {
+        fprintf(stderr, "Could not open mtd device: %s\n", MTD_FACTORY);
+        return -1;
+    }
+	if(offset < 0 || size <= 0 )
+	{
+		printf("input error:offset >= 0 and size >0\n");
+		return -1;
+    }
+    if(ioctl(fd, MEMGETINFO, &mtdInfo))
+    {
+        fprintf(stderr, "Could not get MTD device info from %s\n", MTD_FACTORY);
+        close(fd);
+        return -1;
+    }
+    mtdEraseInfo.length = sz = mtdInfo.erasesize;
+    buf = (unsigned char *)malloc(sz);
+	if(NULL == buf){
+		printf("Allocate memory for sz failed.\n");
+		close(fd);
+		return -1;        
+	}
+	if(read(fd, buf, sz) != sz){
+        fprintf(stderr, "read() %s failed\n", MTD_FACTORY);
+        goto write_fail;
+    }
+    mtdEraseInfo.start = 0x0;
+    for (mtdEraseInfo.start; mtdEraseInfo.start < mtdInfo.size; mtdEraseInfo.start += mtdInfo.erasesize)
+    {
+        ioctl(fd, MEMUNLOCK, &mtdEraseInfo);
+        if(ioctl(fd, MEMERASE, &mtdEraseInfo))
+        {
+            fprintf(stderr, "Failed to erase block on %s at 0x%x\n", MTD_FACTORY, mtdEraseInfo.start);
+            goto write_fail;
+        }
+    }
+
+	ptr = buf + offset;
+    for (i = 0; i < size; i++, ptr++)
+        *ptr = strtoul(value[i], NULL, 16);
+    lseek(fd, 0, SEEK_SET);
+    if (write(fd, buf, sz) != sz)
+    {
+        fprintf(stderr, "write() %s failed\n", MTD_FACTORY);
+        goto write_fail;
+    }
+
+    close(fd);
+    free(buf);
+    return 0;
+write_fail:
+    close(fd);
+    free(buf);
+    return -1;
+}
+
 void usage(char **str)
 {
     printf("How to use:\n");
-    printf("\tread:   %s r <wlan|lan|wan>\n", str[0]);
-    printf("\twrite:  %s w <wlan|lan|wan> <MACADDR[0]> <MACADDR[1]> ...\n", str[0]);
+    printf("\tread:   %s r <wlan|lan|wan|wlan_5g>\n", str[0]);
+    printf("\twrite:  %s w <wlan|lan|wan|wlan_5g> <MACADDR[0]> <MACADDR[1]> ...\n", str[0]);
+	printf("\tread own:  %s p offset[hex] size\n", str[0]);
+	printf("\twrite own: %s t offset[hex] size value[0] value[1] ...\n", str[0]);
 }
 
 int main(int argc,char **argv)
@@ -182,6 +302,14 @@ int main(int argc,char **argv)
                     goto Fail;
             }
             break;
+		case 'p':
+			 if (mtd_read_own(strtol(argv[2],NULL,16),atoi(argv[3])) < 0)
+                goto Fail;
+			break;
+		case 't':
+			 if (mtd_write_own(strtol(argv[2],NULL,16), argv+4, atoi(argv[3])) < 0)
+                goto Fail;
+			break;
         default:
             goto CmdFail;
     }
