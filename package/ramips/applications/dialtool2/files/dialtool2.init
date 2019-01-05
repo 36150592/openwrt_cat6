@@ -9,5 +9,5 @@ start(){
 
 stop(){
     ps | grep dialtool_new | grep -v grep | cut -d' ' -f 2 | xargs kill -9
-    rmmod bm_gobi_net.ko
+    rmmod bm_gobi_net_906.ko
 }
