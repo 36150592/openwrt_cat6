@@ -981,7 +981,7 @@ end
 local Station=wifi_module.station
 
 
-local function get_sta_mac_table(ifname,sta_list)
+local function get_sta_mac_table(ifname)
 
 	local cmd = nil
 	local t = nil
@@ -990,19 +990,20 @@ local function get_sta_mac_table(ifname,sta_list)
 	
 	t = io.popen(cmd)
 	io.close(t)
-	sleep(1)
+	--sleep(1)
 	cmd = string.format("dmesg | tail -n 100")
 	--debug("cmd2 = ", cmd)
 	t = io.popen(cmd)
 	local res = nil
-
+	local sta_list = nil
 	res = t:read()
 	while( res ~= nil)
 	do
-		local start,endp =string.find(res,"MAC.+Rate   QosMap")
+		local start,endp =string.find(res,"MAC.+Rate.+QosMap")
 		if nil ~= start
 		then
-			
+			--print("clear sta_list")
+			sta_list = {}
 			--debug("get sta mac table at ", start)
 			
 			while(res ~= nil)
@@ -1029,7 +1030,7 @@ local function get_sta_mac_table(ifname,sta_list)
 				res = string.gsub(res, '   ', '#')
 				res = string.gsub(res, '  ', '#')
 				res = string.gsub(res, ' ', '#')
-				print(res)
+				--print(res)
 				local s_array = split(res,'#')
 
 				--[[for v,k in pairs(s_array)
@@ -1037,30 +1038,19 @@ local function get_sta_mac_table(ifname,sta_list)
 					print(v,"=",k)
 				end]]--
 				
-				--debug("MAC = ", s_array[1])
+				--print("MAC = ", s_array[1])
 				--debug("RSSI = ", s_array[7])
 				--debug("RATE = ", s_array[14])
 
 				if string.len(s_array[1]) == 17 and string.find(s_array[1], ':') > 0
 				then
-					local flag = false
-					for key,value in pairs(sta_list)
-					do
-						if value["mac"] == s_array[1]
-						then
-							value["rate"] = s_array[14]
-							flag = true
-						end
-						
-					end
-					if flag == false
-					then
-						--debug("flag = false ,new Station")
+					
+						--print("flag = false ,new Station")
 						local temp_sta = Station:new(nil,nil)
 						temp_sta["mac"] = s_array[1]
 						temp_sta["rate"] = s_array[14]
 						sta_list[table.maxn(sta_list)+1] = temp_sta
-					end
+
 				end
 			
 			end
@@ -1070,6 +1060,7 @@ local function get_sta_mac_table(ifname,sta_list)
 	end
 
 	io.close(t)
+	return sta_list
 end
 
 local function get_sta_count_info(ifname,sta_list)
@@ -1081,7 +1072,7 @@ local function get_sta_count_info(ifname,sta_list)
 	--debug("cmd1 = ", cmd)
 	t = io.popen(cmd)
 	io.close(t)
-	sleep(1)
+	--sleep(1)
 	
 	cmd = string.format("dmesg | tail -n 100")
 	--debug("cmd2 = ", cmd)
@@ -1151,7 +1142,7 @@ local function get_sta_count_info(ifname,sta_list)
 						end
 					end
 					
-					if flag == false
+					--[[if flag == false
 					then
 						local temp_sta = Station:new(nil,nil)
 						temp_sta["mac"] = s_array[1]
@@ -1160,7 +1151,7 @@ local function get_sta_count_info(ifname,sta_list)
 						temp_sta["tx_bytes"] = s_array[5]
 						temp_sta["rx_bytes"] = s_array[6]
 						sta_list[table.maxn(sta_list)] = temp_sta
-					end
+					end]]--
 				end
 			
 			end
@@ -1189,14 +1180,13 @@ function wifi_module.wifi_get_connect_sta_list(wifi_id)
 		return nil
 	end
 	
-  	station_list = {}
-  	get_sta_mac_table(ifname, station_list)
+  	station_list = get_sta_mac_table(ifname)
 	
-	print(table.maxn(station_list))
+	--print(table.maxn(station_list))
 
 	get_sta_count_info(ifname, station_list)
 
-	print(table.maxn(station_list))
+	--print(table.maxn(station_list))
 
 	for k,v in pairs(station_list)
 	do
