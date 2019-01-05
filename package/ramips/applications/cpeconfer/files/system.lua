@@ -6,6 +6,8 @@ local x = uci.cursor()
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
+local MEM_INFO_FILE="/proc/meminfo"
+local CPU_AVG_FILE="/proc/loadavg"
 local GET_RUNTIME_CMD="cat /proc/uptime | awk '{print $1}'"
 local GET_MEM_TOTAL_CMD="cat /proc/meminfo | awk '{print $2}' | sed -n  1p"
 local GET_MEM_FREE_CMD="cat /proc/meminfo | awk '{print $2}' | sed -n  2p"
@@ -54,6 +56,70 @@ local function execute_cmd(cmd)
 	return temp
 end
 
+local function get_mem_info()
+	local res = nil
+	local mem_total = nil
+	local mem_free = nil
+	local mem_cache = nil
+	local f = io.open(MEM_INFO_FILE)
+	res = f:read()
+
+	while nil ~= res
+	do
+		local temp = nil
+		local arr = nil
+		if string.match(res,"MemTotal:%s+%d+") ~= nil
+		then 
+			temp = string.match(res,"MemTotal:%s+%d+")
+			arr = split(temp, ":")
+			mem_total = tonumber(arr[2])
+		elseif string.match(res,"MemFree:%s+%d+") ~= nil
+		then 
+			temp = string.match(res,"MemFree:%s+%d+")
+			arr = split(temp, ":")
+			mem_free = tonumber(arr[2])
+		elseif string.match(res,"Cached:%s+%d+") ~= nil
+		then 
+			temp = string.match(res,"Cached:%s+%d+")
+			arr = split(temp, ":")
+			mem_cache = tonumber(arr[2])
+		end
+		if nil ~= mem_total and nil ~= mem_free and nil ~= mem_cache
+		then 
+			break
+		end
+
+
+		res = f:read()
+	end
+
+	io.close(f)
+
+	return mem_total,mem_free,mem_cache
+end
+
+
+local function get_cpu_average()
+	local f = io.open(CPU_AVG_FILE)
+	local arr = nil
+	res = f:read()
+	io.close(f)
+
+
+	if nil == res
+	then
+		return nil,nil,nil
+	end
+
+	arr = split(res,' ')
+
+	if nil == arr
+	then
+		return nil,nil,nil
+	end
+	return arr[1],arr[2],arr[3]
+end
+
 -- get system run status
 -- input:none
 -- return:
@@ -63,12 +129,8 @@ function system_module.system_get_status()
 		local status = system_module.sys_info:new(nil,nil)
 
 		status["runtime"] =  tonumber(execute_cmd(GET_RUNTIME_CMD))
-		status["mem_total"] = tonumber(execute_cmd(GET_MEM_TOTAL_CMD))
-		status["mem_free"] = tonumber(execute_cmd(GET_MEM_FREE_CMD))
-		status["mem_cache"] = tonumber(execute_cmd(GET_MEM_CACHE_CMD))
-		status["cpu_average1"] = tonumber(execute_cmd(GET_CPU_AVG1_CMD))
-		status["cpu_average5"] = tonumber(execute_cmd(GET_CPU_AVG5_CMD))
-		status["cpu_average15"] = tonumber(execute_cmd(GET_CPU_AVG15_CMD))
+		status["mem_total"],status["mem_free"] ,status["mem_cache"] = get_mem_info()
+		status["cpu_average1"],status["cpu_average5"],status["cpu_average15"] = get_cpu_average()
 
 		return status
 end

@@ -5,9 +5,13 @@ local DEBUG=require("debug")
 
 local tzlib = require("luatzlib")
 tzlib.remove_stderr()
+local socket = require "socket"
+function module.test_time(f)
+	--os.execute(string.format("logger test_time %s  %s", f, tostring(socket.gettime())))
+end
 
 function module.debug(...)
-	arg = { ... } 
+	--[[arg = { ... } 
 	local log_str = ""
 	local info = DEBUG.getinfo( 2, "nSl")
 	for k,v in pairs(info) do
@@ -24,7 +28,7 @@ function module.debug(...)
 	for k,v in pairs(arg) do
 		log_str = log_str .. tostring(v) .. " "
 	end
-	os.execute(string.format("logger %s", log_str))
+	os.execute(string.format("logger %s", log_str))]]--
 end
 
 function module.split(szFullString, szSeparator)  
