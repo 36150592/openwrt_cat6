@@ -56,9 +56,9 @@ local function format_get_rx_packets(ifname) return string.format("cat /sys/clas
 local function format_get_tx_bytes(ifname) return string.format("cat /sys/class/net/%s/statistics/tx_bytes", ifname) end
 local function format_get_rx_bytes(ifname) return string.format("cat /sys/class/net/%s/statistics/rx_bytes", ifname) end
 
-local function get_ip_bcast_mask(ifname)
+local function get_ip_bcast_mask_mac(ifname)
 
-	local ip,bcast,mask
+	local ip,bcast,mask,mac
 	if nil == ifname
 	then 
 		debug("get ip fail: ifname nil")
@@ -94,7 +94,13 @@ local function get_ip_bcast_mask(ifname)
 				ip = temp()
 				bcast = temp()
 				mask = temp()
-				break
+		elseif string.match(res,"HWaddr") ~= nil
+		then
+			local temp = string.gmatch(res,"%x%x:%x%x:%x%x:%x%x:%x%x:%x%x")
+			mac = temp()
+		elseif nil ~= ip and nil ~= bcast and nil ~= mask and nil ~= mac
+		then
+			break
 		end
 		res = f:read()
 	end
@@ -103,11 +109,11 @@ local function get_ip_bcast_mask(ifname)
 	if nil == ip or string.match(ip,"%d+%.%d+%.%d+%.%d+") == nil
 	then
 		debug("get ip error")
-		return nil,nil,nil
+		return nil,nil,nil,nil
 	end
 
 
-	return ip,bcast,mask
+	return ip,bcast,mask,mac
 end
 
 local function get_gateway(ifname)
@@ -254,9 +260,9 @@ function network_module.network_get_wan_info()
 	local ifname = x:get(NETWORK_CONFIG_FILE, "wan", "ifname")
 
 	local temp
-	info["ipaddr"],temp,info["netmask"] = get_ip_bcast_mask(ifname)
+	info["ipaddr"],temp,info["netmask"], info["mac"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
-	info["mac"] = get_mac(ifname)
+	--info["mac"] = get_mac(ifname)
 	info["first_dns"],info["second_dns"] = get_dns()
 	info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"] = get_statistics(ifname)
 
@@ -280,9 +286,9 @@ function network_module.network_get_4g_net_info()
 	local ifname = x:get(NETWORK_CONFIG_FILE, "4g", "ifname")
 
 	local temp
-	info["ipaddr"],temp,info["netmask"] = get_ip_bcast_mask(ifname)
+	info["ipaddr"],temp,info["netmask"], info["mac"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
-	info["mac"] = get_mac(ifname)
+	--info["mac"] = get_mac(ifname)
 	info["first_dns"],info["second_dns"] = get_dns()
 	info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"] = get_statistics(ifname)
 	if nil == info["ipaddr"]
