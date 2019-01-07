@@ -591,16 +591,37 @@ end
 --		number wifi_id get by wifi_get_dev
 -- return:
 -- 		number
---		the number of txpower percent range from 0 to 100
+--		the number of txpower in dbm
 function wifi_module.wifi_get_txpower(wifi_id)
     local txpower =  common_config_get(wifi_id, "txpower", "TxPower")
-    return tonumber(txpower)
+    txpower = tonumber(txpower)
+    if 100 >= txpower and 91 <= txpower
+    then
+    	return 23
+    elseif 90 >= txpower and 61 <= txpower
+    then
+    	return 22
+    elseif 60 >= txpower and 31 <= txpower
+    then
+    	return 20
+    elseif 30 >= txpower and 16 <= txpower
+    then
+    	return 17
+    elseif 15 >= txpower and 10 <= txpower
+    then
+    	return 14
+    elseif 9 >= txpower and 0 <= txpower 
+    then
+    	return 11
+	end
+
+    return -1
 end
 
 --txpower
 -- input:
 --		wifi_id(number) -->get by wifi_get_dev
---		txpower(number) [0 ,100] wifi tx power in percent
+--		txpower(number) [0 ,23] wifi tx power in percent
 -- return:boolean
 --		true if success  false if fail
 function wifi_module.wifi_set_txpower(wifi_id,txpower)
@@ -610,13 +631,33 @@ function wifi_module.wifi_set_txpower(wifi_id,txpower)
 		return false
 	end
 
-	if txpower < 0 or txpower > 100
+	if txpower < 0 or txpower > 23
 	then
-		debug("input error: txpower must  range [0,100]")
+		debug("input error: txpower must  range [0,23]")
 		return false
 	end
-	
-    return common_config_set(wifi_id, "txpower", "TxPower", txpower)
+
+	local value = 100
+
+	if 23 == txpower
+	then
+		value = 100
+	elseif txpower >20 and txpower <=22
+	then
+		value = 75
+	elseif txpower >17 and txpower <= 20
+	then
+		value = 50
+	elseif txpower > 14 and txpower <= 17
+	then
+		value = 25
+	elseif txpower > 9 and txpower <= 14
+	then
+		value = 12
+	else
+		value = 5
+	end
+    return common_config_set(wifi_id, "txpower", "TxPower", value)
 end
 
 --hidden ssid
