@@ -228,14 +228,19 @@ div#check_box_right {
 	height: 25px;
 }
 #netInfo {
-    width: 55px;
+    width: 70px;
 }
 #simInfo {
     width: 55px;
 }
 #wifiInfo {
-    width: 75px;
+    width: 105px;
 }
+
+#wifiInfo5g {
+	width: 105px;
+}
+
 #lteUsbInfo {
     width: 43px;
 }
@@ -255,16 +260,29 @@ div#check_box_right {
     background: url("../images/anhui/status.gif") no-repeat 0 -50px;
 }
 #wifiInfo div {
-	padding-left: 28px;
-}
+	 padding-left: 28px;
+ }
 #wifiInfo div.normal {
-    background: url("../images/anhui/wifi.gif") no-repeat;
+	background: url("../images/anhui/wifi.gif") no-repeat;
 }
 #wifiInfo div.unnormal {
-    background: url("../images/anhui/wifi.gif") no-repeat 0 -25px;
+	background: url("../images/anhui/wifi.gif") no-repeat 0 -25px;
 }
 #wifiInfo div.partnormal {
-    background: url("../images/anhui/wifi.gif") no-repeat 0 -50px;
+	background: url("../images/anhui/wifi.gif") no-repeat 0 -50px;
+}
+
+#wifiInfo5g div {
+	padding-left: 28px;
+}
+#wifiInfo5g div.normal {
+	background: url("../images/anhui/wifi.gif") no-repeat;
+}
+#wifiInfo5g div.unnormal {
+	background: url("../images/anhui/wifi.gif") no-repeat 0 -25px;
+}
+#wifiInfo5g div.partnormal {
+	background: url("../images/anhui/wifi.gif") no-repeat 0 -50px;
 }
 #smsInfo div {
 	padding-left: 28px;
@@ -1076,7 +1094,7 @@ input.txt4 {
 .singal {
     display: block;
     height: 20px;
-    width: 23px;
+    width: 60px;
     text-indent: 27px;
 }
 .singal0, .singal0_lock {

@@ -371,11 +371,7 @@ function set_wifi()
 			end
 	end 
 
-	
-	
-	
-
-	--wifi.wifi_restart(id)
+	wifi.wifi_restart(id)
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
@@ -529,6 +525,7 @@ function set_wifi5()
 			end
 	end 
 	
+	wifi.wifi_restart(id)
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
@@ -625,6 +622,7 @@ function set_dhcp()
 		dhcp.dhcp_restart()
     end	
 	
+	dhcp.dhcp_restart()
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
@@ -641,6 +639,35 @@ function get_dhcpClient()
 	print(result_json)
 
 end
+
+function get_sysstatus()
+	local data_array = {}
+	local data_wifi = {}
+	data_array["sim"] = sim.sim_get_status() or ''
+	data_array["modem"] = modem.modem_get_status() or ''
+	
+	local array = wifi.wifi_get_dev()
+	for k,v in pairs(array) do
+	   if(v["band"] == "2.4G")
+	     then
+		 data_wifi['status'] = wifi.wifi_get_enable_status(v['wifi_id'])	
+       end		 
+	   if(v["band"] == "5G")
+	     then
+			data_wifi['status5'] = wifi.wifi_get_enable_status(v['wifi_id'])		   
+		end
+	end
+	
+	data_array["wifi"] = data_wifi
+	local tz_answer = {}
+	tz_answer["cmd"] = 113   
+	tz_answer["success"] = true
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 
 function get_routerinfo()
 	local tz_answer = {}
@@ -667,8 +694,15 @@ function get_routerinfo()
 	print(result_json)
 end
 
+
+
+
 function update_sys()
 
+	file = io.open("../test.bin", "wb")
+    io.output(file)
+    io.write(tz_req["file"])
+	
     local tz_answer = {}
 	tz_answer["cmd"] = 5   
 	tz_answer["success"] = true
@@ -689,6 +723,7 @@ local switch = {
 	 [101] = get_wifi,
 	 [102] = get_dhcp,
 	 [103] = get_dhcpClient,
+	 [113] = get_sysstatus,
 	 [133] = get_routerinfo,
 	 [201] = get_wifi5,
 	 [202] = set_wifi5
