@@ -28,7 +28,8 @@ $(document).ready(function() {
     function index() {
         //var loginName = CookieUtil.getCookie('loginName');
         //var sessionId = CookieUtil.getCookie("sessionId");
-		var auth = CookieUtil.getCookie("auth");
+		//var auth = CookieUtil.getCookie("auth");
+		var auth = sessionStorage['auth'];
 		var sessionId = sessionStorage['sessionId'];
         var loginName = sessionStorage['loginName'];
         if(loginName && sessionId){

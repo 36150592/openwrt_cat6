@@ -75,9 +75,10 @@
                         loginSuccess = data.success;
                         CookieUtil.setCookie("sessionId", sessionId);
                         CookieUtil.setCookie('loginName', username);
+						//CookieUtil.setCookie("auth", data.auth);
 						sessionStorage['sessionId'] = sessionId;
                         sessionStorage['loginName'] = username;
-						CookieUtil.setCookie("auth", data.auth);
+						sessionStorage['auth'] = data.auth;
                         location.href = Page.getUrl("index.html");
                     },
                     fail: function(data) {

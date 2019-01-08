@@ -118,24 +118,24 @@
             var csRegState ="?", psRegState ="?";
             switch(flag) {
                 case 0:
-                    csRegState = "无服务";
-                    psRegState = "无服务";
+                    csRegState = DOC.registerStatus.item0;
+                    psRegState = DOC.registerStatus.item0;
                     break;
                 case 1:
-                    csRegState = "服务";
-                    psRegState = "无服务";
+                    csRegState = DOC.registerStatus.item7;
+                    psRegState = DOC.registerStatus.item0;
                     break;
                 case 2:
-                    csRegState = "服务";
-                    psRegState = "无服务";
+                    csRegState = DOC.registerStatus.item7;
+                    psRegState = DOC.registerStatus.item0;
                     break;
                 case 3:
-                    csRegState = "服务";
-                    psRegState = "服务";
+                    csRegState = DOC.registerStatus.item7;
+                    psRegState = DOC.registerStatus.item7;
                     break;
                 default:
-                    csRegState = "未注册,并处于搜索状态";
-                    psRegState = "未注册,并处于搜索状态";
+                    csRegState = DOC.registerStatus.item8;
+                    psRegState = DOC.registerStatus.item8;
                     break;
             }
             return { csRegState: csRegState, psRegState: psRegState };
@@ -149,6 +149,7 @@
 
                     var data2 = datas.data;
                     console.log(data2);
+					
                     var data_system = data2.system;
                     var data_sim = data2.sim;
                     var data_lan = data2.lan;
@@ -278,6 +279,7 @@
 
                     //if (warningsss != ""){
                     //  var stateWan = String.format('<span style="color:black;"> &nbsp;{0}</span>', warningsss);
+					
                     var run_html = Page.createTable(DOC.title.run, names_run, values_run, names_run.length, 2).replace("<td>", "<td style=\"width:32%;\">");
                     var sim_html = Page.createTable(DOC.title.sim + stateInfo, names_sim, values_sim, names_sim.length, 2).replace("<td>", "<td style=\"width:32%;\">");
                     var net_html = Page.createTable(DOC.title.network, names_net, values_net, names_net.length, 2).replace("<td>", "<td style=\"width:32%;\">");
