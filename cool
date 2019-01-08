@@ -177,6 +177,7 @@ if [ $compile_result = "ok" ]; then
 	fi
 fi
 
+cd ${TOPDIR}
 echo "ok_count=$ok_count" > .compile_count
 echo "fail_count=$fail_count" >> .compile_count
 
