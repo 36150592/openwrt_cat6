@@ -41,6 +41,10 @@ boot() {
 	# allow wifi modules time to settle
 	sleep 1
 
+    [ -f /etc/config/wireless ] || {
+        rm -f /etc/config/mutilssid 2>/dev/null
+    }
+
 	/sbin/wifi detect > /tmp/wireless.tmp
 	[ -s /tmp/wireless.tmp ] && {
 		cat /tmp/wireless.tmp >> /etc/config/wireless

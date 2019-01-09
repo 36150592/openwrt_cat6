@@ -417,6 +417,8 @@ param CFG_ELEMENTS[] =
 
 static struct uci_context * uci_ctx;
 static struct uci_package * uci_wireless;
+static struct uci_package * uci_mutilssid;
+
 static wifi_params wifi_cfg[DEVNUM_MAX];
 
 
@@ -639,6 +641,174 @@ void parse_uci(char * arg)
                 printf("%s(), device (%s) not found!\n", __FUNCTION__, value);
                 break;
             }
+
+			const char* disabled = uci_lookup_option_string(uci_ctx, s, "disabled");
+			if (NULL != disabled && 0 == strncmp("1", disabled, strlen("1")))
+			{
+				continue;
+			}
+
+			
+            value = NULL;
+            value = uci_lookup_option_string(uci_ctx, s, "ifname");
+            printf("%s(), wifi-iface: %s\n", __FUNCTION__, value);
+
+            cur_vif = wifi_cfg[cur_dev].vifnum;
+			
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].ssid, value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].hidden, value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].key, value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].wepkey[0], value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].wepkey[1], value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].wepkey[2], value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].wepkey[3], value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].auth_server, value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].auth_port, value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].auth_secret, value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].rekeyinteval, value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].preauth, value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].pmkcacheperiod, value);
+#if 0
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].authmode, value);
+            PARSE_UCI_OPTION(wifi_cfg[cur_dev].vifs[cur_vif].cipher, value);
+#else
+#define STRNCPPP(dst,src) \
+                do {\
+                    strncpy(dst.value, src, sizeof(dst.value)); \
+                    printf("%s(),    %s=%s\n", __FUNCTION__, dst.uci_key, src); \
+                } while(0)
+
+            /* cipher */
+            value = uci_lookup_option_string(uci_ctx, s, "encryption");
+            if(value)
+            {
+                const char * p = NULL;
+                if (0 == strncmp("8021x", value, strlen("8021x")))
+                {
+                    STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "8021x");
+                    STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].cipher, "wep");
+                }
+
+                if (0 == strncmp("none", value, strlen("none")))
+                {
+                    STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "none");
+                    STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].cipher, "NONE");
+                }
+                else if (0 == strncmp("wep-open", value, strlen("wep-open")))
+                {
+                    STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "wep-open");
+                    STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].cipher, "wep");
+                }
+                else if (0 == strncmp("wep-shared", value, strlen("wep-shared")))
+                {
+                    STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "wep-shared");
+                    STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].cipher, "wep");
+                }
+                else if (0 == strncmp("mixed-psk", value, strlen("mixed-psk")))
+                {
+                    STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "psk-mixed");
+                    p = value+strlen("mixed-psk");
+                    if (*p == '+' && *(p+1) != 0)
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].cipher, p+1);
+                    else
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].cipher, "tkip+ccmp");
+                }
+                else if(0 == strncmp("psk", value, strlen("psk")))
+                {
+                    if (0 == strncmp("psk-mixed", value, strlen("psk-mixed")))
+                    {
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "psk-mixed");
+                        p = value+strlen("psk-mixed");
+                    }
+                    else if (0 == strncmp("psk+psk2", value, strlen("psk+psk2")))
+                    {
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "psk-mixed");
+                        p = value+strlen("psk+psk2");
+                    }
+                    else if (0 == strncmp("psk2", value, strlen("psk2")))
+                    {
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "psk2");
+                        p = value+strlen("psk2");
+                    }
+                    else if (0 == strncmp("psk", value, strlen("psk")))
+                    {
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "psk");
+                        p = value+strlen("psk");
+                    }
+
+                    if (*p == '+' && *(p+1) != 0)
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].cipher, p+1);
+                    else
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].cipher, "tkip+ccmp");
+                }
+                else if(0 == strncmp("wpa", value, strlen("wpa")))
+                {
+                    if (0 == strncmp("wpa-mixed", value, strlen("wpa-mixed")))
+                    {
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "wpa-mixed");
+                        p = value+strlen("wpa-mixed");
+                    }
+                    else if (0 == strncmp("wpa+wpa2", value, strlen("wpa+wpa2")))
+                    {
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "wpa-mixed");
+                        p = value+strlen("wpa+wpa2");
+                    }
+                    else if (0 == strncmp("wpa2", value, strlen("wpa2")))
+                    {
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "wpa2");
+                        p = value+strlen("wpa2");
+                    }
+                    else if (0 == strncmp("wpa", value, strlen("wpa")))
+                    {
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].authmode, "wpa");
+                        p = value+strlen("wpa");
+                    }
+
+                    if (*p == '+' && *(p+1) != 0)
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].cipher, p+1);
+                    else
+                        STRNCPPP(wifi_cfg[cur_dev].vifs[cur_vif].cipher, "tkip+ccmp");
+                }
+
+            }
+
+            /* key */
+
+
+#endif
+
+            wifi_cfg[cur_dev].vifnum++;
+        }
+    }
+
+
+
+	 /* scan mutilssid network interfaces ! */
+	if(uci_mutilssid)
+    uci_foreach_element(&uci_mutilssid->sections, e)
+    {
+        struct uci_section *s = uci_to_section(e);
+        if(0 == strcmp(s->type, "wifi-iface"))
+        {
+            value = NULL;
+            value = uci_lookup_option_string(uci_ctx, s, "device");
+            for(cur_dev=0; cur_dev<DEVNUM_MAX; cur_dev++)
+            {
+                if(0 == strcmp(value, wifi_cfg[cur_dev].devname))
+                    break;
+            }
+            if(cur_dev >= DEVNUM_MAX)
+            {
+                printf("%s(), device (%s) not found!\n", __FUNCTION__, value);
+                break;
+            }
+
+
+			const char* disabled = uci_lookup_option_string(uci_ctx, s, "disabled");
+			if (NULL != disabled && 0 == strncmp("1", disabled, strlen("1")))
+			{
+				continue;
+			}
             value = NULL;
             value = uci_lookup_option_string(uci_ctx, s, "ifname");
             printf("%s(), wifi-iface: %s\n", __FUNCTION__, value);
@@ -770,6 +940,8 @@ void parse_uci(char * arg)
             wifi_cfg[cur_dev].vifnum++;
         }
     }
+
+	
     return;
 }
 
@@ -1272,8 +1444,16 @@ int main(int argc, char ** argv)
     else
     {
         uci_wireless = uci_lookup_package(uci_ctx, "wireless");
+		uci_mutilssid = uci_lookup_package(uci_ctx, "mutilssid");
         if (uci_wireless)
             uci_unload(uci_ctx, uci_wireless);
+
+		if (uci_mutilssid)
+		{
+			uci_unload(uci_ctx, uci_mutilssid);
+			
+		}
+           
     }
 
     if (uci_load(uci_ctx, "wireless", &uci_wireless))
@@ -1281,6 +1461,7 @@ int main(int argc, char ** argv)
         return NG;
     }
 
+	uci_load(uci_ctx, "mutilssid", &uci_mutilssid);
 #if 0
     uci_foreach_element(&uci_wireless->sections, e)
     {

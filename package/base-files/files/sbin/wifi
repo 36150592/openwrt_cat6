@@ -218,6 +218,7 @@ scan_wifi() {
 		esac
 	}
 	config_load "${cfgfile:-wireless}"
+	config_load "${cfgfile:-mutilssid}"
 }
 
 DEVICES=

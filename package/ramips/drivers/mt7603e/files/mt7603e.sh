@@ -953,7 +953,7 @@ detect_mt7603e() {
 	pre_wpa2_key=$(hexdump -n 8 /dev/urandom |awk '{print $2$3$4$5;}')
 #	mt7603e_mac=$(mt7603e_get_mac Factory)	
 	
-	ssid=tozed-`ifconfig eth0 | grep HWaddr | cut -c 48- | sed 's/://g'`
+	ssid=tozed-`ifconfig eth0 | grep HWaddr | cut -c 48- | sed 's/://g' | sed s/' '//g`
 
 	
 		cat <<EOF
@@ -976,8 +976,45 @@ config wifi-iface
     option maxassoc 20
 EOF
 
-	done
 	
+
+	[ -f /etc/config/mutilssid ] || {
+		cat > /etc/config/mutilssid <<EOF
+#this four temp config must not be removed,if remove uci  will apaer id repeat bug
+config temp                                                                       
+config temp                                       
+config temp                                       
+config temp                                       
+             
+EOF
+
+	}
+
+	cat >> /etc/config/mutilssid <<EOF
+config wifi-iface                                 
+        option device 'mt7603e'      
+        option network 'lan'         
+        option mode 'ap'             
+        option ssid ${ssid}-second   
+        option encryption 'psk2+ccmp'
+        option key '12345678'        
+        option maxassoc '20'         
+        option ifname 'ra1'
+        option disabled '1'          
+                                     
+config wifi-iface                    
+        option device 'mt7603e'      
+        option network 'lan'         
+        option mode 'ap'             
+        option ssid '${ssid}-third'  
+        option encryption 'psk2+ccmp'
+        option key '12345678'        
+        option maxassoc '20' 
+        option ifname 'ra2'
+        option disabled '1' 
+                           
+EOF
+done
 }
 
 
