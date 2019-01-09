@@ -147,8 +147,7 @@ elif [ "$options" = "b" ]; then
 elif [ "$options" = "q" ]; then
 	exit
 else
-        echo "不支持这种编译选项"
-	exit
+	make  "$options" V=99
 fi
 
 if [ "$?" = "0" ] ; then
