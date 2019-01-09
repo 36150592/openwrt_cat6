@@ -457,10 +457,10 @@ var StatusUtil = {
                     $('#simInfo').html(StatusUtil.formatSimInfo(simStatus.is_sim_exist));
                     if(simStatus.card_status == 0)                    {
                         var singalLevel = modemStatus.signal_lvl;
-                        var netInfo = StatusUtil.formatSingalLevel(singalLevel,'','信号');
+                        var netInfo = StatusUtil.formatSingalLevel(singalLevel);
                         $('#netInfo').html(netInfo);
                     }else{
-                        var netInfo = StatusUtil.formatSingalLevel(0,'','信号');
+                        var netInfo = StatusUtil.formatSingalLevel(0);
                         $('#netInfo').html(netInfo);
                     }
 
