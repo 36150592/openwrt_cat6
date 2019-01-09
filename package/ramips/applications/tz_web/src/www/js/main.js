@@ -205,11 +205,11 @@ var ConvertUtil = {
         StatusMinute="";
         if (day > 0)
         {
-            StatusMinute= day + DOC.unit.day + " ";
+            StatusMinute= day + DOC.unit.day;
         }
         if (hour>0)
         {
-            StatusMinute += hour + DOC.unit.hour + " ";
+            StatusMinute += hour + DOC.unit.hour;
         }
         if (min>0)
         {
@@ -300,6 +300,58 @@ var SysUtil = {
         }
 
         loop();
+    },
+    upload: function($form, $file, command, callback) {
+        //var url = String.format("{0}?cmd={1}&method=POST&sessionId={2}&language={3}", Url.DEFAULT_CGI, RequestCmd.SYS_UPDATE, Page.sessionId, Page.language);
+        var url = String.format("{0}?cmd={1}&method=POST",  '/cgi-bin/lua.cgi', RequestCmd.SYS_UPDATE);
+        //var url = "xml_action.cgi?Action=Upload&file=upgrade&command=" + command;
+
+        var datas = null;
+        $form.ajaxSubmit({
+            url: url,
+            type: 'POST',
+            dataType: 'json',
+            beforeSubmit: function() {
+                var updateFileName = $file.val();
+                if (updateFileName.length == 0) {
+                    AlertUtil.alertMsg(CHECK.required.uploadFile);
+                    return false;
+                }
+
+                if(/[\\\/]/.test(updateFileName)) {
+                    var matchs = updateFileName.match(/(.*)?[\\\/](.*)/);
+                    updateFileName = matchs[2];
+                }
+
+                if(!confirm(PROMPT.confirm.uploadFile + updateFileName)){
+                    return false;
+                }
+
+                SysUtil.showProgress(ProgressTime.UPLOAD_FILE, PROMPT.status.uploading,
+                function() {
+                        return datas != null;
+                    },
+                    function() {
+                        if (datas.success) {
+                            AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
+                        } else {
+                            SysUtil.processMsg(datas.message);
+                        }
+                        if ($.isFunction(callback)) {
+                            callback(updateFileName);
+                        }
+                    }
+                );
+
+                return true;
+            },
+            success: function(data, statusText) {
+                datas = data;
+            },
+            error: function(responseText, statusText) {
+                datas = { success: false, message: responseText };
+            }
+        });
     }
 
 };
@@ -811,9 +863,9 @@ function getOpenInfo() {
             var roam = loading;
             if(status.roam_status){
                 if(status.roam_status == 0){
-                     roam = DOC.status.noroam;
+                    roam = DOC.status.noroam;
                 }else if(status.roam_status == 1){
-                     roam = DOC.status.roam;
+                    roam = DOC.status.roam;
                 }
             }
             values_advanced.push(roam);
