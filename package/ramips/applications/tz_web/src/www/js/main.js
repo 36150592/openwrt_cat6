@@ -756,9 +756,16 @@ var Page = {
         if(!json.language){
             json.language = Page.language;
         }
+		
+		var asyns;
+        if(isIE()){
+            asyns = false;
+        }else {
+            asyns = true;
+        }
 
         $.ajax({
-            async:false,
+            async:asyns,
             url: settings.url,
             type: 'POST',
             timeout: settings.timeout,
@@ -811,6 +818,13 @@ var Page = {
     }
 
 };
+
+function isIE() {
+    if (!!window.ActiveXObject || "ActiveXObject" in window)
+        return true;
+    else
+        return false;
+}
 
 function getOpenInfo() {
     var loading = '-';
