@@ -2,6 +2,16 @@
  * Created by dell on 2019/1/8.
  */
 
+var ProgressTime = {
+    REBOOT: 120,
+    FIND_AP: 15,
+    UPDATE_UBOOT: 10,
+    UPDATE_PARTIAL: 210,
+    UPLOAD_FILE: 60,
+    SEARCH_PLMN: 120,
+    UPGRADE_CHECK: 60,
+    REMOTE_UPGRADE: 240
+};
 
 var RequestCmd = {
     SYS_INFO: 0,
