@@ -13,6 +13,7 @@ CMAKE_INSTALL:=1
 
 PKG_MAINTAINER:=Jo-Philipp Wich <jow@openwrt.org>
 PKG_LICENSE:=ISC
+PKG_MIRROR_MD5SUM:=ec2eb09fcb2dbfb7473e1178d3d72f68
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk

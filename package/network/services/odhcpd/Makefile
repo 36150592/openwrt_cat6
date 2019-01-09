@@ -19,6 +19,7 @@ PKG_SOURCE_VERSION:=01d3f9d64486ac1daa144848944e877e7f0cb762
 
 PKG_MAINTAINER:=Steven Barth <steven@midlink.org>
 PKG_LICENSE:=GPL-2.0
+PKG_MIRROR_MD5SUM:=68cfd012b71b16ffb5038c34a3b851c2
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
