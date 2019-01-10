@@ -43,6 +43,11 @@
             if(parseInt(Sysauth.charAt(1),10)) {
                 sysMenu.push(new MenuBody("SYS_UPDATE", MENU.sys.firmwareUpdate));
             }
+
+            if(parseInt(Sysauth.charAt(2),10)) {
+                sysMenu.push(new MenuBody("NETWORK_TOOL", MENU.sys.networkTools));
+            }
+            
 			menus.push(sysMenu);
         }
        

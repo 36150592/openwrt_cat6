@@ -711,6 +711,17 @@ function update_sys()
 
 end
 
+function network_tool()
+	
+	local tz_answer = system.system_network_tool(tz_req)
+	
+	
+	tz_answer["cmd"] = 145   
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+end
+
 local switch = {
      [0] = get_sysinfo,
      [2] = set_wifi,
@@ -725,6 +736,7 @@ local switch = {
 	 [103] = get_dhcpClient,
 	 [113] = get_sysstatus,
 	 [133] = get_routerinfo,
+	 [145] = network_tool,
 	 [201] = get_wifi5,
 	 [202] = set_wifi5
  }

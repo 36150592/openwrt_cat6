@@ -25,7 +25,8 @@ var RequestCmd = {
     LOGIN: 100,
     CHANGE_PASSWD: 102,
     GET_SYS_STATUS: 113,
-    ROUTER_INFO: 133
+    ROUTER_INFO: 133,
+    NETWORK_TOOL: 145
 
 };
 
@@ -39,7 +40,8 @@ var MenuItem = {
 
     SYS_SET: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/sys/sysConfigIndex.html" },
     SYS_LOG: { cmd: RequestCmd.SYS_LOG, url: "html/manage/sysLog.html" },
-    SYS_UPDATE:	{ cmd: RequestCmd.SYS_UPDATE, url: "html/update/sysUpdate.html" }
+    SYS_UPDATE:	{ cmd: RequestCmd.SYS_UPDATE, url: "html/update/sysUpdate.html" },
+    NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
 };
 
 var JSONMethod = {

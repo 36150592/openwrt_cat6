@@ -301,6 +301,29 @@ function system_get_status()
 
 end
 
+function system_network_tool()
+
+	print("in system_network_tool")
+	--local req = {["pingUrl"]="www.baidu.com",["pingNum"]="50",["tool"]="ping_start"}
+	--local req = {["pingUrl"]="www.baidu.com",["pingNum"]="50",["tool"]="ping_stop"}
+	local req = {["catchPackageIfname"]="eth0",["tool"]="catch_pkg_start"}
+	--local req = {["catchPackageIfname"]="eth0",["tool"]="catch_pkg_stop"}
+	--local req = {["catchPackageIfname"]="eth0",["tool"]="get_size"}
+	local info = system.system_network_tool(req)
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+
+	for k,v in pairs(info) do 
+			print(k,"=", v)
+	end
+
+end
+
 function sim_get_status()
 
 	print("in sim_get_status")
@@ -1116,6 +1139,7 @@ local api_func = {
 
 	--system
 	["system_get_status"] = system_get_status,
+	["system_network_tool"] = system_network_tool,
 
 	--device
 	["device_get_info"] = device_get_info,

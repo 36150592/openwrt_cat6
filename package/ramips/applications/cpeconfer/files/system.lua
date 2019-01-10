@@ -135,6 +135,67 @@ function system_module.system_get_status()
 		return status
 end
 
+function system_module.system_network_tool(tz_req)
+	
+	local tz_answer = {}
+	if "ping_start" == tz_req["tool"]
+	then
+		if "" ~= tz_req["pingUrl"] and "" ~= tz_req["pingNum"]
+		then
+			if "1" == tz_req["pingLoop"]
+			then
+				os.execute(string.format("ping %s %s > /tmp/.network_tool_log &", tz_req["pingNum"], tz_req["pingUrl"]))
+			else
+				os.execute(string.format("ping -c %s %s > /tmp/.network_tool_log &", tz_req["pingNum"], tz_req["pingUrl"]))
+			end
+		end
+	elseif "ping_stop" == tz_req["tool"]
+	then
+		os.execute("ps | grep 'ping' | grep -v grep | awk '{print $1}' | xargs kill -9")
+	elseif "get_log" == tz_req["tool"]
+	then
+		local f = io.open("/tmp/.network_tool_log")
+		local res = f:read("*a")
+		
+		tz_answer["data"] = res
+		io.close(f)
+	elseif "catch_pkg_start" == tz_req["tool"]
+	then
+		if "" == tz_req["catchPackageIfname"]
+		then
+			tz_req["catchPackageIfname"] = x:get("network","wan","ifname")
+		end
+		os.execute(string.format("tcpdump -i %s > /tmp/.network_tool_log &", tz_req["catchPackageIfname"]))
+
+	elseif "catch_pkg_stop" == tz_req["tool"]
+	then
+		os.execute("ps | grep 'tcpdump' | grep -v grep | awk '{print $1}' | xargs kill -9")
+		os.execute("ln -sf /tmp/.network_tool_log /tz_www/html/manage/network_tool_log.tcpdump ")
+	elseif "get_size" == tz_req["tool"]
+	then
+		local f = io.popen("ls -l /tmp/.network_tool_log | awk '{print $5}'")
+		tz_answer["data"] = f:read()
+		io.close(f)
+	elseif "trace_start" == tz_req["tool"]
+	then
+		if "" ~= tz_req["traceUrl"] 
+		then
+				os.execute(string.format("traceroute %s %s > /tmp/.network_tool_log &", tz_req["traceUrl"], tz_req["tracePort"]))
+		end
+	elseif "trace_stop" == tz_req["tool"]
+	then
+		os.execute("ps | grep 'traceroute' | grep -v grep | awk '{print $1}' | xargs kill -9")
+	elseif "log_start" == tz_req["tool"]
+	then
+		os.execute("logread -f > /tmp/.network_tool_log &")
+	elseif "log_stop" == tz_req["tool"]
+	then
+		os.execute("ps | grep 'logread' | grep -v grep | awk '{print $1}' | xargs kill -9")
+		os.execute("ln -sf /tmp/.network_tool_log /tz_www/html/manage/network_tool_log.log ")
+	end
+
+	return tz_answer
+end
 
 
 

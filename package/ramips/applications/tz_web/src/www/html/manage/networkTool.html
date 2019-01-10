@@ -1,0 +1,394 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+var timer_id;
+var show_log_id ;
+function readLog(){
+    Page.postJSON({
+        json: {cmd:145,tool:"get_log"},
+        success: function(data) {
+           // AlertUtil.alertMsg(data["data"]);
+            show_log_id.text(data["data"]);
+        }
+    });
+}
+
+function readSize(){
+    Page.postJSON({
+        json: {cmd:145,tool:"get_size"},
+        success: function(data) {
+           // AlertUtil.alertMsg(data["data"]);
+            show_log_id.text(data["data"] + "B");
+        }
+    });
+}
+
+    $(document).ready(function(){
+        TempUtil.render('tabsitems-template', 'tabsitems', networktoolhtml.tab_menu);
+        TempUtil.render('networktoolform1-template', 'form1', networktoolhtml.form1);
+        TempUtil.render('networktoolform2-template', 'form2', networktoolhtml.form2);
+        TempUtil.render('networktoolform3-template', 'form3', networktoolhtml.form3);
+        TempUtil.render('networktoolform4-template', 'form4', networktoolhtml.form4);
+        var showText = networktoolhtml.prompt;
+
+        var $lis = $("ul.tabs a");
+        var $boxes = $("div.tab_boxes > div");
+        var $btnSaveLan = $('#btnSaveLan');
+
+
+
+        $('#btnPingStart');
+        $('#btnPingStop').attr("disabled",true);
+        $('#btnCatchPkgStart');
+        $('#btnCatchPkgStop').attr("disabled",true);
+        $('#btnTraceStart');
+        $('#btnTraceStop').attr("disabled",true);
+        $('#btnLogStart');
+        $('#btnLogStop').attr("disabled",true);
+        $('#catchPkglink').hide();
+        $('#logLink').hide()
+        $lis.click(function() {
+            $lis.removeClass("current");
+            $(this).addClass("current");
+            var pannelIndex = $lis.index(this);
+            $boxes.eq(pannelIndex).show().siblings().hide();
+        });
+
+        $lis.eq(0).click();
+
+        //PING
+        $('#btnPingStart').click(function(){
+            $(this).attr("disabled",true);
+            $('#btnPingStop').attr("disabled",false);
+            var count = 0;
+            var $form = $('#form1');
+        // AlertUtil.alertMsg("click ping start");
+            var json = JSON.parmsToJSON($form);
+
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.NETWORK_TOOL;
+            json.tool = 'ping_start'
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                   // AlertUtil.alertMsg(data);
+                }
+            });
+
+            timer_id = window.setInterval("readLog()", 5000); 
+            show_log_id = $('#PingTxtPingResult')
+        });
+
+         $('#btnPingStop').click(function(){
+            $(this).attr("disabled",true);
+            $('#btnPingStart').attr("disabled",false);
+            var count = 0;
+            var $form = $('#form1');
+         
+            var json = JSON.parmsToJSON($form);
+        //AlertUtil.alertMsg("click ping stop");
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.NETWORK_TOOL;
+            json.tool = 'ping_stop'
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    //AlertUtil.alertMsg(data);
+                }
+            });
+
+             window.clearInterval(timer_id);
+        });
+
+        //Catch pkg
+        $('#btnCatchPkgStart').click(function(){
+            $(this).attr("disabled",true);
+            $('#btnCatchPkgStop').attr("disabled",false);
+            var count = 0;
+            var $form = $('#form2');
+        // AlertUtil.alertMsg("click ping start");
+            var json = JSON.parmsToJSON($form);
+
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.NETWORK_TOOL;
+            json.tool = 'catch_pkg_start'
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    $('#catchPkglink').hide();
+                }
+            });
+
+            timer_id = window.setInterval("readSize()", 5000); 
+            show_log_id = $('#catchPkgLable')
+        });
+
+        $('#btnCatchPkgStop').click(function(){
+            $(this).attr("disabled",true);
+            $('#btnCatchPkgStart').attr("disabled",false);
+            var count = 0;
+            var $form = $('#form2');
+         
+            var json = JSON.parmsToJSON($form);
+        //AlertUtil.alertMsg("click ping stop");
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.NETWORK_TOOL;
+            json.tool = 'catch_pkg_stop'
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    $('#catchPkglink').show();
+                }
+            });
+
+             window.clearInterval(timer_id);
+        });
+
+
+        //TraceRoute
+        $('#btnTraceStart').click(function(){
+            $(this).attr("disabled",true);
+            $('#btnTraceStop').attr("disabled",false);
+            var count = 0;
+            var $form = $('#form3');
+        // AlertUtil.alertMsg("click ping start");
+            var json = JSON.parmsToJSON($form);
+
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.NETWORK_TOOL;
+            json.tool = 'trace_start'
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                }
+            });
+
+            timer_id = window.setInterval("readLog()", 5000); 
+            show_log_id = $('#traceTxtResult')
+        });
+
+         $('#btnTraceStop').click(function(){
+            $(this).attr("disabled",true);
+            $('#btnTraceStart').attr("disabled",false);
+            var count = 0;
+            var $form = $('#form3');
+         
+            var json = JSON.parmsToJSON($form);
+        //AlertUtil.alertMsg("click ping stop");
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.NETWORK_TOOL;
+            json.tool = 'trace_stop'
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                }
+            });
+
+             window.clearInterval(timer_id);
+        });
+
+          //System Log 
+        $('#btnLogStart').click(function(){
+            $(this).attr("disabled",true);
+            $('#btnLogStop').attr("disabled",false);
+            var count = 0;
+            var $form = $('#form4');
+        // AlertUtil.alertMsg("click ping start");
+            var json = JSON.parmsToJSON($form);
+
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.NETWORK_TOOL;
+            json.tool = 'log_start'
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    $('#logLink').hide();
+                }
+            });
+
+            timer_id = window.setInterval("readSize()", 5000); 
+            show_log_id = $('#logLable')
+        });
+
+        $('#btnLogStop').click(function(){
+            $(this).attr("disabled",true);
+            $('#btnLogStart').attr("disabled",false);
+            var count = 0;
+            var $form = $('#form4');
+         
+            var json = JSON.parmsToJSON($form);
+        //AlertUtil.alertMsg("click ping stop");
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.NETWORK_TOOL;
+            json.tool = 'log_stop'
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    $('#logLink').show();
+                }
+            });
+
+             window.clearInterval(timer_id);
+        });
+    });
+</script>
+
+<div class="detail_box">
+    <div class="tab_menu">
+        <ul class="tabs" id="tabsitems">
+            <script type="text/template" id="tabsitems-template">
+                <li><a href="javascript:;"><%- item1 %></a></li>
+                <li><a href="javascript:;"><%- item2 %></a></li>
+                <li><a href="javascript:;"><%- item3 %></a></li>
+                <li><a href="javascript:;"><%- item4 %></a></li>
+            </script>
+        </ul>
+    </div>
+    <div class="tab_menu_bottom"></div>
+    <div>
+        <div class="tab_boxes">
+            <div class="main_box">
+                <form id="form1">
+                    <script type="text/template" id="networktoolform1-template">
+                        <table class="detail" cellspacing="0"><tr>
+                            <th><%- th1 %>&nbsp;</th>
+                            <td><input type="text" id="pingNum" name="pingNum" class="normal inputs_lan"  />
+                            <input type="radio" name="pingLoop" value="1"><%- th1radio%></td>
+                            </tr>
+
+                            <tr class="odd">
+                                <th><%- th2 %>&nbsp;</th>
+                                <td><input type="text" id="pingUrl" name="pingUrl" class="normal inputs_lan"/></td></tr>
+
+                            
+                            <tr id="trSaveLan" class="even" >
+                                <th>&nbsp;</th>
+                                <td>
+                                    <input type="button" id="btnPingStart" value="<%- btnStart %>"/>
+                                    <input type="button" id="btnPingStop" value="<%- btnStop %>"/>
+                                </td>
+                            </tr>
+
+                            <tr class="odd">
+                                <th>&nbsp;</th>
+                                <td>
+                                    <textarea id="PingTxtPingResult" cols="80" rows="20"></textarea>
+                                    <br>
+                                    <input type="button" onclick="javascript:$('#PingTxtPingResult').text('')" value="<%- btnClear %>">
+                                </td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+
+            </div>
+
+            <div class="main_box">
+                <form id="form2">
+                    <script type="text/template" id="networktoolform2-template">
+                        <table class="detail" cellspacing="0">
+                            <tr><td colspan="2"><span class="cmt"><%- tipLabel %></span></td></tr>
+                            <tr>
+                            <th><%- th1 %>&nbsp;</th>
+                            <td><input type="text" id="catchPackageIfname" name="catchPackageIfname" class="normal inputs_lan"  />
+                                <span class="cmt"><%- th1tip %></span>
+                            </td>
+                            </tr>
+
+                            <tr id="trSaveLan" class="even" >
+                                <th>&nbsp;</th>
+                                <td>
+                                    <input type="button" id="btnCatchPkgStart" value="<%- btnStart %>"/>
+                                    <input type="button" id="btnCatchPkgStop" value="<%- btnStop %>"/>
+                                </td>
+                            </tr>
+
+                            <tr class="odd">
+                                <th><%- th2 %>&nbsp;</th>
+                                <td>
+                                    <label id="catchPkgLable"></label>
+                                    <a id="catchPkglink" href="html/manage/network_tool_log.tcpdump" download><%- downfile %></a>
+                                </td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+            </div>
+
+            <div class="main_box">
+                <form id="form3">
+                    <script type="text/template" id="networktoolform3-template">
+                        <table class="detail" cellspacing="0">
+                            <tr class="odd">
+                                <th><%- th1 %>&nbsp;</th>
+                                <td><input type="text" id="traceUrl" name="traceUrl" class="normal inputs_lan"/></td>
+                            </tr>
+                             <tr class="odd">
+                                <th><%- th2 %>&nbsp;</th>
+                                <td><input type="text" id="tracePort" name="tracePort" class="normal inputs_lan"/></td>
+                            </tr>
+                            
+                            <tr id="trSaveLan" class="even" >
+                                <th>&nbsp;</th>
+                                <td>
+                                    <input type="button" id="btnTraceStart" value="<%- btnStart %>"/>
+                                    <input type="button" id="btnTraceStop" value="<%- btnStop %>"/>
+                                </td>
+                            </tr>
+
+                            <tr class="odd">
+                                <th>&nbsp;</th>
+                                <td>
+                                    <textarea id="traceTxtResult" cols="80" rows="20"></textarea>
+                                    <br>
+                                </td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+
+            </div>
+
+
+            <div class="main_box">
+                <form id="form4">
+                    <script type="text/template" id="networktoolform4-template">
+                        <table class="detail" cellspacing="0">
+                            
+                            <tr id="trSaveLan" class="even" >
+                                <th>&nbsp;</th>
+                                <td>
+                                    <input type="button" id="btnLogStart" value="<%- btnStart %>"/>
+                                    <input type="button" id="btnLogStop" value="<%- btnStop %>"/>
+                                </td>
+                            </tr>
+
+                             <tr class="odd">
+                                <th><%- th1 %>&nbsp;</th>
+                                <td>
+                                    <label id="logLable"></label>
+                                    <a id="logLink" href="html/manage/network_tool_log.log" download><%- downfile %></a>
+                                </td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+
+            </div>
+
+            
+        </div>
+    </div>
+    <div class="helper_box" style="display:none;">
+        <div id="helper"></div>
+    </div>
+    <span style="clear:both"></span>
+</div>

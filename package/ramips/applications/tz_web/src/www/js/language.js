@@ -141,6 +141,17 @@ networkconfightml.ipMacEdit = {};
 networkconfightml.prompt = {};
 networkconfightml.tab_menu = {};
 
+var networktoolhtml = {};
+networktoolhtml.editClose = {};
+networktoolhtml.form1 = {};
+networktoolhtml.form2 = {};
+networktoolhtml.form3 = {};
+networktoolhtml.form4 = {};
+networktoolhtml.helper = {};
+networktoolhtml.ipMacEdit = {};
+networktoolhtml.prompt = {};
+networktoolhtml.tab_menu = {};
+
 var sysmanagehtml = {};
 sysmanagehtml.form1 = {};
 sysmanagehtml.form2 = {};
