@@ -45,13 +45,14 @@ check_ubuntu_version()
 	fi
 }
 
+FTPADDR=ftp://soft:83583000@192.168.1.154:14147/openwrt_cat6
 download_flag=.flag_download_something_2018_12_20
 download_something()
 {
 	if [ ! -f ${download_flag} ]; then
 		touch ${download_flag}
-		wget ftp://192.168.1.123/openwrt_cat6/s21/some-bin/factory.bin -O project/s21/bin/factory.bin
-		wget ftp://192.168.1.123/openwrt_cat6/s21/some-bin/old-all.bin -O project/s21/bin/old-all.bin
+		wget ${FTPADDR}/s21/some-bin/factory.bin -O project/s21/bin/factory.bin
+		wget ${FTPADDR}/s21/some-bin/old-all.bin -O project/s21/bin/old-all.bin
 			
 	fi
 }
