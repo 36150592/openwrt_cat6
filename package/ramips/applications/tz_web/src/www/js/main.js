@@ -209,9 +209,9 @@ var ConvertUtil = {
         return sb.toString();
     },
     timeStamp:function(StatusMinute){
-        var day=parseInt(StatusMinute/60/24);
-        var hour=parseInt(StatusMinute/60%24);
-        var min= parseInt(StatusMinute % 60);
+       var day=parseInt(StatusMinute/3600/24);
+        var hour=parseInt(StatusMinute/3600%24);
+        var min= parseInt(StatusMinute/60% 60);
         StatusMinute="";
         if (day > 0)
         {
