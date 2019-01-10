@@ -9,6 +9,7 @@ local NETWORK_DNS_SECOND_RESOLV_FILE="/tmp/resolv.conf.auto"
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
+local tzlib = require("luatzlib")
 network_module.net_info = {
 		
 		["mac"] = nil,
@@ -45,45 +46,20 @@ function network_module.net_info:new(o,obj)
 	
 end
 
-
-local function format_get_ip_cmd(ifname) return string.format("ifconfig %s | grep 'inet addr' | cut -d':' -f 2 | cut -d' ' -f 1", ifname) end
-local function format_get_bcast_cmd(ifname) return string.format("ifconfig %s | grep 'inet addr' | cut -d':' -f 3 | cut -d' ' -f 1", ifname) end
-local function format_get_mask_cmd(ifname) return string.format("ifconfig %s | grep 'inet addr' | cut -d':' -f 4 | cut -d' ' -f 1", ifname) end
 local function format_get_gateway_cmd(ifname) return string.format("route | grep %s  | awk '{print $2}' |  grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' ", ifname) end
 local function format_get_mac(ifname) return string.format("cat /sys/class/net/%s/address", ifname) end
-local function format_get_tx_packets(ifname) return string.format("cat /sys/class/net/%s/statistics/tx_packets", ifname) end
-local function format_get_rx_packets(ifname) return string.format("cat /sys/class/net/%s/statistics/rx_packets", ifname) end
-local function format_get_tx_bytes(ifname) return string.format("cat /sys/class/net/%s/statistics/tx_bytes", ifname) end
-local function format_get_rx_bytes(ifname) return string.format("cat /sys/class/net/%s/statistics/rx_bytes", ifname) end
 
 local function get_ip_bcast_mask_mac(ifname)
 
 	local ip,bcast,mask,mac
+	local tx_p,rx_p,tx_b,rx_b
 	if nil == ifname
 	then 
 		debug("get ip fail: ifname nil")
 		return nil,nil,nil
 	end
 
-
-
-	--[[f = io.popen(format_get_ip_cmd(ifname))
-	ip = f:read("*all")
-	io.close(f)
-
-
-	f = io.popen(format_get_bcast_cmd(ifname))
-	bcast = f:read("*all")
-	io.close(f)
-
-
-	f = io.popen(format_get_mask_cmd(ifname))
-	mask = f:read("*all")
-	io.close(f)
-]]--
-
 	f = io.popen(string.format("ifconfig %s", ifname))
-
 	local res = f:read()
 
 	while nil ~= res
@@ -98,10 +74,27 @@ local function get_ip_bcast_mask_mac(ifname)
 		then
 			local temp = string.gmatch(res,"%x%x:%x%x:%x%x:%x%x:%x%x:%x%x")
 			mac = temp()
-		elseif nil ~= ip and nil ~= bcast and nil ~= mask and nil ~= mac
+		elseif string.match(res,"RX packets:%d+") ~= nil
 		then
-			break
+			temp = string.match(res,"RX packets:%d+")
+			arr = split(temp, ":")
+			rx_p = arr[2]
+		elseif string.match(res,"TX packets:%d+") ~= nil
+		then
+			temp = string.match(res,"TX packets:%d+")
+			arr = split(temp, ":")
+			tx_p = arr[2]
+		elseif string.match(res,"RX bytes:%d+") ~= nil
+		then
+			temp = string.match(res,"RX bytes:%d+")
+			arr = split(temp, ":")
+			rx_b = arr[2]
+
+			temp = string.match(res,"TX bytes:%d+")
+			arr = split(temp, ":")
+			tx_b = arr[2]
 		end
+
 		res = f:read()
 	end
 	io.close(f)
@@ -109,11 +102,11 @@ local function get_ip_bcast_mask_mac(ifname)
 	if nil == ip or string.match(ip,"%d+%.%d+%.%d+%.%d+") == nil
 	then
 		debug("get ip error")
-		return nil,nil,nil,nil
+		return nil,nil,nil,nil,nil,nil,nil,nil
 	end
 
 
-	return ip,bcast,mask,mac
+	return ip,bcast,mask,mac,tx_p,rx_p,tx_b,rx_b
 end
 
 local function get_gateway(ifname)
@@ -192,64 +185,6 @@ local function get_dns()
     return dns1,dns2
 end
 
-
-local function get_statistics(ifname)
-	local tx_p,rx_p,tx_b,rx_b
-	local f
-
-	--[[f = io.popen(format_get_tx_packets(ifname))
-	tx_p = f:read()
-	io.close(f)
-
-
-	f = io.popen(format_get_rx_packets(ifname))
-	rx_p = f:read()
-	io.close(f)
-
-	f = io.popen(format_get_tx_bytes(ifname))
-	tx_b = f:read()
-	io.close(f)
-
-	f = io.popen(format_get_rx_bytes(ifname))
-	rx_b = f:read()
-	io.close(f)]]--
-
-	f = io.popen(string.format("ifconfig %s", ifname))
-
-	local res = f:read()
-
-	while nil ~= res
-	do
-		local temp = nil 
-		local arr = nil
-		if string.match(res,"RX packets:%d+") ~= nil
-		then
-			temp = string.match(res,"RX packets:%d+")
-			arr = split(temp, ":")
-			rx_p = arr[2]
-		elseif string.match(res,"TX packets:%d+") ~= nil
-		then
-			temp = string.match(res,"TX packets:%d+")
-			arr = split(temp, ":")
-			tx_p = arr[2]
-		elseif string.match(res,"RX bytes:%d+") ~= nil
-		then
-			temp = string.match(res,"RX bytes:%d+")
-			arr = split(temp, ":")
-			rx_b = arr[2]
-
-			temp = string.match(res,"TX bytes:%d+")
-			arr = split(temp, ":")
-			tx_b = arr[2]
-		end
-		res = f:read()
-	end
-	io.close(f)
-
-
-	return tx_p,rx_p,tx_b,rx_b
-end
-
 -- get wan net info
 -- input:none
 -- return:
@@ -260,11 +195,9 @@ function network_module.network_get_wan_info()
 	local ifname = x:get(NETWORK_CONFIG_FILE, "wan", "ifname")
 
 	local temp
-	info["ipaddr"],temp,info["netmask"], info["mac"]= get_ip_bcast_mask_mac(ifname)
+	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
-	--info["mac"] = get_mac(ifname)
 	info["first_dns"],info["second_dns"] = get_dns()
-	info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"] = get_statistics(ifname)
 
 	if nil == info["ipaddr"]
 	then
@@ -286,11 +219,9 @@ function network_module.network_get_4g_net_info()
 	local ifname = x:get(NETWORK_CONFIG_FILE, "4g", "ifname")
 
 	local temp
-	info["ipaddr"],temp,info["netmask"], info["mac"]= get_ip_bcast_mask_mac(ifname)
+	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
-	--info["mac"] = get_mac(ifname)
 	info["first_dns"],info["second_dns"] = get_dns()
-	info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"] = get_statistics(ifname)
 	if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the 4g interface,return nil")
