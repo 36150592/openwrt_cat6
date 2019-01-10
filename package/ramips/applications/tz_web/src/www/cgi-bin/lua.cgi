@@ -8,15 +8,19 @@ local sim = require "tz.sim"
 local modem = require "tz.modem"
 local device = require "tz.device"
 local network = require "tz.network"
-
+local uti = require "tz.util"
 
 
 local WEB_PATH = "/tz_www"
 print("Contenttype:text/html\n")
 
-data1=io.read();
-tz_req = cjson.decode(data1);
 
+local envf = io.popen("env")
+local envv = envf:read("*a")
+io.close(envf)
+
+
+local tz_req
 
 function login()
 
@@ -722,11 +726,38 @@ function network_tool()
 	print(result_json)
 end
 
+
+function upload_file()
+	local UploadDir = "/tmp/web_upload/"
+
+	local boundary = uti.get_env_boundary(envv)
+	local content_len = uti.get_env_content_len(envv)
+
+	local a1 = io.read()
+	local a2 = io.read()
+	local a3 = io.read()
+	local a4 = io.read()
+
+	local file_len = content_len - string.len(a2) - string.len(a3) - string.len(boundary) * 2 - 70
+
+	local a5 = io.read(file_len)
+	if nil ~= a5
+	then
+		local file_name = uti.get_upload_file_name(a2)
+		local file_path = string.format("%s%s",UploadDir,file_name)
+
+		os.execute(string.format("mkdir -p %s",UploadDir))
+		local ff = io.open(file_path,"w")
+		ff:write(a5)
+		io.close(ff)
+	end
+end
+
 local switch = {
      [0] = get_sysinfo,
      [2] = set_wifi,
 	 [3] = set_dhcp,
-	 [5] = update_sys,
+	 [5] = upload_file,
 	 [43] = get_diviceinfo,
      [80] = iniPage,
 	 [97] = change_language,
@@ -740,11 +771,27 @@ local switch = {
 	 [201] = get_wifi5,
 	 [202] = set_wifi5
  }
- 
- local f = switch[tz_req["cmd"]]
- if(f) then
-     f()
- end
+
+
+cmdid = uti.get_env_cmdId(envv)
+if cmdid ~= nil
+then
+	uti.web_log(cmdid)
+	if "5" == cmdid
+	then
+		upload_file()
+	end
+else
+	data1=io.read();
+	tz_req = cjson.decode(data1)
+	local f = switch[tz_req["cmd"]]
+	if(f) then
+	    f()
+	end
+end
+
+
+
  
  
 

@@ -64,4 +64,87 @@ function module.is_file_exist(FileName)
 	return true
 end 
 
+function module.web_log(content)
+	if nil ~= content
+	then
+		local ff = io.open("/tmp/web_log","a")
+		ff:write(content)
+		io.close(ff)
+	end
+end
+
+function module.get_env_cmdId(env)
+	local lines = string.match(env,'QUERY_STRING=cmd=%d+')
+	if nil ~= lines
+	then
+		local cmdId = string.match(lines,'%d+')
+		if nil ~= cmdId 
+		then
+			return cmdId
+		end
+	end
+	return nil
+end
+
+function module.get_env_boundary(env)
+        local lines = string.match(env,'boundary=---------------------------%d+')
+        if nil ~= lines
+        then
+                local boundary = string.match(lines,'%d+')
+                if nil ~= boundary
+                then
+                        return boundary
+                end
+        end
+end
+
+function module.get_env_content_len(env)                                                                                  
+        local lines = string.match(env,'CONTENT_LENGTH=%d+')
+        if nil ~= lines
+        then
+                local len = string.match(lines,'%d+')
+                if nil ~= len
+                then
+                        return len
+                end
+        end
+end
+
+function module.get_upload_file_name(lines)
+	local p1 = string.match(lines,"filename=.*")
+	if nil == p1
+	then
+		return nil
+	end
+
+	local p2 = string.match(p1,"\".*")
+	if nil == p2
+	then
+		return nil
+	end
+
+	local p3 = string.sub(p2, 2, string.len(p2) -2)
+
+	local strchar
+	if nil ~= string.find(p3, "\\")
+	then
+		strchar = "\\"
+	else
+		if nil ~= string.find(p3,"/")
+		then
+			strchar = "/"
+		else
+			return p3
+		end
+	end
+
+	local str1 = string.reverse(p3)
+	local pa1, pa2 = string.find(str1, strchar)
+	local str2 = string.sub(str1, 1, pa2-1)
+	local str3 = string.reverse(str2)
+
+	return str3
+
+end
+
 return module
