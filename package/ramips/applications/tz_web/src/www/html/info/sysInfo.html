@@ -452,7 +452,8 @@
                         var values = [];
                         var data2 = datas.data;
                         names.push(DOC.wlan.currentMode);
-                        values.push(DOC.wlan.ApMode);
+						var mode = getWlanMode(parseInt(data2.mode));
+                        values.push(mode);
 
                         names.push(DOC.wlan.wifi);
                         if(data2.status == "0")
