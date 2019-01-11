@@ -105,9 +105,11 @@ end
 function firewall_set_port_redirect()
 		print("in firewall_set_port_redirect")
 		local ports={
-		{["dest_addr"]=nil, ["dest_port"]="90", ["protocol"]='tcp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8080', ["comment"]="test port redirect1"},
-		{["dest_addr"]='192.168.2.131', ["dest_port"]="80", ["protocol"]='udp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8090', ["comment"]="test port redirect2"},
-		{["dest_addr"]='192.168.2.131', ["dest_port"]="22", ["protocol"]='all', ["redirect_addr"]='192.168.2.1',["redirect_port"]='80', ["comment"]="test port redirect3"}
+		{["dest_addr"]=nil, ["dest_port"]="90", ["protocol"]='tcp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8080', ["comment"]="test port redirect1",["iswork"]=true},
+		{["dest_addr"]='192.168.2.131', ["dest_port"]="80", ["protocol"]='udp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8090', ["comment"]="test port redirect2",["iswork"]=true},
+		{["dest_addr"]='192.168.2.131', ["dest_port"]="22", ["protocol"]='all', ["redirect_addr"]='192.168.2.1',["redirect_port"]='80', ["comment"]="test port redirect3",["iswork"]=true},
+		{["dest_addr"]='192.168.2.131', ["dest_port"]="8899", ["protocol"]='all', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8896', ["comment"]="test port redirect3",["iswork"]=false}
+		
 		}
 
 		if firewall.firewall_set_port_redirect_list(ports)
@@ -141,9 +143,10 @@ end
 function firewall_set_port_filter()
 		print("in firewall_set_port_filter")
 		local ports={
-		{["port"]='4545',["protocol"]='tcp', ["action"]='ACCEPT', ["comment"]="test port filter1"},
-		{["port"]='1902',["protocol"]='udp', ["action"]='DROP', ["comment"]="test port filter2"},
-		{["port"]='907',["protocol"]='all',["action"]='DROP', ["comment"]="test port filter3"}
+		{["port"]='4545',["protocol"]='tcp', ["action"]='ACCEPT', ["comment"]="test port filter1",["iswork"]=true},
+		{["port"]='1902',["protocol"]='udp', ["action"]='DROP', ["comment"]="test port filter2",["iswork"]=true},
+		{["port"]='907',["protocol"]='all',["action"]='DROP', ["comment"]="test port filter3",["iswork"]=true},
+		{["port"]='523',["protocol"]='all',["action"]='DROP', ["comment"]="test port filter3",["iswork"]=false},
 		}
 
 		if firewall.firewall_set_port_filter_list(ports)
@@ -177,9 +180,10 @@ end
 function firewall_set_ip_filter()
 		print("in firewall_set_ip_filter")
 		local ips={
-		{["ipaddr"]='192.168.3.6', ["action"]='ACCEPT', ["comment"]="test ip filter"},
-		{["ipaddr"]='192.168.4.6', ["action"]='DROP', ["comment"]="test ip filter"}
-
+		{["ipaddr"]='192.168.3.6', ["action"]='ACCEPT', ["comment"]="test ip filter",["iswork"]=true},
+		{["ipaddr"]='192.168.4.6', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=true},
+		{["ipaddr"]='192.168.4.8', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=true},
+		{["ipaddr"]='192.168.4.9', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=false},
 		}
 
 		if firewall.firewall_set_ip_filter_list(ips)
@@ -213,9 +217,9 @@ end
 function firewall_set_url_filter()
 		print("in firewall_set_url_filter")
 		local urls={
-		{["url"]='sina.cn', ["action"]='ACCEPT', ["comment"]="test url filter"},
-		{["url"]='baidu.com', ["action"]='DROP', ["comment"]="test url filter"}
-
+		{["url"]='sina.cn', ["action"]='ACCEPT', ["comment"]="test url filter",["iswork"]=true},
+		{["url"]='baidu.com', ["action"]='DROP', ["comment"]="test url filter",["iswork"]=true},
+		{["url"]='cn.bing.com', ["action"]='DROP', ["comment"]="test url filter",["iswork"]=false},
 		}
 
 		if firewall.firewall_set_url_filter_list(urls)
@@ -251,9 +255,9 @@ end
 function firewall_set_mac_filter()
 		print("in firewall_set_mac_filter")
 		local macs={
-		{["mac"]='aa:bb:cc:11:22:33', ["action"]='DROP', ["comment"]="test mac filter"},
-		{["mac"]='aa:bb:cc:11:22:34', ["action"]='DROP', ["comment"]="test mac filter"}
-
+		{["mac"]='aa:bb:cc:11:22:33', ["action"]='DROP', ["comment"]="test mac filter",["iswork"]=true},
+		{["mac"]='aa:bb:cc:11:22:34', ["action"]='DROP', ["comment"]="test mac filter",["iswork"]=true},
+		{["mac"]='aa:bb:cc:11:22:44', ["action"]='DROP', ["comment"]="test mac filter",["iswork"]=false},
 		}
 
 		if firewall.firewall_set_mac_filter_list(macs)

@@ -19,7 +19,8 @@ firewall_module.mac_filter = {
 		
 	["mac"] = nil,
 	["action"] = nil,--DROP:refused  ACCEPT: accept connect 
-	["comment"] = nil --user note
+	["comment"] = nil, --user note
+	["iswork"] = nil  -- is apply this rule  true:apply  false:not apply
 }
 
 function firewall_module.mac_filter:new(o,obj)
@@ -33,14 +34,15 @@ function firewall_module.mac_filter:new(o,obj)
 	self["mac"] = obj["mac"] or nil
 	self["action"] = obj["action"] or nil 
 	self["comment"] = obj["comment"] or nil
-	
+	self["iswork"] = obj["iswork"] or nil
 end
 
 firewall_module.url_filter = {
 		
 	["url"] = nil,
 	["action"] = nil, --DROP:refused  ACCEPT: accept connect 
-	["comment"] = nil -- user note
+	["comment"] = nil, -- user note
+	["iswork"] = nil  -- is apply this rule  true:apply  false:not apply
 }
 
 function firewall_module.url_filter:new(o,obj)
@@ -54,6 +56,7 @@ function firewall_module.url_filter:new(o,obj)
 	self["url"] = obj["url"] or nil
 	self["action"] = obj["action"] or nil
 	self["comment"] = obj["comment"] or nil
+	self["iswork"] = obj["iswork"] or nil
 	
 end
 
@@ -61,7 +64,8 @@ firewall_module.ip_filter = {
 		
 	["ipaddr"] = nil,
 	["action"] = nil,--DROP:refused  ACCEPT: access connect 
-	["comment"] = nil -- user note
+	["comment"] = nil, -- user note
+	["iswork"] = nil  -- is apply this rule  true:apply  false:not apply
 }
 
 function firewall_module.ip_filter:new(o,obj)
@@ -75,6 +79,7 @@ function firewall_module.ip_filter:new(o,obj)
 	self["ipaddr"] = obj["ipaddr"] or nil
 	self["action"] = obj["action"] or nil
 	self["comment"] = obj["comment"] or nil
+	self["iswork"] = obj["iswork"] or nil
 	
 end
 
@@ -83,7 +88,8 @@ firewall_module.port_filter = {
 	["port"] = nil,
 	["protocol"] = nil, --tcp  upd  all
 	["action"] = nil, --DROP:refused  ACCEPT: accept connect 
-	["comment"] = nil --user note
+	["comment"] = nil, --user note
+	["iswork"] = nil  -- is apply this rule  true:apply  false:not apply
 }
 
 function firewall_module.port_filter:new(o,obj)
@@ -98,6 +104,7 @@ function firewall_module.port_filter:new(o,obj)
 	self["protocol"] = obj["protocol"] or nil
 	self["action"] = obj["action"] or nil
 	self["comment"] = obj["comment"] or nil
+	self["iswork"] = obj["iswork"] or nil
 	
 end
 
@@ -107,7 +114,8 @@ firewall_module.port_redirect = {
 	["dest_port"] = nil,--origin dest port 
 	["redirect_addr"] = nil,-- redirect ip address 
 	["redirect_port"]  = nil,-- redirect port
-	["comment"] = nil --user note
+	["comment"] = nil, --user note
+	["iswork"] = nil  -- is apply this rule  true:apply  false:not apply
 
 }
 
@@ -125,6 +133,7 @@ function firewall_module.port_redirect:new(o,obj)
 	self["redirect_addr"] = obj["redirect_addr"] or nil
 	self["redirect_port"] = obj["redirect_port"] or nil
 	self["comment"] = obj["comment"] or nil
+	self["iswork"] = obj["iswork"] or nil
 	
 end
 
@@ -243,9 +252,17 @@ end
 
 
 
-local function execute_cmd(cmd)
+local function execute_cmd(...)
 	
 	local temp = nil
+	local cmd = nil
+	if false == arg[2]
+	then
+		cmd = string.gsub(arg[1], 'echo \'','echo \'#')
+	else
+		cmd = arg[1]
+	end
+
 
 	local f = io.popen(cmd)
 
@@ -319,6 +336,18 @@ local function check_protocol(protocol)
 	return false
 end
 
+local function rule_is_work(str)
+	local ret = string.find(str,"#iptables")
+
+	if nil ~= ret
+	then
+		return false
+	end
+
+	return true
+
+end
+
 function firewall_module.firewall_clear_all_user_rule()
 	return execute_cmd(string.format("> %s", FIREWALL_CUSTOM_CONFIG_FILE))
 end
@@ -356,12 +385,13 @@ function firewall_module.firewall_get_mac_filter_list()
 
 	for i = 1, table.maxn(data)
 	do
-		print(data[i])
+		debug(data[i])
 		local array = split(data[i], "##")
 		local temp = firewall_module.mac_filter:new(nil,nil)
 		temp["mac"] = array[3]
 		temp["action"] = array[4]
 		temp["comment"] = array[5]
+		temp["iswork"] = rule_is_work(data[i])
 		mac_filter_list[i] = temp
 
 	end
@@ -403,7 +433,7 @@ function firewall_module.firewall_set_mac_filter_list(filter_list)
 
 		if check_action(temp["action"]) and check_mac(temp["mac"])
 		then
-			execute_cmd(format_set_mac_filter_cmd(temp["mac"], temp["action"], temp["comment"]))
+			execute_cmd(format_set_mac_filter_cmd(temp["mac"], temp["action"], temp["comment"]), temp["iswork"])
 		else
 			debug("check fail ", temp["action"]," ", temp["mac"], " ", temp["comment"])
 			return false
@@ -435,12 +465,13 @@ function firewall_module.firewall_get_url_filter_list()
 
 	for i = 1, table.maxn(data)
 	do
-		print(data[i])
+		debug(data[i])
 		local array = split(data[i], "##")
 		local temp = firewall_module.url_filter:new(nil,nil)
 		temp["url"] = array[3]
 		temp["action"] = array[4]
 		temp["comment"] = array[5]
+		temp["iswork"] = rule_is_work(data[i])
 		url_filter_list[i] = temp
 
 	end
@@ -481,7 +512,7 @@ function firewall_module.firewall_set_url_filter_list(filter_list)
 
 		if check_action(temp["action"]) 
 		then
-			execute_cmd(format_set_url_filter_cmd(temp["url"], temp["action"], temp["comment"]))
+			execute_cmd(format_set_url_filter_cmd(temp["url"], temp["action"], temp["comment"]), temp["iswork"])
 		else
 			debug("check fail ", temp["action"]," ", temp["url"], " ", temp["comment"])
 			return false
@@ -522,6 +553,7 @@ function firewall_module.firewall_get_ip_filter_list()
 		temp["ipaddr"] = array[3]
 		temp["action"] = array[4]
 		temp["comment"] = array[5]
+		temp["iswork"] = rule_is_work(data[i])
 		if '1' == array[6]
 		then
 			ip_filter_list[j] = temp
@@ -566,7 +598,7 @@ function firewall_module.firewall_set_ip_filter_list(filter_list)
 
 		if check_action(temp["action"]) and check_ip(temp["ipaddr"])
 		then
-			execute_cmd(format_set_ip_filter_cmd(temp["ipaddr"], temp["action"], temp["comment"]))
+			execute_cmd(format_set_ip_filter_cmd(temp["ipaddr"], temp["action"], temp["comment"]), temp["iswork"])
 		else
 			debug("check fail ", temp["action"]," ", temp["ipaddr"], " ", temp["comment"])
 			return false
@@ -606,6 +638,7 @@ function firewall_module.firewall_get_port_filter_list()
 		temp["protocol"] = array[4]
 		temp["action"] = array[5]
 		temp["comment"] = array[6]
+		temp["iswork"] = rule_is_work(data[i])
 		if '1' == array[7] or nil == array[7]
 		then
 			port_filter_list[j] = temp
@@ -650,7 +683,7 @@ function firewall_module.firewall_set_port_filter_list(filter_list)
 
 		if check_action(temp["action"]) and check_protocol(temp["protocol"])
 		then
-			execute_cmd(format_set_port_filter_cmd(temp["port"],temp["protocol"], temp["action"], temp["comment"]))
+			execute_cmd(format_set_port_filter_cmd(temp["port"],temp["protocol"], temp["action"], temp["comment"]), temp["iswork"])
 		else
 			debug("check fail ", temp["action"]," ", temp["protocol"], " ", temp["port"], " ", temp["comment"])
 			return false
@@ -693,6 +726,7 @@ function firewall_module.firewall_get_port_redirect_list()
 		temp["redirect_addr"] = array[6]
 		temp["redirect_port"] = array[7]
 		temp["comment"] = array[8]
+		temp["iswork"] = rule_is_work(data[i])
 		if '1' == array[9] or nil == array[9]
 		then
 			port_redirect_list[j] = temp
@@ -743,7 +777,7 @@ function firewall_module.firewall_set_port_redirect_list(redirect_list)
 				return false
 			end
 
-			execute_cmd(format_set_port_redirect_cmd(temp["protocol"], temp["dest_addr"], temp["dest_port"], temp["redirect_addr"], temp["redirect_port"], temp["comment"]))
+			execute_cmd(format_set_port_redirect_cmd(temp["protocol"], temp["dest_addr"], temp["dest_port"], temp["redirect_addr"], temp["redirect_port"], temp["comment"]), temp["iswork"])
 		else
 			debug(temp["protocol"], " ", temp["dest_addr"]," ",  temp["dest_port"]," ",  temp["redirect_addr"]," ",  temp["redirect_port"]," ", temp["comment"])
 			return false
