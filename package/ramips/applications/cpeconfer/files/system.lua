@@ -197,7 +197,30 @@ function system_module.system_network_tool(tz_req)
 	return tz_answer
 end
 
+--[[
+ret: 
+	0: success
+	-1: file is not exist
+	-2: file format is error
+]]--
+function system_module.update_system(file_path)
+	if (util.is_file_exist(file_path) ~= true)
+		return -1
+	end
 
+	os.execute("rm -rf /tmp/updateit")
+	os.execute(string.format("cd /tmp && unzip -P tz18c6 %s updateit", file_path))
+
+	if (util.is_file_exist("/tmp/updateit") ~= true)
+		return -2
+	end
+
+	os.execute("chmod 777 /tmp/updateit")
+	os.execute(string.format("/tmp/updateit %s",file_path))
+
+	return 0
+
+end
 
 return system_module
 
