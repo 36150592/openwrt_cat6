@@ -412,7 +412,7 @@ local macs={
 -- return true if success false if fail
 function firewall_module.firewall_set_mac_filter_list(filter_list)
 
-	if type(filter_list) ~= 'table' or table.maxn(filter_list) <= 0
+	if type(filter_list) ~= 'table' 
 	then
 		debug("filter list is empty or not a table")
 		return nil
@@ -425,6 +425,11 @@ function firewall_module.firewall_set_mac_filter_list(filter_list)
 	then
 		debug("execute clear cmd fail")
 		return false
+	end
+
+	if table.maxn(filter_list) <= 0
+	then
+		return true
 	end
 
 	for i=1,table.maxn(array)
@@ -492,7 +497,7 @@ local urls={
 -- return:true if success false if fail
 function firewall_module.firewall_set_url_filter_list(filter_list)
 
-	if type(filter_list) ~= 'table' or table.maxn(filter_list) <= 0
+	if type(filter_list) ~= 'table'
 	then
 		debug("filter list is empty or not a table")
 		return nil
@@ -504,6 +509,11 @@ function firewall_module.firewall_set_url_filter_list(filter_list)
 	then
 		debug("execute clear cmd fail")
 		return false
+	end
+
+	if table.maxn(filter_list) <= 0
+	then
+		return true
 	end
 
 	for i=1,table.maxn(array)
@@ -578,7 +588,7 @@ local ips={
 -- return:true if success false if fail
 function firewall_module.firewall_set_ip_filter_list(filter_list)
 
-	if type(filter_list) ~= 'table' or table.maxn(filter_list) <= 0
+	if type(filter_list) ~= 'table'
 	then
 		debug("filter list is empty or not a table")
 		return nil
@@ -590,6 +600,11 @@ function firewall_module.firewall_set_ip_filter_list(filter_list)
 	then
 		debug("execute clear cmd fail")
 		return false
+	end
+
+	if table.maxn(filter_list) <= 0
+	then
+		return true
 	end
 
 	for i=1,table.maxn(array)
@@ -663,7 +678,7 @@ local ports={
 -- return:true if success false if fail
 function firewall_module.firewall_set_port_filter_list(filter_list)
 
-	if type(filter_list) ~= 'table' or table.maxn(filter_list) <= 0
+	if type(filter_list) ~= 'table'
 	then
 		debug("filter list is empty or not a table")
 		return nil
@@ -675,6 +690,11 @@ function firewall_module.firewall_set_port_filter_list(filter_list)
 	then
 		debug("execute clear cmd fail")
 		return false
+	end
+
+	if table.maxn(filter_list) <= 0
+	then
+		return true
 	end
 
 	for i=1,table.maxn(array)
@@ -751,7 +771,7 @@ end
 -- return:true if success false if fail
 function firewall_module.firewall_set_port_redirect_list(redirect_list)
 
-	if type(redirect_list) ~= 'table' or table.maxn(redirect_list) <= 0
+	if type(redirect_list) ~= 'table'
 	then
 		debug("redirect list is empty or not a table")
 		return nil
@@ -763,6 +783,11 @@ function firewall_module.firewall_set_port_redirect_list(redirect_list)
 	then
 		debug("execute clear cmd fail")
 		return false
+	end
+
+	if table.maxn(redirect_list) <= 0
+	then
+		return true
 	end
 
 	for i=1,table.maxn(array)
