@@ -128,6 +128,7 @@ enum
 {
 	mode_sendat,
 	mode_terminal,
+	mode_once,
 }mode;
 
 char at_send_file[128];
@@ -169,13 +170,20 @@ void thr_recv(void *arg)
 				}
 			}
 		}
-		else
+		else if(mode_terminal == mode)
 		{
 			printf("%s",buffer_output);
 			bytes_n=0;
 			memset(buffer_output,0,sizeof(buffer_output));
+			fsync(f);
 		}
-		fsync(f);
+		else 
+		{
+			printf("%s",buffer_output);
+			fsync(f);
+			exit(0);
+		}
+		
 	}
 }
 
@@ -189,7 +197,7 @@ int main(int argc,char *argv[])
 //	int n=0;
 	int ret;
 	mode=mode_sendat;
-	while((ret= getopt(argc,argv,"d:f:o:t")) != -1)
+	while((ret= getopt(argc,argv,"e:d:f:o:t")) != -1)
 	{
 		switch(ret)
 		{
@@ -205,35 +213,60 @@ int main(int argc,char *argv[])
 			case 't':
 				mode=mode_terminal;
 				break;
+			case 'e':
+				mode=mode_once;
+				strcpy(buffer_input,optarg);
+				break;
 			default:
 				printf("error");
 				exit(-1);
 		}
 	}
+	
 	if(mode==mode_sendat)
 	{
 		if(argc!=4)
 		{
-			printf("./a.out -d/dev/ttyUSB1 -f/tmp/at_send -o /tmp/at_recv\n");
+			printf("sendat -d/dev/ttyUSB1 -f/tmp/at_send -o /tmp/at_recv\n");
+			exit(1);
+		}
+	}
+	else if(mode_terminal == mode)
+	{
+		if(argc!=3)
+		{
+			printf("sendat -d/dev/ttyUSB1 -t\n");
+			exit(1);
+		}
+	}
+	else if(mode_once == mode)
+	{
+		if(argc != 3 && argc != 4)
+		{
+			printf("sendat -d/dev/ttyUSB1 -e at-cmd OR sendat -e at-cmd \n");
 			exit(1);
 		}
 	}
 	else
 	{
-		if(argc!=3)
-		{
-			printf("./a.out -d/dev/ttyUSB1 -t\n");
-			exit(1);
-		}
+		printf("please special the mode(t:f:e)\n");
+		exit(1);
 	}
+	
 	f=open(serial_port,O_RDWR);
-	if (-1 == f)
+	if(-1 == f)
+	{
+		strncpy(serial_port, "/dev/ttyUSB3",sizeof(serial_port));
+		f=open(serial_port,O_RDWR);
+	}
+	if(-1 == f)
+	{
+		printf("open serial port error!");
 		return 1;
-	else
-		printf("open:%s\n",serial_port);
+	}
+		
 	config_device_mode(f,baudrate,8,1,'s');	
 //	signal(SIGINT,sig_int);
-	printf("at port open now\n");
     if(pthread_create(&thread_recv,NULL,(void *)thr_recv,NULL) != 0)
 	{
 		log_error("thr_recv create error\n");
@@ -263,7 +296,7 @@ int main(int argc,char *argv[])
 	}
 /* the mode like terminator,can send at cmd like minicom
  */
-	else
+	else if(mode_terminal == mode)
 	{
 		while(1)
 		{
@@ -277,6 +310,20 @@ int main(int argc,char *argv[])
 			fsync(f);
 		}
 	}
+	else
+	{
+		
+		if(NULL==strchr(buffer_input,'\r'))
+		{
+			buffer_input[strlen(buffer_input)]='\r';
+		}
+		write(f,buffer_input,strlen(buffer_input));
+		fsync(f);
+		pthread_join(thread_recv,NULL);
+		close(f);
+		return 0;
+	}
+	
 	pthread_join(thread_recv,NULL);
 	close(f);
 	return 0;
