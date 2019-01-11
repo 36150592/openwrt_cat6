@@ -19,6 +19,10 @@ local envf = io.popen("env")
 local envv = envf:read("*a")
 io.close(envf)
 
+--local fe = io.open("/tmp/env.txt","w")
+--fe:write(envv)
+--io.close(fe)
+
 
 local tz_req
 
@@ -738,7 +742,7 @@ function upload_file()
 	local a3 = io.read()
 	local a4 = io.read()
 
-	local file_len = content_len - string.len(a2) - string.len(a3) - string.len(boundary) * 2 - 70
+	local file_len = content_len - string.len(a2) - string.len(a3) - string.len(boundary) * 2 - 10 - 7 + 1 
 
 	local a5 = io.read(file_len)
 	if nil ~= a5

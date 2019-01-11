@@ -87,10 +87,10 @@ function module.get_env_cmdId(env)
 end
 
 function module.get_env_boundary(env)
-        local lines = string.match(env,'boundary=---------------------------%d+')
+        local lines = string.match(env,'boundary=[-%d%u%l]*')
         if nil ~= lines
         then
-                local boundary = string.match(lines,'%d+')
+                local boundary = string.sub(lines, 10, string.len(lines))
                 if nil ~= boundary
                 then
                         return boundary
