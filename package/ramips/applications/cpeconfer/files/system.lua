@@ -205,6 +205,7 @@ ret:
 ]]--
 function system_module.update_system(file_path)
 	if (util.is_file_exist(file_path) ~= true)
+	then
 		return -1
 	end
 
@@ -212,6 +213,7 @@ function system_module.update_system(file_path)
 	os.execute(string.format("cd /tmp && unzip -P tz18c6 %s updateit", file_path))
 
 	if (util.is_file_exist("/tmp/updateit") ~= true)
+	then
 		return -2
 	end
 
