@@ -76,7 +76,7 @@ function readSize(){
                 }
             });
 
-            timer_id = window.setInterval("readLog()", 5000); 
+            timer_id = window.setInterval("readLog()", 2000); 
             show_log_id = $('#PingTxtPingResult')
         });
 
@@ -119,11 +119,20 @@ function readSize(){
                 json: json,
                 success: function(data) {
                     $('#catchPkglink').hide();
+                    if (data["data"] == "NOTCPDUMP")
+                    {
+                        AlertUtil.alertMsg(networktoolhtml.form2.tipLabel);
+                        $('#btnCatchPkgStart').attr("disabled",false);
+                        $('#btnCatchPkgStop').attr("disabled",true);
+                        return ;
+                    }
+                    timer_id = window.setInterval("readSize()", 2000); 
+                    show_log_id = $('#catchPkgLable')
+                    
                 }
             });
 
-            timer_id = window.setInterval("readSize()", 5000); 
-            show_log_id = $('#catchPkgLable')
+          
         });
 
         $('#btnCatchPkgStop').click(function(){
@@ -168,7 +177,7 @@ function readSize(){
                 }
             });
 
-            timer_id = window.setInterval("readLog()", 5000); 
+            timer_id = window.setInterval("readLog()", 2000); 
             show_log_id = $('#traceTxtResult')
         });
 
@@ -213,7 +222,7 @@ function readSize(){
                 }
             });
 
-            timer_id = window.setInterval("readSize()", 5000); 
+            timer_id = window.setInterval("readSize()", 2000); 
             show_log_id = $('#logLable')
         });
 

@@ -135,6 +135,11 @@ function system_module.system_get_status()
 		return status
 end
 
+local TMP_NETWORK_TOOL_LOG_FILE="/tmp/.network_tool_log"
+local TMP_TCPDUMP_FILE="/tmp/web_upload/tcpdump"
+local TMP_PKG_DOWNLOAD_FILE="/tz_www/html/manage/network_tool_log.tcpdump"
+local TMP_LOG_DOWNLOAD_FILE="/tz_www/html/manage/network_tool_log.log"
+
 function system_module.system_network_tool(tz_req)
 	
 	local tz_answer = {}
@@ -144,9 +149,9 @@ function system_module.system_network_tool(tz_req)
 		then
 			if "1" == tz_req["pingLoop"]
 			then
-				os.execute(string.format("ping %s %s > /tmp/.network_tool_log &", tz_req["pingNum"], tz_req["pingUrl"]))
+				os.execute(string.format("ping %s > %s &", tz_req["pingUrl"],TMP_NETWORK_TOOL_LOG_FILE))
 			else
-				os.execute(string.format("ping -c %s %s > /tmp/.network_tool_log &", tz_req["pingNum"], tz_req["pingUrl"]))
+				os.execute(string.format("ping -c %s %s > %s &", tz_req["pingNum"], tz_req["pingUrl"], TMP_NETWORK_TOOL_LOG_FILE))
 			end
 		end
 	elseif "ping_stop" == tz_req["tool"]
@@ -154,7 +159,7 @@ function system_module.system_network_tool(tz_req)
 		os.execute("ps | grep 'ping' | grep -v grep | awk '{print $1}' | xargs kill -9")
 	elseif "get_log" == tz_req["tool"]
 	then
-		local f = io.open("/tmp/.network_tool_log")
+		local f = io.open(TMP_NETWORK_TOOL_LOG_FILE)
 		local res = f:read("*a")
 		
 		tz_answer["data"] = res
@@ -165,33 +170,40 @@ function system_module.system_network_tool(tz_req)
 		then
 			tz_req["catchPackageIfname"] = x:get("network","wan","ifname")
 		end
-		os.execute(string.format("tcpdump -i %s > /tmp/.network_tool_log &", tz_req["catchPackageIfname"]))
+
+		if (util.is_file_exist(TMP_TCPDUMP_FILE) == true)
+		then
+			os.execute(string.format("chmod 755 %s", TMP_TCPDUMP_FILE))
+			os.execute(string.format("%s -i %s > %s &", TMP_TCPDUMP_FILE, tz_req["catchPackageIfname"],TMP_NETWORK_TOOL_LOG_FILE))
+		else
+			tz_answer["data"] = "NOTCPDUMP"
+		end
 
 	elseif "catch_pkg_stop" == tz_req["tool"]
 	then
 		os.execute("ps | grep 'tcpdump' | grep -v grep | awk '{print $1}' | xargs kill -9")
-		os.execute("ln -sf /tmp/.network_tool_log /tz_www/html/manage/network_tool_log.tcpdump ")
+		os.execute(string.format("ln -sf %s %s ", TMP_NETWORK_TOOL_LOG_FILE, TMP_PKG_DOWNLOAD_FILE))
 	elseif "get_size" == tz_req["tool"]
 	then
-		local f = io.popen("ls -l /tmp/.network_tool_log | awk '{print $5}'")
+		local f = io.popen(string.format("ls -l %s | awk '{print $5}'", TMP_NETWORK_TOOL_LOG_FILE))
 		tz_answer["data"] = f:read()
 		io.close(f)
 	elseif "trace_start" == tz_req["tool"]
 	then
 		if "" ~= tz_req["traceUrl"] 
 		then
-				os.execute(string.format("traceroute %s %s > /tmp/.network_tool_log &", tz_req["traceUrl"], tz_req["tracePort"]))
+				os.execute(string.format("traceroute %s %s > %s &", tz_req["traceUrl"], tz_req["tracePort"],TMP_NETWORK_TOOL_LOG_FILE))
 		end
 	elseif "trace_stop" == tz_req["tool"]
 	then
 		os.execute("ps | grep 'traceroute' | grep -v grep | awk '{print $1}' | xargs kill -9")
 	elseif "log_start" == tz_req["tool"]
 	then
-		os.execute("logread -f > /tmp/.network_tool_log &")
+		os.execute(string.format("logread -f > %s &", TMP_NETWORK_TOOL_LOG_FILE))
 	elseif "log_stop" == tz_req["tool"]
 	then
 		os.execute("ps | grep 'logread' | grep -v grep | awk '{print $1}' | xargs kill -9")
-		os.execute("ln -sf /tmp/.network_tool_log /tz_www/html/manage/network_tool_log.log ")
+		os.execute(string.format("ln -sf %s %s ", TMP_NETWORK_TOOL_LOG_FILE, TMP_LOG_DOWNLOAD_FILE))
 	end
 
 	return tz_answer

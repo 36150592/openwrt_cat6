@@ -56,6 +56,7 @@ define Package/tz_web/install
 	$(INSTALL_DIR) $(1)/tz_www/html/info
 	$(INSTALL_DIR) $(1)/tz_www/html/sys
 	$(INSTALL_DIR) $(1)/tz_www/html/update
+	$(INSTALL_DIR) $(1)/tz_www/html/manage
 
 
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/cgi-bin/* $(1)/tz_www/cgi-bin/
@@ -75,6 +76,7 @@ define Package/tz_web/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/html/info/* $(1)/tz_www/html/info
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/html/sys/* $(1)/tz_www/html/sys
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/html/update/* $(1)/tz_www/html/update
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/html/manage/* $(1)/tz_www/html/manage
        
         
 endef
