@@ -109,8 +109,8 @@ keygen()
 
 start_service()
 {
-	[ -s /etc/dropbear/dropbear_rsa_host_key -a \
-	  -s /etc/dropbear/dropbear_dss_host_key ] || keygen
+#	[ -s /etc/dropbear/dropbear_rsa_host_key -a \
+#	  -s /etc/dropbear/dropbear_dss_host_key ] || keygen
 
 	. /lib/functions.sh
 	. /lib/functions/network.sh

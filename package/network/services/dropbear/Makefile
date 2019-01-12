@@ -117,8 +117,8 @@ define Package/dropbear/install
 	$(INSTALL_BIN) ./files/dropbear.init $(1)/etc/init.d/dropbear
 	$(INSTALL_DIR) $(1)/usr/lib/opkg/info
 	$(INSTALL_DIR) $(1)/etc/dropbear
-	touch $(1)/etc/dropbear/dropbear_rsa_host_key
-	touch $(1)/etc/dropbear/dropbear_dss_host_key
+	# touch $(1)/etc/dropbear/dropbear_rsa_host_key
+	# touch $(1)/etc/dropbear/dropbear_dss_host_key
 endef
 
 define Package/dropbearconvert/install
