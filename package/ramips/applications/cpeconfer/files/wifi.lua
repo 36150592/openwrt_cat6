@@ -5,7 +5,7 @@ local util=require("tz.util")
 local x = uci.cursor()
 local WIFI_CONFIG_FILE="wireless"
 local WIFI_OPTION_DEVICE="wifi-device"
-local WIFI_OPTION_INTERFACE="wifi-ifame"
+local WIFI_OPTION_INTERFACE="wifi-iface"
 local WIFI_DRIVE_CONFIG_DIR="/etc/wireless"
 local debug = util.debug
 local split = util.split 
@@ -263,6 +263,24 @@ local function txpower_dbm_to_percent(txpower)
 	return value
 end
 
+local function get_wifi_mac(ifname)
+
+	if nil == ifname or "" == ifname
+	then
+		return nil
+	end
+
+	local f = io.popen(string.format("iwconfig %s | grep 'Access Point' | awk '{print $5}'", ifname))
+	if nil ~= f
+	then
+			local res = f:read()
+			io.close(f)
+			return res
+	end
+
+	return nil
+end
+
 --<------------	1	------>
 --.name	 = 	mt7603e
 --.anonymous	 = 	false
@@ -306,6 +324,7 @@ wifi_module.device = {
 	["password"] = nil,
 	["encry_algorithms"] = nil,
 	["connect_sta_number"] = nil,
+	["macaddr"] = nil,
 }
 
 function wifi_module.device:new(o,obj)
@@ -331,6 +350,7 @@ function wifi_module.device:new(o,obj)
 	self["password"] = obj["password"] or nil
 	self["encry_algorithms"] = obj["encry_algorithms"] or nil
 	self["connect_sta_number"] = obj["connect_sta_number"] or nil
+	self["mac"] = obj["mac"] or nil
    return o
 end
 
@@ -416,6 +436,7 @@ function wifi_module.wifi_get_dev()
 				elseif ("ifname" == k )
 				then
 					p_dev["interface_name"] = v
+					p_dev["mac"] = get_wifi_mac(v)
 				else
 					p_dev[k] = v
 				end
