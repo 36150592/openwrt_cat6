@@ -89,7 +89,10 @@ POSSIBILITY OF SUCH DAMAGE.
 // Include Files
 //---------------------------------------------------------------------------
 #include "QMIDevice.h"
-
+#include <linux/usb/cdc.h>
+#if (LINUX_VERSION_CODE > KERNEL_VERSION( 4,14,0 ))
+#include <linux/sched/signal.h>
+#endif
 static unsigned int pkt_data_handle = 0;
 
 //-----------------------------------------------------------------------------
@@ -98,7 +101,9 @@ static unsigned int pkt_data_handle = 0;
 
 extern int debug;
 extern int interruptible;
-
+//add a timer to get qmi response to replace interrupt by qiao 2019/01/13
+static struct timer_list qmi_timer;
+static int  time_out_val = 100;
 // Prototype to GobiSuspend function
 int GobiSuspend( 
    struct usb_interface *     pIntf,
@@ -415,8 +420,8 @@ void ReadCallback( struct urb * pReadURB )
       DBG( "Read status = %d\n", pReadURB->status );
 
       // Resubmit the interrupt URB
-      ResubmitIntURB( pDev->mQMIDev.mpIntURB );
-
+     // ResubmitIntURB( pDev->mQMIDev.mpIntURB );
+     mod_timer(&qmi_timer, jiffies +  msecs_to_jiffies(time_out_val));
       return;
    }
    DBG( "Read %d bytes\n", pReadURB->actual_length );
@@ -437,8 +442,8 @@ void ReadCallback( struct urb * pReadURB )
       DBG( "Read error parsing QMUX %d\n", result );
 
       // Resubmit the interrupt URB
-      ResubmitIntURB( pDev->mQMIDev.mpIntURB );
-
+      //ResubmitIntURB( pDev->mQMIDev.mpIntURB );
+       mod_timer(&qmi_timer,  jiffies +  msecs_to_jiffies(time_out_val));
       return;
    }
    
@@ -450,8 +455,8 @@ void ReadCallback( struct urb * pReadURB )
       DBG( "Data buffer too small to parse\n" );
 
       // Resubmit the interrupt URB
-      ResubmitIntURB( pDev->mQMIDev.mpIntURB );
-
+      //ResubmitIntURB( pDev->mQMIDev.mpIntURB );
+       mod_timer(&qmi_timer, jiffies +  msecs_to_jiffies(time_out_val));
       return;
    }
   #ifdef CONFIG_DHCP
@@ -633,9 +638,52 @@ void ReadCallback( struct urb * pReadURB )
    spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
 
    // Resubmit the interrupt URB
-   ResubmitIntURB( pDev->mQMIDev.mpIntURB );
-}
+   //ResubmitIntURB( pDev->mQMIDev.mpIntURB );
+   mod_timer(&qmi_timer,  jiffies +  msecs_to_jiffies(time_out_val));
 
+}
+/*===========================================================================
+METHOD:
+   bm_get_qmi_response_timer_func (Public Method)
+
+DESCRIPTION:
+   the timer function to submit a qmi response get control message.
+
+PARAMETERS
+   pDev       
+   
+RETURN VALUE:
+   None
+===========================================================================*/
+void bm_get_qmi_response_timer_func(unsigned long data)
+{
+	int status=0;
+	
+	sGobiUSBNet * pDev = (sGobiUSBNet *)data;
+        
+	if(!pDev)
+	{
+		DBG( "pDev error..\n" );
+		return; 
+	}
+	
+	usb_fill_control_urb( pDev->mQMIDev.mpReadURB,
+				   pDev->mpNetDev->udev,
+				   usb_rcvctrlpipe( pDev->mpNetDev->udev, 0 ),
+				   (unsigned char *)pDev->mQMIDev.mpReadSetupPacket,
+				   pDev->mQMIDev.mpReadBuffer,
+				   DEFAULT_READ_URB_LENGTH,
+				   ReadCallback,
+				   pDev );
+	status = usb_submit_urb( pDev->mQMIDev.mpReadURB, GFP_ATOMIC );
+	if (status != 0)
+	{
+		DBG( "Error submitting Read URB %d\n", status );
+	}
+       mod_timer(&qmi_timer,  jiffies +  msecs_to_jiffies(time_out_val));
+
+	
+}
 /*===========================================================================
 METHOD:
    IntCallback (Public Method)
@@ -677,8 +725,12 @@ void IntCallback( struct urb * pIntURB )
       // CDC GET_ENCAPSULATED_RESPONSE
       // Endpoint number is the wIndex value, which is the 5th byte in the
       // CDC GET_ENCAPSULTED_RESPONSE message
-      if ((pIntURB->actual_length == 8)
-      &&  (*(u64*)pIntURB->transfer_buffer == cpu_to_le64(CDC_GET_ENCAPSULATED_RESPONSE+ (pDev->mpEndpoints->mIntfNum * 0x100000000ll))))
+      sURBSetupPacket* p_setup = (sURBSetupPacket*)pIntURB->transfer_buffer;
+      
+      if(p_setup->mRequestType==0xa1 && p_setup->mRequestCode==0x01)
+  //    if ((pIntURB->actual_length ==8)
+  //    &&  
+   //   (*(u64*)pIntURB->transfer_buffer == cpu_to_le64(CDC_GET_ENCAPSULATED_RESPONSE+ (pDev->mpEndpoints->mIntfNum * 0x100000000ll))))
       {
          // Time to read
          usb_fill_control_urb( pDev->mQMIDev.mpReadURB,
@@ -748,8 +800,7 @@ RETURN VALUE:
 ===========================================================================*/
 int StartRead( sGobiUSBNet * pDev )
 {
-   int interval;
-
+//   int interval;
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device!\n" );
@@ -772,7 +823,15 @@ int StartRead( sGobiUSBNet * pDev )
       pDev->mQMIDev.mpReadURB = NULL;
       return -ENOMEM;
    }
-
+   
+    pDev->mQMIDev.orq = kmalloc(sizeof(struct usb_ctrlrequest), GFP_KERNEL);
+	if (!pDev->mQMIDev.orq)
+	{
+      DBG( "Error allocating int pDev->mQMIDev.orq\n" );
+      usb_free_urb( pDev->mQMIDev.mpReadURB );
+      pDev->mQMIDev.mpReadURB = NULL;
+      return -ENOMEM;
+   }
    // Create data buffers
    pDev->mQMIDev.mpReadBuffer = kmalloc( DEFAULT_READ_URB_LENGTH, GFP_KERNEL );
    if (pDev->mQMIDev.mpReadBuffer == NULL)
@@ -782,6 +841,8 @@ int StartRead( sGobiUSBNet * pDev )
       pDev->mQMIDev.mpIntURB = NULL;
       usb_free_urb( pDev->mQMIDev.mpReadURB );
       pDev->mQMIDev.mpReadURB = NULL;
+	  kfree(pDev->mQMIDev.orq);
+	  pDev->mQMIDev.orq=NULL;
       return -ENOMEM;
    }
    
@@ -795,6 +856,8 @@ int StartRead( sGobiUSBNet * pDev )
       pDev->mQMIDev.mpIntURB = NULL;
       usb_free_urb( pDev->mQMIDev.mpReadURB );
       pDev->mQMIDev.mpReadURB = NULL;
+	  kfree(pDev->mQMIDev.orq);
+	  pDev->mQMIDev.orq=NULL;
       return -ENOMEM;
    }      
    
@@ -811,32 +874,52 @@ int StartRead( sGobiUSBNet * pDev )
       pDev->mQMIDev.mpIntURB = NULL;
       usb_free_urb( pDev->mQMIDev.mpReadURB );
       pDev->mQMIDev.mpReadURB = NULL;
+	  kfree(pDev->mQMIDev.orq);
+	  pDev->mQMIDev.orq=NULL;
       return -ENOMEM;
    }
-
+   
    // CDC Get Encapsulated Response packet
    pDev->mQMIDev.mpReadSetupPacket->mRequestType = 0xA1;
-   pDev->mQMIDev.mpReadSetupPacket->mRequestCode = 1;
+   pDev->mQMIDev.mpReadSetupPacket->mRequestCode = USB_CDC_GET_ENCAPSULATED_RESPONSE;
    pDev->mQMIDev.mpReadSetupPacket->mValue = 0;
    pDev->mQMIDev.mpReadSetupPacket->mIndex = cpu_to_le16(pDev->mpEndpoints->mIntfNum);
    pDev->mQMIDev.mpReadSetupPacket->mLength = cpu_to_le16(DEFAULT_READ_URB_LENGTH);
 
-   interval = 9;
-
-   
+ //  interval = 9;   
    DBG( "StartRead submitted URD for read!\n" );
-   
+  /*
+  static inline void usb_fill_int_urb(struct urb *urb, 
+  * struct usb_device *dev, 
+  * unsigned int pipe, 
+  * void *transfer_buffer, 
+  * int buffer_length, 
+  * usb_complete_t complete_fn, 
+  * void *context, 
+  * int interval)
+   **/ 
    // Schedule interrupt URB
+#if 0
    usb_fill_int_urb( pDev->mQMIDev.mpIntURB,
                      pDev->mpNetDev->udev,
                      usb_rcvintpipe( pDev->mpNetDev->udev,
                                      pDev->mpEndpoints->mIntInEndp ),
                      pDev->mQMIDev.mpIntBuffer,
-                     8,
+                     usb_endpoint_maxp(&pDev->mpEndpoints->Intep_desc),
                      IntCallback,
                      pDev,
-                     interval );
+                     pDev->mpEndpoints->Intep_desc.bInterval );
    return usb_submit_urb( pDev->mQMIDev.mpIntURB, GFP_KERNEL );
+#else
+   init_timer(&qmi_timer);
+   qmi_timer.function = bm_get_qmi_response_timer_func;
+   qmi_timer.expires = jiffies +  msecs_to_jiffies(1000);
+   qmi_timer.data = (unsigned long) pDev;
+   add_timer(&qmi_timer);
+   
+   return 0;
+#endif	
+ 
 }
 
 /*===========================================================================
@@ -874,6 +957,9 @@ void KillRead( sGobiUSBNet * pDev )
    pDev->mQMIDev.mpReadBuffer = NULL;
    kfree( pDev->mQMIDev.mpIntBuffer );
    pDev->mQMIDev.mpIntBuffer = NULL;
+   
+   kfree(pDev->mQMIDev.orq);
+   pDev->mQMIDev.orq=NULL;
    
    // Release URB's
    usb_free_urb( pDev->mQMIDev.mpReadURB );
@@ -1199,7 +1285,8 @@ int WriteSync(
    int result;
    struct semaphore writeSem;
    struct urb * pWriteURB;
-   sURBSetupPacket writeSetup;
+ //  sURBSetupPacket writeSetup;
+   struct usb_ctrlrequest	*writeSetup;
    unsigned long flags;
 
    if (IsDeviceValid( pDev ) == false)
@@ -1214,8 +1301,8 @@ int WriteSync(
       DBG( "URB mem error\n" );
       return -ENOMEM;
    }
-   DBG( "FillQMUX clientID %d\n", clientID );
-
+   DBG( "FillQMUX clientID %d\n", clientID );   
+   writeSetup = pDev->mQMIDev.orq;
    // Fill writeBuffer with QMUX
    result = FillQMUX( clientID, pWriteBuffer, writeBufferSize, pDev->big_endian);
    if (result < 0)
@@ -1225,29 +1312,53 @@ int WriteSync(
    }
 
    // CDC Send Encapsulated Request packet
-   writeSetup.mRequestType = 0x21;
-   writeSetup.mRequestCode = 0;
-   writeSetup.mValue = 0;
-   writeSetup.mIndex = cpu_to_le16(pDev->mpEndpoints->mIntfNum);
-   writeSetup.mLength = cpu_to_le16(writeBufferSize);
-
+   writeSetup->bRequestType = 0x21;
+   writeSetup->bRequest = USB_CDC_SEND_ENCAPSULATED_COMMAND;
+   writeSetup->wValue = 0;
+   writeSetup->wIndex = cpu_to_le16(pDev->mpEndpoints->mIntfNum);
+   writeSetup->wLength = cpu_to_le16(writeBufferSize);
+/*
+static inline void usb_fill_control_urb(
+* struct urb *urb, 
+* struct usb_device *dev, 
+* unsigned int pipe, 
+* unsigned char *setup_packet, 
+* void *transfer_buffer, 
+* int buffer_length, 
+* usb_complete_t complete_fn, 
+* void *context) { 
+* urb->dev = dev; 
+* urb->pipe = pipe; 
+* urb->setup_packet = setup_packet; 
+* urb->transfer_buffer = transfer_buffer;
+* urb->transfer_buffer_length = buffer_length; 
+* urb->complete = complete_fn; 
+* urb->context = context;
+*  }
+* 	req->bRequestType = (USB_DIR_OUT | USB_TYPE_CLASS |
+			     USB_RECIP_INTERFACE);
+	req->bRequest = USB_CDC_SEND_ENCAPSULATED_COMMAND;
+	req->wValue = 0;
+	req->wIndex = desc->inum;
+	req->wLength = cpu_to_le16(count);
+ * */
    // Create URB   
    usb_fill_control_urb( pWriteURB,
                          pDev->mpNetDev->udev,
                          usb_sndctrlpipe( pDev->mpNetDev->udev, 0 ),
-                         (unsigned char *)&writeSetup,
+                         (unsigned char *)writeSetup,
                          (void*)pWriteBuffer,
                          writeBufferSize,
-                         NULL,
-                         pDev );
+                         WriteSyncCallback,
+                         &writeSem );
 
    DBG( "Actual Write:\n" );
    PrintHex( pWriteBuffer, writeBufferSize );
 
    sema_init( &writeSem, 0 );
    
-   pWriteURB->complete = WriteSyncCallback;
-   pWriteURB->context = &writeSem;
+  // pWriteURB->complete = WriteSyncCallback;
+ //  pWriteURB->context = &writeSem;
    
    // Wake device
 #ifdef CONFIG_PM	     
@@ -2863,7 +2974,7 @@ int RegisterQMIDevice( sGobiUSBNet * pDev )
    {
       return result;
    }
-
+   time_out_val = 30*1000; //
    // Create cdev
    cdev_init( &pDev->mQMIDev.mCdev, &UserspaceQMIFops );
    pDev->mQMIDev.mCdev.owner = THIS_MODULE;
@@ -2879,13 +2990,13 @@ int RegisterQMIDevice( sGobiUSBNet * pDev )
 
  
    // Match interface number (usb#)
-   pDevName = strstr( pDev->mpNetDev->net->name, "usb" );
+   pDevName = strstr( pDev->mpNetDev->net->name, "wwan" );
    if (pDevName == NULL)
    {
       DBG( "Bad net name: %s\n", pDev->mpNetDev->net->name );
       return -ENXIO;
    }
-   pDevName += strlen( "usb" );
+   pDevName += strlen( "wwan" );
    GobiQMIIndex = simple_strtoul( pDevName, NULL, 10 );
    if (GobiQMIIndex < 0)
    {
@@ -2955,6 +3066,7 @@ void DeregisterQMIDevice( sGobiUSBNet * pDev )
       return;
    }
    pDev->mbderegisterQMI = true;
+   del_timer(&qmi_timer);
 
    spin_lock_irqsave( &pDev->mQMIDev.mClientMemLock, flags );
    while (pDev->mQMIDev.mpClientMemList != NULL)
@@ -3066,7 +3178,11 @@ void DeregisterQMIDevice( sGobiUSBNet * pDev )
    // but exists to prevent an infinate loop just in case.
    for (tries = 0; tries < 30 * 100; tries++)
    {
-      int ref = atomic_read( &pDev->mQMIDev.mCdev.kobj.kref.refcount );
+#if (LINUX_VERSION_CODE > KERNEL_VERSION( 4,14,0 ))
+    int ref = atomic_read( &pDev->mQMIDev.mCdev.kobj.kref.refcount.refs );
+#else    
+    int ref = atomic_read( &pDev->mQMIDev.mCdev.kobj.kref.refcount );
+#endif
       if (ref > 1)
       {
          DBG( "cdev in use by %d tasks\n", ref - 1 ); 
@@ -3116,7 +3232,7 @@ bool QMIReady(
    struct semaphore readSem;
    u16 curTime;
    unsigned long flags;
-   u8 transactionID;
+   u8 transactionID=0;
    
    if (IsDeviceValid( pDev ) == false)
    {
@@ -3141,7 +3257,7 @@ bool QMIReady(
       // Start read
       sema_init( &readSem, 0 );
    
-      transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID );
+     // transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID );
       if (transactionID == 0)
       {
          transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID );

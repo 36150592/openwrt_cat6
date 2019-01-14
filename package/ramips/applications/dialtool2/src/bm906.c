@@ -491,7 +491,7 @@ const MDI bm906_moduleinfo=
 	"0",
 	"0",
 	"bm_gobi_net_906.ko",
-	"usb0",
+	"wwan0",
 }; 
 
 static int check_cpin_num = 0;

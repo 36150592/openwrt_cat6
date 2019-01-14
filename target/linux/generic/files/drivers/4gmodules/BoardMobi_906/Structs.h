@@ -200,8 +200,8 @@ typedef struct sURBSetupPacket
 } sURBSetupPacket;
 
 // Common value for sURBSetupPacket.mLength
-#define DEFAULT_READ_URB_LENGTH 0x1000
-
+//#define DEFAULT_READ_URB_LENGTH 0x1000
+#define DEFAULT_READ_URB_LENGTH 256
 
 /*=========================================================================*/
 // Struct sAutoPM
@@ -289,7 +289,7 @@ typedef struct sQMIDev
 
    /* Read setup packet */
    sURBSetupPacket *          mpReadSetupPacket;
-
+   struct usb_ctrlrequest	*orq;
    /* Read buffer attached to current read URB */
    void *                     mpReadBuffer;
    
@@ -345,6 +345,8 @@ typedef struct sEndpoints
 
    /* Bulk out endpoint */
    unsigned               mBlkOutEndp;
+   
+   struct usb_endpoint_descriptor Intep_desc;
 
 } sEndpoints;
 

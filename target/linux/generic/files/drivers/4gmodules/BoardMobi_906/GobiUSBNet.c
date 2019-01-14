@@ -144,6 +144,7 @@ sEndpoints * GatherEndpoints( struct usb_interface * pIntf )
       &&  usb_endpoint_xfer_int( &pEndpoint->desc ) == true)
       {
          pOut->mIntInEndp = pEndpoint->desc.bEndpointAddress;
+         pOut->Intep_desc = pEndpoint->desc;
       }
       else if (usb_endpoint_dir_in( &pEndpoint->desc ) == true
       &&  usb_endpoint_xfer_int( &pEndpoint->desc ) == false)
@@ -1109,260 +1110,62 @@ int GobiUSBNetStop( struct net_device * pNet )
    }
 }
 
-int PreparePacket(struct usbnet *dev, struct sk_buff *skb, gfp_t flags)
-{
-   char *dataPtr;
-   PQC_ETH_HDR ethHdr;
-   unsigned long ethLen;
 
-   dataPtr = (char *)skb->data;
-   ethLen = skb->len;
-   ethHdr = (PQC_ETH_HDR)dataPtr;
-
-   DBG( "IPO: -->_PreparePacket: EtherType 0x%04X\n", ethHdr->EtherType );
-
-   // examine Ethernet header
-   switch (ntohs(ethHdr->EtherType))
-   {
-      case ETH_TYPE_ARP:  // && IPV4
-      {
-         // locally process ARP under IPV4
-         ProcessARP(dev, skb);
-         return 0;
-      }
-      case ETH_TYPE_IPV4:
-      {
-         DBG( "IPO: _PreparePacket: IP 0x%04X\n", ntohs(ethHdr->EtherType) );
-         skb_pull(skb, ETH_HLEN);
-         return 1;
-      }
-
-      case ETH_TYPE_IPV6:
-      {
-         DBG( "IPO: _PreparePacket: IP 0x%04X\n", ntohs(ethHdr->EtherType) );
-         skb_pull(skb, ETH_HLEN);
-         return 1;
-      }
-      default:
-      {
-         DBG( "IPO: _PreparePacket: IP 0x%04X\n", ntohs(ethHdr->EtherType) );
-         return 0;
-      }
-   }
-}  // MPUSB_PreparePacket
-
-void ProcessARP(struct usbnet *dev, struct sk_buff *skb)
-{
-   PQC_ARP_HDR arpHdr;
-   char *tempHA[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-   int sz;
-   int bRespond = 0;
-   unsigned long Length = skb->len;
-   char *EthPkt;
-
-   EthPkt = (char *)skb->data;
-   DBG( "IPO: -->ProcessARP: %dB\n", (int)Length );
-
-   arpHdr = (PQC_ARP_HDR)(EthPkt + sizeof(QC_ETH_HDR));
-
-   // Ignore non-Ethernet HW type and non-request Operation
-   if ((ntohs(arpHdr->HardwareType) != 1) || (ntohs(arpHdr->Operation) != 1))
-   {
-      DBG( "IPO: ProcessARP: ignore HW %d OP %d\n", arpHdr->HardwareType, arpHdr->Operation);
-      return;
-   }
-
-   // Ignore non-IPV4 protocol type
-   if (ntohs(arpHdr->ProtocolType) != ETH_TYPE_IPV4)
-   {
-      DBG( "IPO: ProcessARP: ignore protocol %d\n", arpHdr->ProtocolType);
-      return;
-   }
-
-   // Validate HLEN and PLEN
-   if (arpHdr->HLEN != ETH_ALEN)
-   {
-      DBG( "IPO: ProcessARP: wrong HLEN %d\n", arpHdr->HLEN);
-      return;
-   }
-   if (arpHdr->PLEN != 4)
-   {
-      DBG( "IPO: ProcessARP: wrong PLEN %d\n", arpHdr->PLEN);
-      return;
-   }
-
-   // Ignore gratuitous ARP
-   if (arpHdr->SenderIP == arpHdr->TargetIP)
-   {
-      DBG( "IPO: ProcessARP: ignore gratuitous ARP (IP 0x%d)\n", (int)arpHdr->TargetIP);      
-      return;
-   }
-
-   // Request for HA
-   sz = memcmp(arpHdr->TargetHA, tempHA, ETH_ALEN);
-
-   if ((arpHdr->SenderIP != 0) && (ETH_ALEN== sz))
-   {
-      DBG( " IPO: ProcessARP: req for HA\n");      
-      bRespond = 1;
-   }
-   else
-   {
-      DBG( "IPO: ProcessARP: Ignore\n");      
-   }
-
-   if (bRespond == 1)
-   {
-      // respond with canned ARP
-      ArpResponse(dev, skb);
-   }
-
-   DBG( "IPO: <--ProcessARP: local rsp %d\n", bRespond);      
-}  // MPUSB_ProcessARP
-
-
-void ArpResponse(struct usbnet *dev, struct sk_buff *skb)
-{
-   PQC_ARP_HDR        arpHdr;
-   struct ethhdr *eth;
-   struct sk_buff *skbn;
-   sGobiUSBNet *pGobiDev;
-   char *p;
-   unsigned long Length = skb->len;
-
-   pGobiDev = (sGobiUSBNet *)dev->data[0];
-
-   DBG( "IPO: -->MPUSB_ArpResponse: ETH_Len %dB\n", (int)Length);      
-
-   skbn = netdev_alloc_skb(dev->net, Length);
-   skb_put(skbn, Length);
-
-
-   
-   
-   eth = (struct ethhdr *)skb_push(skbn,ETH_HLEN + sizeof(QC_ARP_HDR));
-   memcpy(eth->h_dest, dev->net->dev_addr, ETH_ALEN);
-   memset(eth->h_source, 0, ETH_ALEN);
-   eth->h_proto = __cpu_to_be16(ETH_P_IP);
-   skbn->dev = dev->net;
-   
-
-   // 3. Formulate the response
-   // Target: arpHdr->SenderHA & arpHdr->SenderIP
-   // Sender: pAdapter->MacAddress2 & pAdapter->IPSettings.IPV4.Address
-   p = (char *)eth;
-
-   // ARP Header
-   arpHdr = (PQC_ARP_HDR)(p + sizeof(QC_ETH_HDR));
-
-   // target/requestor MAC and IP
-   memcpy(arpHdr->TargetHA, arpHdr->SenderHA, ETH_ALEN);
-   // arpHdr->SenderIP = arpHdr->TargetIP;
-
-   // sender/remote MAC and IP
-   memcpy(arpHdr->SenderHA, eth->h_source, ETH_ALEN);
-   // arpHdr->TargetIP = pGobiDev->IPv4Addr;
-
-   // Operation: reply
-   arpHdr->Operation = ntohs(0x0002);
-
-   usbnet_skb_return(dev, skbn);
-   DBG( "IPO: IPO: <--MPUSB_ArpResponse\n");         
-}  // MPUSB_ArpResponse
-
-
-/*
 static struct sk_buff * GobiNetDriver_tx_fixup(struct usbnet *dev, struct sk_buff *skb, gfp_t flags)
 {
 
-   sGobiUSBNet *pGobiDev = (sGobiUSBNet *)dev->data[0];
-   //if(!pGobiDev->mdm9x07)
-  // {
-	return skb;
-   //}
-  // qmap_mux(skb, pGobiDev, 0);
+	// Skip Ethernet header from message
+	if (skb_pull(skb, ETH_HLEN)) {
+	//	printk_hex(skb->data,skb->len);
+		return skb;
+	} else {
+		dev_err(&dev->intf->dev,  "Packet Dropped ");
+	}
 
-   DBG( "TxFixup %d bytes Protocol %d\n", skb->len, skb->protocol );
-
- //  if (skb->len < 32)
- //     PrintHex( skb->data, skb->len);
-  // else
-   //   PrintHex( skb->data, 32);
-   
-   return skb;
-}*/
-static int GobiNetDriver_rx_fixup(struct usbnet *dev, struct sk_buff *skb_in)
+	// Filter the packet out, release it
+	dev_kfree_skb_any(skb);
+	return NULL;
+}
+static int GobiNetDriver_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
 {
-//   struct sk_buff *skbn;
-   struct sGobiUSBNet * pGobiDev;
- //  int offset = 0;
- //  int packet_len;
-  // int pad_len;
-//   qmap_t qhdr;
-   struct ethhdr *eth;
-   pGobiDev = (sGobiUSBNet *)dev->data[0];
-   if(!pGobiDev->mdm9x07)
-   {
-	 return 1;
-   }
+	
+	__be16 proto;
 
-   //while( offset < skb_in->len )
-   {
-      //qhdr = (qmap_t) (skb_in->data + offset);
-      //pad_len = qhdr->cd_rsvd_pad & 0x3f;
-      //packet_len = (qhdr->pkt_len[0] << 8) | (qhdr->pkt_len[1]);
+	/* This check is no longer done by usbnet */
+	if (skb->len < dev->net->hard_header_len)
+		return 0;
 
-     // if (skb_in->data[offset] & 0x80) {
-         /* drop the packet, we do not know what to do */
-     //    printk("Dropping command packet\n");
-     //    return 1;
-    //  }
-    //  skbn = netdev_alloc_skb(dev->net, packet_len);
-    //  skb_put(skbn, packet_len);
-    //  memcpy(skbn->data, skb_in->data + offset + sizeof(struct qmap_hdr), packet_len);
-  switch(skb_in->data[0] & 0xf0) 
-  {
-        case 0x40:
-                skb_in->protocol = __cpu_to_be16(ETH_P_IP);
-                break;
-        case 0x60:
-                skb_in->protocol = __cpu_to_be16(ETH_P_IPV6);
-                break;
-        default:
-                printk("L3 protocol decode error: 0x%02x, len %d\n",
-                       skb_in->data[0] & 0xf0, skb_in->len);
-   }
-
-   if(pskb_expand_head(skb_in, ETH_HLEN, 0, GFP_ATOMIC))
-   {
-	   printk("pskb_expand_head fail\n");
-	   return 0;
-   }
-      eth = (struct ethhdr *)skb_push(skb_in,ETH_HLEN);
-      memcpy(eth->h_dest, dev->net->dev_addr, ETH_ALEN);
-      memset(eth->h_source, 0, ETH_ALEN);
-      if(skb_in->protocol == __cpu_to_be16(ETH_P_IP))
-      {
-       		eth->h_proto = __cpu_to_be16(ETH_P_IP);
-      }
-     else
-     {
-		 eth->h_proto = __cpu_to_be16(ETH_P_IPV6);
-     }
-	 // skb_in->dev = dev->net;
-
-      DBG( "RxFixup %d bytes\n", skb_in->len );
-      
-      //if (skb_in->len < 32)
-     //    PrintHex( skb_in->data, skb_in->len);
-    //  else
-    //     PrintHex( skb_in->data, 32);
-
-    //  usbnet_skb_return(dev, skb_in);
-    //  offset += (packet_len + sizeof(struct qmap_hdr));
-
-   }
-   return 1;
+	switch (skb->data[0] & 0xf0) {
+	case 0x40:
+		proto = htons(ETH_P_IP);
+		break;
+	case 0x60:
+		proto = htons(ETH_P_IPV6);
+		break;
+	case 0x00:
+	
+		if (is_multicast_ether_addr(skb->data))
+			return 1;
+		/* possibly bogus destination - rewrite just in case */
+		skb_reset_mac_header(skb);
+		goto fix_dest;
+	default:
+		/* pass along other packets without modifications */
+		return 1;
+	}
+	if (skb_headroom(skb) < ETH_HLEN)
+		return 0;
+	skb_push(skb, ETH_HLEN);
+	skb_reset_mac_header(skb);
+	eth_hdr(skb)->h_proto = proto;
+#if (LINUX_VERSION_CODE > KERNEL_VERSION( 3,16,0 ))
+	eth_zero_addr(eth_hdr(skb)->h_source);
+#else
+	memset(eth_hdr(skb)->h_source,0,ETH_ALEN);
+#endif
+fix_dest:
+	memcpy(eth_hdr(skb)->h_dest, dev->net->dev_addr, ETH_ALEN);
+	return 1;
 }
 /*
 static ssize_t
@@ -1523,12 +1326,12 @@ static struct attribute *dev_attrs[] =
 static const struct driver_info GobiNetInfo =
 {
    .description   = "GobiNet Ethernet Device",
-   //.flags         =  FLAG_LINK_INTR,
+	.flags		= FLAG_WWAN,
    .bind          = GobiNetDriverBind,
    .unbind        = GobiNetDriverUnbind,
    .data          = 0,
    .rx_fixup      = GobiNetDriver_rx_fixup,
-   //.tx_fixup      = GobiNetDriver_tx_fixup,
+   .tx_fixup      = GobiNetDriver_tx_fixup,
 };
 
 /*=========================================================================*/
@@ -1553,6 +1356,10 @@ static const struct usb_device_id GobiVIDPIDTable [] =
    // Broadmobi BM906
    { 
       USB_DEVICE( 0x2020, 0x2063 ),
+      .driver_info = (unsigned long)&GobiNetInfo 
+   },
+   { 
+      USB_DEVICE( 0x2020, 0x2060 ),
       .driver_info = (unsigned long)&GobiNetInfo 
    },
    //Terminating entry
@@ -1641,7 +1448,8 @@ int GobiUSBNetProbe(
    pGobiDev->mdm9x40 = (pDev->udev->descriptor.idProduct == cpu_to_le16(0x9025));
    if(!pGobiDev->mdm9x40)
 	  pGobiDev->mdm9x40 = (pDev->udev->descriptor.idProduct == cpu_to_le16(0x2063));
-   pGobiDev->mdm9x07 = (pDev->udev->descriptor.idProduct == cpu_to_le16(0x2040));
+pGobiDev->mdm9x07 = (pDev->udev->descriptor.idProduct == cpu_to_le16(0x2040)) ||  (pDev->udev->descriptor.idProduct == cpu_to_le16(0x2060));
+ //  pGobiDev->mdm9x07 = (pDev->udev->descriptor.idProduct == cpu_to_le16(0x2060));
    if(pGobiDev->mdm9x07)
    {
 	  DBG( "bm817 device\n" );
@@ -1753,19 +1561,18 @@ int GobiUSBNetProbe(
    pDev->net->netdev_ops = pNetDevOps;
 
    // set ETHER
+  #if 0
+   pDev->net->header_ops      = NULL;  /* No header */
+   pDev->net->type            = ARPHRD_NONE;
+   pDev->net->hard_header_len = 0;
+   pDev->net->addr_len        = 0;
+   pDev->net->flags           = IFF_POINTOPOINT | IFF_NOARP | IFF_MULTICAST;  
+  // pDev->net->needed_headroom = sizeof(struct qmap_hdr);
+  #endif
   
-   if(pGobiDev->mdm9x07)
-   {
-   	pDev->net->header_ops = 0;  /* No header */
-   	pDev->net->type = ARPHRD_ETHER;
-   	//pDev->net->needed_headroom = sizeof(struct qmap_hdr);
-   }
-   // pDev->net->header_ops      = NULL;  /* No header */
-   // pDev->net->type            = ARPHRD_ETHER;
-   // pDev->net->hard_header_len = 0;
-   // pDev->net->addr_len        = 0;
-   //pDev->net->flags           = IFF_NOARP;   
-   // pDev->net->needed_headroom = sizeof(struct qmap_hdr);
+  ether_setup(pDev->net);
+  pDev->net->flags          |= IFF_NOARP ;
+//		netdev_dbg(net, "mode: Ethernet\n");
 #endif
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,31 ))
