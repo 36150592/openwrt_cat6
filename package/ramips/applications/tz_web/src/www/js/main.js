@@ -27,6 +27,20 @@ var RequestCmd = {
     GET_SYS_STATUS: 113,
     ROUTER_INFO: 133,
     NETWORK_TOOL: 145
+	
+	APPLY_FILTER: 20,
+	PORT_FILTER: 21,
+	IP_FILTER: 22,
+    MAC_FILTER: 23,
+    IP_MAC_BINDING: 24,
+    SPEED_LIMIT: 25,
+    URL_FILTER: 26,
+    OTHER_FILTER: 27,
+	
+    NETWORK_TOOLS: 145,
+	
+    BACKUP_FIREWALL: 163,
+    NETWORK_SERVICE: 172
 
 };
 
@@ -41,7 +55,17 @@ var MenuItem = {
     SYS_SET: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/sys/sysConfigIndex.html" },
     SYS_LOG: { cmd: RequestCmd.SYS_LOG, url: "html/manage/sysLog.html" },
     SYS_UPDATE:	{ cmd: RequestCmd.SYS_UPDATE, url: "html/update/sysUpdate.html" },
-    NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
+	NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
+	
+	FW_RULE: { cmd: RequestCmd.PORT_FILTER, url: "html/firewall/firewall.html" },
+    FW_MAC_FILTER: { cmd: RequestCmd.MAC_FILTER, url: "html/firewall/firewall.html" },
+    FW_IP_MAC_BINDING: { cmd: RequestCmd.IP_MAC_BINDING, url: "html/firewall/firewall.html" },
+    FW_URL_FILTER: { cmd: RequestCmd.URL_FILTER, url: "html/firewall/firewall.html" },
+    FW_PORT_MAPPING: { cmd: RequestCmd.OTHER_FILTER, url: "html/firewall/firewall.html" },
+    FW_SPEED_LIMIT: { cmd: RequestCmd.SPEED_LIMIT, url: "html/firewall/firewall.html" },
+    FW_DMZ: { cmd: RequestCmd.NETWORK_SERVICE, url: "html/firewall/dmz.html" },
+    FW_ALG: { cmd: RequestCmd.NETWORK_SERVICE, url: "html/firewall/alg.html" },
+    FW_BACKUP_FIREWALL: { cmd: RequestCmd.BACKUP_FIREWALL, url: "html/firewall/backup.html" }
 };
 
 var JSONMethod = {
@@ -211,7 +235,7 @@ var ConvertUtil = {
         return sb.toString();
     },
     timeStamp:function(StatusMinute){
-       var day=parseInt(StatusMinute/3600/24);
+        var day=parseInt(StatusMinute/3600/24);
         var hour=parseInt(StatusMinute/3600%24);
         var min= parseInt(StatusMinute/60% 60);
         StatusMinute="";
@@ -300,7 +324,8 @@ var SysUtil = {
                 ratio = maxCount / count;
                 if (ratio >= 3) count += 3;
                 else if (ratio >= 2) count += 2;
-                else if (ratio > 1 && maxCount - count > delayCount) count++;
+                //else if (ratio > 1 && maxCount - count > delayCount) count++;
+				else  count++;
             }
             if (count <= maxCount) {
                 $info.text(message + DOC.comma + PROMPT.status.progress+" " + parseInt((100 * count) / maxCount) + "%");
@@ -319,6 +344,23 @@ var SysUtil = {
         //var url = "xml_action.cgi?Action=Upload&file=upgrade&command=" + command;
 
         var datas = null;
+		
+        SysUtil.showProgress(ProgressTime.UPLOAD_FILE, PROMPT.status.uploading,
+                function() {
+                        return datas != null;
+                    },
+                    function() {
+                        if (datas.success) {
+                            AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
+                        } else {
+                            //SysUtil.processMsg(datas.message);
+							 AlertUtil.alertMsg(datas.message);
+                        }
+                        if ($.isFunction(callback)) {
+                            callback(updateFileName);
+                        }
+                    }
+        );
         $form.ajaxSubmit({
             url: url,
             type: 'POST',
@@ -347,7 +389,8 @@ var SysUtil = {
                         if (datas.success) {
                             AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
                         } else {
-                            SysUtil.processMsg(datas.message);
+                            //SysUtil.processMsg(datas.message);
+							 AlertUtil.alertMsg(datas.message);
                         }
                         if ($.isFunction(callback)) {
                             callback(updateFileName);
@@ -497,6 +540,26 @@ var CheckUtil = {
 
         return validate.form();
     },
+	checkIp: function(ip, isIpv6) {
+		//console.log(ip);
+        if(isIpv6 != "IPV6"){
+            var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
+            return reg.test(ip);
+        } else {
+            return  ( /::/g.test(ip) && ip.match(/::/g).length == 1
+                && (/^([\da-f]{1,4}(:|::)){1,6}[\da-f]{1,4}$/i.test(ip)
+                || /^([\da-f]{1,4}(:|::)){1,6}[\da-f]{1,4}\/\d{1,3}$/i.test(ip)
+                || /^::[\da-f]{1,4}$/i.test(ip)
+                || /^::[\da-f]{1,4}\/\d{1,3}$/i.test(ip)))
+                || /^([\da-f]{1,4}:){7}[\da-f]{1,4}$/i.test(ip)
+                || /^([\da-f]{1,4}:){7}[\da-f]{1,4}\/\d{1,3}$/i.test(ip);
+        }
+
+    },
+	checkMac: function(mac) {
+        var reg = /^([0-9a-f]{2}[\:|\-]){5}[0-9a-f]{2}$/i;
+        return reg.test(mac);
+    },
     checkNetSegment: function(lanip, netMask, ip){
         var lanips = ConvertUtil.ip4ToNum(lanip);
         var netMasks = ConvertUtil.ip4ToNum(netMask);
@@ -508,6 +571,7 @@ var CheckUtil = {
 
 var Page = {
     AUTH:"",
+	menuItem: null,
     isNULLToSpace: false,
     currentId: 0,
     sessionId: "",
@@ -663,6 +727,16 @@ var Page = {
         if (!datas) datas = DOC;
 
         $(containerId).html(_.template($(templateId).html(), datas));
+    },
+	getPreHostname: function() {
+    	var hostname = FormatUtil.formatField(location.hostname);
+    	var lastIndex = hostname.lastIndexOf('.');
+    	if (lastIndex > 0) {
+    		hostname = hostname.substring(0, lastIndex + 1);
+    	} else {
+    		hostname = "192.168.0.";
+    	}
+    	return hostname;
     },
     setStripeTable: function(id) {
         var $tab = $(id || 'table.detail');
@@ -820,6 +894,8 @@ var Page = {
     }
 
 };
+
+
 
 function isIE() {
     if (!!window.ActiveXObject || "ActiveXObject" in window)

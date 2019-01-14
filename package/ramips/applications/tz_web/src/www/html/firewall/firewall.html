@@ -1,0 +1,926 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render('#fwTabs', '#fwTabs_template', TAB.fw);
+        Page.render('#fwBtns', '#fwBtns_template', DOC);
+        Page.render('#default_box', '#defaultBox_template', DOC);
+
+        var $detailBox = $('.detail_box').hide();
+        var $lis = $("ul.tabs a");
+        var $boxes = $("div.tab_boxes > div"), $btnAdd = $('#btnAdd'), $btnApply = $('#btnApply'), $btnCleanAll = $('#btnCleanAll');
+        var $box = $('#edit_box'), $mask = $('#mask');
+        var $acceptAlls = $('input[name=acceptAll]'),
+            $acceptAll6s = $('input[name=acceptAll6]');
+        var $btnShifts = $('input[id^=btnShift]'), $lblShift = $('#lblShift');
+        var currentPannelIndex = 0;
+        var isPageRequests = [false, false, false, false, false, false, false, false];
+        var defaultCmd = RequestCmd.DEFAULT_FILTER;
+
+        $lis.click(function() {
+            $lis.removeClass("current");
+            $(this).addClass("current");
+            var pannelIndex = $lis.index(this);
+            $boxes.eq(pannelIndex).show().siblings().hide();
+
+            var hasEnableLink = true;
+            currentPannelIndex = pannelIndex;
+            if (pannelIndex == 7) {
+                $lblShift.hide();
+                $btnShifts.hide();
+                $btnAdd.hide();
+                $btnCleanAll.show();
+            } else {
+                $btnCleanAll.hide();
+                $lblShift.show();
+                $btnShifts.show();
+                $btnAdd.show();
+            }
+            if (!isPageRequests[pannelIndex]) {
+                isPageRequests[pannelIndex] = true;
+
+                var customTitles = [], customFieldNames = [];
+                switch (pannelIndex) {
+                    case 0:
+                        customTitles = [DOC.net.ipv46, DOC.net.protocol, DOC.net.port, DOC.lbl.remark];
+                        customFieldNames = ["ippro", "protocol", "port", "comment"];
+                        break;
+                    case 1:
+                        customTitles = [DOC.net.ipv46, DOC.net.protocol, DOC.net.ip, DOC.lbl.remark];
+                        customFieldNames = ["ippro", "protocol", "ipaddr", "comment"];
+                        break;
+                    case 2:
+                        customTitles = [DOC.net.ipv46, DOC.net.mac, DOC.lbl.remark];
+                        customFieldNames = ["ippro", "mac", "comment"];
+                        break;
+                    case 3:
+                        hasEnableLink = false;
+                        customTitles = [DOC.net.ipv46, DOC.net.port, DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
+                        customFieldNames = ["protocol", "port", "mappingIp", "mappingPort", "remark"];
+                        break;
+                    case 4:
+                        customTitles = [DOC.net.ipv46, DOC.net.url, DOC.lbl.remark];
+                        customFieldNames = ["ippro", "url", "remark"];
+                        break;
+                    case 5:
+                        hasEnableLink = false;
+                        customTitles = [DOC.net.ipv46, DOC.net.ip, DOC.net.mac, DOC.lbl.remark];
+                        customFieldNames = ["ippro", "ip", "mac", "remark"];
+                        break;
+                    case 6:
+                        hasEnableLink = false;
+                        customTitles = [DOC.net.ipv46, DOC.net.ip, DOC.net.maxSpeed, DOC.lbl.remark];
+                        customFieldNames = ["ippro", "ip", "maxSpeed", "remark"];
+                        break;
+                    default:
+                        break;
+                }
+
+                var cmd = (pannelIndex == 7) ? defaultCmd : filterOptions.getRequestCmd(pannelIndex);
+
+                Page.postJSON({
+                    json: {
+                        cmd: cmd,
+                        method: JSONMethod.GET,
+						getfun: true
+                    },
+                    success: function(data) {
+                        if (pannelIndex == 7) {
+                            if (data.data && data.data.length > 1) {
+                                InputUtil.setRadiosSelectedValue($acceptAlls, data.data[0].acceptAll);
+                                InputUtil.setRadiosSelectedValue($acceptAll6s, data.data[1].acceptAll);
+                            }
+                        } else {
+						   
+                            createFilterTable({
+                                pannelIndex: pannelIndex,
+                                datas: data.data || [],
+                                requiredSave: false,
+                                hasEnableLink: hasEnableLink,
+                                customTitles: customTitles,
+                                customFieldNames: customFieldNames
+                            });
+                        }
+                    }
+                });
+            } else {
+                createTableDelegate(99);
+            }
+        });
+
+        $btnShifts.click(function() {
+            createTableDelegate($btnShifts.index(this));
+        });
+
+        $acceptAlls.click(function() {
+            Page.postJSON({
+                json: {
+                    cmd: defaultCmd,
+                    method: JSONMethod.POST,
+                    success: true,
+                    datas: [{enableRule: true, acceptAll: eval($('input[name=acceptAll]').filter(':checked').val()), ippro: "IPV4"},
+                        {enableRule: true, acceptAll: eval($('input[name=acceptAll6]').filter(':checked').val()), ippro: "IPV6"}]
+                },
+                success: function(data) {
+                    $btnApply.enable();
+                }
+            });
+        });
+
+        $acceptAll6s.click(function() {
+            Page.postJSON({
+                json: {
+                    cmd: defaultCmd,
+                    method: JSONMethod.POST,
+                    success: true,
+                    datas: [{enableRule: true, acceptAll: eval($('input[name=acceptAll]').filter(':checked').val()), ippro: "IPV4"},
+                        {enableRule: true, acceptAll: eval($('input[name=acceptAll6]').filter(':checked').val()), ippro: "IPV6"}]
+                },
+                success: function(data) {
+                    $btnApply.enable();
+                }
+            });
+        });
+
+        $btnAdd.click(function() {
+            $mask.show();
+            $box.show();
+            SysUtil.setBoxStyle($box);
+
+            switch(currentPannelIndex) {
+                case 0:
+                    processPortFilter();
+                    break;
+
+                case 1:
+                    processIpFilter();
+                    break;
+
+                case 2:
+                    processMacFilter();
+                    break;
+
+                case 3:
+                    processPortMapping();
+                    break;
+
+                case 4:
+                    processUrlFilter();
+                    break;
+
+                case 5:
+                    processIpMacBinding();
+                    break;
+
+                case 6:
+                    processSpeedLimit();
+                    break;
+
+                default:
+                    break;
+            }
+        });
+
+        $btnApply.click(function() {
+           // AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
+            Page.postJSON({
+                //$id: $btnApply,
+                json: {
+                    cmd: RequestCmd.APPLY_FILTER,
+                    method: JSONMethod.POST
+                },
+                success: function(data) {
+                    if (data.success == "success") {
+                     AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
+                     } else {
+                     AlertUtil.alertMsg(PROMPT.status.applyRuleFail);
+                     }
+                }
+            });
+        });
+
+        $btnCleanAll.click(function() {
+            if(!confirm(PROMPT.confirm.clearAllRules)){
+                return false;
+            }
+
+            Page.postJSON({
+                $id: $btnCleanAll,
+                json: {
+                    cmd: RequestCmd.CLEAN_ALL_FILTER,
+                    method: JSONMethod.POST
+                },
+                success: function(data) {
+                    if (data.success) {
+                        AlertUtil.alertMsg(PROMPT.status.clearAllRulesSuccess);
+                    } else {
+                        AlertUtil.alertMsg(PROMPT.status.clearAllRulesFail);
+                    }
+                },
+                complete: function() {
+                    $('#FW_RULE').click();
+                }
+            });
+        });
+
+        function createTableDelegate(shiftIndex) {
+            $('#hddShiftIndex' + currentPannelIndex).val(shiftIndex);
+            $('#btnDelegate' + currentPannelIndex).click();
+        }
+
+        function shiftItem(shiftIndex, selectedIndex, length) {
+            switch(shiftIndex) {
+                case 0: selectedIndex = 0; break;
+                case 1: selectedIndex--; break;
+                case 2: selectedIndex++; break;
+                case 3: selectedIndex = length; break;
+                default: break;
+            }
+            return selectedIndex;
+        }
+
+        var filterOptions = {
+            requiredSave: true,
+            hasEnableLink: true,
+            pannelIndex: 0,
+            selectedIndex: 0,
+            listBoxIds: ['port_box', 'ip_box', 'mac_box', 'port_mapping_box', 'url_box', 'ip_mac_binding_box', 'speed_limit_box', 'default_box'],
+            editBoxId: 'edit_box',
+            btnSaveId: 'btnSaveRule',
+            datas: [],
+            getDatas: function() {
+                return this.datas;
+            },
+            setDatas: function(datas) {
+                this.datas = datas;
+            },
+            urls: [
+                'html/firewall/portFilter.html',
+                'html/firewall/ipFilter.html',
+                'html/firewall/macFilter.html',
+                'html/firewall/portMapping.html',
+                'html/firewall/urlFilter.html',
+                'html/firewall/ipMacBinding.html',
+                'html/firewall/speedLimit.html',
+                ''
+            ],
+            cmds: [
+                RequestCmd.PORT_FILTER,
+                RequestCmd.IP_FILTER,
+                RequestCmd.MAC_FILTER,
+                RequestCmd.OTHER_FILTER,
+                RequestCmd.URL_FILTER,
+                RequestCmd.IP_MAC_BINDING,
+                RequestCmd.SPEED_LIMIT,
+                RequestCmd.DEFAULT_FILTER
+            ],
+            customTitles: [],
+            customFieldNames: [],
+            getRequestCmd: function(pannelIndex) {
+                return this.cmds[pannelIndex || this.pannelIndex];
+            },
+            getUrl: function() {
+                return this.urls[this.pannelIndex];
+            },
+            getListBoxId: function() {
+                return this.listBoxIds[this.pannelIndex];
+            },
+            getIdByIndex: function(i) {
+                return (this.pannelIndex + 1) * 10000 + i;
+            },
+            getIndexById: function(id) {
+                var num = parseInt(id, 10);
+                if (!isNaN(num)) {
+                    return num % 10000;
+                }
+                return 0;
+            },
+            setApplyButtonStatus: function(value) {
+                if (!value) {
+                    $btnApply.disable();
+                } else {
+                    $btnApply.enable();
+                }
+            },
+            setShiftButtonsStatus: function() {
+                var selectedIndex = this.getSelectedIndex();
+                var length = this.getDatas().length;
+                if (length <= 1) {
+                    $btnShifts.disable();
+                } else {
+                    if (selectedIndex == 0) {
+                        $btnShifts.eq(0).disable();
+                        $btnShifts.eq(1).disable();
+                        $btnShifts.eq(2).enable();
+                        $btnShifts.eq(3).enable();
+                    } else if (selectedIndex == (length - 1)) {
+                        $btnShifts.eq(0).enable();
+                        $btnShifts.eq(1).enable();
+                        $btnShifts.eq(2).disable();
+                        $btnShifts.eq(3).disable();
+                    } else {
+                        $btnShifts.enable();
+                    }
+                }
+            },
+            setSelectedIndex: function(selectedIndex) {
+                this.selectedIndex = selectedIndex;
+            },
+            getSelectedIndex: function() {
+                return this.selectedIndex;
+            },
+            getItem: function() {
+                return JSON.parse($('#hddItem' + this.pannelIndex).val());
+            },
+            setItem: function(item) {
+                $('#hddItem' + this.pannelIndex).val(JSON.stringify(item));
+            }
+        };
+
+        function createFilterTable(options) {
+            options = $.extend({}, filterOptions, options || {});
+
+            var datas = options.getDatas();
+		
+            if (options.requiredSave) {
+                Page.postJSON({
+                    json: {
+                        cmd: options.getRequestCmd(),
+                        method: JSONMethod.POST,
+                        success: true,
+                        datas: datas
+                    },
+                    success: function(data) {
+					    //console.log(data);
+                    }
+                });
+            } else {
+                options.requiredSave = true;
+            }
+
+            var sb = new StringBuilder();
+            sb.append('<table class="list" cellspacing="0">');
+            sb.append(String.format('<tr><th>{0}</th><th>{1}</th><th class="index">{2}</th>',
+                DOC.table.enableRule, DOC.table.selected, DOC.table.priority));
+
+            var titles = options.customTitles;
+            var pannelIndex = options.pannelIndex;
+            for (var i = 0; i < titles.length; i++) {
+                sb.append(String.format('<th>{0}</th>', titles[i]));
+            }
+
+            var hasEnableLink = options.hasEnableLink;
+            if (hasEnableLink) {
+                sb.append(String.format('<th>{0}</th><th>{1}</th>',
+                    DOC.table.filterMode, DOC.table.changeFilterMode));
+            }
+            sb.append(String.format('<th>{0}', DOC.table.delRule));
+            sb.append(String.format('<input type="hidden" id="hddItem{0}" value="null" />', pannelIndex));
+            sb.append(String.format('<input type="hidden" id="hddShiftIndex{0}" value="0" />', pannelIndex));
+            sb.append(String.format('<span style="display:none"><input type="button" id="btnDelegate{0}" value="Delegate" /></span>', pannelIndex));
+            sb.append('</th></tr>');
+			//console.log(datas);
+            var length = datas.length;
+            var selectedIndex = options.getSelectedIndex();
+            if (selectedIndex >= length) {
+                selectedIndex = length - 1;
+            }
+            if (selectedIndex < 0) {
+                selectedIndex = 0;
+            }
+            // 保存修改后的级别
+            options.setSelectedIndex(selectedIndex);
+            options.setShiftButtonsStatus();
+
+            var fieldNames = options.customFieldNames;
+            for(var i = 0; i < length; i++) {
+                var item = datas[i];
+                if (item == null) continue;
+
+                var id = options.getIdByIndex(i);
+                sb.append(String.format('<tr id="trRule{0}"{1}>', id, !item.iswork ? ' class="disabled"' : ''));
+                sb.append(String.format('<td><input type="checkbox" id="chkRule{0}" {1} /></td>', id,
+                    item.iswork ? ' checked="checked"' : ''));
+                sb.append(String.format('<td><input type="radio" id="radRule{0}" name="radRule{1}" {2} /></td>', id, pannelIndex,
+                    selectedIndex == i ? ' checked="checked"' : ''));
+                sb.append(String.format('<td>{0}</td>', i + 1));
+
+                for (var j = 0; j < fieldNames.length; j++) {
+                    sb.append(String.format('<td>{0}</td>', eval("item." + fieldNames[j]) || ""));
+                }
+
+                if (hasEnableLink) {
+                    sb.append(String.format('<td>{0}</td>', item.action == "ACCEPT" ?
+                        String.format('<span class="ok">{0}</span>', DOC.status.accept) :
+                        String.format('<span class="fail">{0}</span>', DOC.status.reject)));
+                    sb.append(String.format('<td><a href="javascript:;" id="lnkEnableLink{0}" class="common">{1}</a></td>', id,
+                        item.action == "ACCEPT"? DOC.status.reject : DOC.status.accept));
+                }
+                sb.append(String.format('<td><a href="javascript:;" id="lnkRuleDel{0}">{1}</a></td>', id, DOC.table.del));
+
+                sb.append('</tr>');
+            }
+            sb.append('</table>');
+
+            $boxes.eq(pannelIndex).html(sb.toString());
+            Page.setStripeTable(String.format('#{0} table', options.getListBoxId()));
+
+            $('#btnDelegate' + pannelIndex).click(function() {
+
+                var shiftIndex = parseInt($('#hddShiftIndex' + pannelIndex).val(), 10);
+                if (shiftIndex < 0) {
+                    // 小于0时为新增
+                    datas.push(options.getItem());
+
+                    options.setApplyButtonStatus(true);
+                    options.setSelectedIndex(datas.length - 1);
+                } else if (shiftIndex == 99) {
+                    options.setShiftButtonsStatus();
+                } else {
+                    var selectedIndex = options.getSelectedIndex();
+                    var item = datas[selectedIndex];
+                    datas.splice(selectedIndex, 1);
+
+                    selectedIndex = shiftItem(shiftIndex, selectedIndex, datas.length);
+                    datas.splice(selectedIndex, 0, item);
+
+                    options.setApplyButtonStatus(true);
+                    options.setSelectedIndex(selectedIndex);
+                }
+                createFilterTable(options);
+            });
+
+            $(String.format('tr[id^=trRule{0}]', pannelIndex + 1)).click(function() {
+                $(this.id.replace("trRule", "#radRule")).click();
+            });
+
+            $(String.format('input[name=radRule{0}]', pannelIndex)).click(function(e) {
+                // 阻止事件冒泡
+                e.stopPropagation();
+
+                var selectedIndex = options.getIndexById(this.id.replace("radRule", ""));
+
+                options.setSelectedIndex(selectedIndex);
+                options.setShiftButtonsStatus();
+            });
+
+            $(String.format('input[id^=chkRule{0}]', pannelIndex + 1)).click(function(e) {
+                e.stopPropagation();
+
+                var selectedIndex = options.getIndexById(this.id.replace("chkRule", ""));
+                try {
+                    var item = datas[selectedIndex];
+                    if ($(this).attr("checked")) {
+                        item.iswork = true;
+                    } else {
+                        item.iswork = false;
+                    }
+
+                    options.setApplyButtonStatus(true);
+                    createFilterTable(options);
+                } catch(e) {
+                }
+            });
+
+            $(String.format('a[id^=lnkEnableLink{0}]', pannelIndex + 1)).click(function(e) {
+                e.stopPropagation();
+                var selectedIndex = options.getIndexById(this.id.replace("lnkEnableLink", ""));
+                try {
+                    var item = datas[selectedIndex];
+                    if (item.iswork) {
+                       item.action = item.action == "ACCEPT" ? "DROP" : "ACCEPT";
+                        options.setApplyButtonStatus(true);
+                        createFilterTable(options);
+                    }
+                } catch(e) {
+                }
+            });
+
+            $(String.format('a[id^=lnkRuleDel{0}]', pannelIndex + 1)).click(function(e) {
+                e.stopPropagation();
+
+                var selectedIndex = options.getIndexById(this.id.replace("lnkRuleDel", ""));
+                try {
+                    datas.splice(selectedIndex, 1);
+
+                    options.setApplyButtonStatus(true);
+                    createFilterTable(options);
+                } catch(e) {
+                }
+            });
+        }
+
+        function processFilter(options) {
+            options = $.extend({}, filterOptions, options || {});
+            options.pannelIndex = currentPannelIndex;
+
+           // Page.getHtml(options.getUrl(), MenuItem.FW_RULE.cmd + options.pannelIndex, function(data) {
+			 $box.load(options.getUrl(),function () {
+                    
+              
+               // $box.html(data);
+                $box.css({
+                    width: options.width,
+                    height: options.height
+                });
+				
+                var tab = String.format('#{0} table', options.editBoxId);
+                Page.setStripeTable(tab);
+                $(tab + ' input[type=text]:first').focus();
+				
+                $('#' + options.btnSaveId).click(function() {
+                    var item = options.getSavingItem();
+                    if (!item) return;
+
+                    options.setItem(item);
+                    createTableDelegate(-1);
+                    $mask.hide();
+                    $box.hide();
+                });
+			});
+           // });
+        }
+
+        function getCommonItem(hasIPV46) {
+            var item = {};
+			
+            //item.enableRule = true;
+            item.protocol = $('input[name=protocol]').filter(':checked').val();
+
+            var $enableLinks = $('input[name=enableLink]');
+            if ($enableLinks.length > 0) {
+                item.action = $enableLinks.filter(':checked').val();
+            }
+            //item.remark = $('#txtRemark').val().trim();
+			item.comment = $('#txtRemark').val().trim();
+            if(hasIPV46){
+                item.ippro = $('input[name=ippro]').filter(':checked').val();
+            }
+           
+            return item;
+        }
+
+        function processSpeedLimit() {
+            processFilter({
+                width: "700px",
+                height: "auto",
+                getSavingItem: function() {
+                    var ip = $('#txtIp').val().trim().replace(/ /g, '');
+                    if (ip == "") {
+                        AlertUtil.alertMsg(CHECK.required.ip);
+                        return false;
+                    }
+
+                    var item = getCommonItem(true);
+                    if (!CheckUtil.checkIp(ip, item.ippro)) {
+                        AlertUtil.alertMsg(CHECK.format.ip);
+                        return false;
+                    }
+
+                    var maxSpeed = $('#txtMaxSpeed').val().trim();
+                    if (maxSpeed == "") {
+                        AlertUtil.alertMsg(CHECK.required.maxSpeed);
+                        return false;
+                    }
+
+                    var theMaxSpeed = parseInt(maxSpeed, 10);
+                    if (isNaN(theMaxSpeed) || theMaxSpeed <= 0) {
+                        AlertUtil.alertMsg(CHECK.format.maxSpeed);
+                        return false;
+                    }
+
+                    var mtu = parseInt($('#hddMtu').val(), 10) || 1500;
+                    var packetNum = parseInt((theMaxSpeed * 1024) / mtu, 10);
+
+                    item.ip = ip;
+                    item.maxSpeed = theMaxSpeed + " KB/s";
+                    item.packetNum = packetNum;
+
+                    return item;
+                }
+            });
+        }
+
+        function processIpMacBinding() {
+            processFilter({
+                width: "700px",
+                height: "auto",
+                getSavingItem: function() {
+                    var ip = $('#txtIp').val().trim().replace(/ /g, '');
+                    if (ip == "") {
+                        AlertUtil.alertMsg(CHECK.required.ip);
+                        return false;
+                    }
+
+                    var item = getCommonItem(true);
+                    if (!CheckUtil.checkIp(ip, item.ippro)) {
+                        AlertUtil.alertMsg(CHECK.format.ip);
+                        return false;
+                    }
+
+                    var mac = $('#txtMac').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
+                    if (mac == "") {
+                        AlertUtil.alertMsg(CHECK.required.mac);
+                        return false;
+                    }
+
+                    if (!CheckUtil.checkMac(mac)) {
+                        AlertUtil.alertMsg(CHECK.format.mac);
+                        return false;
+                    }
+
+                    item.ip = ip;
+                    item.mac = mac;
+
+                    return item;
+                }
+            });
+        }
+
+        function processPortMapping() {
+            processFilter({
+                width: "700px",
+                height: "auto",
+                getSavingItem: function() {
+                    var port = parsePort($('#txtPort').val());
+                    if (!port) return false;
+
+                    var mappingIp = $('#txtMappingIp').val();
+                    if (mappingIp == "") {
+                        AlertUtil.alertMsg(CHECK.required.ip);
+                        return false;
+                    }
+
+                    if (!CheckUtil.checkIp(mappingIp)){
+                        AlertUtil.alertMsg(CHECK.format.ip);
+                        return false;
+                    }
+
+                    var theMappingPort = $('#txtMappingPort').val();
+                    if (theMappingPort == "") {
+                        AlertUtil.alertMsg(CHECK.required.port);
+                        return false;
+                    }
+
+                    var mappingPortArr = CheckUtil.checkPort(theMappingPort);
+                    if (!mappingPortArr.isValid) {
+                        AlertUtil.alertMsg(CHECK.format.port);
+                        return false;
+                    }
+                    var mappingPort = mappingPortArr.port;
+
+                    var item = getCommonItem();
+                    item.port = port;
+                    item.mappingIp = mappingIp;
+                    item.mappingPort = mappingPort;
+                    item.mappingIpPort = String.format("{0}:{1}", mappingIp, mappingPort);
+
+                    return item;
+                }
+            });
+        }
+
+        function processUrlFilter() {
+            processFilter({
+                width: "800px",
+                height: "auto",
+                getSavingItem: function() {
+                    var url = $('#txtUrl').val().trim().replace(/ /g, '');
+                    if (url == "") {
+                        AlertUtil.alertMsg(CHECK.required.urlKeyword);
+                        return false;
+                    }
+
+                    var item = getCommonItem(true);
+                    item.url = url;
+
+                    return item;
+                }
+            });
+        }
+
+        function processMacFilter() {
+            processFilter({
+                width: "700px",
+                height: "auto",
+                getSavingItem: function() {
+                    var mac = $('#txtMac').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
+                    if (mac == "") {
+                        AlertUtil.alertMsg(CHECK.required.mac);
+                        return false;
+                    }
+
+                    if (!CheckUtil.checkMac(mac)) {
+                        AlertUtil.alertMsg(CHECK.format.mac);
+                        return false;
+                    }
+                    var item = getCommonItem(false);
+                    item.mac = mac;
+
+                    return item;
+                }
+            });
+        }
+
+        function processIpFilter() {
+            processFilter({
+                width: "800px",
+                height: "auto",
+                getSavingItem: function() {
+                    var ip = $('#txtIp').val().trim().replace(/ /g, '');
+                    if (ip == "") {
+                        AlertUtil.alertMsg(CHECK.required.ip);
+                        return false;
+                    }
+
+                    var item = getCommonItem(false);
+                    var ips = ip.split('-');
+
+                    if (ips.length > 2 || !CheckUtil.checkIp(ips[0], item.ippro) || (ips.length == 2 && !CheckUtil.checkIp(ips[1], item.ippro))
+
+                    ) {
+                        AlertUtil.alertMsg(CHECK.format.ip);
+                        return false;
+                    }
+
+                    item.ipaddr = ip;
+                    return item;
+                }
+            });
+        }
+
+        function processPortFilter() {
+            processFilter({
+                width: "800px",
+                height: "auto",
+                getSavingItem: function() {
+                    var port = parsePort($('#txtPort').val());
+                    if (!port) return false;
+
+                    var item = getCommonItem(false);
+                    item.port = port;
+                    return item;
+                }
+            });
+        }
+
+        function parsePort(thePort) {
+            var port = thePort.trim().replace(/ /g, ''), port1, port2, pre = '';
+            if (port == "") {
+                AlertUtil.alertMsg(CHECK.required.port);
+                return false;
+            }
+            if (port.startsWith('<') || port.startsWith('>')) {
+                pre = port.substring(0, 1);
+                port = port.substring(1);
+            }
+
+            var ports = port.split('-');
+            if (ports.length <= 2) {
+                port1 = parseInt(ports[0], 10);
+                if (isNaN(port1)) {
+                    AlertUtil.alertMsg(CHECK.format.port);
+                    return false;
+                } else if (port1 < 0 || port1 > 65535) {
+                    AlertUtil.alertMsg(CHECK.range.port);
+                    return false;
+                } else if (ports.length == 2) {
+                    port2 = parseInt(ports[1], 10);
+                    if (pre != '' || isNaN(port2)) {
+                        AlertUtil.alertMsg(CHECK.required.port);
+                        return false;
+                    }
+                    if (port2 < 0 || port2 > 65535) {
+                        AlertUtil.alertMsg(CHECK.range.port);
+                        return false;
+                    }
+                    if (port2 < port1) {
+                        AlertUtil.alertMsg(CHECK.format.portRange);
+                        return false;
+                    }
+                    port = port1 + '-' + port2;
+                } else {
+                    port = pre + port1.toString();
+                }
+
+                return port;
+            } else {
+                AlertUtil.alertMsg(CHECK.required.port);
+                return false;
+            }
+            return port;
+        };
+
+        function setLisState(arr) {
+            $lis.hide();
+
+            for (var i = 0, max = arr.length; i < max; i++) {
+               // $lis.eq(arr[i]).show().click();
+				$lis.eq(arr[i]).show();
+            }
+        }
+
+        switch(Page.menuItem.cmd) {
+            case RequestCmd.PORT_FILTER:
+                defaultCmd = RequestCmd.DEFAULT_FILTER;
+                setLisState([0, 1, 7]);
+                $lis.eq(0).click();
+                break;
+
+            case RequestCmd.MAC_FILTER:
+                defaultCmd = RequestCmd.MAC_DEFAULT_FILTER;
+                setLisState([2, 7]);
+                $lis.eq(2).click();
+                break;
+
+            case RequestCmd.OTHER_FILTER:
+                setLisState([3]);
+                $lis.eq(3).click();
+                break;
+
+            case RequestCmd.URL_FILTER:
+                defaultCmd = RequestCmd.URL_DEFAULT_FILTER;
+                setLisState([4, 7]);
+                $lis.eq(4).click();
+                break;
+
+            case RequestCmd.IP_MAC_BINDING:
+                setLisState([5]);
+                $lis.eq(5).click();
+                break;
+
+            case RequestCmd.SPEED_LIMIT:
+                setLisState([6]);
+                $lis.eq(6).click();
+                break;
+        }
+        $detailBox.show();
+    });
+</script>
+
+<div class="detail_box">
+    <div class="tab_menu">
+        <ul class="tabs" id="fwTabs">
+            <script type="text/template" id="fwTabs_template">
+                <li><a href="javascript:;"><%- portFiltering %></a></li>
+                <li><a href="javascript:;"><%- ipFiltering %></a></li>
+                <li><a href="javascript:;"><%- macFiltering %></a></li>
+                <li><a href="javascript:;"><%- portMapping %></a></li>
+                <li><a href="javascript:;"><%- urlFiltering %></a></li>
+                <li><a href="javascript:;"><%- ipMacBinding %></a></li>
+                <li><a href="javascript:;"><%- speedLimit %></a></li>
+                <li><a href="javascript:;"><%- defaultSetting %></a></li>
+            </script>
+        </ul>
+    </div>
+    <div class="tab_menu_bottom"></div>
+
+    <div class="tab_boxes">
+        <div id="port_box"></div>
+        <div id="ip_box"></div>
+        <div id="mac_box"></div>
+        <div id="port_mapping_box"></div>
+        <div id="url_box"></div>
+        <div id="ip_mac_binding_box"></div>
+        <div id="speed_limit_box"></div>
+        <div id="default_box" style="display: none;">
+            <script type="text/template" id="defaultBox_template">
+                <fieldset style="width: 60%;padding: 10px 40px;line-height: 25px;">
+                    <legend><%- lbl.ipv4FilterRule %></legend>
+                    <div>
+                        <input type="radio" name="acceptAll" value="true" checked="checked" />&nbsp;<%= lbl.accept %>
+                    </div>
+                    <div>
+                        <input type="radio" name="acceptAll" value="false" />&nbsp;<%= lbl.reject %>
+                    </div>
+                </fieldset>
+                <fieldset style="width: 60%;padding: 10px 40px;line-height: 25px;display: none;">
+                    <legend><%- lbl.ipv6FilterRule %></legend>
+                    <div>
+                        <input type="radio" name="acceptAll6" value="true" checked="checked" />&nbsp;<%= lbl.accept %>
+                    </div>
+                    <div>
+                        <input type="radio" name="acceptAll6" value="false" />&nbsp;<%= lbl.reject %>
+                    </div>
+                </fieldset>
+                <br />
+            </script>
+        </div>
+    </div>
+    <div class="tab_btns" id="fwBtns">
+        <script type="text/template" id="fwBtns_template">
+            <input id="btnAdd" type="button" value="<%- btn.addRule %>" />
+            &nbsp;&nbsp;
+            <label id="lblShift"><%- lbl.priority %></label>
+            <input id="btnShiftTop" type="button" value="<%- btn.top %>" />
+            <input id="btnShiftUp" type="button" value="<%- btn.moveUp %>" />
+            <input id="btnShiftDown" type="button" value="<%- btn.moveDown %>" />
+            <input id="btnShiftBottom" type="button" value="<%- btn.bottom %>" />
+            &nbsp;&nbsp;
+            <input id="btnApply" type="button" value="<%- btn.applyRules %>" />
+            &nbsp;&nbsp;
+            <input id="btnCleanAll" type="button" value="<%- btn.clearAllRules %>" />
+        </script>
+    </div>
+</div>
+

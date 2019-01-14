@@ -8,21 +8,15 @@ local sim = require "tz.sim"
 local modem = require "tz.modem"
 local device = require "tz.device"
 local network = require "tz.network"
+local firewall = require "tz.firewall"
 local uti = require "tz.util"
-
 
 local WEB_PATH = "/tz_www"
 print("Contenttype:text/html\n")
 
-
 local envf = io.popen("env")
 local envv = envf:read("*a")
 io.close(envf)
-
---local fe = io.open("/tmp/env.txt","w")
---fe:write(envv)
---io.close(fe)
-
 
 local tz_req
 
@@ -703,19 +697,89 @@ function get_routerinfo()
 end
 
 
+function firewall_restart()
 
-
-function update_sys()
-
-	file = io.open("../test.bin", "wb")
-    io.output(file)
-    io.write(tz_req["file"])
-	
-    local tz_answer = {}
-	tz_answer["cmd"] = 5   
-	tz_answer["success"] = true
+	local tz_answer = {}
+	tz_answer["cmd"] = 21   
+	tz_answer["success"] = firewall.firewall_restart()
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
+
+end
+
+function port_filter()
+
+	local tz_answer = {}
+	tz_answer["cmd"] = 21   
+	
+    local datas = tz_req["datas"]
+	local getfun = tz_req["getfun"]
+ 
+	if (getfun)
+	then
+	  local data_array = firewall.firewall_get_port_filter_list() or ''
+	  tz_answer["data"] = data_array
+	  tz_answer["success"] = true
+	else
+	  tz_answer["success"] = firewall.firewall_set_port_filter_list(datas)
+		
+	end
+
+	
+
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function ip_filter()
+
+	local tz_answer = {}
+	tz_answer["cmd"] = 22   
+	
+    local datas = tz_req["datas"]
+	local getfun = tz_req["getfun"]
+ 
+	if (getfun)
+	then
+	  local data_array = firewall.firewall_get_ip_filter_list() or ''
+	  tz_answer["data"] = data_array
+	  tz_answer["success"] = true
+	else
+	  tz_answer["success"] = firewall.firewall_set_ip_filter_list(datas)
+		
+	end
+
+	
+
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function mac_filter()
+
+	local tz_answer = {}
+	tz_answer["cmd"] = 23   
+	
+    local datas = tz_req["datas"]
+	local getfun = tz_req["getfun"]
+ 
+	if (getfun)
+	then
+	  local data_array = firewall.firewall_get_mac_filter_list() or ''
+	  tz_answer["data"] = data_array
+	  tz_answer["success"] = true
+	else
+	  tz_answer["success"] = firewall.firewall_set_mac_filter_list(datas)
+		
+	end
+
+	
+
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
 
 end
 
@@ -729,7 +793,6 @@ function network_tool()
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 end
-
 
 function upload_file()
 	local UploadDir = "/tmp/web_upload/"
@@ -761,7 +824,11 @@ local switch = {
      [0] = get_sysinfo,
      [2] = set_wifi,
 	 [3] = set_dhcp,
-	 [5] = upload_file,
+	 [5] = update_sys,
+	 [20] = firewall_restart,
+	 [21] = port_filter,
+	 [22] = ip_filter,
+	 [23] = mac_filter,
 	 [43] = get_diviceinfo,
      [80] = iniPage,
 	 [97] = change_language,
@@ -775,8 +842,7 @@ local switch = {
 	 [201] = get_wifi5,
 	 [202] = set_wifi5
  }
-
-
+ 
 cmdid = uti.get_env_cmdId(envv)
 if cmdid ~= nil
 then
@@ -793,9 +859,6 @@ else
 	    f()
 	end
 end
-
-
-
  
  
 
