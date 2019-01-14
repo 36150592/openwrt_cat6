@@ -15,43 +15,7 @@
             SysUtil.upload($('#form1'), $('#fp'), "system", function(fileName) {
                 theUpdateFileName = fileName;
                 closeBox();
-            });
-			
-		   // var selectedFile = document.getElementById('fp').files[0];
-           // var name = selectedFile.name;//读取选中文件的文件名
-           // var size = selectedFile.size;//读取选中文件的大小
-           // console.log(document.getElementById('fp').value);
-           // console.log("文件名:"+name+"大小:"+size);
-           // var dataFile = "";
-           // var reader = new FileReader();
-           
-           // reader.onload = function (evt) {
-           //     dataFile = evt.target.result;
-           //     console.log(dataFile);
-           //     Page.postJSON({
-            //        json: {
-           //             cmd:5,
-           //             method: JSONMethod.POST,
-           //             file:dataFile
-           //         },
-					
-          //          success: function(data) {
-          //              console.log(data);
-           //         },
-          //          fail: function(data) {
-
-
-               //     },
-            //        complete: function() {
-
-            //        }
-           //     });
-
-           // };
-          //  reader.readAsBinaryString(selectedFile);
-
-
-           
+            }); 
         });
 
         function update() {
@@ -97,99 +61,30 @@
         }
 
         $('#btnUpdatePartial').bind('click', function() {
-            if (Page.isTestUser) {
-                if (theUpdateFileName == "") {
+            
+            if (theUpdateFileName == "") {
                     AlertUtil.alertMsg(CHECK.required.uploadFile);
                     return false;
-                }
             }
+            
 
             Page.postJSON({
                 json: {
-                    cmd: RequestCmd.UPDATE_PARTIAL,
-                    updateType: UpdateType.CLIENT,
+                    cmd: RequestCmd.UPDATE_PARTIAL, 
                     method: JSONMethod.POST,
                     fileName: theUpdateFileName
                 },
                 success: function(data) {
-                    console.log("success" + data);
-                    if (data.success) {
-                        datas = data;
-                    }
-                    else
-                    {
-                        datas = data;
-                    }
+                    console.log("success" + data); 
                 },
                 fail: function(data) {
                     console.log("fail" + data);
-                    datas = data;
                 }
             });
 
-            update();
+          //  update();
         });
 
-        function beginUpdate() {
-            update();
-            Page.postJSON({
-                json: {
-                    cmd: RequestCmd.REMOTE_UPGRADE,
-                    method: JSONMethod.POST,
-                    subcmd: 3
-                },
-                success: function(data) {
-                    var msg = data.message;
-                    if (!msg.startsWith("0:")) {
-                        datas = data;
-                        datas.success = false;
-                    }
-                },
-                fail: function(data) {
-                    datas = data;
-                }
-            });
-        }
-
-        var $btnUpdate = $('#btnUpdate');
-        $btnUpdate.bind('click', function() {
-            Page.postJSON({
-                $id: $btnUpdate,
-                json: {
-                    cmd: RequestCmd.REMOTE_UPGRADE,
-                    method: JSONMethod.POST,
-                    subcmd: 2
-                },
-                success: function(data) {
-                    var msg = data.message;
-                    if(msg.indexOf("needreboot1")>0)
-                    {
-                        needreboot=1;
-                    }
-                    else
-                    {
-                        needreboot=0;
-                    }
-
-                    //去掉needrebootx这样的信息
-                    msg=msg.replace( /needreboot\d/,"" );
-
-                    if (msg.startsWith("7:")) {
-                        AlertUtil.alertMsg(PROMPT.status.hasUpdated);
-                    } else if (msg.startsWith("12:")) {
-                        if (AlertUtil.confirm(PROMPT.status.updatingAvailable)) {
-                            beginUpdate();
-                        }
-                    } else {
-                        var index = msg.indexOf(':');
-                        if (index >= 0 && index < 3) {
-                            msg = msg.substring(index + 1);
-                        }
-                        AlertUtil.alertMsg(msg);
-                    }
-                }
-            });
-        });
     });
 
 </script>

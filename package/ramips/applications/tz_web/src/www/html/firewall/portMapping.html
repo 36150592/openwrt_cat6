@@ -1,0 +1,59 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render('#fwHead', '#fwHead_template');
+        Page.render('#fwBody', '#fwBody_template');
+
+        $('.hostname_head').text(Page.getPreHostname());
+
+        $('#btnCloseRule').click(function() {
+            var $box = $('#edit_box'), $mask = $('#mask');
+            $box.hide();
+            $mask.hide();
+        });
+    });
+</script>
+
+<div class="detail" id="fwHead">
+    <script type="text/template" id="fwHead_template">
+        <div id="edit_title"><%- title.addPortMapping %></div>
+        <div id="edit_close"><input id="btnCloseRule" type="button" value="<%- btn.close %>" /></div>
+        <div style="clear:both;"></div>
+    </script>
+</div>
+<div id="fwBody">
+    <script type="text/template" id="fwBody_template">
+        <table class="detail" cellspacing="0">
+            <tr>
+                <th><%- net.protocol %><%- colon %></th>
+                <td>
+                    <input type="radio" name="protocol" value="tcp" checked="checked" /><%- net.tcp %>&nbsp;
+                    <input type="radio" name="protocol" value="udp" /><%- net.udp %>&nbsp;
+                </td>
+            </tr>
+            <tr>
+                <th><%- net.port %><%- colon %></th>
+                <td>
+                    <input type="text" id="txtPort" name="txtPort" class="normal" maxlength="10" /><span class="cmt"><%- lbl.example %><%- colon %>80(http), 443(https)</span>
+                </td>
+            </tr>
+            <tr>
+                <th><%- net.mappingIp %><%- colon %></th>
+                <td><input type="text" id="txtMappingIp" name="txtMappingIp" class="normal" maxlength="50" /><span class="cmt"><%- lbl.example %><%- colon %><span class="hostname_head"></span>100</span></td>
+            </tr>
+            <tr>
+                <th><%- net.mappingPort %><%- colon %></th>
+                <td><input type="text" id="txtMappingPort" name="txtMappingPort" class="normal" maxlength="10" /><span class="cmt"><%- lbl.example %><%- colon %>8080</span></td>
+            </tr>
+            <tr>
+                <th><%- lbl.remark %><%- colon %></th>
+                <td><input type="text" id="txtRemark" name="txtRemark" class="larger" maxlength="99" /></td>
+            </tr>
+            <tr>
+                <th>&nbsp;</th>
+                <td><input type="button" id="btnSaveRule" value="<%- btn.save %>"/></td>
+            </tr>
+        </table>
+    </script>
+</div>

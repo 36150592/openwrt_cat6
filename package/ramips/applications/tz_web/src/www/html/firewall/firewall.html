@@ -55,8 +55,8 @@
                         break;
                     case 3:
                         hasEnableLink = false;
-                        customTitles = [DOC.net.ipv46, DOC.net.port, DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
-                        customFieldNames = ["protocol", "port", "mappingIp", "mappingPort", "remark"];
+						customTitles = [DOC.net.ip, DOC.net.port, DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
+                        customFieldNames = ["dest_addr", "dest_port", "redirect_addr", "redirect_port", "comment"];
                         break;
                     case 4:
                         customTitles = [DOC.net.ipv46, DOC.net.url, DOC.lbl.remark];
@@ -670,10 +670,10 @@
                     var mappingPort = mappingPortArr.port;
 
                     var item = getCommonItem();
-                    item.port = port;
-                    item.mappingIp = mappingIp;
-                    item.mappingPort = mappingPort;
-                    item.mappingIpPort = String.format("{0}:{1}", mappingIp, mappingPort);
+                    item.dest_addr = location.hostname;
+                    item.dest_port = port;
+                    item.redirect_addr = mappingIp;
+                    item.redirect_port = mappingPort;
 
                     return item;
                 }
@@ -691,7 +691,7 @@
                         return false;
                     }
 
-                    var item = getCommonItem(true);
+                    var item = getCommonItem(false);
                     item.url = url;
 
                     return item;

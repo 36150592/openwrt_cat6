@@ -168,8 +168,10 @@
 
                     var runtime = ConvertUtil.timeStamp(data_system.runtime || 0);
                     values_run.push(runtime);
-                    values_run.push(data_system.cpu_average1 || loading + ", " + data_system.cpu_average5 || loading + ", " + data_system.cpu_average15 || loading);
-                    values_run.push(data_system.mem_total ? FormatUtil.formatField(data_system.mem_total, 'KB') : loading);
+                    values_run.push((data_system.cpu_average1 || loading) + ", " + (data_system.cpu_average5 || loading) + ", " + (data_system.cpu_average15 || loading));
+                    values_run.push("MemTotal "+ (data_system.mem_total ? FormatUtil.formatField(data_system.mem_total, 'KB') : loading) +
+                                    "MemFree " + (data_system.mem_free ? FormatUtil.formatField(data_system.mem_free, 'KB') : loading) +
+                                    "Cached  " + (data_system.mem_cache ? FormatUtil.formatField(data_system.mem_cache, 'KB') : loading));
 
                     names_sim.push(DOC.lbl.usim);
                     names_sim.push(DOC.lbl.pinCode);
@@ -184,7 +186,7 @@
                     names_net.push(DOC.lbl.dialMode);
                     names_net.push(DOC.lbl.dialState);
 
-                    values_net.push(DOC.lbl.manualDial);
+                    values_net.push(DOC.lbl.autoDial);
                     values_net.push(DOC.status.connected);
 
 

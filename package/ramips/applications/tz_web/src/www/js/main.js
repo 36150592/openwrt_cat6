@@ -18,12 +18,14 @@ var RequestCmd = {
     WIRELESS_CONFIG: 2,
     NETWORK_CONFIG: 3,
     SYS_UPDATE: 5,
+	SYS_REBOOT: 6,
     SYS_LOG: 17,
     DEVICE_VERSION_INFO: 43,
     INIT_PAGE: 80,
     CHANGE_LANGUAGE: 97,
     LOGIN: 100,
     CHANGE_PASSWD: 102,
+	UPDATE_PARTIAL: 106,
     GET_SYS_STATUS: 113,
     ROUTER_INFO: 133,
     NETWORK_TOOL: 145,
@@ -339,28 +341,8 @@ var SysUtil = {
         loop();
     },
     upload: function($form, $file, command, callback) {
-        //var url = String.format("{0}?cmd={1}&method=POST&sessionId={2}&language={3}", Url.DEFAULT_CGI, RequestCmd.SYS_UPDATE, Page.sessionId, Page.language);
         var url = String.format("{0}?cmd={1}&method=POST",  '/cgi-bin/lua.cgi', RequestCmd.SYS_UPDATE);
-        //var url = "xml_action.cgi?Action=Upload&file=upgrade&command=" + command;
-
-        var datas = null;
-		
-        SysUtil.showProgress(ProgressTime.UPLOAD_FILE, PROMPT.status.uploading,
-                function() {
-                        return datas != null;
-                    },
-                    function() {
-                        if (datas.success) {
-                            AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
-                        } else {
-                            //SysUtil.processMsg(datas.message);
-							 AlertUtil.alertMsg(datas.message);
-                        }
-                        if ($.isFunction(callback)) {
-                            callback(updateFileName);
-                        }
-                    }
-        );
+        
         $form.ajaxSubmit({
             url: url,
             type: 'POST',
@@ -377,38 +359,36 @@ var SysUtil = {
                     updateFileName = matchs[2];
                 }
 
-                if(!confirm(PROMPT.confirm.uploadFile + updateFileName)){
+                if(confirm(PROMPT.confirm.uploadFile + updateFileName)){
+                    SysUtil.showProgress(ProgressTime.UPLOAD_FILE, PROMPT.status.uploading,
+                        function() {
+                            return false;
+                        },
+                        function() {
+                            AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
+                            if ($.isFunction(callback)) {
+                                callback(updateFileName);
+                            }
+                        }
+                    );
+
+                    return true;
+
+                }else {
                     return false;
                 }
 
-                SysUtil.showProgress(ProgressTime.UPLOAD_FILE, PROMPT.status.uploading,
-                function() {
-                        return datas != null;
-                    },
-                    function() {
-                        if (datas.success) {
-                            AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
-                        } else {
-                            //SysUtil.processMsg(datas.message);
-							 AlertUtil.alertMsg(datas.message);
-                        }
-                        if ($.isFunction(callback)) {
-                            callback(updateFileName);
-                        }
-                    }
-                );
 
-                return true;
+
             },
-            success: function(data, statusText) {
-                datas = data;
+            success: function() {
+               
             },
-            error: function(responseText, statusText) {
-                datas = { success: false, message: responseText };
+            error: function(responseText) {
+                AlertUtil.alertMsg(responseText);
             }
         });
     }
-
 };
 
 var StatusUtil = {
@@ -540,6 +520,11 @@ var CheckUtil = {
 
         return validate.form();
     },
+	checkPwd: function(pwd) {
+        var asciiReg = /^[\x00-\xff]{8,63}$/;
+        var hexReg = /^[0-9A-F]{64}$/;
+        return asciiReg.test(pwd) || hexReg.test(pwd);
+    },
 	checkIp: function(ip, isIpv6) {
 		//console.log(ip);
         if(isIpv6 != "IPV6"){
@@ -559,6 +544,11 @@ var CheckUtil = {
 	checkMac: function(mac) {
         var reg = /^([0-9a-f]{2}[\:|\-]){5}[0-9a-f]{2}$/i;
         return reg.test(mac);
+    },
+	checkPort: function(port) {
+        var thePort = parseInt(port, 10);
+        if (isNaN(thePort) || thePort < 0 || thePort > 65535) return { isValid : false };
+        return { isValid : true, port: thePort};
     },
     checkNetSegment: function(lanip, netMask, ip){
         var lanips = ConvertUtil.ip4ToNum(lanip);

@@ -51,9 +51,11 @@
         }
 		
 		// FW BEGIN 
-         var fwMenu = new MenuHead("fw_menu", MENU.fw.head);
-         fwMenu.push(new MenuBody("FW_RULE", MENU.fw.filters));
-   
+        var fwMenu = new MenuHead("fw_menu", MENU.fw.head);
+        fwMenu.push(new MenuBody("FW_RULE", MENU.fw.filters));
+		fwMenu.push(new MenuBody("FW_MAC_FILTER", MENU.fw.macFilter));
+        fwMenu.push(new MenuBody("FW_PORT_MAPPING", MENU.fw.portMapping));
+		fwMenu.push(new MenuBody("FW_URL_FILTER", MENU.fw.urlFilter));
 
          menus.push(fwMenu);
          // FW END 

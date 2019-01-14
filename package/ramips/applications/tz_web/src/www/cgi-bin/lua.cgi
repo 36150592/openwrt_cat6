@@ -617,14 +617,9 @@ function set_dhcp()
 			end
 	end	
 	
-	if(setipflg)
-	   then
-	   dhcp.dhcp_reload()
-	else
-		dhcp.dhcp_restart()
-    end	
 	
-	dhcp.dhcp_restart()
+	
+    dhcp.dhcp_restart()
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
@@ -700,7 +695,7 @@ end
 function firewall_restart()
 
 	local tz_answer = {}
-	tz_answer["cmd"] = 21   
+	tz_answer["cmd"] = 20   
 	tz_answer["success"] = firewall.firewall_restart()
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
@@ -780,6 +775,53 @@ function mac_filter()
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
+end
+
+function url_filtet()
+
+   	local tz_answer = {}
+	tz_answer["cmd"] = 26   
+	
+    local datas = tz_req["datas"]
+	local getfun = tz_req["getfun"]
+ 
+	if (getfun)
+	then
+	  local data_array = firewall.firewall_get_url_filter_list() or ''
+	  tz_answer["data"] = data_array
+	  tz_answer["success"] = true
+	else
+	  tz_answer["success"] = firewall.firewall_set_url_filter_list(datas)
+		
+	end
+
+	
+
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function port_redirect()
+   
+	local tz_answer = {}
+	tz_answer["cmd"] = 27   
+	
+    local datas = tz_req["datas"]
+	local getfun = tz_req["getfun"]
+ 
+	if (getfun)
+	then
+	  local data_array = firewall.firewall_get_port_redirect_list() or ''
+	  tz_answer["data"] = data_array
+	  tz_answer["success"] = true
+	else
+	  tz_answer["success"] = firewall.firewall_set_port_redirect_list(datas)
+		
+	end
+
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
 
 end
 
@@ -820,15 +862,46 @@ function upload_file()
 	end
 end
 
+function update_partial()
+	local UploadDir = "/tmp/web_upload/"
+	local tz_answer = {}
+	tz_answer["cmd"] = 106   	
+    local fileName = tz_req["fileName"]
+	tz_answer["success"] = true
+	tz_answer["data"] = system.update_system(UploadDir..fileName)
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+end
+
+function reboot_sys()
+
+	local tz_answer = {}
+	tz_answer["cmd"] = 6  
+	local ret = os.execute("reboot ")
+	if(ret == 0)
+	 then
+	  tz_answer["success"] = true
+	else
+	  tz_answer["success"] = false
+	end
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+
+
 local switch = {
      [0] = get_sysinfo,
      [2] = set_wifi,
 	 [3] = set_dhcp,
-	 [5] = update_sys,
+	 [6] = reboot_sys,
 	 [20] = firewall_restart,
 	 [21] = port_filter,
 	 [22] = ip_filter,
 	 [23] = mac_filter,
+	 [26] = url_filtet,
+ 	 [27] = port_redirect,
 	 [43] = get_diviceinfo,
      [80] = iniPage,
 	 [97] = change_language,
@@ -836,6 +909,7 @@ local switch = {
 	 [101] = get_wifi,
 	 [102] = get_dhcp,
 	 [103] = get_dhcpClient,
+	 [106] = update_partial,
 	 [113] = get_sysstatus,
 	 [133] = get_routerinfo,
 	 [145] = network_tool,
