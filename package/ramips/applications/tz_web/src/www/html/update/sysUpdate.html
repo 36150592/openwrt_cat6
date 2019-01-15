@@ -3,7 +3,7 @@
 <script type="text/javascript">
 
     $(document).ready(function() {
-        var needreboot=1;
+
         var showText = sysupdatehtml.prompt;
         Page.render();
         Page.setStripeTable();
@@ -20,44 +20,17 @@
 
         function update() {
             var isOk = false;
-            datas = null;
             SysUtil.showProgress(ProgressTime.UPDATE_PARTIAL, PROMPT.status.updating,
                 function() {
-                    return datas != null || isOk;
+                    return isOk;
                 },
                 function() {
-                    if (datas.success) {
-                        Page.writeTime(0);
-                        if(needreboot==1){
-                            SysUtil.reboot({
-                                rebootType: RENOOTTYPE.RESTORE_SETTING,
-                                // msg: PROMPT.status.updateSuccess,
-                                hideConfirm:true
-                            });
-
-                            //  AlertUtil.alertMsg(PROMPT.status.updateSuccess);
-                            //	   location.reload();
-                        }
-                        else
-                        {
-                            AlertUtil.alertMsg(PROMPT.status.updateSuccess);
-                            location.reload();
-                        }
-                    } else {
-                        var msg = datas.message;
-                        var index = msg.indexOf(':');
-                        if (index >= 0 && index < 3) {
-                            msg = msg.substring(index + 1);
-                        }
-                        SysUtil.processMsg(msg);
-                        closeBox();
-                    }
+                     AlertUtil.alertMsg(PROMPT.status.updateSuccess);
+                     location.reload();
+                        
                 }
             );
-            setTimeout(function(){
-                closeBox();
-            },220000);
-
+           
         }
 
         $('#btnUpdatePartial').bind('click', function() {
@@ -82,7 +55,7 @@
                 }
             });
 
-          //  update();
+            update();
         });
 
     });
