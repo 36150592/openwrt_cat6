@@ -50,10 +50,18 @@ set network.$1.macaddr='$macaddr'
 EOF
 
 	case $1 in
-	lan) uci -q batch <<EOF
+	lan*) 
+        local network_code="2"
+        if [ $1 != "lan" ];then
+            local str=$1
+            network_code=${str##*lan}
+            network_code=$(($network_code+2))
+        fi
+
+	    uci -q batch <<EOF
 set network.$1.type='bridge'
 set network.$1.proto='static'
-set network.$1.ipaddr='192.168.2.1'
+set network.$1.ipaddr="192.168.${network_code}.1"
 set network.$1.netmask='255.255.255.0'
 set network.$1.ip6assign='60'
 EOF

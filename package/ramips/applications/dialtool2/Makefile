@@ -47,7 +47,7 @@ define Package/dialtool2/install
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) ./files/dialogtool2_config $(1)/etc/dialogtool2_config
 	$(INSTALL_DATA) ./files/dialogtool2_version $(1)/etc/dialogtool2_version
-	$(INSTALL_BIN) ./files/udhcpc.script $(1)/etc/udhcpc.script
+	ln -sf /lib/netifd/dhcp.script $(1)/etc/udhcpc.script
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/dialtool2.init $(1)/etc/init.d/dialtool2
 endef

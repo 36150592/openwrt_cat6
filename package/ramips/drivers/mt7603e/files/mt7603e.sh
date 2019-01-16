@@ -993,7 +993,7 @@ EOF
 	cat >> /etc/config/mutilssid <<EOF
 config wifi-iface                                 
         option device 'mt7603e'      
-        option network 'lan'         
+        option network 'lan1'         
         option mode 'ap'             
         option ssid ${ssid}-second   
         option encryption 'psk2+ccmp'
@@ -1004,7 +1004,7 @@ config wifi-iface
                                      
 config wifi-iface                    
         option device 'mt7603e'      
-        option network 'lan'         
+        option network 'lan2'         
         option mode 'ap'             
         option ssid '${ssid}-third'  
         option encryption 'psk2+ccmp'

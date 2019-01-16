@@ -44,6 +44,15 @@ ucidef_set_interface_loopback()
 	local a=$1
 }
 
+ucidef_set_interface_lan_number() {
+    local number=$1
+    local lan_if=$2
+        
+    json_select_object network  
+    _ucidef_set_interface lan${number} $lan_if
+    json_select ..
+}
+
 ucidef_set_interface_lan() {
 	local lan_if=$1
 
@@ -59,6 +68,7 @@ ucidef_set_interface_4g() {
 	_ucidef_set_interface 4g $if_4g
 	json_select ..
 }
+
 
 ucidef_set_interfaces_lan_wan() {
 	local lan_if=$1

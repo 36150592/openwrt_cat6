@@ -128,6 +128,8 @@ ramips_setup_interfaces()
 
     zbt-wg2626)
 	    ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
+	    ucidef_set_interface_lan_number 1 eth0.3	
+	    ucidef_set_interface_lan_number 2 eth0.4	
 		ucidef_add_switch "switch0" "1" "1"
 		ucidef_add_switch_vlan "switch0" "1" "0 1 2 3 6t"
 		ucidef_add_switch_vlan "switch0" "2" "4 6t"
@@ -400,6 +402,8 @@ ramips_setup_macs()
 	esac
 
 	[ -n "$lan_mac" ] && ucidef_set_interface_macaddr lan $lan_mac
+    [ -n "$lan_mac" ] && ucidef_set_interface_macaddr lan1 $(macaddr_add "$lan_mac" 2)
+    [ -n "$lan_mac" ] && ucidef_set_interface_macaddr lan2 $(macaddr_add "$lan_mac" 3)
 	[ -n "$wan_mac" ] && ucidef_set_interface_macaddr wan $wan_mac
 }
 
