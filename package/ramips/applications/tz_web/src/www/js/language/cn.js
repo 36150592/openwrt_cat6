@@ -1019,6 +1019,7 @@ PROMPT.status.unlockFailed = "解锁失败！";
 PROMPT.status.unlockPinSuccess = "解锁PIN码成功！";
 PROMPT.status.unlockSuccess = "解锁成功！";
 PROMPT.status.updateSuccess = "升级成功！";
+PROMPT.status.updateFalse = "升级失败！";
 PROMPT.status.updating = "正在进行升级, 请勿关闭设备";
 PROMPT.status.updatingAvailable = "您的CPE有新固件， 单击“确定”开始升级";
 PROMPT.status.uploadSuccess = "文件上传成功！";

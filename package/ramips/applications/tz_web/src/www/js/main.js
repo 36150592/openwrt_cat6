@@ -6,7 +6,7 @@ var ProgressTime = {
     REBOOT: 120,
     FIND_AP: 15,
     UPDATE_UBOOT: 10,
-    UPDATE_PARTIAL: 210,
+    UPDATE_PARTIAL: 260,
     UPLOAD_FILE: 60,
     SEARCH_PLMN: 120,
     UPGRADE_CHECK: 60,
@@ -343,6 +343,7 @@ var SysUtil = {
     upload: function($form, $file, command, callback) {
         var url = String.format("{0}?cmd={1}&method=POST",  '/cgi-bin/lua.cgi', RequestCmd.SYS_UPDATE);
         
+		var datas = null;
         $form.ajaxSubmit({
             url: url,
             type: 'POST',
@@ -362,13 +363,17 @@ var SysUtil = {
                 if(confirm(PROMPT.confirm.uploadFile + updateFileName)){
                     SysUtil.showProgress(ProgressTime.UPLOAD_FILE, PROMPT.status.uploading,
                         function() {
-                            return false;
+                            return datas != null;
                         },
                         function() {
+					      if (datas.success) {
                             AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
-                            if ($.isFunction(callback)) {
+                          } else {
+                    	    SysUtil.processMsg(datas.message);
+                          }
+                          if ($.isFunction(callback)) {
                                 callback(updateFileName);
-                            }
+                           }
                         }
                     );
 
@@ -381,11 +386,11 @@ var SysUtil = {
 
 
             },
-            success: function() {
-               
+            success: function(data) {
+               datas = data;
             },
             error: function(responseText) {
-                AlertUtil.alertMsg(responseText);
+               datas = { success: false, message: responseText };
             }
         });
     }

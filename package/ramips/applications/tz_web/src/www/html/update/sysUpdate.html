@@ -4,7 +4,6 @@
 
     $(document).ready(function() {
 
-        var showText = sysupdatehtml.prompt;
         Page.render();
         Page.setStripeTable();
 
@@ -20,13 +19,21 @@
 
         function update() {
             var isOk = false;
+            datas = null;
             SysUtil.showProgress(ProgressTime.UPDATE_PARTIAL, PROMPT.status.updating,
                 function() {
-                    return isOk;
+                    return datas != null || isOk;
                 },
                 function() {
-                     AlertUtil.alertMsg(PROMPT.status.updateSuccess);
-                     location.reload();
+				     if(datas == -1 || datas == -2)
+					 {
+					    AlertUtil.alertMsg(PROMPT.status.updateFalse);
+						location.reload();
+					  }else {
+					   AlertUtil.alertMsg(PROMPT.status.updateSuccess);
+						location.href = Page.getUrl(Url.LOGIN);
+					 
+					 }
                         
                 }
             );
@@ -49,9 +56,11 @@
                 },
                 success: function(data) {
                     console.log("success" + data); 
+					datas = data.data;
                 },
                 fail: function(data) {
                     console.log("fail" + data);
+					datas = data.data;
                 }
             });
 

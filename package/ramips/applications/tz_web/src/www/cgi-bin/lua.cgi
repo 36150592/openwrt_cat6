@@ -837,6 +837,8 @@ function network_tool()
 end
 
 function upload_file()
+	local tz_answer = {}
+	tz_answer["cmd"] = 5 
 	local UploadDir = "/tmp/web_upload/"
 
 	local boundary = uti.get_env_boundary(envv)
@@ -860,6 +862,11 @@ function upload_file()
 		ff:write(a5)
 		io.close(ff)
 	end
+	
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+	
 end
 
 function update_partial()

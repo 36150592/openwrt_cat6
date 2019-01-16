@@ -1023,6 +1023,7 @@ PROMPT.status.unlockFailed = "Unlock failed!";
 PROMPT.status.unlockPinSuccess = "Unlock PIN successfully.";
 PROMPT.status.unlockSuccess = "Unlock successfully!";
 PROMPT.status.updateSuccess = "Upgrade successful!";
+PROMPT.status.updateFalse = "Upgrade failure!";
 PROMPT.status.updating = "Upgrading";
 PROMPT.status.updatingAvailable = "New firmware available. Click OK to proceed with update";
 PROMPT.status.uploadSuccess = "Upload successful!";
