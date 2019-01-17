@@ -84,40 +84,164 @@ local function get_section_name_by_type(s_type)
 	return nil
 end
 
--- get server ip 
--- input:none
--- return:
---		string of server ip
-function dhcp_module.dhcp_get_server_ip()
-	debug("dhcp_get_server_ip")
-	local section_name = get_section_name_by_type(DHCP_CONFIG_TYPE)
-	if nil == section_name 
+
+dhcp_module.dhcp_object = {
+	["name"]	 = 	nil,
+	["interface"]	 = 	nil,
+	["start_ip"]	 = 	nil,
+	["end_ip"]	 = 	nil,
+	["leasetime"]	 = 	nil,
+	["server_ip"] = nil,
+	["netmask"] = nil,
+	["enable"] = nil, -- true or false
+}
+
+
+function dhcp_module.dhcp_object:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+	
+	self["name"]	 = obj["name"] or nil
+	self["interface"]	 = obj["interface"] or nil
+	self["start_ip"]	 = 	obj["start_ip"] or nil
+	self["end_ip"]	 = 	obj["end_ip"] or nil
+	self["leasetime"]	 = 	obj["leasetime"] or nil
+	self["server_ip"]	 = 	obj["server_ip"] or nil
+	self["netmask"]	 = 	obj["netmask"] or nil
+	self["enable"]	 = 	obj["enable"] or nil
+   return o
+end
+
+local function get_dhcp_config(name)
+	if nil == name or  "" == name
 	then
-		debug("section_name is nil")
+		debug("name is nil")
+		return nil
+	end
+	local temp = dhcp_module.dhcp_object:new(nil,nil)
+
+
+	temp["name"] = name
+	temp["interface"] = x:get(DHCP_CONFIG_FILE, name, "interface")
+	if nil == temp["interface"]
+	then
+		debug("cannot get this config")
 		return nil
 	end
 	
-	local domain = x:get(DHCP_CONFIG_FILE, section_name, "domain")
-	debug("domain = ", domain)
-	if nil ~= domain
+	temp["server_ip"] = x:get(NETWORK_CONFIG_FILE, temp["interface"], "ipaddr")
+	temp["netmask"] = x:get(NETWORK_CONFIG_FILE, temp["interface"], "netmask")
+	temp["leasetime"] = x:get(DHCP_CONFIG_FILE, name, "leasetime")
+	if nil == temp["leasetime"]
 	then
-		local ifname =  x:get(DHCP_CONFIG_FILE,domain, "interface")
-		local ipaddr =  x:get(NETWORK_CONFIG_FILE,ifname, "ipaddr")
-		debug("ip addr = ", ipaddr)
-		return ipaddr
-	else
-		debug("domain is nil")
 		return nil
 	end
+	local l_array = split(temp["leasetime"], 'h')
+	temp["leasetime"] = l_array[1]
+	local ignore = x:get(DHCP_CONFIG_FILE, name, "ignore")
+	temp["enable"] = ignore == "0" or ignore == nil or false
+	if nil ~= temp["server_ip"] and nil ~= temp["netmask"] and nil ~= temp["name"]
+	then
+		temp["start"] = x:get(DHCP_CONFIG_FILE, name, "start")
+		temp["limit"] = x:get(DHCP_CONFIG_FILE, name, "limit")
+		local cmd = string.format("/bin/ipcalc.sh %s %s %s %d", temp["server_ip"], temp["netmask"], temp["start"], tonumber(temp["limit"])-1)
+		local f = io.popen(cmd)
+		local res = f:read()
+
+		while nil ~= res
+		do
+			if nil ~= string.find(res,"START")
+			then
+				local ar = split(res, "=")
+				temp["start_ip"] = ar[2]
+			elseif nil ~= string.find(res,"END")
+			then
+				local ar = split(res, "=")
+				temp["end_ip"] = ar[2]
+			end
+
+			res = f:read()
+		end
+		io.close(f)
+		return temp 
+
+	end
+
+	return nil
+end
+
+-- get all dhcp configs 
+-- input:none
+-- return:the array of dhcp_object
+function dhcp_module.dhcp_get_object_list()
+
+	local dhcp_list = {}
+	local all_config = x:get_all(DHCP_CONFIG_FILE)
+
+	if nil == all_config 
+	then
+		debug("all_config = nil")
+	end
+
+	local i = 1
+	for k,v in pairs(all_config) do
+		
+		if "dhcp" == v[".type"]
+		then
+			local temp = get_dhcp_config(v[".name"])
+			if nil ~= temp
+			then
+				dhcp_list[i] = temp
+				i = i + 1
+			end
+			
+		end
+	end
+
+	return dhcp_list
+end
+
+
+-- get server ip 
+-- input:
+--		name(string):the dhcp_object name
+-- return:
+--		string of server ip
+function dhcp_module.dhcp_get_server_ip(name)
+	debug("dhcp_get_server_ip")
+	if nil == name 
+	then
+		debug("name is nil")
+		return nil
+	end
+	
+	debug("name = ", name)
+	local interface = x:get(DHCP_CONFIG_FILE, name, "interface")
+
+	if nil == interface 
+	then
+		debug("interface is nil")
+		return nil
+	end
+
+	local ipaddr =  x:get(NETWORK_CONFIG_FILE,interface, "ipaddr")
+	debug("ip addr = ", ipaddr)
+	return ipaddr
+
 end
 
 
 -- set lan server ip
 -- input:
---		ip(string)  the server ip 
+--		name(string):the dhcp_object name
+--		ip(string) :the server ip 
 -- return:
 --		boolean  true if success false if fail
-function dhcp_module.dhcp_set_server_ip(ip)
+function dhcp_module.dhcp_set_server_ip(name,ip)
 
 	debug("dhcp_set_server_ip")
 	local start,endp = string.find(ip,"%d+%.%d+%.%d+%.%d+")
@@ -128,63 +252,65 @@ function dhcp_module.dhcp_set_server_ip(ip)
 		return false
 	end
 	
-	local section_name = get_section_name_by_type(DHCP_CONFIG_TYPE)
-	if nil == section_name 
+	if nil == name
 	then
-		debug("section_name is nil")
+		debug("name is nil")
+		return nil
+	end
+
+	local interface = x:get(DHCP_CONFIG_FILE, name, "interface")
+	if nil == interface 
+	then
+		debug("interface is nil")
 		return false
 	end
 	
-	local domain = x:get(DHCP_CONFIG_FILE, section_name, "domain")
-	debug("domain = ", domain)
-	if nil ~= domain
+	debug("interface = ", interface)
+
+	if x:set(NETWORK_CONFIG_FILE,interface, "ipaddr",ip)
 	then
-		local ifname =  x:get(DHCP_CONFIG_FILE,domain, "interface")
-		if x:set(NETWORK_CONFIG_FILE,ifname, "ipaddr",ip)
-		then
-			return x:commit(NETWORK_CONFIG_FILE)	
-		end
-	else
-		debug("domain is nil")
+		return x:commit(NETWORK_CONFIG_FILE)	
 	end
-	
+
 	return false
 
 end
 
 -- get server netmask
--- input:none
+-- input:
+--		name(string):the dhcp_object name
 -- return:
 --		string of server netmask
-function dhcp_module.dhcp_get_server_mask()
+function dhcp_module.dhcp_get_server_mask(name)
 	debug("dhcp_get_server_mask")
-	local section_name = get_section_name_by_type(DHCP_CONFIG_TYPE)
-	if nil == section_name 
+
+	if nil == name
 	then
-		debug("section_name is nil")
+		debug("name is nil")
+		return nil
+	end
+
+	local interface = x:get(DHCP_CONFIG_FILE, name, "interface")
+
+	if nil == interface 
+	then
+		debug("interface is nil")
 		return nil
 	end
 	
-	local domain = x:get(DHCP_CONFIG_FILE, section_name, "domain")
-	debug("domain = ", domain)
-	if nil ~= domain
-	then
-		local ifname =  x:get(DHCP_CONFIG_FILE,domain, "interface")
-		local ipaddr =  x:get(NETWORK_CONFIG_FILE,ifname, "netmask")
-		debug("ip addr = ", ipaddr)
-		return ipaddr
-	else
-		debug("domain is nil")
-		return nil
-	end
+	debug("domain = ", interface)
+	local netmask =  x:get(NETWORK_CONFIG_FILE,interface, "netmask")
+	debug("netmask = ", netmask)
+	return netmask	
 end
 
 -- set lan server mask
 -- input:
+--		name(string):the dhcp_object name
 --		ip_mask(string)  the netmask
 -- return:
 --		boolean  true if success false if fail
-function dhcp_module.dhcp_set_server_mask(ip_mask)
+function dhcp_module.dhcp_set_server_mask(name, ip_mask)
 	debug("dhcp_set_server_mask")
 	local start,endp = string.find(ip_mask,"%d+%.%d+%.%d+%.%d+")
 	debug("start = ",start,"endp = ", endp)
@@ -194,69 +320,55 @@ function dhcp_module.dhcp_set_server_mask(ip_mask)
 		return false
 	end
 	
-	local section_name = get_section_name_by_type(DHCP_CONFIG_TYPE)
-	if nil == section_name 
+	if nil == name
 	then
-		debug("section_name is nil")
+		debug("name is nil")
+		return nil
+	end
+
+	local interface = x:get(DHCP_CONFIG_FILE, name, "interface")
+
+	if nil == interface 
+	then
+		debug("interface is nil")
 		return false
 	end
 	
-	local domain = x:get(DHCP_CONFIG_FILE, section_name, "domain")
-	debug("domain = ", domain)
-	if nil ~= domain
+	if x:set(NETWORK_CONFIG_FILE,interface, "netmask",ip_mask)
 	then
-		local ifname =  x:get(DHCP_CONFIG_FILE,domain, "interface")
-		if x:set(NETWORK_CONFIG_FILE,ifname, "netmask",ip_mask)
-		then
-			return x:commit(NETWORK_CONFIG_FILE)	
-		end
-	else
-		debug("domain is nil")
+		return x:commit(NETWORK_CONFIG_FILE)	
 	end
 	
 	return false
 end
 
 -- get ip range
--- input:none
+-- input:
+--		name(string):the dhcp_object name
 -- return:
 --		two var are return: the start ip and the end ip  of string
-function dhcp_module.dhcp_get_ip_range()
+function dhcp_module.dhcp_get_ip_range(name)
 	debug("dhcp_get_ip_range")
-	local cmd = string.format("cat %s | grep dhcp-range | cut -d',' -f 2",DNSMASQ_CONFIG_PATH)
-	local f = io.popen(cmd)
-	local start_ip = f:read()
-	io.close(f)
-	cmd = string.format("cat %s | grep dhcp-range | cut -d',' -f 3",DNSMASQ_CONFIG_PATH)
-	f = io.popen(cmd)
-	local endp_ip = f:read()
-	io.close(f)
-
-	debug("start_ip = ",start_ip)
-	debug("endp_ip = ", endp_ip)
-
-	if string.find(start_ip, "%d+%.%d+%.%d+%.%d+") == nil or
-		string.find(endp_ip, "%d+%.%d+%.%d+%.%d+") == nil
+	local temp = get_dhcp_config(name)
+	if nil ~= temp
 	then
-		debug("get wrong start_ip or endp_ip ")
-		return nil
+		return temp["start_ip"],temp["end_ip"]
 	end
-
-	return start_ip,endp_ip
-	
+	return nil,nil
 end
 
 -- set ip range
 -- input:
+--		name(string):the dhcp_object name
 --		ip_start(string)  start ip address
 --		limit_number(number)  the number of ip range
 -- return:
 --		boolean  true if success false if fail
-function dhcp_module.dhcp_set_ip_range(ip_start, limit_number)
+function dhcp_module.dhcp_set_ip_range(name, ip_start, limit_number)
 	debug("dhcp_set_ip_range")
 	local start,endp = string.find(ip_start,"%d+%.%d+%.%d+%.%d+")
 	debug("start = ",start,"endp = ", endp)
-	if nil == ip_start or start == nil
+	if nil == ip_start or nil == start
 	then
 		debug("input error: ip_start must be string like xx.xx.xx.xx")
 		return false
@@ -268,10 +380,9 @@ function dhcp_module.dhcp_set_ip_range(ip_start, limit_number)
 		return false
 	end
 	
-	local section_name = get_section_name_by_type(DHCP_CONFIG_TYPE)
-	if nil == section_name 
+	if nil == name 
 	then
-		debug("section_name is nil")
+		debug("name is nil")
 		return false
 	end
 
@@ -280,34 +391,31 @@ function dhcp_module.dhcp_set_ip_range(ip_start, limit_number)
 	local s_array = split(ip_start, '#')
 
 	debug("s_array[4] = ", s_array[4])
-	local domain = x:get(DHCP_CONFIG_FILE, section_name, "domain")
-	debug("domain = ", domain)
-	if nil ~= domain
-	then
-		
-		if  x:set(DHCP_CONFIG_FILE,domain, "start", s_array[4]) and
-			x:set(DHCP_CONFIG_FILE,domain, "limit", limit_number)
-		then
-			return x:commit(DHCP_CONFIG_FILE)	
-		end
-	else
-		debug("domain is nil")
-	end
 	
+		
+	if  x:set(DHCP_CONFIG_FILE, name, "start", s_array[4]) and
+		x:set(DHCP_CONFIG_FILE, name, "limit", limit_number)
+	then
+		return x:commit(DHCP_CONFIG_FILE)	
+	end
+
 	return false
 end
 
 -- get lease time
--- input:none
+-- input:
+--		name(string):the dhcp_object name
 -- return:
 -- 		the number of lease time in hour
-function dhcp_module.dhcp_get_lease_time()
+function dhcp_module.dhcp_get_lease_time(name)
 	debug("dhcp_get_lease_time")
-	local cmd = string.format("cat %s | grep dhcp-range | cut -d',' -f 5",DNSMASQ_CONFIG_PATH)
-	local f = io.popen(cmd)
-	local leasetime = f:read()
-	io.close(f)
-	
+
+	local leasetime = x:get(DHCP_CONFIG_FILE, name, "leasetime")
+	if nil == leasetime
+	then
+		return nil
+	end
+
 	local l_array = split(leasetime, 'h')
 	debug("leasetime = ", l_array[1])
 	return tonumber(l_array[1])
@@ -316,10 +424,11 @@ end
 
 -- set lease time
 -- input:
+--		name(string):the dhcp_object name
 --		hour(number) 
 -- return:
 --		boolean  true if success false if fail
-function dhcp_module.dhcp_set_lease_time(hour)
+function dhcp_module.dhcp_set_lease_time(name, hour)
 	debug("dhcp_set_lease_time")
 	if type(hour) ~= "number"
 	then
@@ -327,25 +436,18 @@ function dhcp_module.dhcp_set_lease_time(hour)
 		return false
 	end
 	
-	local section_name = get_section_name_by_type(DHCP_CONFIG_TYPE)
-	if nil == section_name 
+	if nil == name 
 	then
-		debug("section_name is nil")
+		debug("name is nil")
 		return false
 	end
 	
-	local domain = x:get(DHCP_CONFIG_FILE, section_name, "domain")
-	debug("domain = ", domain)
-	if nil ~= domain
+	local temp_h = string.format("%dh", hour)
+	if x:set(DHCP_CONFIG_FILE, name, "leasetime",temp_h)
 	then
-		local temp_h = string.format("%dh", hour)
-		if x:set(DHCP_CONFIG_FILE,domain, "leasetime",temp_h)
-		then
-			return x:commit(DHCP_CONFIG_FILE)	
-		end
-	else
-		debug("domain is nil")
+		return x:commit(DHCP_CONFIG_FILE)	
 	end
+	
 	
 	return false
 end

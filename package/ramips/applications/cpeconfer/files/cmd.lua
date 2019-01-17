@@ -922,11 +922,29 @@ function wifi_set_connect_sta_number()
 
 end
 
+function dhcp_get_list()
+
+	local list = dhcp.dhcp_get_object_list()
+
+	for k, v in pairs(list)
+	do
+
+		for key,value in pairs(v)
+		do
+			print("key = ", key, "value = ", value)
+
+		end
+
+		print("-------------")
+	end
+
+
+end
 
 function dhcp_get_enable_status()
 
 	print("dhcp_get_enable_status")
-	local ret = dhcp.dhcp_get_enable_status()
+	local ret = dhcp.dhcp_get_enable_status(arg[2])
 
 	if  ret 
 	then
@@ -940,26 +958,27 @@ end
 function dhcp_get_server_ip()
 
 	print("dhcp_get_server_ip")
-	local ret = dhcp.dhcp_get_server_ip()
+	local ret = dhcp.dhcp_get_server_ip(arg[2])
 
 	if  nil ~= ret 
 	then
 		print("dhcp server ip = ", ret)
 	else
 		print("get  dhcp server ip fail")
-		print("usepage:dhcp_get_server_ip")
+		print("usepage:dhcp_get_server_ip dhcp_name")
 	end
 end
 
 
 function dhcp_set_server_ip()
-	local ret = dhcp.dhcp_set_server_ip(tostring(arg[2]))
+	local ret = dhcp.dhcp_set_server_ip(arg[2],tostring(arg[3]))
 	
 	if ret
 	then
 		print("set server ip success")
 	else
 		print("set server ip fail")
+		print("usepage:dhcp_set_server_ip dhcp_name server_ip")
 	end
 	
 end
@@ -968,26 +987,27 @@ end
 function dhcp_get_server_mask()
 
 	print("dhcp_get_server_mask")
-	local ret = dhcp.dhcp_get_server_mask()
+	local ret = dhcp.dhcp_get_server_mask(arg[2])
 
 	if  nil ~= ret 
 	then
 		print("dhcp server mask = ", ret)
 	else
 		print("get  dhcp server mask fail")
-		print("usepage:dhcp_get_server_mask")
+		print("usepage:dhcp_get_server_mask dhcp_name")
 	end
 end
 
 
 function dhcp_set_server_mask()
-	local ret = dhcp.dhcp_set_server_mask(tostring(arg[2]))
+	local ret = dhcp.dhcp_set_server_mask(arg[2],tostring(arg[3]))
 	
 	if ret
 	then
 		print("set server mask success")
 	else
 		print("set server mask fail")
+		print("usepage:dhcp_set_server_mask dhcp_name netmask")
 	end
 	
 end
@@ -996,26 +1016,27 @@ end
 function dhcp_get_ip_range()
 
 	print("dhcp_get_ip_range")
-	local start,endp = dhcp.dhcp_get_ip_range()
+	local start,endp = dhcp.dhcp_get_ip_range(arg[2])
 
 	if  nil ~= start 
 	then
 		print("dhcp ip range = ", start, "-", endp)
 	else
 		print("get  dhcp ip range fail")
-		print("usepage:dhcp_get_ip_range")
+		print("usepage:dhcp_get_ip_range dhcp_name")
 	end
 end
 
 
 function dhcp_set_ip_range()
-	local ret = dhcp.dhcp_set_ip_range(tostring(arg[2]), tonumber(arg[3]))
+	local ret = dhcp.dhcp_set_ip_range(arg[2], tostring(arg[3]), tonumber(arg[4]))
 	
 	if ret
 	then
 		print("set set ip range success")
 	else
 		print("set set ip range fail")
+		print("usepage:dhcp_set_ip_range dhcp_name start_ip limit")
 	end
 end
 
@@ -1023,26 +1044,27 @@ end
 function dhcp_get_lease_time()
 
 	print("dhcp_get_lease_time")
-	local lease_time = dhcp.dhcp_get_lease_time()
+	local lease_time = dhcp.dhcp_get_lease_time(arg[2])
 
 	if  nil ~= lease_time 
 	then
 		print("dhcp lease_time = ", lease_time, "hour")
 	else
 		print("get  lease_time fail")
-		print("usepage:dhcp_get_lease_time")
+		print("usepage:dhcp_get_lease_time dhcp_name")
 	end
 end
 
 
 function dhcp_set_lease_time()
-	local ret = dhcp.dhcp_set_lease_time(tonumber(arg[2]))
+	local ret = dhcp.dhcp_set_lease_time(arg[2], tonumber(arg[3]))
 	
 	if ret
 	then
 		print("set leasetime success")
 	else
 		print("set leasetime fail")
+		print("usepage:dhcp_set_lease_time dhcp_name leasetime")
 	end
 end
 
@@ -1126,6 +1148,7 @@ local api_func = {
 	["dhcp_disable"]=dhcp.dhcp_disable,
 	["dhcp_reload"]=dhcp.dhcp_reload,
 	["dhcp_get_enable_status"]=dhcp_get_enable_status,
+	["dhcp_get_list"] = dhcp_get_list,
 
 	--modem
 	["modem_get_status"] = modem_get_status,
