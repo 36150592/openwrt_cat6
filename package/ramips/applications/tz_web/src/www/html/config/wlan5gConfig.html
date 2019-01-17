@@ -4,12 +4,52 @@
     $(document).ready(function () {
         TempUtil.render('tabsitems-template', 'tabsitems', wlan5ghtml.tab_menu);
         TempUtil.render('wlform1-template', 'form1', wlan5ghtml.form1);
+		TempUtil.render('macInfoContainer-template', 'macInfoContainer', wirelessconfightml.macInfoContainer);
         var showText = wirelessconfightml.prompt;
         var $lis = $("ul.tabs a");
         var $boxes = $("div.tab_boxes > div");
 
         var $btnSave = $('#btnSave');
         var $wifiOpen = $('#wifiOpen'), $broadcast = $('#broadcast'), $wmm = $('#wmm');
+		
+		var usrInfos = [], macInfos = [], firstRequest = true;
+		
+				function createMacInfosTable(){
+
+            var length = macInfos.length;
+            var sb = new StringBuilder();
+
+             sb.append(String.format('<table class="list" cellspacing="0"><tr><th>{0}</th><th>{1}</th><th>{2}</th><th>MAC<th>{3}</th></th><th>SSID</th><th>{4}</th></tr>',
+                showText.no,showText.edit,DOC.device.name,DOC.net.ip,showText.rate));
+            for (var i = 0; i < length; i++) {
+                var item = macInfos[i];
+				var ipaddr = "-",name = "-";
+				for( var j = 0; j < usrInfos.length; j++)
+				{
+				         if(usrInfos[j].mac.toUpperCase() == item.mac){
+								name = usrInfos[j].name;
+								ipaddr = usrInfos[j].ipaddr;
+							  break;
+						 }
+				}
+                sb.append(String.format('<tr><td>{0}</td>', i + 1));
+                sb.append(String.format('<td><a id="edit{0}" href="javascript:;">{1}</a></td>', i, showText.edit));
+				sb.append(String.format('<td id="name{0}">{1}</td>', i,name ));
+                sb.append(String.format('<td id="mac{0}">{1}</td>', i, item.mac)); 
+				sb.append(String.format('<td id="ip{0}">{1}</td>', i,ipaddr ));
+                sb.append(String.format('<td id="ssid{0}">{1}</td>', i, item.ssid));
+				sb.append(String.format('<td id="ssid{0}">{1}</td>', i, item.rate));
+            }
+            sb.append('</table>');
+
+            $('#macInfos').html(sb.toString());
+
+            $('a[id^=edit]').click(function() {
+                var id = this.id.substring(4);
+                id = parseInt(id, 10);
+
+            });
+        }
 
         $lis.click(function () {
             $lis.removeClass("current");
@@ -68,7 +108,22 @@
                     $('.helper_box').show();
                     break;
                 case 1:
-                    //$('#showContainer').load('html/config/connectedList5G.html');
+                    if (firstRequest) {
+                        Page.postJSON({
+                            returnHtml: true,
+                            json: {
+                                cmd: RequestCmd.WIFI5_CONTROL_INFO,
+                                method: JSONMethod.GET
+                            },
+                            success: function(data) {
+							    usrInfos = data.userlist;
+                                macInfos = data.wifilist;
+								console.log(macInfos);
+                                createMacInfosTable();
+                                firstRequest = false;
+                            }
+                        });
+                    }
                     $('.helper_box').hide();
                     break;
             }
@@ -184,9 +239,9 @@
         </ul>
     </div>
     <div class="tab_menu_bottom"></div>
-    <div class="main_box">
+    <div >
         <div class="tab_boxes">
-            <div>
+            <div class="main_box">
                 <form id="form1">
                     <script type="text/template" id="wlform1-template">
                         <table class="detail" cellspacing="0">
@@ -293,8 +348,10 @@
                     </script>
                 </form>
             </div>
-            <div>
-                <span>测试</span>
+             <div id="macInfoContainer">
+                <script type="text/template" id="macInfoContainer-template">
+                <div id="macInfos"><%- macInfos %></div>
+				</script>
             </div>
         </div>
     </div>

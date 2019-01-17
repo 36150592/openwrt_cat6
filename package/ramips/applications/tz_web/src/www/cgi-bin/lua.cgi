@@ -637,6 +637,56 @@ function get_dhcpClient()
 
 end
 
+function get_wifiClient()
+
+	local tz_answer = {}
+	tz_answer["cmd"] = 117   
+
+	local array = wifi.wifi_get_dev()
+	local id
+	for k,v in pairs(array) do
+	   if(v["band"] == "2.4G")
+	     then
+		   id = v['wifi_id']				  
+		end
+	end
+
+	local data_array = dhcp.dhcp_get_client_list()
+	
+	local data_array2 = wifi.wifi_get_connect_sta_list(id)
+	tz_answer["success"] = true
+	tz_answer["userlist"] = data_array
+	tz_answer["wifilist"] = data_array2
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function get_wifi5Client()
+
+	local tz_answer = {}
+	tz_answer["cmd"] = 118  
+
+	local array = wifi.wifi_get_dev()
+	local id
+	for k,v in pairs(array) do
+	   if(v["band"] == "5G")
+	     then
+		   id = v['wifi_id']				  
+		end
+	end
+
+	local data_array = dhcp.dhcp_get_client_list()
+	
+	local data_array2 = wifi.wifi_get_connect_sta_list(id)
+	tz_answer["success"] = true
+	tz_answer["userlist"] = data_array
+	tz_answer["wifilist"] = data_array2
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 function get_sysstatus()
 	local data_array = {}
 	local data_wifi = {}
@@ -697,6 +747,16 @@ function firewall_restart()
 	local tz_answer = {}
 	tz_answer["cmd"] = 20   
 	tz_answer["success"] = firewall.firewall_restart()
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function clear_allrule()
+
+	local tz_answer = {}
+	tz_answer["cmd"] = 39   
+	tz_answer["success"] = firewall.firewall_clear_all_user_rule()
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
@@ -825,6 +885,30 @@ function port_redirect()
 
 end
 
+function default_action()
+
+    local tz_answer = {}
+	tz_answer["cmd"] = 28
+
+	local action = tz_req["action"]
+	local getfun = tz_req["getfun"]
+	
+	if (getfun)
+	then
+	  local data = firewall.firewall_get_default_action() or ''
+	  tz_answer["action"] = data
+	  tz_answer["success"] = true
+	else
+	  tz_answer["success"] = firewall.firewall_set_default_action(action)
+		
+	end
+
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+
+end
+
 function network_tool()
 	
 	local tz_answer = system.system_network_tool(tz_req)
@@ -909,6 +993,8 @@ local switch = {
 	 [23] = mac_filter,
 	 [26] = url_filtet,
  	 [27] = port_redirect,
+	 [28] = default_action,
+	 [39] = clear_allrule,
 	 [43] = get_diviceinfo,
      [80] = iniPage,
 	 [97] = change_language,
@@ -918,6 +1004,8 @@ local switch = {
 	 [103] = get_dhcpClient,
 	 [106] = update_partial,
 	 [113] = get_sysstatus,
+	 [117] = get_wifiClient,
+	 [118] = get_wifi5Client,
 	 [133] = get_routerinfo,
 	 [145] = network_tool,
 	 [201] = get_wifi5,

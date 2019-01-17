@@ -4,7 +4,6 @@
     $(document).ready(function() {
         var currentId = Page.currentId;
         var count = 0;
-        var dataMac = "-";
         var loading = '-';
         function getPinPukWarning(reqPin, reqPuk){
             if (reqPin == 1) {
@@ -155,7 +154,6 @@
                     var data_lan = data2.lan;
                     var data_modem = data2.modem;
                     var data_wan = data2.network;
-                    dataMac = data_wan.mac || "-";
 
                     Page.isNULLToSpace = true;
 
@@ -224,7 +222,7 @@
                     names_lan.push(DOC.net.ip);
                     names_lan.push(DOC.net.mask);
 
-                    values_lan.push(dataMac);
+                    values_lan.push(data_wan.mac || loading);
 
                     Page.lanIp = data_lan.lanIp;
                     values_lan.push(data_lan.lanIp || loading);
@@ -408,7 +406,7 @@
                         values.push(data2.ssid || loading);
 
                         names.push(DOC.net.mac);
-                        values.push(dataMac);
+                        values.push(data2.mac || loading);
 
                         names.push(DOC.wlan.ssidBroadcast);
                         if(data2.hidden == "1"){
@@ -467,7 +465,7 @@
                         values.push(data2.ssid || loading);
 
                         names.push(DOC.net.mac);
-                        values.push(dataMac);
+                        values.push(data2.mac || loading);
 
                         names.push(DOC.wlan.ssidBroadcast);
                         if(data2.hidden == "1"){

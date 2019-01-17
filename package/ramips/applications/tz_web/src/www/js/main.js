@@ -38,6 +38,11 @@ var RequestCmd = {
     SPEED_LIMIT: 25,
     URL_FILTER: 26,
     OTHER_FILTER: 27,
+	DEFAULT_FILTER: 28,
+	CLEAN_ALL_FILTER: 39,
+		
+	WIFI_CONTROL_INFO: 117,
+	WIFI5_CONTROL_INFO: 118,	
 	
     NETWORK_TOOLS: 145,
 	
@@ -98,6 +103,7 @@ var AlertUtil = {
     }
 };
 
+
 var CookieUtil = {
     getCookie: function(name) {
         var str = document.cookie;
@@ -137,6 +143,16 @@ var CookieUtil = {
     deleteCookie: function(name, option) {
         this.setCookie(name, '', option);
     }
+};
+
+var InputUtil = {
+    setRadiosSelectedValue: function($radios, value) {
+        $radios.each(function(){
+            if($(this).val() == value.toString()){
+                $(this).attr("checked", "checked");
+            }
+        });
+    },
 };
 
 var FormatUtil = {

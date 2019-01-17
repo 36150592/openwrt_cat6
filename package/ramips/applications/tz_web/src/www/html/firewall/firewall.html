@@ -86,9 +86,9 @@
                     },
                     success: function(data) {
                         if (pannelIndex == 7) {
-                            if (data.data && data.data.length > 1) {
-                                InputUtil.setRadiosSelectedValue($acceptAlls, data.data[0].acceptAll);
-                                InputUtil.setRadiosSelectedValue($acceptAll6s, data.data[1].acceptAll);
+						    console.log(data);
+                            if (data.action) {
+                                InputUtil.setRadiosSelectedValue($acceptAlls,data.action);
                             }
                         } else {
 						   
@@ -118,8 +118,8 @@
                     cmd: defaultCmd,
                     method: JSONMethod.POST,
                     success: true,
-                    datas: [{enableRule: true, acceptAll: eval($('input[name=acceptAll]').filter(':checked').val()), ippro: "IPV4"},
-                        {enableRule: true, acceptAll: eval($('input[name=acceptAll6]').filter(':checked').val()), ippro: "IPV6"}]
+                    action: $(this).filter(':checked').val()
+                        
                 },
                 success: function(data) {
                     $btnApply.enable();
@@ -205,7 +205,6 @@
             }
 
             Page.postJSON({
-                $id: $btnCleanAll,
                 json: {
                     cmd: RequestCmd.CLEAN_ALL_FILTER,
                     method: JSONMethod.POST
@@ -218,7 +217,9 @@
                     }
                 },
                 complete: function() {
+					
                     $('#FW_RULE').click();
+					
                 }
             });
         });
@@ -759,6 +760,7 @@
 
                     var item = getCommonItem(false);
                     item.port = port;
+					item.iswork = false;
                     return item;
                 }
             });
@@ -829,7 +831,7 @@
 
             case RequestCmd.MAC_FILTER:
                 defaultCmd = RequestCmd.MAC_DEFAULT_FILTER;
-                setLisState([2, 7]);
+                setLisState([2]);
                 $lis.eq(2).click();
                 break;
 
@@ -840,7 +842,7 @@
 
             case RequestCmd.URL_FILTER:
                 defaultCmd = RequestCmd.URL_DEFAULT_FILTER;
-                setLisState([4, 7]);
+                setLisState([4]);
                 $lis.eq(4).click();
                 break;
 
@@ -888,10 +890,10 @@
                 <fieldset style="width: 60%;padding: 10px 40px;line-height: 25px;">
                     <legend><%- lbl.ipv4FilterRule %></legend>
                     <div>
-                        <input type="radio" name="acceptAll" value="true" checked="checked" />&nbsp;<%= lbl.accept %>
+                        <input type="radio" name="acceptAll" value="ACCEPT" checked="checked" />&nbsp;<%= lbl.accept %>
                     </div>
                     <div>
-                        <input type="radio" name="acceptAll" value="false" />&nbsp;<%= lbl.reject %>
+                        <input type="radio" name="acceptAll" value="REJECT" />&nbsp;<%= lbl.reject %>
                     </div>
                 </fieldset>
                 <fieldset style="width: 60%;padding: 10px 40px;line-height: 25px;display: none;">

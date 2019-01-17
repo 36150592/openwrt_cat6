@@ -20,13 +20,15 @@
             var length = ipMacs.length;
             var sb = new StringBuilder();
 
-            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3}</th><th>{4}</th></tr>',
-                DOC.table.rowNo, DOC.net.mac, DOC.net.ip, DOC.table.edit, DOC.table.del));
+           sb.append(String.format('<table class="list" cellspacing="0"><tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3}</th><th>{4}</th><th>{5}</th><th>{6}</th></tr>',
+                DOC.table.rowNo,DOC.device.name, DOC.net.mac, DOC.net.ip, DOC.net.connectTime, DOC.table.edit, DOC.table.del));
             for (var i = 0; i < length; i++) {
                 var item = ipMacs[i];
                 sb.append(String.format('<tr><td>{0}</td>', i + 1));
+				sb.append(String.format('<td id="name{0}">{1}</td>', i, item.name));
                 sb.append(String.format('<td id="mac{0}">{1}</td>', i, item.mac));
                 sb.append(String.format('<td id="ip{0}">{1}</td>', i, item.ipaddr));
+				sb.append(String.format('<td id="time{0}">{1}</td>', i, item.connect_time));
                 sb.append(String.format('<td><a id="edit{0}" href="javascript:;">{1}</a></td>', i, disableEdit ? "" : showText.edit));
                 sb.append(String.format('<td><a id="del{0}" href="javascript:;">{1}</a></td></tr>', i, disableEdit ? "" : showText.del));
             }
