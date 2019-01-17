@@ -454,6 +454,237 @@ function modem_get_info()
 
 end
 
+function wifi_secondary_get_ssid_list()
+	print("in wifi_secondary_get_ssid_list")
+	local array = wifi.wifi_secondary_get_ssid_list()
+	for i = 1,table.maxn(array) do 
+		temp = array[i]
+		
+		print('<------------',i,'------>')
+		for k,v in pairs(temp) do
+			print(k," = ", v)
+		end
+
+	end
+
+end
+
+function wifi_secondary_get_ssid()
+	print("wifi_get_ssid")
+	local ret = wifi.wifi_secondary_get_ssid(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("wifi ssid = ", ret)
+	else
+		print("get ssid fail")
+	end
+end
+
+function wifi_secondary_set_ssid()
+	print("wifi_set_ssid")
+	local ret = wifi.wifi_secondary_set_ssid(tonumber(arg[2]), arg[3])
+
+	if  ret 
+	then
+		print("set wifi ssid success")
+	else
+		print("set ssid fail")
+	end
+end
+
+
+function wifi_secondary_get_password()
+	print("wifi_get_password")
+	local ret = wifi.wifi_secondary_get_password(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("wifi password = ", ret)
+	else
+		print("get password  fail")
+	end
+end
+
+function wifi_secondary_set_password()
+	print("wifi_set_password")
+	print(type(arg[3]))
+	local ret = wifi.wifi_secondary_set_password(tonumber(arg[2]), arg[3])
+
+	if  ret 
+	then
+		print("set wifi password success")
+	else
+		print("set password fail")
+	end
+end
+
+function wifi_secondary_get_hidden()
+	print("wifi_get_hidden_ssid")
+	local hidden = wifi.wifi_secondary_get_hidden(tonumber(arg[2]))
+	print(hidden)
+	if "0" == hidden 
+	then
+		print("ssid hidden is disable")
+	elseif "1" == hidden
+	then
+		print("ssid hidden is enable")
+	else
+		print("get ssid hidden config fail")
+	end
+end
+
+function wifi_secondary_enable_hidden()
+	print("wifi_enable_hidden_ssid")
+	local ret = wifi.wifi_secondary_enable_hidden(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("enable hidden ssid success")
+	else
+		print("enable hidden ssid fail")
+	end
+end
+
+function wifi_secondary_disable_hidden()
+	print("wifi_disable_hidden_ssid")
+	local ret = wifi.wifi_secondary_disable_hidden(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("disable hidden ssid success")
+	else
+		print("disable hidden ssid fail")
+	end
+end
+
+function wifi_secondary_get_encryption()
+	print("wifi_secondary_get_encryption")
+	local ret = wifi.wifi_secondary_get_encryption(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("encryption = ", ret)
+	else
+		print("get encryption fail")
+	end
+end
+
+function wifi_secondary_set_encryption()
+	print("wifi_secondary_set_encryption")
+	local ret = wifi.wifi_secondary_set_encryption(tonumber(arg[2]), tostring(arg[3]))
+
+	if  ret 
+	then
+		print("set encryption success")
+	else
+		print("set encryption fail")
+		print("usepage: wifi_set_encryption wifi_id  wep|psk|psk2|miexed|none")
+	end
+end
+
+function wifi_secondary_get_encryption_type()
+	print("wifi_secondary_get_encryption_type")
+	local ret = wifi.wifi_secondary_get_encryption_type(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("encryption type = ", ret)
+	else
+		print("get encryption type fail")
+		print("usepage:wifi_get_encryption_type wifi_id")
+	end
+end
+
+function wifi_secondary_set_encryption_type()
+	print("wifi_secondary_set_encryption_type")
+	local ret = wifi.wifi_secondary_set_encryption_type(tonumber(arg[2]), tostring(arg[3]))
+
+	if  ret 
+	then
+		print("set encryption type success")
+	else
+		print("set encryption type fail")
+		print("usepage: wifi_set_encryption_type wifi_id ccmp+tkip|ccmp|tkip|none")
+	end
+end
+
+function wifi_secondary_get_wmm()
+	print("wifi_secondary_get_wmm")
+	local ret = wifi.wifi_secondary_get_wmm(tonumber(arg[2]))
+
+	if  nil ~= ret 
+	then
+		print("wmm = ", ret)
+	else
+		print("get encryption type fail")
+		print("usepage:wifi_get_wmm wifi_id")
+	end
+end
+
+function wifi_secondary_enable_wmm()
+	print("wifi_secondary_enable_wmm")
+	local ret = wifi.wifi_secondary_enable_wmm(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("enable wmm success")
+	else
+		print("set wmm fail")
+		print("usepage: wifi_enable_wmm wifi_id ")
+	end
+end
+
+function wifi_secondary_disable_wmm()
+	print("wifi_secondary_disable_wmm")
+	local ret = wifi.wifi_secondary_disable_wmm(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("disable wmm success")
+	else
+		print("set wmm fail")
+		print("usepage: wifi_disable_wmm wifi_id ")
+	end
+end		
+
+function wifi_secondary_enable()
+	print("wifi_secondary_enable")
+	local ret = wifi.wifi_secondary_enable(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("wifi enable succes")
+	else
+		print("wifi enable fail")
+	end
+end
+
+function wifi_secondary_disable()
+	print("wifi_secondary_disable")
+	local ret = wifi.wifi_secondary_disable(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("wifi_disable succes")
+	else
+		print("wifi_disable fail")
+	end
+end
+
+function wifi_secondary_get_enable_status()
+	print("wifi_secondary_get_enable_status")
+	local ret = wifi.wifi_secondary_get_enable_status(tonumber(arg[2]))
+
+	if  "0" == ret
+	then
+		print("wifi is  enable")
+	else
+		print("wifi is disable")
+	end
+end
+
+
 function wifi_get_dev()
 	print("in wifi_get_dev")
 	local array = wifi.wifi_get_dev()
@@ -1085,6 +1316,28 @@ function dhcp_get_client_list()
 end
 
 local api_func = {
+	["wifi_secondary_get_ssid_list"] = wifi_secondary_get_ssid_list,
+	["wifi_secondary_get_hidden"]=wifi_secondary_get_hidden,
+	["wifi_secondary_enable_hidden"]=wifi_secondary_enable_hidden,
+	["wifi_secondary_disable_hidden"]=wifi_secondary_disable_hidden,
+	["wifi_secondary_get_encryption"]=wifi_secondary_get_encryption,
+	["wifi_secondary_set_encryption"]=wifi_secondary_set_encryption,
+	["wifi_secondary_get_encryption_type"]=wifi_secondary_get_encryption_type,
+	["wifi_secondary_set_encryption_type"]=wifi_secondary_set_encryption_type,
+	["wifi_secondary_get_wmm"]=wifi_secondary_get_wmm,
+	["wifi_secondary_enable_wmm"]=wifi_secondary_enable_wmm,
+	["wifi_secondary_disable_wmm"]=wifi_secondary_disable_wmm,
+	["wifi_secondary_get_ssid"]=wifi_secondary_get_ssid,
+	["wifi_secondary_set_ssid"]=wifi_secondary_set_ssid,
+	["wifi_secondary_get_password"]=wifi_secondary_get_password,
+	["wifi_secondary_set_password"]=wifi_secondary_set_password,
+	["wifi_secondary_get_connect_sta_number"] = wifi_secondary_get_connect_sta_number,
+	["wifi_secondary_set_connect_sta_number"] = wifi_secondary_set_connect_sta_number,
+	["wifi_secondary_enable"]=wifi_secondary_enable,
+	["wifi_secondary_disable"]=wifi_secondary_disable,
+	["wifi_secondary_get_enable_status"]=wifi_secondary_get_enable_status,
+
+
 	["wifi_get_dev"]=wifi_get_dev,
 	["wifi_get_hidden_ssid"]=wifi_get_hidden_ssid,
 	["wifi_enable_hidden_ssid"]=wifi_enable_hidden_ssid,
@@ -1106,27 +1359,18 @@ local api_func = {
 	["wifi_set_password"]=wifi_set_password,
 	["wifi_get_txpower"]=wifi_get_txpower,
 	["wifi_set_txpower"]=wifi_set_txpower,
-	
 	["wifi_get_channel"]=wifi_get_channel,
 	["wifi_set_channel"]=wifi_set_channel,
-
 	["wifi_start"]=wifi_start,
 	["wifi_start_all"]=wifi_start_all,
-
 	["wifi_restart"]=wifi_restart,
 	["wifi_restart_all"]=wifi_restart_all,
-
 	["wifi_stop"]=wifi_stop,
 	["wifi_stop_all"]=wifi_stop_all,
-
 	["wifi_is_start"]=wifi_is_start,
 	["wifi_enable"]=wifi_enable,
-
 	["wifi_disable"]=wifi_disable,
 	["wifi_get_enable_status"]=wifi_get_enable_status,
-
-
-	
 	["wifi_get_connect_sta_number"] = wifi_get_connect_sta_number,
 	["wifi_set_connect_sta_number"] = wifi_set_connect_sta_number,
 	["wifi_get_connect_sta_list"]=wifi_get_connect_sta_list,

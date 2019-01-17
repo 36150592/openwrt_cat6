@@ -7,6 +7,7 @@ local WIFI_CONFIG_FILE="wireless"
 local WIFI_OPTION_DEVICE="wifi-device"
 local WIFI_OPTION_INTERFACE="wifi-iface"
 local WIFI_DRIVE_CONFIG_DIR="/etc/wireless"
+local WIFI_MUTILSSID_CONFIG_FILE="mutilssid"
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
@@ -46,6 +47,43 @@ local function common_get_section_name_by_index(wifi_id)
 	debug("not found")
 	return nil
 end
+
+-- get section name (.name) by index 
+-- input:
+-- 		number:wifi_secondary_id --> wifi secondary index get by wifi_secondary_get_list
+-- return:
+--		string:device type or nil if get fail
+local function common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	assert(type(wifi_secondary_id) == "number", "wifi_secondary_id is not a number")
+
+	--debug("wifi_id = ", wifi_id)
+	
+	local value = nil
+	local dev_type = nil		 
+	local all_config = x:get_all(WIFI_MUTILSSID_CONFIG_FILE)
+
+	if nil == all_config 
+	then
+		debug("all_config = nil")
+	end
+
+	for k,v in pairs(all_config) do
+		if wifi_secondary_id == v[".index"] then
+			--debug("get index == wifi_id")
+			if nil == v[".name"]
+			then
+				debug("error:device type is nil. ")
+				return nil
+			end
+			return tostring(v[".name"])
+		end
+	end
+
+	debug("not found")
+	return nil
+end
+
 
 -- get ifame section name (.name) by index 
 -- input:
@@ -539,7 +577,21 @@ function wifi_module.wifi_disable(wifi_id)
 	--debug("disable wifi self start at boot")
     -- set the ifame section
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-	return common_config_set(section_name, "disabled", "", 1)
+	if nil ~= section_name
+	then
+		local wifi_type = x:get(WIFI_CONFIG_FILE, section_name, "type")
+		x:foreach(WIFI_MUTILSSID_CONFIG_FILE, WIFI_OPTION_INTERFACE, function(s)
+				if s["type"] == wifi_type
+				then
+					x:set(WIFI_MUTILSSID_CONFIG_FILE, s[".name"], "disabled", 1)
+					
+				end
+		end)
+		x:commit(WIFI_MUTILSSID_CONFIG_FILE)
+		return common_config_set(section_name, "disabled", "", 1)
+	else
+		return false
+	end
 end
 
 -- get wifi self boot config
@@ -1017,7 +1069,560 @@ function wifi_module.wifi_get_wmm(wifi_id)
    return tonumber(wmm)
 end
 
+wifi_module.secondary_ssid = {
+	["primary_id"]	 = 	nil,  -- wifi_id 
+	["secondary_id"]	 = 	nil, -- secondary id
+	["ssid"]	 = 	nil,
+	["password"]	 = 	nil,
+	["interface_name"] = nil,
+	["hidden_ssid"] = nil,
+	["encryption"] = nil,
+	["encry_algorithms"] = nil,
+	["connect_sta_number"] = nil,
+	["macaddr"] = nil,
+	["wmm"] = nil,
+}
 
+function wifi_module.secondary_ssid:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+	
+	self["primary_id"]	 = obj["primary_id"] or nil
+	self["secondary_id"]	 = 	obj["secondary_id"] or nil
+	self["ssid"]	 = 	obj["ssid"] or nil
+	self["password"]	 = 	obj["password"] or nil
+	self["hidden_ssid"]	 = 	obj["hidden_ssid"] or nil
+	self["interface_name"]	 = 	obj["interface_name"] or nil
+	self["encryption"] = obj["encryption"] or nil
+	self["encry_algorithms"]	 = 	obj["encry_algorithms"] or nil
+	self["connect_sta_number"] = obj["connect_sta_number"] or nil
+	self["macaddr"] = obj["macaddr"] or nil
+	self["wmm"] = obj["wmm"] or nil
+   return o
+end
+
+function wifi_module.wifi_secondary_get_ssid_list()
+    
+    local ssid_list = {}
+    local i = 1
+    x:foreach(WIFI_CONFIG_FILE, WIFI_OPTION_DEVICE, function(s)
+		local wifi_type
+		local wifi_index 
+		for k,v in pairs(s) do
+				if (k == "type")
+				then
+					wifi_type = v
+				elseif (k == ".index" )
+				then
+					wifi_index = v
+				end
+		end
+
+		x:foreach(WIFI_MUTILSSID_CONFIG_FILE, WIFI_OPTION_INTERFACE, function(s)
+
+			if wifi_type == s["device"]
+			then
+				local temp = wifi_module.secondary_ssid:new(nil,nil)
+				temp["primary_id"] = wifi_index
+				temp["secondary_id"] = s[".index"]
+				temp["ssid"] = s["ssid"]
+				temp["password"] = s["key"]
+				temp["hidden_ssid"] = s["hidden"] or "0"
+				temp["interface_name"] = s["ifname"]
+				local arr = split(s["encryption"], '+')
+				temp["encryption"] = arr[1] or "none"
+				temp["encry_algorithms"] = arr[2] or "none"
+				temp["connect_sta_number"] = s["maxassoc"] 
+				temp["wmm"] = s["wmm"] or "1"
+				temp["macaddr"] = get_wifi_mac(s["ifname"])
+				ssid_list[i] = temp
+				i = i+1
+
+			end
+
+		end)
+
+
+		
+    end)
+
+    return ssid_list
+
+end
+
+-- get secondary wifi ssid
+-- input:wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:
+--		nil:get fail
+--		string: ssid string
+function wifi_module.wifi_secondary_get_ssid(wifi_secondary_id)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return nil
+	end
+
+	return x:get(WIFI_MUTILSSID_CONFIG_FILE, section, "ssid")
+end
+
+
+-- set secondary wifi ssid
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+--		value(string):the ssid in string
+-- return:boolean
+--		 true if success false if fail
+function wifi_module.wifi_secondary_set_ssid(wifi_secondary_id, value)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return false
+	end
+
+	if nil == value or "" == value
+	then
+		debug("input:value is nil")
+		return false
+	end
+
+	x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "ssid", value)
+	return x:commit(WIFI_MUTILSSID_CONFIG_FILE)
+end
+
+-- get secondary wifi password
+-- input:wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:
+--		nil:get fail
+--		string: password string
+function wifi_module.wifi_secondary_get_password(wifi_secondary_id)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return nil
+	end
+
+	return x:get(WIFI_MUTILSSID_CONFIG_FILE, section, "key")
+end
+
+-- set secondary wifi password
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+--		value(string):the password in string
+-- return:boolean
+--		 true if success false if fail
+function wifi_module.wifi_secondary_set_password(wifi_secondary_id, value)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return false
+	end
+
+	if nil == value or "" == value
+	then
+		debug("input:value is nil")
+		return false
+	end
+
+	x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "key", value)
+	return x:commit(WIFI_MUTILSSID_CONFIG_FILE)
+end
+
+-- get secondary wifi hidden ssid config
+-- input:wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:
+--		nil:get fail
+--		string: 0 to do not hidden the ssid  OR  1  to hide the ssid
+function wifi_module.wifi_secondary_get_hidden(wifi_secondary_id)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return nil
+	end
+	local hidden = x:get(WIFI_MUTILSSID_CONFIG_FILE, section, "hidden")
+	if nil == hidden
+	then
+		return "0"
+	end
+
+	return hidden
+end
+
+-- set secondary wifi hidden to enable 
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:boolean
+--		 true if success false if fail
+function wifi_module.wifi_secondary_enable_hidden(wifi_secondary_id)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return false
+	end
+	x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "hidden", 1)
+	return x:commit(WIFI_MUTILSSID_CONFIG_FILE) 
+end
+
+-- set secondary wifi hidden to disable 
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:boolean
+--		 true if success false if fail
+function wifi_module.wifi_secondary_disable_hidden(wifi_secondary_id)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return false
+	end
+	x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "hidden", 0)
+	return x:commit(WIFI_MUTILSSID_CONFIG_FILE) 
+end
+
+-- get secondary wifi max connect sta config
+-- input:wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:
+--		nil:get fail
+--		number: number of the max connect sta of this wifi 
+function wifi_module.wifi_secondary_get_connect_sta_num(wifi_secondary_id)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return nil
+	end
+
+	local max_num = x:get(WIFI_MUTILSSID_CONFIG_FILE, section, "maxassoc")
+	if nil == max_num
+	then
+		return nil
+	end
+
+	return tonumber(max_num)
+end
+
+-- set secondary wifi max connect sta config
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+--		value(number):the max number of the connect 
+-- return:boolean
+--		 true if success false if fail
+function wifi_module.wifi_secondary_set_connect_sta_num(wifi_secondary_id, value)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return false
+	end
+
+	if nil == value or "" == value or type(value) ~= "number"
+	then
+		debug("input:value is nil")
+		return false
+	end
+
+	x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "maxassoc", value)
+	return x:commit(WIFI_MUTILSSID_CONFIG_FILE)
+end
+
+
+--get secondary encryption mode
+-- input:wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:
+--		string value as follow:
+--		none   --> none or open
+-- 		wep -->wep wep-open wep-shared
+-- 		psk -->wap-psk wap psk
+-- 		psk2 -->wap2-psk wap2 psk2
+-- 		mixed --> psk+psk2/wap-psk/wap2-psk mixed
+-- 		nil: get fail
+-- e.g
+--	option encryption 'wep-open'
+--	option key '1'
+--	option key1 '1234567890'
+--	option key2 '1234567890'
+--	option key3 '1234567890'
+--	option key4 '1234567890'
+function wifi_module.wifi_secondary_get_encryption(wifi_secondary_id)
+
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return nil
+	end
+
+	local encry_all = x:get(WIFI_MUTILSSID_CONFIG_FILE, section, "encryption")
+
+	--debug("encry_all = ", encry_all)
+	local start, endp = string.find(encry_all, "+")
+
+    if nil == start 
+    then
+		return encry_all
+    else
+
+		local encry = string.sub(encry_all, 1, start-1)
+
+		debug("encry = ", encry)
+
+		return encry
+   	end
+end
+
+--set encryption
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+--		encryption string value as above
+-- return:
+--		boolean true if success false if fail
+function wifi_module.wifi_secondary_set_encryption(wifi_secondary_id,encryption)
+	if type(encryption) ~= "string" 
+	then 
+		debug("encryption not string,input error")
+		return false
+	end
+
+	if "none" == encryption or "wep" == encryption or "psk" == encryption or
+		"psk2" == encryption or "mixed" == encryption 
+	then
+
+		local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+		if nil == section
+		then
+			debug("wifi_secondary_id is wrong")
+			return false
+		end
+
+		x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "encryption", encryption)
+		return x:commit(WIFI_MUTILSSID_CONFIG_FILE)
+	else
+		debug("encryption:none wep psk psk2 mixed")
+		return false
+	end
+
+end
+
+-- get encrytion algorithms
+-- input:wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:string
+--		ccmp+tkip  -->TKIPAES
+--		ccmp	-->  AES
+--		tkip -->TKIP
+--		none --> AUTO
+--		nil:get fail
+function wifi_module.wifi_secondary_get_encryption_type(wifi_secondary_id)
+	
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return nil
+	end
+
+	local encry_all = x:get(WIFI_MUTILSSID_CONFIG_FILE, section, "encryption")
+	local start, endp = string.find(encry_all, "+")
+
+	if nil == start
+	then 
+		return "none"
+	end
+
+	local encry_type = string.sub(encry_all, start+1)
+
+	return encry_type
+end
+
+-- set encrytion algorithms
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+--		encry_algorithms(string):
+--		ccmp+tkip  -->TKIPAES
+--		ccmp	-->  AES
+--		tkip -->TKIP
+--		none --> AUTO
+-- return:
+--		boolean true if success false if fail
+function wifi_module.wifi_secondary_set_encryption_type(wifi_secondary_id,encry_algorithms)
+  	debug("set encryption")
+  	if type(encry_algorithms) ~= "string" 
+	then 
+		debug("encry_algorithms not string,input error")
+		return false
+	end
+	
+	if "none" == encry_algorithms or "ccmp+tkip" == encry_algorithms 
+		or "ccmp" == encry_algorithms or "tkip" == encry_algorithms 
+	then
+	    --  set the ifame section
+		local encry = wifi_module.wifi_secondary_get_encryption(wifi_secondary_id)
+		encry_algorithms = encry .. "+" .. encry_algorithms 
+	    
+		local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+		x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "encryption", encry_algorithms)
+		return x:commit(WIFI_MUTILSSID_CONFIG_FILE)
+	else
+		debug("input error:must be [none ccmp+tkip ccmp tkip]")
+		return false
+	end
+end
+
+-- enable wmm
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:
+--		boolean true if success false if fail
+function wifi_module.wifi_secondary_enable_wmm(wifi_secondary_id)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return false
+	end
+	x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "wmm", 1)
+	return x:commit(WIFI_MUTILSSID_CONFIG_FILE) 
+end
+
+-- disable wmm
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:
+--		boolean true if success false if fail
+function wifi_module.wifi_secondary_disable_wmm(wifi_secondary_id)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return false
+	end
+	x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "wmm", 0)
+	return x:commit(WIFI_MUTILSSID_CONFIG_FILE) 
+end
+
+-- get secondary wifi wmm config
+-- input:wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:
+--		nil:get fail
+--		string: 1  to enable  wmm OR 0 to disable wmm
+function wifi_module.wifi_secondary_get_wmm(wifi_secondary_id)
+	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section
+	then
+		debug("wifi_secondary_id is wrong")
+		return false
+	end
+	local wmm = x:get(WIFI_MUTILSSID_CONFIG_FILE, section, "wmm")
+	if nil == wmm
+	then
+		return "1"
+	end
+
+	return wmm
+end
+
+-- input:wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+--return:
+--		1:disable
+--		0:enable
+--		nil:get fail
+function wifi_module.wifi_secondary_get_enable_status(wifi_secondary_id)
+	local section_name = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section_name 
+	then
+		debug("error:can not get section name ")
+		return nil
+	end
+
+	local ret = x:get(WIFI_MUTILSSID_CONFIG_FILE, section_name, "disabled")
+
+	if nil == ret
+	then
+		debug("ret is nil ,return default value")
+		return "0"
+	end
+
+	return ret
+end
+
+-- enable secondary wifi
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:
+--		boolean true if success false if fail
+function wifi_module.wifi_secondary_enable(wifi_secondary_id)
+	local section_name = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	local device = x:get(WIFI_MUTILSSID_CONFIG_FILE, section_name, "device")
+
+	if nil == device
+	then
+		debug("error of get the device")
+		return false
+	end
+
+	local main_wifi_id 
+
+	 x:foreach(WIFI_CONFIG_FILE, WIFI_OPTION_DEVICE, function(s)
+		if s["type"] == device
+		then
+			main_wifi_id = s[".index"]
+		end
+	end)
+
+	 if wifi_module.wifi_get_enable_status(main_wifi_id) == "0"
+	 then
+	 	x:set(WIFI_MUTILSSID_CONFIG_FILE, section_name, "disabled", 0)
+	 	return x:commit(WIFI_MUTILSSID_CONFIG_FILE) 
+	 else
+	 	debug("only when main wifi is enable  can the secondary enable")
+	 	return false
+	 end
+
+end
+
+-- disable secondary wifi
+-- input:
+--		wifi_secondary_id(number):the id of secondary wifi which get by wifi_secondary_get_ssid_list
+-- return:
+--		boolean true if success false if fail
+function wifi_module.wifi_secondary_disable(wifi_secondary_id)
+	local section_name = common_secondary_get_section_name_by_index(wifi_secondary_id)
+
+	if nil == section_name
+	then
+		debug("wifi_secondary_id wrong")
+		return false
+	end
+
+ 	x:set(WIFI_MUTILSSID_CONFIG_FILE, section_name, "disabled", 1)
+ 	return x:commit(WIFI_MUTILSSID_CONFIG_FILE) 
+end
 
 wifi_module.station = {
 	["mac"]	 = 	nil,
