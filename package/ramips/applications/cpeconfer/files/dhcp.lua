@@ -94,6 +94,7 @@ dhcp_module.dhcp_object = {
 	["server_ip"] = nil,
 	["netmask"] = nil,
 	["enable"] = nil, -- true or false
+	["lan_mac"] = nil,
 }
 
 
@@ -113,6 +114,7 @@ function dhcp_module.dhcp_object:new(o,obj)
 	self["server_ip"]	 = 	obj["server_ip"] or nil
 	self["netmask"]	 = 	obj["netmask"] or nil
 	self["enable"]	 = 	obj["enable"] or nil
+	self["lan_mac"]	 = 	obj["lan_mac"] or nil
    return o
 end
 
@@ -135,6 +137,7 @@ local function get_dhcp_config(name)
 	
 	temp["server_ip"] = x:get(NETWORK_CONFIG_FILE, temp["interface"], "ipaddr")
 	temp["netmask"] = x:get(NETWORK_CONFIG_FILE, temp["interface"], "netmask")
+	temp["lan_mac"] = x:get(NETWORK_CONFIG_FILE, temp["interface"], "macaddr")
 	temp["leasetime"] = x:get(DHCP_CONFIG_FILE, name, "leasetime")
 	if nil == temp["leasetime"]
 	then
