@@ -21,6 +21,7 @@
 #include "include.h"
 #include "logger.h"
 #include "bm906.h"
+#include "bm916.h"
 #include "bm806.h"
 #include "ec20.h"
 #include "serial.h"
@@ -43,6 +44,7 @@ const MDI* modules_info_summary[]=
 {
 	&bm806_moduleinfo,
 	&bm906_moduleinfo,
+	&bm916_moduleinfo,
 	&ec20_moduleinfo,
 	&sim7000c_moduleinfo,
 	&ar9500_moduleinfo,

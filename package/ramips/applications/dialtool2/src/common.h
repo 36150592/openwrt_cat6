@@ -43,6 +43,10 @@
 #define TZ_VERDOR_S21_ID			0x05c6
 #define TZ_PRODUCT_S21V1			0x9025
 
+#define TZ_VERDOR_BM916_ID			0x2020
+#define TZ_PRODUCT_BM916_ID			0x2063
+
+
 #define TZ_VENDOR_EC20_ID			0x05c6
 #define TZ_PRODUCT_EC20				0x9215
 

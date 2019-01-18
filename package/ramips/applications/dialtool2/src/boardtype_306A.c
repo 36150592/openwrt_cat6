@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "bm906.h"
+#include "bm916.h"
 #include "bm806.h"
 #include "ec20.h"
 #include "include.h"
@@ -61,6 +62,17 @@ MP bm906_306A=
 	init_306a,
 	update_306a,
 	&process_bm906,
+};
+
+
+MP bm916_306A=
+{
+	"BM916",
+	"TZ7.823.306A",
+	"/tmp/.module_bm916_is_used",
+	init_306a,
+	update_306a,
+	&process_bm916,
 };
 
 
@@ -156,6 +168,7 @@ MP lt10_306A=
 MP* project_info_summary[]=
 {
 	&bm906_306A,
+	&bm916_306A,
 	&bm806U_C1_306A,
 	&bm806U_T1_306A,
 	&bm806U_E1_306A,

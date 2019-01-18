@@ -8,7 +8,7 @@ ifdef P61_DIALTOOL_FLAG
 CFLAGS += -DP61_DIALTOOL_FLAG
 endif
 
-OBJS = main.o lt10.o bm806.o ec20.o bm906.o common.o logger.o option.o queue.o serial.o sim7000.o a9500.o
+OBJS = main.o lt10.o bm806.o ec20.o bm906.o common.o logger.o option.o queue.o serial.o sim7000.o a9500.o bm916.o
 
 ifeq ($(TOZED_HW_VERSION), TZ7.823.317)
 OBJS += boardtype_317.o
