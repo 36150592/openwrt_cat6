@@ -1,0 +1,41 @@
+Index: linux-3.18.23/drivers/usb/serial/option.c
+===================================================================
+--- linux-3.18.23.orig/drivers/usb/serial/option.c
++++ linux-3.18.23/drivers/usb/serial/option.c
+@@ -521,6 +521,11 @@ static void option_instat_callback(struc
+ #define TZ_VENDOR_BM906_ID			0x05c6
+ #define TZ_PRODUCT_BM906_ID			0x9025
+ 
++#define TZ_VENDOR_BM916_ID			0x2020
++#define TZ_PRODUCT_BM916_ID			0x2063
++
++
++
+ /* some devices interfaces need special handling due to a number of reasons */
+ enum option_blacklist_reason {
+ 		OPTION_BLACKLIST_NONE = 0,
+@@ -1079,6 +1084,7 @@ static const struct usb_device_id option
+ 	{ USB_DEVICE(TZ_VENDOR_P500_ID, TZ_PRODUCT_P500V2) }, 							/* TZ P500V2 */
+ 	{ USB_DEVICE(TZ_VENDOR_P500_ID, TZ_PRODUCT_P500V3) },							/* TZ P500V3 */
+ 	{ USB_DEVICE(TZ_VENDOR_BM906_ID, TZ_PRODUCT_BM906_ID) },							/* TZ BM906 */
++	{ USB_DEVICE(TZ_VENDOR_BM916_ID, TZ_PRODUCT_BM916_ID) },							/* TZ BM916 */
+ 	/* Novatel Ovation MC551 a.k.a. Verizon USB551L */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(NOVATELWIRELESS_VENDOR_ID, NOVATELWIRELESS_PRODUCT_MC551, 0xff, 0xff, 0xff) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(NOVATELWIRELESS_VENDOR_ID, NOVATELWIRELESS_PRODUCT_E362, 0xff, 0xff, 0xff) },
+@@ -1940,6 +1946,16 @@ static int option_probe(struct usb_seria
+ 		return -ENODEV;
+ 	}
+ 
++	if (dev_desc->idVendor == cpu_to_le16(TZ_VENDOR_BM916_ID) &&
++	    dev_desc->idProduct == cpu_to_le16(TZ_PRODUCT_BM916_ID) &&
++	    serial->interface->cur_altsetting->desc.bInterfaceNumber == 0x4)
++	{
++		printk("serial option_probe 0x%X - 0x%X - %d\n", 
++                    le16_to_cpu( serial->dev->descriptor.idVendor ), 
++                    le16_to_cpu( serial->dev->descriptor.idProduct ), 
++                    serial->interface->cur_altsetting->desc.bInterfaceNumber);
++		return -ENODEV;
++	}
+ 	/* Store device id so we can use it during attach. */
+ 	usb_set_serial_data(serial, (void *)id);
+ 
