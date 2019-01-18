@@ -152,6 +152,10 @@ networktoolhtml.ipMacEdit = {};
 networktoolhtml.prompt = {};
 networktoolhtml.tab_menu = {};
 
+var sysathtml = {};
+sysathtml.form1 = {};
+sysathtml.head = {};
+
 var sysmanagehtml = {};
 sysmanagehtml.form1 = {};
 sysmanagehtml.form2 = {};

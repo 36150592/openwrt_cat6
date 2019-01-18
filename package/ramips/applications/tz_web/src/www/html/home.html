@@ -47,6 +47,10 @@
 			if(parseInt(Sysauth.charAt(2),10)) {
                 sysMenu.push(new MenuBody("NETWORK_TOOL", MENU.sys.networkTools));
             }
+
+            if(parseInt(Sysauth.charAt(3),10)) {
+                sysMenu.push(new MenuBody("SYS_AT", MENU.sys.at));
+            }
 			menus.push(sysMenu);
         }
 		
@@ -130,7 +134,8 @@
 
         $('#menu li a').bind('click', function(e) {
             var id = this.id;
-            var item = MenuItem[id];
+
+            var item = MenuItem[id]; 
             if (item != null) {
                // if (item.cmd == RequestCmd.SYS_REBOOT) {
                //     SysUtil.rebootDevice(RENOOTTYPE.NORMAL_REBOOT, PROMPT.confirm.reboot);
@@ -144,6 +149,7 @@
 
                     setMenuItem(id);
                     Page.menuItem = item;
+
                     Page.$iframe.load(item.url);
                     //Page.get(item.url);
                // }

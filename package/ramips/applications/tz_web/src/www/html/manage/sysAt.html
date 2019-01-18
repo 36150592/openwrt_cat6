@@ -1,0 +1,70 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function(){
+
+        TempUtil.render('sysathtmlhead-template', 'title_container', sysathtml.head);
+        TempUtil.render('sysathtmlform1-template', 'form1', sysathtml.form1);
+        $('#atStart').click(function(){
+            $(this).attr("disabled",true);
+            var count = 0;
+            var $form = $('#form1');
+        // AlertUtil.alertMsg("click ping start");
+            var json = JSON.parmsToJSON($form);
+
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.SYS_AT;
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    $('#atResult').html(data.data)
+                    $('#atStart').attr("disabled",false);
+                }
+            });
+        });
+ 
+    });
+</script>
+
+<div class="detail_box" >
+    <div id="title_container">
+        <script type="text/template" id="sysathtmlhead-template">
+          <div class="detail"><%- title%></div>
+        </script>
+    </div>
+    <div>
+        <div class="tab_boxes">
+            <div class="main_box">
+                <form id="form1">
+                    <script type="text/template" id="sysathtmlform1-template">
+                        <table class="detail" cellspacing="0"><tr>
+                            <tr><td colspan="3"><span class="cmt"><%- helper %></span></td></tr>
+                            <th><%- input %>&nbsp;</th>
+                            <td>
+                                <input type="text" id="atCmd" name="atCmd" class="normal inputs_lan"  />
+                                <input type="button" id="atStart" value="<%- execute %>"/>
+                            </td>
+                            </tr>
+
+                            <tr class="odd">
+                                <th>&nbsp;</th>
+                                <td>
+                                    <textarea id="atResult" cols="80" rows="20"></textarea>
+                                    <br>
+                                    <input type="button" onclick="javascript:$('#atResult').text('')" value="<%- clear %>">
+                                </td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+
+            </div>
+          
+        </div>
+    </div>
+    <div class="helper_box" style="display:none;">
+        <div id="helper"></div>
+    </div>
+    <span style="clear:both"></span>
+</div>

@@ -980,13 +980,24 @@ function reboot_sys()
 
 end
 
+function deal_at()
+	local tz_answer = {}
+	tz_answer["cmd"] = 19  
 
+	local f = io.popen(string.format("sendat -d/dev/ttyUSB3 -e  %s", tz_req["atCmd"]))
+	tz_answer["data"] = f:read("*a")
+	io.close(f)
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+end
 
 local switch = {
      [0] = get_sysinfo,
      [2] = set_wifi,
 	 [3] = set_dhcp,
 	 [6] = reboot_sys,
+	 [19] = deal_at,
 	 [20] = firewall_restart,
 	 [21] = port_filter,
 	 [22] = ip_filter,
