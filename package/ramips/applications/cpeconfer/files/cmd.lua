@@ -609,6 +609,34 @@ function wifi_secondary_set_encryption_type()
 	end
 end
 
+function wifi_secondary_get_connect_sta_number()
+	print("wifi_secondary_get_connect_sta_number")
+	local ret = wifi.wifi_secondary_get_connect_sta_num(tonumber(arg[2]))
+
+	if  ret 
+	then
+		print("the max connect sta number  = ",ret)
+	else
+		print("get fail")
+		print("usepage: wifi_secondary_get_connect_sta_number wifi_secondary_id")
+	end
+
+end
+
+function wifi_secondary_set_connect_sta_number()
+	print("wifi_secondary_set_connect_sta_number")
+	local ret = wifi.wifi_secondary_set_connect_sta_num(tonumber(arg[2]), tonumber(arg[3]))
+
+	if  ret 
+	then
+		print("set success ")
+	else
+		print("get fail")
+		print("usepage: wifi_secondary_set_connect_sta_number wifi_secondary_id num")
+	end
+
+end
+
 function wifi_secondary_get_wmm()
 	print("wifi_secondary_get_wmm")
 	local ret = wifi.wifi_secondary_get_wmm(tonumber(arg[2]))
