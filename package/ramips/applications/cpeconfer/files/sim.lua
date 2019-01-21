@@ -5,7 +5,7 @@ local util=require("tz.util")
 local x = uci.cursor()
 local SIM_CONFIG_FILE="network"
 local SIM_DYNAMIC_STATUS_PATH="/tmp/.system_info_dynamic"
-local SIM_SEND_AT_CMD="sendat -d/dev/ttyUSB3 -f/tmp/at_send -o/tmp/at_recv"
+local SIM_SEND_AT_CMD="sendat -d/dev/ttyUSB1 -f/tmp/at_send -o/tmp/at_recv"
 local SIM_AT_SEND_FILE="/tmp/at_send"
 local SIM_AT_RECV_FILE="/tmp/at_recv"
 local debug = util.debug
@@ -42,86 +42,15 @@ function sim_module.sim_status:new(o,obj)
 	self["puk_left_times"]  = obj["puk_left_times"] or  nil
 end
 
-function sim_module.sim_get_status()
-	local f = nil
-	local status = nil
-	local res = nil
-
-	f = io.open(SIM_DYNAMIC_STATUS_PATH,"r")
-
-	if nil == f
-	then
-		debug("open ",SIM_DYNAMIC_STATUS_PATH, " fail")
-		return nil
-	end
-
-	res = f:read()
-
-	while( res ~= nil)
-	do
-		if nil == status
-		then
-			status = sim_module.sim_status:new(nil,nil)
-			status["card_status"] = 0
-		end
-
-		local array = split(res,":")
-		--print(array[1],"=", array[2])
-		local key = string.gsub(array[1],"\t","")
-		local value = string.gsub(array[2],"\t","")
-		key = string.lower(key)
-		
-		if  "iccid" == key
-		then
-			status["iccid"] = value
-		elseif "imsi" == key
-		then
-			status["imsi"] = value
-		elseif "lock_pin_flag" == key
-		then
-			if value == "1"
-			then 
-				status["card_status"] = 1
-			end
-		elseif "lock_puk_flag" == key
-		then
-			if value == "1"
-			then 
-				status["card_status"] = 2
-			end
-		elseif "pinlock_enable_flag" == key
-		then 
-			status["pinlock_enable"] = value
-		elseif "is_sim_exist" == key
-		then
-			status["is_sim_exist"] = value
-		elseif "pin_left_times" == key
-		then
-			status["pin_left_times"] = value
-		elseif "puk_left_times" == key
-		then
-			status["puk_left_times"] = value
-		end
-
-		res = f:read()
-	end
-
-	io.close(f)
-
-	return status
-
-end
-
-
 local function clear_file(path)
 	return os.execute(string.format("> %s", path))
 end
 
 local function format_enable_pin_lock_at_cmd(pin_passwd)return string.format('AT+CLCK="SC",1,"%s"\n', pin_passwd) end
 local function format_disable_pin_lock_at_cmd(pin_passwd)return string.format('AT+CLCK="SC",0,"%s"\n', pin_passwd) end
+local function format_get_pin_lock_at_cmd()return 'AT+CLCK="SC",2,""\n' end
 local function format_pin_unlock_at_cmd(pin_passwd)return string.format('AT+CPIN=%s\n', pin_passwd) end
 local function format_get_rev_cmd(file)return string.format('cat %s | grep OK | wc -l', file) end
-
 
 local function send_at_cmd(cmd)
 	clear_file(SIM_AT_SEND_FILE)
@@ -171,6 +100,102 @@ local function send_at_cmd(cmd)
 	return false
 
 end
+
+local function get_pin_lock_enable_status()
+	local ret = send_at_cmd(format_get_pin_lock_at_cmd())
+	if true == ret
+	then
+		local f = io.popen(string.format("cat %s | grep 'CLCK' | cut -d':' -f 2", SIM_AT_RECV_FILE))
+		if nil ~= f
+		then 
+			local res = f:read()
+			io.close(f)
+			return res
+		end
+	end
+
+	return nil
+end
+
+function sim_module.sim_reload()
+	if send_at_cmd("AT+CFUN=0\n")
+	then
+		return send_at_cmd("AT+CFUN=1\n")
+	end
+	return false
+end
+
+function sim_module.sim_get_status()
+	local f = nil
+	local status = nil
+	local res = nil
+
+	f = io.open(SIM_DYNAMIC_STATUS_PATH,"r")
+
+	if nil == f
+	then
+		debug("open ",SIM_DYNAMIC_STATUS_PATH, " fail")
+		return nil
+	end
+
+	res = f:read()
+
+	while( res ~= nil)
+	do
+		if nil == status
+		then
+			status = sim_module.sim_status:new(nil,nil)
+			status["card_status"] = 0
+		end
+
+		local array = split(res,":")
+		--print(array[1],"=", array[2])
+		local key = string.gsub(array[1],"\t","")
+		local value = string.gsub(array[2],"\t","")
+		key = string.lower(key)
+		
+		if  "iccid" == key
+		then
+			status["iccid"] = value
+		elseif "imsi" == key
+		then
+			status["imsi"] = value
+		elseif "lock_pin_flag" == key
+		then
+			if value == "1"
+			then 
+				status["card_status"] = 1
+			end
+		elseif "lock_puk_flag" == key
+		then
+			if value == "1"
+			then 
+				status["card_status"] = 2
+			end
+		elseif "is_sim_exist" == key
+		then
+			status["is_sim_exist"] = value
+		elseif "pin_left_times" == key
+		then
+			status["pin_left_times"] = value
+		elseif "puk_left_times" == key
+		then
+			status["puk_left_times"] = value
+		end
+
+		res = f:read()
+	end
+
+	status["pinlock_enable"] = get_pin_lock_enable_status()
+
+
+	io.close(f)
+
+	return status
+
+end
+
+
 
 
 function sim_module.sim_pin_lock_enable(pin_passwd)

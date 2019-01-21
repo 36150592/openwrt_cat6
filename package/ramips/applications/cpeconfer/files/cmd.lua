@@ -328,6 +328,17 @@ function system_network_tool()
 
 end
 
+function sim_reload()
+	print("in sim_reload")
+	local ret = sim.sim_reload()
+	if ret 
+	then	
+		print("reload success")
+	else
+		print("reload fail")
+	end
+end
+
 function sim_get_status()
 
 	print("in sim_get_status")
@@ -1435,7 +1446,8 @@ local api_func = {
 	["sim_pin_lock_enable"] = sim_pin_lock_enable,
 	["sim_pin_lock_disable"] = sim_pin_lock_disable,
 	["sim_pin_unlock"] = sim_pin_unlock,
-
+	["sim_reload"] = sim_reload,
+	
 	--system
 	["system_get_status"] = system_get_status,
 	["system_network_tool"] = system_network_tool,
