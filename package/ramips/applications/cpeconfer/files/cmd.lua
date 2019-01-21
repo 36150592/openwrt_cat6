@@ -180,10 +180,10 @@ end
 function firewall_set_ip_filter()
 		print("in firewall_set_ip_filter")
 		local ips={
-		{["ipaddr"]='192.168.3.6', ["action"]='ACCEPT', ["comment"]="test ip filter",["iswork"]=true},
-		{["ipaddr"]='192.168.4.6', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=true},
-		{["ipaddr"]='192.168.4.8', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=true},
-		{["ipaddr"]='192.168.4.9', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=false},
+		{["protocol"] = 'tcp', ["ipaddr"]='192.168.3.6', ["action"]='ACCEPT', ["comment"]="test ip filter",["iswork"]=true},
+		{["protocol"] = 'all', ["ipaddr"]='192.168.4.6', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=true},
+		{["protocol"] = 'udp', ["ipaddr"]='192.168.4.8', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=true},
+		{["protocol"] = 'tcp', ["ipaddr"]='192.168.4.9', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=false},
 		}
 
 		if firewall.firewall_set_ip_filter_list(ips)

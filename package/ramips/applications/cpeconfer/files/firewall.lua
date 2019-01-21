@@ -64,6 +64,7 @@ firewall_module.ip_filter = {
 		
 	["ipaddr"] = nil,
 	["action"] = nil,--DROP:refused  ACCEPT: access connect 
+	["protocol"] = nil, --tcp  upd  all
 	["comment"] = nil, -- user note
 	["iswork"] = nil  -- is apply this rule  true:apply  false:not apply
 }
@@ -78,10 +79,12 @@ function firewall_module.ip_filter:new(o,obj)
 		
 	self["ipaddr"] = obj["ipaddr"] or nil
 	self["action"] = obj["action"] or nil
+	self["protocol"] = obj["protocol"] or nil
 	self["comment"] = obj["comment"] or nil
 	self["iswork"] = obj["iswork"] or nil
 	
 end
+
 
 firewall_module.port_filter = {
 	
@@ -170,13 +173,13 @@ local function format_get_url_filter_cmd()
 	return string.format("cat %s | grep %s", FIREWALL_CUSTOM_CONFIG_FILE, FIREWALL_URL_FILTER_PREX) 
 end
 
-local function format_set_ip_filter_cmd(ip,action,comment)
+local function format_set_ip_filter_cmd(ip,protocol,action,comment)
 
-	local cmd1 = string.format("echo 'iptables  -I FORWARD -s %s  -j %s ##%s##%s##%s##%s##1' >> %s ;",
-								 ip, action, FIREWALL_IP_FILTER_PREX, ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+	local cmd1 = string.format("echo 'iptables  -I FORWARD -p %s -s %s  -j %s ##%s##%s##%s##%s##%s##1' >> %s ;",
+								 protocol,ip, action, FIREWALL_IP_FILTER_PREX, protocol, ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 
-	local cmd2 = string.format("echo 'iptables  -I FORWARD -d %s  -j %s ##%s##%s##%s##%s##2' >> %s ;",
-								 ip, action, FIREWALL_IP_FILTER_PREX, ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+	local cmd2 = string.format("echo 'iptables  -I FORWARD -p %s -d %s  -j %s ##%s##%s##%s##%s##%s##2' >> %s ;",
+								  protocol,ip, action, FIREWALL_IP_FILTER_PREX,  protocol,ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
 	return string.format("%s%s",cmd1,cmd2)
 end
 
@@ -560,11 +563,12 @@ function firewall_module.firewall_get_ip_filter_list()
 		local array = split(data[i], "##")
 		local temp = firewall_module.ip_filter:new(nil,nil)
 
-		temp["ipaddr"] = array[3]
-		temp["action"] = array[4]
-		temp["comment"] = array[5]
+		temp["protocol"] = array[3]
+		temp["ipaddr"] = array[4]
+		temp["action"] = array[5]
+		temp["comment"] = array[6]
 		temp["iswork"] = rule_is_work(data[i])
-		if '1' == array[6]
+		if '1' == array[7]
 		then
 			ip_filter_list[j] = temp
 			j = j+1
@@ -611,11 +615,11 @@ function firewall_module.firewall_set_ip_filter_list(filter_list)
 	do
 		local temp = array[i]
 
-		if check_action(temp["action"]) and check_ip(temp["ipaddr"])
+		if check_action(temp["action"]) and check_ip(temp["ipaddr"]) and check_protocol(temp["protocol"])
 		then
-			execute_cmd(format_set_ip_filter_cmd(temp["ipaddr"], temp["action"], temp["comment"]), temp["iswork"])
+			execute_cmd(format_set_ip_filter_cmd(temp["ipaddr"],temp["protocol"], temp["action"], temp["comment"]), temp["iswork"])
 		else
-			debug("check fail ", temp["action"]," ", temp["ipaddr"], " ", temp["comment"])
+			debug("check fail ", temp["action"]," ", temp["ipaddr"], " ", temp["comment"], " ", temp["protocol"])
 			return false
 		end
 	end
