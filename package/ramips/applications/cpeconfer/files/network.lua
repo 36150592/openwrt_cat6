@@ -46,7 +46,7 @@ function network_module.net_info:new(o,obj)
 	
 end
 
-local function format_get_gateway_cmd(ifname) return string.format("route | grep %s  | awk '{print $2}' |  grep -E -o '([0-9]{1,3}[\.]){3}[0-9]{1,3}' ", ifname) end
+local function format_get_gateway_cmd(ifname) return string.format("ip route list table %s | grep default | awk '{print $3}'", ifname) end
 local function format_get_mac(ifname) return string.format("cat /sys/class/net/%s/address", ifname) end
 
 local function get_ip_bcast_mask_mac(ifname)
