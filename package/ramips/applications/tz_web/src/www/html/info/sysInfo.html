@@ -151,7 +151,7 @@
 					
                     var data_system = data2.system;
                     var data_sim = data2.sim;
-                    var data_lan = data2.lan;
+                    var data_lan = data2.lan[0];
                     var data_modem = data2.modem;
                     var data_wan = data2.network;
 
@@ -222,14 +222,14 @@
                     names_lan.push(DOC.net.ip);
                     names_lan.push(DOC.net.mask);
 
-                    values_lan.push(data_wan.mac || loading);
+                    values_lan.push(data_lan.lan_mac || loading);
 
-                    Page.lanIp = data_lan.lanIp;
-                    values_lan.push(data_lan.lanIp || loading);
-                    values_lan.push(data_lan.netMask || loading);
+                    Page.lanIp = data_lan.server_ip;
+                    values_lan.push(data_lan.server_ip || loading);
+                    values_lan.push(data_lan.netmask || loading);
 
                     names_lan.push(DOC.net.dhcpServer);
-                    var dhcp = data_lan.status ? '1' : '0';
+                    var dhcp = data_lan.enable ? '1' : '0';
                     if(dhcp == DHCPServer.CLOSED){
                         values_lan.push(DOC.status.closed);
                     } else {

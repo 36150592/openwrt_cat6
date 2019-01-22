@@ -20,7 +20,7 @@ var RequestCmd = {
     SYS_UPDATE: 5,
 	SYS_REBOOT: 6,
     SYS_LOG: 17,
-    SYS_AT:19,
+	SYS_AT:19,
     DEVICE_VERSION_INFO: 43,
     INIT_PAGE: 80,
     CHANGE_LANGUAGE: 97,
@@ -63,7 +63,7 @@ var MenuItem = {
     SYS_SET: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/sys/sysConfigIndex.html" },
     SYS_LOG: { cmd: RequestCmd.SYS_LOG, url: "html/manage/sysLog.html" },
     SYS_UPDATE:	{ cmd: RequestCmd.SYS_UPDATE, url: "html/update/sysUpdate.html" },
-    SYS_AT: { cmd: RequestCmd.SYS_AT, url: "html/manage/sysAt.html" },
+	SYS_AT: { cmd: RequestCmd.SYS_AT, url: "html/manage/sysAt.html" },
 	NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
 	
 	FW_RULE: { cmd: RequestCmd.PORT_FILTER, url: "html/firewall/firewall.html" },

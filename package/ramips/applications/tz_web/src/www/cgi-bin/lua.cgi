@@ -104,7 +104,7 @@ end
 
 function get_sysinfo()
 	local data_array = {}
-	local data_lan = {}
+	--local data_lan = {}
     data_array["system"]  = system.system_get_status() or ''
 	data_array["modem"] = modem.modem_get_status() or ''
 	data_array["sim"] = sim.sim_get_status() or ''
@@ -113,10 +113,10 @@ function get_sysinfo()
 	  then
 	    data_array["network"] = network.network_get_4g_net_info() or ''
 	end
-	data_lan["lanIp"] = dhcp.dhcp_get_server_ip()
-	data_lan["netMask"] = dhcp.dhcp_get_server_mask()
-	data_lan["status"] = dhcp.dhcp_get_enable_status()
-    data_array["lan"] = data_lan
+	--data_lan["lanIp"] = dhcp.dhcp_get_server_ip()
+	--data_lan["netMask"] = dhcp.dhcp_get_server_mask()
+	--data_lan["status"] = dhcp.dhcp_get_enable_status()
+    data_array["lan"] = dhcp.dhcp_get_object_list()
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 0;
@@ -154,10 +154,10 @@ function get_wifi()
 	data_array['status'] = wifi.wifi_get_enable_status(id)
 	data_array['hidden_ssid'] = wifi.wifi_get_hidden_ssid(id)
 	data_array['wmm'] = wifi.wifi_get_wmm(id)
-	data_array['ssid'] = wifi.wifi_get_ssid(id)
-	data_array['maxNum'] = wifi.wifi_get_connect_sta_number(id)
-	data_array['encryption'] = wifi.wifi_get_encryption(id)
-	data_array['pwd'] = wifi.wifi_get_password(id)
+	--data_array['ssid'] = wifi.wifi_get_ssid(id)
+	--data_array['maxNum'] = wifi.wifi_get_connect_sta_number(id)
+	--data_array['encryption'] = wifi.wifi_get_encryption(id)
+	--data_array['pwd'] = wifi.wifi_get_password(id)
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 101;
@@ -196,13 +196,145 @@ function get_wifi5()
 	
 end
 
+function get_ssidlist()
+
+  local array = wifi.wifi_secondary_get_ssid_list()
+  local data_array = {}
+  local wifiId = tonumber(tz_req["wifiId"])
+  local i = 2
+  for k,v in pairs(array) do
+	   if(v["primary_id"] == wifiId)
+	     then
+		  data_array[i] = v		
+          i = i+ 1	  
+		end
+  end
+  local tz_answer = {};
+  tz_answer["success"] = true;
+  tz_answer["cmd"] = 120;
+  tz_answer["data"] = data_array;
+  result_json = cjson.encode(tz_answer);
+  print(result_json);
+  
+end
+
+function set_ssidlist()
+
+	local tz_answer = {};
+	local ret 
+	
+	local wifiId = tonumber(tz_req["wifiId"])
+	local secondaryId = tonumber(tz_req["secondaryId"])
+	local broadcast = tonumber(tz_req["broadcast"])
+	local wmm = tonumber(tz_req["wmm"])
+    local ssid = tz_req["ssid"]
+	local maxStation = tonumber(tz_req["maxStation"])
+	local authenticationType = tz_req["authenticationType"]
+	local encryptAlgorithm = tz_req["encryptAlgorithm"]
+	local key = tz_req["key"]
+	
+	
+	if(nil ~= broadcast)
+	then
+		if(0 == broadcast)
+		 then
+	       ret = wifi.wifi_secondary_disable_hidden(secondaryId)
+		    if(not ret)
+			  then
+			  tz_answer["disableSsid"] = false
+		    end
+		elseif(1 == broadcast)
+		  then
+			ret = wifi.wifi_secondary_enable_hidden(secondaryId)
+			  if(not ret)
+		        then
+			     tz_answer["enableSsid"] = false
+              end
+	   end
+	end
+	
+	if(nil ~= wmm)
+	then
+		if(0 == wmm)
+		  then
+	        ret = wifi.wifi_secondary_disable_wmm(secondaryId)
+		     if(not ret)
+		       then
+			   tz_answer["disableWmm"] = false
+			  end
+	    elseif(1 == wmm)
+	      then
+	      ret = wifi.wifi_secondary_enable_wmm(secondaryId)
+	        if(not ret)
+		      then
+			  tz_answer["enableWmm"] = false
+            end
+	    end
+	end
+	
+	if(nil ~= ssid)
+	 then
+		ret = wifi.wifi_secondary_set_ssid(secondaryId, ssid)
+			if(not ret)
+				then
+				tz_answer["setSsid"] = false
+			end
+	end
+	
+	if(nil ~= maxStation)
+	 then
+		ret = wifi.wifi_secondary_set_connect_sta_num(secondaryId, maxStation)	
+		
+			if(not ret)
+				then
+				tz_answer["setnumber"] = false
+			end
+	end  
+	
+	if(nil ~= authenticationType)
+	 then
+		ret = wifi.wifi_secondary_set_encryption(secondaryId, authenticationType)	
+			if(not ret)
+				then
+				tz_answer["setEncryption"] = false
+			end	    
+	end 
+	
+	if(nil ~= encryptAlgorithm)
+	 then
+		ret = wifi.wifi_secondary_set_encryption_type(secondaryId, encryptAlgorithm)	
+			if(not ret)
+				then
+				tz_answer["setEncryptionType"] = false
+			end	    
+	end 
+		
+	if(nil ~= key)
+	 then
+		ret = wifi.wifi_secondary_set_password(secondaryId, key)	
+			if(not ret)
+				then
+				tz_answer["setPassword"] = false
+			end
+	end 
+	
+	wifi.wifi_restart(wifiId)
+	tz_answer["success"] = true;
+	tz_answer["cmd"] = 121;
+	result_json = cjson.encode(tz_answer);
+	print(result_json);
+	
+	
+end
+
 function get_dhcp()
     local data_array = {}
-	data_array["status"] = dhcp.dhcp_get_enable_status()
-	data_array["lanIp"] = dhcp.dhcp_get_server_ip()
-	data_array["netMask"] = dhcp.dhcp_get_server_mask()
-	data_array["ipBegin"],data_array["ipEnd"] = dhcp.dhcp_get_ip_range()
-	data_array["expireTime"] = dhcp.dhcp_get_lease_time()
+	--data_array["status"] = dhcp.dhcp_get_enable_status()
+	--data_array["lanIp"] = dhcp.dhcp_get_server_ip()
+	--data_array["netMask"] = dhcp.dhcp_get_server_mask()
+	--data_array["ipBegin"],data_array["ipEnd"] = dhcp.dhcp_get_ip_range()
+	--data_array["expireTime"] = dhcp.dhcp_get_lease_time()
+	data_array = dhcp.dhcp_get_object_list()
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 102;
@@ -234,8 +366,9 @@ function set_wifi()
 	local maxStation = tonumber(tz_req["maxStation"])
 	local channel = tz_req["channel"]
 	local mode = tonumber(tz_req["wifiWorkMode"])
-	local security = tz_req["security_config"]
-	local pwd = tz_req["pwd"]
+	local authenticationType = tz_req["authenticationType"]
+	local encryptAlgorithm = tz_req["encryptAlgorithm"]
+	local key = tz_req["key"]
 	
 	if(nil ~= wifiOpen)
 	then
@@ -340,33 +473,28 @@ function set_wifi()
 			end
 	end 
 	
-	if(nil ~= security)
+	
+	if(nil ~= authenticationType)
 	 then
-		ret = wifi.wifi_set_encryption(id, security)	
+		ret = wifi.wifi_set_encryption(id, authenticationType)	
 			if(not ret)
 				then
 				tz_answer["setEncryption"] = false
-			end
-		if("none" == security)
-		  then
-	        ret = wifi.wifi_set_encryption_type(id,"none")
-		     if(not ret)
-		       then
-			   tz_answer["setEncryptionType"] = false
-			  end
-	    else
-	      ret = wifi.wifi_set_encryption_type(id,"ccmp")
-	        if(not ret)
-		      then
-			  tz_answer["setEncryptionType"] = false
-            end
-	    end
-		    
+			end	    
 	end 
 	
-	if(nil ~= pwd)
+	if(nil ~= encryptAlgorithm)
 	 then
-		ret = wifi.wifi_set_password(id, pwd)	
+		ret = wifi.wifi_set_encryption_type(id, encryptAlgorithm)	
+			if(not ret)
+				then
+				tz_answer["setEncryptionType"] = false
+			end	    
+	end 
+	
+	if(nil ~= key)
+	 then
+		ret = wifi.wifi_set_password(id, key)	
 			if(not ret)
 				then
 				tz_answer["setPassword"] = false
@@ -539,17 +667,8 @@ function set_dhcp()
 	local tz_answer = {}
 	tz_answer["cmd"] = 3
     local ret 
-	local setipflg = false
-	local array = wifi.wifi_get_dev()
-	
-	local id
-	for k,v in pairs(array) do
-	   if(v["band"] == "2.4G")
-	     then
-		   id = v['wifi_id']				  
-		end
-	end
-	
+
+	local lanName = tz_req["lanName"]
 	local lanIp = tz_req["lanIp"]
 	local netMask = tz_req["netMask"]
 	local dhcpServer = tonumber(tz_req["dhcpServer"])
@@ -560,10 +679,9 @@ function set_dhcp()
    
 	if(nil ~= lanIp)
 	  then
-		ret = dhcp.dhcp_set_server_ip(lanIp)
+		ret = dhcp.dhcp_set_server_ip(lanName,lanIp)
 			if(ret)
 				then
-				setipflg = true
 				tz_answer["setIp"] = true	
 			else
                 tz_answer["setIp"] = false			
@@ -572,7 +690,7 @@ function set_dhcp()
 	
 	if(nil ~= netMask)
 	  then
-		ret = dhcp.dhcp_set_server_mask(netMask)
+		ret = dhcp.dhcp_set_server_mask(lanName,netMask)
 			if(not ret)
 				then
 				tz_answer["setMask"] = false
@@ -581,7 +699,7 @@ function set_dhcp()
 	
 	if(nil ~= expireTime)
 	  then
-		ret = dhcp.dhcp_set_lease_time(expireTime)
+		ret = dhcp.dhcp_set_lease_time(lanName,expireTime)
 			if(not ret)
 				then
 				tz_answer["setLeaseTime"] = false
@@ -610,7 +728,7 @@ function set_dhcp()
 	
 	if(nil ~= ipBegin)
 	  then
-		ret = dhcp.dhcp_set_ip_range(ipBegin, limitNum)
+		ret = dhcp.dhcp_set_ip_range(lanName,ipBegin, limitNum)
 			if(not ret)
 				then
 				tz_answer["setIpRange"] = false
@@ -992,6 +1110,7 @@ function deal_at()
 	print(result_json)
 end
 
+
 local switch = {
      [0] = get_sysinfo,
      [2] = set_wifi,
@@ -1017,6 +1136,8 @@ local switch = {
 	 [113] = get_sysstatus,
 	 [117] = get_wifiClient,
 	 [118] = get_wifi5Client,
+	 [120] = get_ssidlist,
+	 [121] = set_ssidlist,
 	 [133] = get_routerinfo,
 	 [145] = network_tool,
 	 [201] = get_wifi5,
