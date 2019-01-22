@@ -194,6 +194,42 @@ function firewall_set_ip_filter()
 		end
 end
 
+function firewall_get_acl_filter()
+
+	print("in firewall_get_acl_filter")
+	local info = firewall.firewall_get_acl_filter_list()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			for key,value in pairs(v) do
+				print(key,"=",value)
+			end
+	end
+
+end
+
+function firewall_set_acl_filter()
+		print("in firewall_set_ip_filter")
+		local ips={
+		{["protocol"] = 'tcp', ["src_ipaddr"]='192.168.3.6', ["dest_ipaddr"]='192.168.3.99', ["action"]='ACCEPT', ["comment"]="test acl filter",["iswork"]=true},
+		{["protocol"] = 'all', ["src_ipaddr"]='192.168.3.6', ["dest_ipaddr"]='192.168.3.88', ["action"]='DROP', ["comment"]="test acl filter",["iswork"]=true},
+		{["protocol"] = 'udp', ["src_ipaddr"]='192.168.3.6', ["dest_ipaddr"]='192.168.3.77', ["action"]='DROP', ["comment"]="test acl filter",["iswork"]=true},
+		{["protocol"] = 'tcp', ["src_ipaddr"]='192.168.3.6', ["dest_ipaddr"]='192.168.3.66', ["action"]='DROP', ["comment"]="test acl filter",["iswork"]=false},
+		}
+
+		if firewall.firewall_set_acl_filter_list(ips)
+		then
+			print("set success")
+		else
+			print("set fail")
+		end
+end
+
 
 function firewall_get_url_filter()
 
@@ -223,6 +259,81 @@ function firewall_set_url_filter()
 		}
 
 		if firewall.firewall_set_url_filter_list(urls)
+		then
+			print("set success")
+		else
+			print("set fail")
+		end
+end
+
+function firewall_get_speed_filter()
+
+	print("in firewall_get_speed_filter")
+	local info = firewall.firewall_get_speed_filter_list()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			for key,value in pairs(v) do
+				print(key,"=",value)
+			end
+	end
+
+end
+
+
+
+function firewall_set_speed_filter()
+		print("in firewall_set_speed_filter")
+		local macs={
+		{["speed"]=11, ["ipaddr"]='192.168.2.158', ["comment"]="test speed filter",["iswork"]=true},
+		{["speed"]=90, ["ipaddr"]='192.168.2.159', ["comment"]="test speed 2 filter",["iswork"]=true},
+		{["speed"]=1200, ["ipaddr"]='192.168.2.150', ["comment"]="test spped 3 filter",["iswork"]=false},
+		}
+
+		if firewall.firewall_set_speed_filter_list(macs)
+		then
+			print("set success")
+		else
+			print("set fail")
+		end
+end
+
+
+function firewall_get_ipmac_bind_filter()
+
+	print("in firewall_get_ipmac_bind_filter")
+	local info = firewall.firewall_get_ipmac_bind_filter_list()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			for key,value in pairs(v) do
+				print(key,"=",value)
+			end
+	end
+
+end
+
+
+
+function firewall_set_ipmac_bind_filter()
+		print("in firewall_set_ipmac_bind_filter")
+		local macs={
+		{["mac"]='aa:bb:cc:11:22:33', ["ipaddr"]='192.168.2.158', ["comment"]="test ip mac bind filter",["iswork"]=true},
+		{["mac"]='aa:bb:cc:11:22:34', ["ipaddr"]='192.168.2.159', ["comment"]="test ip mac bind filter filter",["iswork"]=true},
+		{["mac"]='aa:bb:cc:11:22:44', ["ipaddr"]='192.168.2.150', ["comment"]="test ip mac bind filter",["iswork"]=false},
+		}
+
+		if firewall.firewall_set_ipmac_bind_filter_list(macs)
 		then
 			print("set success")
 		else
@@ -1458,14 +1569,20 @@ local api_func = {
 	--firewall
 	["firewall_set_mac_filter"] = firewall_set_mac_filter,
 	["firewall_get_mac_filter"] = firewall_get_mac_filter,
+	["firewall_get_ipmac_bind_filter"] = firewall_get_ipmac_bind_filter,
+	["firewall_set_ipmac_bind_filter"] = firewall_set_ipmac_bind_filter,
 	["firewall_set_url_filter"] = firewall_set_url_filter,
 	["firewall_get_url_filter"] = firewall_get_url_filter,
 	["firewall_set_ip_filter"] = firewall_set_ip_filter,
 	["firewall_get_ip_filter"] = firewall_get_ip_filter,
+	["firewall_set_acl_filter"] = firewall_set_acl_filter,
+	["firewall_get_acl_filter"] = firewall_get_acl_filter,
 	["firewall_get_port_filter"] = firewall_get_port_filter,
 	["firewall_set_port_filter"] = firewall_set_port_filter,
 	["firewall_get_port_redirect"] = firewall_get_port_redirect,
 	["firewall_set_port_redirect"] = firewall_set_port_redirect,
+	["firewall_get_speed_filter"] = firewall_get_speed_filter,
+	["firewall_set_speed_filter"] = firewall_set_speed_filter,
 
 	["firewall_get_default_action"] = firewall.firewall_get_default_action,
 	["firewall_set_default_action"] = firewall_set_default_action,
