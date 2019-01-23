@@ -1303,6 +1303,19 @@ function wifi_set_connect_sta_number()
 
 end
 
+function dhcp_get_object()
+
+	local temp = dhcp.dhcp_get_object_by_network(arg[2])
+
+
+	for key,value in pairs(temp)
+	do
+		print("key = ", key, "value = ", value)
+
+	end
+
+end
+
 function dhcp_get_list()
 
 	local list = dhcp.dhcp_get_object_list()
@@ -1543,6 +1556,7 @@ local api_func = {
 	["dhcp_reload"]=dhcp.dhcp_reload,
 	["dhcp_get_enable_status"]=dhcp_get_enable_status,
 	["dhcp_get_list"] = dhcp_get_list,
+	["dhcp_get_object"] = dhcp_get_object,
 
 	--modem
 	["modem_get_status"] = modem_get_status,

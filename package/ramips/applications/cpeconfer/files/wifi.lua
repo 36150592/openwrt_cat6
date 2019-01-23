@@ -363,6 +363,7 @@ wifi_module.device = {
 	["encry_algorithms"] = nil,
 	["connect_sta_number"] = nil,
 	["macaddr"] = nil,
+	["network"] = nil, -- the lan network bridge which  the wifi attach
 }
 
 function wifi_module.device:new(o,obj)
@@ -389,6 +390,7 @@ function wifi_module.device:new(o,obj)
 	self["encry_algorithms"] = obj["encry_algorithms"] or nil
 	self["connect_sta_number"] = obj["connect_sta_number"] or nil
 	self["mac"] = obj["mac"] or nil
+	self["network"] = obj["network"] or nil
    return o
 end
 
@@ -463,7 +465,6 @@ function wifi_module.wifi_get_dev()
 				if (k == ".anonymous" 
 					or k == ".type" 
 					or k == "mode" 
-					or k == "network" 
 					or k == "device" 
 					or k == "autoch"
 					or k == "bw"
@@ -471,6 +472,9 @@ function wifi_module.wifi_get_dev()
 					or k == ".index")
 				then
 					break
+				elseif "network" == k
+				then
+					p_dev["network"] = v
 				elseif ("ifname" == k )
 				then
 					p_dev["interface_name"] = v
@@ -1081,6 +1085,7 @@ wifi_module.secondary_ssid = {
 	["connect_sta_number"] = nil,
 	["macaddr"] = nil,
 	["wmm"] = nil,
+	["network"] = nil,
 }
 
 function wifi_module.secondary_ssid:new(o,obj)
@@ -1102,6 +1107,7 @@ function wifi_module.secondary_ssid:new(o,obj)
 	self["connect_sta_number"] = obj["connect_sta_number"] or nil
 	self["macaddr"] = obj["macaddr"] or nil
 	self["wmm"] = obj["wmm"] or nil
+	self["network"] = obj["network"] or nil
    return o
 end
 
@@ -1133,6 +1139,7 @@ function wifi_module.wifi_secondary_get_ssid_list()
 				temp["password"] = s["key"]
 				temp["hidden_ssid"] = s["hidden"] or "0"
 				temp["interface_name"] = s["ifname"]
+				temp["network"] = s["network"]
 				local arr = split(s["encryption"], '+')
 				temp["encryption"] = arr[1] or "none"
 				temp["encry_algorithms"] = arr[2] or "none"

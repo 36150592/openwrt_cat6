@@ -177,6 +177,31 @@ local function get_dhcp_config(name)
 	return nil
 end
 
+-- get dchp config by dhcp interface 
+-- input:network(string):the network of wifi config(the interface dhcp config)
+-- return:the struct of dhcp_object or nil if fail
+function dhcp_module.dhcp_get_object_by_network(network)
+
+	local all_config = x:get_all(DHCP_CONFIG_FILE)
+
+	if nil == all_config  or nil == network
+	then
+		debug("all_config = nil or network = nil")
+	end
+
+	local i = 1
+	for k,v in pairs(all_config) do
+		
+		if "dhcp" == v[".type"] and v["interface"] ==  network
+		then
+			local temp = get_dhcp_config(v[".name"])
+			return temp
+		end
+	end
+
+	return nil
+end
+
 -- get all dhcp configs 
 -- input:none
 -- return:the array of dhcp_object
