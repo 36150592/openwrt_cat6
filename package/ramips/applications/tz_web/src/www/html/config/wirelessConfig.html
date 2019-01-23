@@ -101,10 +101,10 @@
                             Page.setFormFieldValue2("ssid", data.ssid);
                             Page.setFormFieldValue2("wifiWorkMode", data.mode);
                             var encryp = data.encryption.split("+")[0];
-                            var encrypType = data.encryption.substring(encryp.length +1);
+                            var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
                             Page.setFormFieldValue2("authenticationType", encryp);
 							$("#encryptAlgorithm >input[value=" + encrypType +"]").attr("checked",true);
-                            $('#encryptAlgorithm').attr('old',encrypType);
+                            $('#encryptAlgorithm').attr('old',data.encryption.substring(encryp.length +1));
                             Page.setFormFieldValue2("key", data.key);
 
                         }

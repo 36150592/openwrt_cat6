@@ -7,8 +7,7 @@
             Page.postJSON({
                 json: { cmd: RequestCmd.DEVICE_VERSION_INFO },
                 success: function(datas) {
-                    var data = {"name":"","version":"","certificationVer":"","displayedVersion":"","hwversionCfg":"","hwversion":"","configVer":"","modversion":"",
-                        "time":"","module":"","deviceId":"","modsoftversion":"","modhardwareversion":"","imei":"","imsi":"","iccid":""};
+                 
                     var names = [], names_lte = [];
                     var device = DOC.device;
                     names.push(device.name);
@@ -35,16 +34,11 @@
                     values.push(data2.device.type || loading);
                     //   values.push(FormatUtil.formatField(data2.device.build));
 
-                    //values.push(data.build);
-//                    var swVer1 = FormatUtil.formatField(Page.getDeviceVersion(data.name, data.version)),
-//                        swVer2 = FormatUtil.formatField(data.certificationVer);
-                  //  values.push(FormatUtil.formatField(Page.displayedVersion || swVer2));
 
                     values.push(loading);
                     values.push(data2.device.hwversion || loading);
                     values.push(data2.device.version || loading);
-                    //  values.push(FormatUtil.formatField(data.deviceId));
-
+                  
 
                     values_lte.push(data2.modem.type || loading);
                     values_lte.push(data2.modem.softver || loading);
@@ -52,8 +46,6 @@
                     values_lte.push(data2.modem.imei || loading);
                     values_lte.push(data2.sim.imsi || loading);
                     values_lte.push(data2.sim.iccid || loading);
-
-                    //values_lte.push(FormatUtil.formatField(data.mac));
 
                     var sys_html = Page.createTable(DOC.title.device, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
                     var lte_html = Page.createTable(DOC.title.lte, names_lte, values_lte, names_lte.length, 1);

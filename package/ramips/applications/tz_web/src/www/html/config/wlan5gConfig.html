@@ -3,18 +3,20 @@
 <script type="text/javascript">
     $(document).ready(function () {
         TempUtil.render('tabsitems-template', 'tabsitems', wlan5ghtml.tab_menu);
-        TempUtil.render('wlform1-template', 'form1', wlan5ghtml.form1);
+        TempUtil.render('wlform1-template', 'form', wlan5ghtml.form1);
+        TempUtil.render('wlform1-template1', 'form1', wlan5ghtml.form1);
+        TempUtil.render('wlform1-template2', 'form2', wlan5ghtml.form1);
 		TempUtil.render('macInfoContainer-template', 'macInfoContainer', wirelessconfightml.macInfoContainer);
         var showText = wirelessconfightml.prompt;
         var $lis = $("ul.tabs a");
         var $boxes = $("div.tab_boxes > div");
 
         var $btnSave = $('#btnSave');
-        var $wifiOpen = $('#wifiOpen'), $broadcast = $('#broadcast'), $wmm = $('#wmm');
+        var $wifiOpen = $('#wifiOpen'), $broadcast = $('#broadcast'), $wmm = $('#wmm'), $wifiId = $('#wifiId');
 		
 		var usrInfos = [], macInfos = [], firstRequest = true;
 		
-				function createMacInfosTable(){
+		function createMacInfosTable(){
 
             var length = macInfos.length;
             var sb = new StringBuilder();
@@ -68,8 +70,11 @@
                                 $wifiOpen.prop('checked', true);
                             }else {
                                 $wifiOpen.prop('checked', false);
+								$lis.eq(1).hide();
+                                $lis.eq(2).hide();
                             }
                             $wifiOpen.attr('old',data.status);
+							$wifiId.val(data.wifi_id);
 
                             if(data.hidden_ssid == 0){
                                 $broadcast.prop('checked', true);
@@ -90,24 +95,56 @@
                             Page.setFormFieldValue2("ssid", data.ssid);
                             Page.setFormFieldValue2("wifiWorkMode", data.mode);
                             Page.setFormFieldValue2("bandWidth", data.ht);
-                            Page.setFormFieldValue2("authenticationType", data.encryption);
-//                            if(data.encryption == 'none'){
-//                                $wpa.hide();
-//                            }else {
-//                                $wpa.show();
-//                                Page.setFormFieldValue2("pwd", data.pwd);
-//                            }
+							Page.setFormFieldValue2("maxStation", data.maxassoc);
+							var encryp = data.encryption.split("+")[0];
+                            var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
+                            Page.setFormFieldValue2("authenticationType", encryp);
+                            $("#encryptAlgorithm>input[value=" + encrypType +"]").attr("checked",true);
+                            $('#encryptAlgorithm').attr('old',data.encryption.substring(encryp.length +1));
+                            Page.setFormFieldValue2("key", data.key);
 
-                            $("input[name='encryptAlgorithm'][value=" + data.enType +"]").attr("checked",true);
-                            $('#encryptAlgorithm').attr('old',data.enType);
-                            Page.setFormFieldValue2("key", data.pwd);
 
                         }
                     });
                     Page.getHelperPage('html/config/wlan5gConfig.html');
                     $('.helper_box').show();
                     break;
-                case 1:
+				case 1:
+                case 2:
+                    Page.postJSON({
+                        json: { cmd: 120,wifiId: $wifiId.val() },
+                        success: function(datas) {
+                            console.log(datas);
+                            var data = datas.data;
+                            for(var i = 1; i <= data.length; i++) {
+                                if (data[i].hidden_ssid == 0) {
+                                    $('#broadcast' + i).prop('checked', true);
+                                } else {
+                                    $('#broadcast' + i).prop('checked', false);
+                                }
+                                $('#broadcast' + i).attr('old', data[i].hidden_ssid || 1);
+
+                                if (data[i].wmm == 1) {
+                                    $('#wmm' + i).prop('checked', true);
+                                } else {
+                                    $('#wmm' + i).prop('checked', false);
+                                }
+                                $('#wmm' + i).attr('old', data[i].wmm || 0);
+
+                                $('#secondaryId' + i).val(data[i].secondary_id);
+                                Page.setFormFieldValue2("maxStation" +i, data[i].connect_sta_number);
+                                Page.setFormFieldValue2("ssid" +i, data[i].ssid);
+                                Page.setFormFieldValue2("authenticationType" +i, data[i].encryption);
+								$("#encryptAlgorithm" + i+">input[value=" +data[i].encry_algorithms +"]").attr("checked",true);
+                                $('#encryptAlgorithm'+i).attr('old',data[i].encry_algorithms);
+                                Page.setFormFieldValue2("key" +i, data[i].password);
+                            }
+
+                        }
+                    });
+                    $('.helper_box').show();
+                    break;
+                case 3:
                     if (firstRequest) {
                         Page.postJSON({
                             returnHtml: true,
@@ -143,7 +180,7 @@
         $btnSave.click(function() {
             $(this).attr("disabled",true);
             var count = 0;
-            var $form = $('#form1');
+            var $form = $('#form');
             if(!CheckUtil.checkForm($form, wireless_rules, wireless_messages)){
                 $(this).attr("disabled",false);
                 return false;
@@ -192,6 +229,10 @@
                 delete json["bandWidth"];
                 count++;
             }
+			if(json.maxStation ==  $("#maxStation").attr('old')){
+                delete json["maxStation"];
+                count++;
+            }
             if(json.authenticationType == $("#authenticationType").attr('old')){
                 delete json["authenticationType"];
                 count++;
@@ -202,7 +243,7 @@
                 delete json["encryptAlgorithm"];
                 count++;
             }
-            if(count == 10){
+            if(count == 11){
 			    AlertUtil.alertMsg(CHECK.required.noChanges);
                 $(this).attr("disabled",false);
                 return false;
@@ -224,6 +265,84 @@
            
         });
 
+		        var $btn2Save = $('input[id^=btn2Save]');
+
+        $btn2Save.click(function() {
+            var id = this.id.substring(8);
+            $(this).attr("disabled",true);
+            var count = 0;
+            var $form = $('#form'+id);
+            if(!CheckUtil.checkForm($form, wireless_rules, wireless_messages)){
+                $(this).attr("disabled",false);
+                return false;
+            }
+            var json = JSON.parmsToJSON($form);
+
+            if(json.key == $('#key' +id).attr('old')){
+                delete json["key"];
+                count++;
+            }else {
+                if (!CheckUtil.checkPwd(json.key)) {
+                    AlertUtil.alertMsg(showText.keyCkeckMsg);
+                    $(this).attr("disabled", false);
+                    return false;
+                }
+            }
+            json.broadcast = json.broadcast ? '0' : '1';
+            json.wmm = json.wmm ? '1' : '0';
+
+            if(json.broadcast == $("#broadcast" +id).attr('old')){
+                delete json["broadcast"];
+                count++;
+            }
+            if(json.wmm ==   $('#wmm' + id).attr('old')){
+                delete json["wmm"];
+                count++;
+            }
+            if(json.ssid ==  $('#ssid' + id).attr('old')){
+                delete json["ssid"];
+                count++;
+            }
+            if(json.maxStation ==   $('#maxStation' + id).attr('old')){
+                delete json["maxStation"];
+                count++;
+            }
+            if(json.wifiWorkMode ==  $('#wifiWorkMode' + id).attr('old')){
+                delete json["wifiWorkMode"];
+                count++;
+            }
+            if(json.authenticationType == $("#authenticationType" +id).attr('old')){
+                delete json["authenticationType"];
+                count++;
+            }
+
+            if(json.encryptAlgorithm == $('#encryptAlgorithm' +id).attr('old'))
+            {
+                delete json["encryptAlgorithm"];
+                count++;
+            }
+            if(count == 8){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+            }
+
+            json.cmd = 121;
+			json.wifiId = $wifiId.val();
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    console.log(data);
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $lis.eq(id).click();
+                },
+                complete: function(){
+                    $('#btn2Save'+id).attr("disabled",false);
+                }
+            });
+
+        });
 
 
     });
@@ -233,7 +352,9 @@
     <div class="tab_menu">
         <ul class="tabs" id="tabsitems">
             <script type="text/template" id="tabsitems-template">
-                <li id="walnInfo"><a href="javascript:void(0);"><%- basicConfig %></a></li>
+                <li id="walnInfo"><a href="javascript:void(0);"><%- item1 %></a></li>
+                <li id="walnInfo1"><a href="javascript:void(0);"><%- item2 %></a></li>
+                <li id="walnInfo3"><a href="javascript:void(0);"><%- item3 %></a></li>
                 <li id="connectedList"><a href="javascript:void(0);"><%- connectedList %></a></li>
             </script>
         </ul>
@@ -242,9 +363,12 @@
     <div >
         <div class="tab_boxes">
             <div class="main_box">
-                <form id="form1">
+                <form id="form">
                     <script type="text/template" id="wlform1-template">
                         <table class="detail" cellspacing="0">
+							<tr style = "display:none">
+                                <td> <input type="text" id="wifiId" name="wifiId" /></td>
+                            </tr>
                             <tr>
                                 <th><%- wifiFunction %></th>
                                 <td>
@@ -308,6 +432,12 @@
                                     </select>
                                 </td>
                             </tr>
+							<tr>
+                                <th><%- maxStation %></th>
+                                <td>
+                                    <input type="text" id="maxStation" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
+                                </td>
+                            </tr>
                             <tr>
                                 <th><%- authenticationType %></th>
                                 <td>
@@ -331,8 +461,9 @@
                                         &nbsp;<span><%- aes %></span>
                                         <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- tkip_aes %></span>
+                                    </label>
                                 </td>
-                                </label>
+
                             </tr>
                             <tr>
                                 <th><%- key %></th>
@@ -348,6 +479,159 @@
                     </script>
                 </form>
             </div>
+
+            <div  class="main_box">
+                <form id="form1">
+                    <script type="text/template" id="wlform1-template1">
+                        <table class="detail" cellspacing="0">
+                            <tr style = "display:none">
+                                <td> <input type="text" id="secondaryId1" name="secondaryId" /></td>
+                            </tr>
+                            <tr>
+                                <th><%- ssidBd %></th>
+                                <td>
+                                    <input type="checkbox" id="broadcast1" name="broadcast" /><%- enable %>
+                                </td>
+                            </tr>
+                            <tr class="wifi_wmm">
+                                <th><%- wmm %></th>
+                                <td>
+                                    <input type="checkbox" id="wmm1" name="wmm" /><%- enable %>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th><%- ssid %></th>
+                                <td><input type="text" id="ssid1" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
+                            </tr>
+
+							<tr>
+                                <th><%- maxStation %></th>
+                                <td>
+                                    <input type="text" id="maxStation1" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th><%- authenticationType %></th>
+                                <td>
+                                    <select name="authenticationType" id="authenticationType1">
+                                        <option value="none"><%- openSys %></option>
+                                        <option value="psk"><%- wpa_psk %></option>
+                                        <option value="psk2"><%- wpa2_psk %></option>
+                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- encryptAlgorithmTh %></th>
+                                <td>
+                                    <label id="encryptAlgorithm1">
+                                        <input type="radio" value="none" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- auto %></span>
+                                        <input type="radio" value="tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip %></span>
+                                        <input type="radio" value="ccmp" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- aes %></span>
+                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip_aes %></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- key %></th>
+                                <td>
+                                    <input type="text" name="key" maxlength="63" id="key1"/>
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>&nbsp;</th>
+                                <td><input type="button" id="btn2Save1" value="<%- btnSave %>" /></td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+            </div>
+
+            <div  class="main_box">
+                <form id="form2">
+                    <script type="text/template" id="wlform1-template2">
+                        <table class="detail" cellspacing="0">
+                            <tr style = "display:none">
+                                <td> <input type="text" id="secondaryId2" name="secondaryId" /></td>
+                            </tr>
+                            <tr>
+                                <th><%- ssidBd %></th>
+                                <td>
+                                    <input type="checkbox" id="broadcast2" name="broadcast" /><%- enable %>
+                                </td>
+                            </tr>
+                            <tr class="wifi_wmm">
+                                <th><%- wmm %></th>
+                                <td>
+                                    <input type="checkbox" id="wmm2" name="wmm" /><%- enable %>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th><%- ssid %></th>
+                                <td><input type="text" id="ssid2" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
+                            </tr>
+
+							<tr>
+                                <th><%- maxStation %></th>
+                                <td>
+                                    <input type="text" id="maxStation2" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
+                                </td>
+                            </tr>
+
+
+
+                            <tr>
+                                <th><%- authenticationType %></th>
+                                <td>
+                                    <select name="authenticationType" id="authenticationType2">
+                                        <option value="none"><%- openSys %></option>
+                                        <option value="psk"><%- wpa_psk %></option>
+                                        <option value="psk2"><%- wpa2_psk %></option>
+                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- encryptAlgorithmTh %></th>
+                                <td>
+                                    <label id="encryptAlgorithm2">
+                                        <input type="radio" value="none" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- auto %></span>
+                                        <input type="radio" value="tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip %></span>
+                                        <input type="radio" value="ccmp" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- aes %></span>
+                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip_aes %></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- key %></th>
+                                <td>
+                                    <input type="text" name="key" maxlength="63" id="key2"/>
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>&nbsp;</th>
+                                <td><input type="button" id="btn2Save2" value="<%- btnSave %>" /></td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+            </div>
+
              <div id="macInfoContainer">
                 <script type="text/template" id="macInfoContainer-template">
                 <div id="macInfos"><%- macInfos %></div>

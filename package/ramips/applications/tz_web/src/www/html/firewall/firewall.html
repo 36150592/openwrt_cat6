@@ -25,7 +25,7 @@
 
             var hasEnableLink = true;
             currentPannelIndex = pannelIndex;
-            if (pannelIndex == 7) {
+            if (pannelIndex == 8) {
                 $lblShift.hide();
                 $btnShifts.hide();
                 $btnAdd.hide();
@@ -55,43 +55,47 @@
                         break;
                     case 3:
                         hasEnableLink = false;
-						customTitles = [DOC.net.ip, DOC.net.port, DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
+                        customTitles = [DOC.net.ip, DOC.net.port, DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
                         customFieldNames = ["dest_addr", "dest_port", "redirect_addr", "redirect_port", "comment"];
                         break;
                     case 4:
                         customTitles = [DOC.net.ipv46, DOC.net.url, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "url", "remark"];
+                        customFieldNames = ["ippro", "url", "comment"];
                         break;
                     case 5:
                         hasEnableLink = false;
                         customTitles = [DOC.net.ipv46, DOC.net.ip, DOC.net.mac, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "ip", "mac", "remark"];
+                        customFieldNames = ["ippro", "ipaddr", "mac", "comment"];
                         break;
                     case 6:
                         hasEnableLink = false;
                         customTitles = [DOC.net.ipv46, DOC.net.ip, DOC.net.maxSpeed, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "ip", "maxSpeed", "remark"];
+                        customFieldNames = ["ippro", "ipaddr", "speed", "comment"];
+                        break;
+                    case 7:
+                        customTitles = [DOC.net.ipv46,DOC.net.protocol,DOC.net.sourceAddr,DOC.net.targeAddr, DOC.lbl.remark];
+                        customFieldNames = ["ippro", "protocol","src_ipaddr","dest_ipaddr", "comment"];
                         break;
                     default:
                         break;
                 }
 
-                var cmd = (pannelIndex == 7) ? defaultCmd : filterOptions.getRequestCmd(pannelIndex);
+                var cmd = (pannelIndex == 8) ? defaultCmd : filterOptions.getRequestCmd(pannelIndex);
 
                 Page.postJSON({
                     json: {
                         cmd: cmd,
                         method: JSONMethod.GET,
-						getfun: true
+                        getfun: true
                     },
                     success: function(data) {
-                        if (pannelIndex == 7) {
-						    console.log(data);
+                        if (pannelIndex == 8) {
+                            console.log(data);
                             if (data.action) {
                                 InputUtil.setRadiosSelectedValue($acceptAlls,data.action);
                             }
                         } else {
-						   
+
                             createFilterTable({
                                 pannelIndex: pannelIndex,
                                 datas: data.data || [],
@@ -119,7 +123,7 @@
                     method: JSONMethod.POST,
                     success: true,
                     action: $(this).filter(':checked').val()
-                        
+
                 },
                 success: function(data) {
                     $btnApply.enable();
@@ -175,14 +179,16 @@
                 case 6:
                     processSpeedLimit();
                     break;
-
+                case 7:
+                    processAclFilter();
+                    break;
                 default:
                     break;
             }
         });
 
         $btnApply.click(function() {
-           // AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
+            // AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
             Page.postJSON({
                 //$id: $btnApply,
                 json: {
@@ -191,10 +197,10 @@
                 },
                 success: function(data) {
                     if (data.success == "success") {
-                     AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
-                     } else {
-                     AlertUtil.alertMsg(PROMPT.status.applyRuleFail);
-                     }
+                        AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
+                    } else {
+                        AlertUtil.alertMsg(PROMPT.status.applyRuleFail);
+                    }
                 }
             });
         });
@@ -217,9 +223,9 @@
                     }
                 },
                 complete: function() {
-					
+
                     $('#FW_RULE').click();
-					
+
                 }
             });
         });
@@ -245,7 +251,7 @@
             hasEnableLink: true,
             pannelIndex: 0,
             selectedIndex: 0,
-            listBoxIds: ['port_box', 'ip_box', 'mac_box', 'port_mapping_box', 'url_box', 'ip_mac_binding_box', 'speed_limit_box', 'default_box'],
+            listBoxIds: ['port_box', 'ip_box', 'mac_box', 'port_mapping_box', 'url_box', 'ip_mac_binding_box', 'speed_limit_box', 'acl_box', 'default_box'],
             editBoxId: 'edit_box',
             btnSaveId: 'btnSaveRule',
             datas: [],
@@ -263,7 +269,9 @@
                 'html/firewall/urlFilter.html',
                 'html/firewall/ipMacBinding.html',
                 'html/firewall/speedLimit.html',
+                'html/firewall/aclFilter.html',
                 ''
+
             ],
             cmds: [
                 RequestCmd.PORT_FILTER,
@@ -273,7 +281,9 @@
                 RequestCmd.URL_FILTER,
                 RequestCmd.IP_MAC_BINDING,
                 RequestCmd.SPEED_LIMIT,
+                RequestCmd.ACL_FILTER,
                 RequestCmd.DEFAULT_FILTER
+
             ],
             customTitles: [],
             customFieldNames: [],
@@ -342,7 +352,7 @@
             options = $.extend({}, filterOptions, options || {});
 
             var datas = options.getDatas();
-		
+
             if (options.requiredSave) {
                 Page.postJSON({
                     json: {
@@ -352,7 +362,7 @@
                         datas: datas
                     },
                     success: function(data) {
-					    //console.log(data);
+                        //console.log(data);
                     }
                 });
             } else {
@@ -380,7 +390,7 @@
             sb.append(String.format('<input type="hidden" id="hddShiftIndex{0}" value="0" />', pannelIndex));
             sb.append(String.format('<span style="display:none"><input type="button" id="btnDelegate{0}" value="Delegate" /></span>', pannelIndex));
             sb.append('</th></tr>');
-			//console.log(datas);
+            //console.log(datas);
             var length = datas.length;
             var selectedIndex = options.getSelectedIndex();
             if (selectedIndex >= length) {
@@ -489,7 +499,7 @@
                 try {
                     var item = datas[selectedIndex];
                     if (item.iswork) {
-                       item.action = item.action == "ACCEPT" ? "DROP" : "ACCEPT";
+                        item.action = item.action == "ACCEPT" ? "DROP" : "ACCEPT";
                         options.setApplyButtonStatus(true);
                         createFilterTable(options);
                     }
@@ -515,20 +525,20 @@
             options = $.extend({}, filterOptions, options || {});
             options.pannelIndex = currentPannelIndex;
 
-           // Page.getHtml(options.getUrl(), MenuItem.FW_RULE.cmd + options.pannelIndex, function(data) {
-			 $box.load(options.getUrl(),function () {
-                    
-              
-               // $box.html(data);
+            // Page.getHtml(options.getUrl(), MenuItem.FW_RULE.cmd + options.pannelIndex, function(data) {
+            $box.load(options.getUrl(),function () {
+
+
+                // $box.html(data);
                 $box.css({
                     width: options.width,
                     height: options.height
                 });
-				
+
                 var tab = String.format('#{0} table', options.editBoxId);
                 Page.setStripeTable(tab);
                 $(tab + ' input[type=text]:first').focus();
-				
+
                 $('#' + options.btnSaveId).click(function() {
                     var item = options.getSavingItem();
                     if (!item) return;
@@ -538,13 +548,13 @@
                     $mask.hide();
                     $box.hide();
                 });
-			});
-           // });
+            });
+            // });
         }
 
         function getCommonItem(hasIPV46) {
             var item = {};
-			
+
             //item.enableRule = true;
             item.protocol = $('input[name=protocol]').filter(':checked').val();
 
@@ -553,11 +563,11 @@
                 item.action = $enableLinks.filter(':checked').val();
             }
             //item.remark = $('#txtRemark').val().trim();
-			item.comment = $('#txtRemark').val().trim();
+            item.comment = $('#txtRemark').val().trim();
             if(hasIPV46){
                 item.ippro = $('input[name=ippro]').filter(':checked').val();
             }
-           
+
             return item;
         }
 
@@ -572,7 +582,7 @@
                         return false;
                     }
 
-                    var item = getCommonItem(true);
+                    var item = getCommonItem(false);
                     if (!CheckUtil.checkIp(ip, item.ippro)) {
                         AlertUtil.alertMsg(CHECK.format.ip);
                         return false;
@@ -590,13 +600,9 @@
                         return false;
                     }
 
-                    var mtu = parseInt($('#hddMtu').val(), 10) || 1500;
-                    var packetNum = parseInt((theMaxSpeed * 1024) / mtu, 10);
-
-                    item.ip = ip;
-                    item.maxSpeed = theMaxSpeed + " KB/s";
-                    item.packetNum = packetNum;
-
+                    item.ipaddr = ip;
+                    item.speed = theMaxSpeed ;
+                    item.iswork = false;
                     return item;
                 }
             });
@@ -613,7 +619,7 @@
                         return false;
                     }
 
-                    var item = getCommonItem(true);
+                    var item = getCommonItem(false);
                     if (!CheckUtil.checkIp(ip, item.ippro)) {
                         AlertUtil.alertMsg(CHECK.format.ip);
                         return false;
@@ -630,9 +636,9 @@
                         return false;
                     }
 
-                    item.ip = ip;
+                    item.ipaddr = ip;
                     item.mac = mac;
-
+                    item.iswork = false;
                     return item;
                 }
             });
@@ -675,7 +681,7 @@
                     item.dest_port = port;
                     item.redirect_addr = mappingIp;
                     item.redirect_port = mappingPort;
-
+                    item.iswork = false;
                     return item;
                 }
             });
@@ -694,7 +700,7 @@
 
                     var item = getCommonItem(false);
                     item.url = url;
-
+                    item.iswork = false;
                     return item;
                 }
             });
@@ -717,7 +723,7 @@
                     }
                     var item = getCommonItem(false);
                     item.mac = mac;
-
+                    item.iswork = false;
                     return item;
                 }
             });
@@ -745,6 +751,7 @@
                     }
 
                     item.ipaddr = ip;
+                    item.iswork = false;
                     return item;
                 }
             });
@@ -760,10 +767,49 @@
 
                     var item = getCommonItem(false);
                     item.port = port;
-					item.iswork = false;
+                    item.iswork = false;
                     return item;
                 }
             });
+        }
+
+        function processAclFilter() {
+            processFilter({
+                width: "800px",
+                height: "auto",
+                getSavingItem: function() {
+                    var srcip = $('#srcIpaddr').val().trim().replace(/ /g, '');
+                    var destip = $('#destIpaddr').val().trim().replace(/ /g, '');
+                    if (srcip == "" || destip == "") {
+                        AlertUtil.alertMsg(CHECK.required.ip);
+                        return false;
+                    }
+
+                    var item = getCommonItem(false);
+
+                    var srcips = srcip.split('-');
+                    var destips = destip.split('-');
+                    if (srcips.length > 2 || !CheckUtil.checkIp(srcips[0], item.ippro) || (srcips.length == 2 && !CheckUtil.checkIp(srcips[1], item.ippro))
+
+                    ) {
+                        AlertUtil.alertMsg(CHECK.format.ip);
+                        return false;
+                    }
+
+                    if (destips.length > 2 || !CheckUtil.checkIp(destips[0], item.ippro) || (destips.length == 2 && !CheckUtil.checkIp(destips[1], item.ippro))
+
+                    ) {
+                        AlertUtil.alertMsg(CHECK.format.ip);
+                        return false;
+                    }
+
+                    item.src_ipaddr = srcip;
+                    item.dest_ipaddr = destip;
+                    item.iswork = false;
+                    return item;
+                }
+            });
+
         }
 
         function parsePort(thePort) {
@@ -817,15 +863,15 @@
             $lis.hide();
 
             for (var i = 0, max = arr.length; i < max; i++) {
-               // $lis.eq(arr[i]).show().click();
-				$lis.eq(arr[i]).show();
+                // $lis.eq(arr[i]).show().click();
+                $lis.eq(arr[i]).show();
             }
         }
 
         switch(Page.menuItem.cmd) {
             case RequestCmd.PORT_FILTER:
                 defaultCmd = RequestCmd.DEFAULT_FILTER;
-                setLisState([0, 1, 7]);
+                setLisState([0, 1, 8]);
                 $lis.eq(0).click();
                 break;
 
@@ -855,6 +901,10 @@
                 setLisState([6]);
                 $lis.eq(6).click();
                 break;
+            case RequestCmd.ACL_FILTER:
+                setLisState([7]);
+                $lis.eq(7).click();
+                break;
         }
         $detailBox.show();
     });
@@ -871,6 +921,7 @@
                 <li><a href="javascript:;"><%- urlFiltering %></a></li>
                 <li><a href="javascript:;"><%- ipMacBinding %></a></li>
                 <li><a href="javascript:;"><%- speedLimit %></a></li>
+                <li><a href="javascript:;"><%- alcFiltering %></a></li>
                 <li><a href="javascript:;"><%- defaultSetting %></a></li>
             </script>
         </ul>
@@ -885,6 +936,7 @@
         <div id="url_box"></div>
         <div id="ip_mac_binding_box"></div>
         <div id="speed_limit_box"></div>
+        <div id="acl_box"></div>
         <div id="default_box" style="display: none;">
             <script type="text/template" id="defaultBox_template">
                 <fieldset style="width: 60%;padding: 10px 40px;line-height: 25px;">

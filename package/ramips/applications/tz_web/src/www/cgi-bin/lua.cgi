@@ -104,7 +104,7 @@ end
 
 function get_sysinfo()
 	local data_array = {}
-	--local data_lan = {}
+
     data_array["system"]  = system.system_get_status() or ''
 	data_array["modem"] = modem.modem_get_status() or ''
 	data_array["sim"] = sim.sim_get_status() or ''
@@ -113,9 +113,6 @@ function get_sysinfo()
 	  then
 	    data_array["network"] = network.network_get_4g_net_info() or ''
 	end
-	--data_lan["lanIp"] = dhcp.dhcp_get_server_ip()
-	--data_lan["netMask"] = dhcp.dhcp_get_server_mask()
-	--data_lan["status"] = dhcp.dhcp_get_enable_status()
     data_array["lan"] = dhcp.dhcp_get_object_list()
 	local tz_answer = {};
     tz_answer["success"] = true;
@@ -181,12 +178,12 @@ function get_wifi5()
 	data_array['status'] = wifi.wifi_get_enable_status(id)
 	data_array['hidden_ssid'] = wifi.wifi_get_hidden_ssid(id)
 	data_array['wmm'] = wifi.wifi_get_wmm(id)
-	data_array['ssid'] = wifi.wifi_get_ssid(id)
-	data_array['mode'] = wifi.wifi_get_mode(id)
+	--data_array['ssid'] = wifi.wifi_get_ssid(id)
+	--data_array['mode'] = wifi.wifi_get_mode(id)
 	data_array['ht'] = wifi.wifi_get_ht_mode(id)
-	data_array['encryption'] = wifi.wifi_get_encryption(id)
-	data_array['enType'] = wifi.wifi_get_encryption_type(id)
-	data_array['pwd'] = wifi.wifi_get_password(id)
+	--data_array['encryption'] = wifi.wifi_get_encryption(id)
+	--data_array['enType'] = wifi.wifi_get_encryption_type(id)
+	--data_array['pwd'] = wifi.wifi_get_password(id)
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 201;
@@ -447,7 +444,6 @@ function set_wifi()
 	
 	if(nil ~= maxStation)
 	 then
-	    print(type(maxStation))
 		ret = wifi.wifi_set_connect_sta_number(id, maxStation)	
 			if(not ret)
 				then
@@ -530,6 +526,7 @@ function set_wifi5()
 	local channel = tz_req["channel"]
 	local mode = tonumber(tz_req["wifiWorkMode"])
 	local ht = tz_req["bandWidth"]
+    local maxStation = tonumber(tz_req["maxStation"])
 	local authenticationType = tz_req["authenticationType"]
 	local encryptAlgorithm = tz_req["encryptAlgorithm"]
 	local key = tz_req["key"]
@@ -627,6 +624,15 @@ function set_wifi5()
 				tz_answer["setHtMOde"] = false
 			end
 	end
+	
+	if(nil ~= maxStation)
+	 then
+		ret = wifi.wifi_set_connect_sta_number(id, maxStation)	
+			if(not ret)
+				then
+				tz_answer["setnumber"] = false
+			end
+	end  
 	
 	if(nil ~= authenticationType)
 	 then
@@ -955,6 +961,52 @@ function mac_filter()
 
 end
 
+function ipmac_binding()
+
+	local tz_answer = {}
+	tz_answer["cmd"] = 24   
+	
+    local datas = tz_req["datas"]
+	local getfun = tz_req["getfun"]
+ 
+	if (getfun)
+	then
+	  local data_array = firewall.firewall_get_ipmac_bind_filter_list() or ''
+	  tz_answer["data"] = data_array
+	  tz_answer["success"] = true
+	else
+	  tz_answer["success"] = firewall.firewall_set_ipmac_bind_filter_list(datas)
+		
+	end
+
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function speed_limit()
+
+	local tz_answer = {}
+	tz_answer["cmd"] = 25   
+	
+    local datas = tz_req["datas"]
+	local getfun = tz_req["getfun"]
+ 
+	if (getfun)
+	then
+	  local data_array = firewall.firewall_get_speed_filter_list() or ''
+	  tz_answer["data"] = data_array
+	  tz_answer["success"] = true
+	else
+	  tz_answer["success"] = firewall.firewall_set_speed_filter_list(datas)
+		
+	end
+
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 function url_filtet()
 
    	local tz_answer = {}
@@ -1018,6 +1070,30 @@ function default_action()
 	  tz_answer["success"] = true
 	else
 	  tz_answer["success"] = firewall.firewall_set_default_action(action)
+		
+	end
+
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+
+end
+
+function acl_filter()
+    
+	local tz_answer = {}
+	tz_answer["cmd"] = 29   
+	
+    local datas = tz_req["datas"]
+	local getfun = tz_req["getfun"]
+ 
+	if (getfun)
+	then
+	  local data_array = firewall.firewall_get_acl_filter_list() or ''
+	  tz_answer["data"] = data_array
+	  tz_answer["success"] = true
+	else
+	  tz_answer["success"] = firewall.firewall_set_acl_filter_list(datas)
 		
 	end
 
@@ -1121,9 +1197,12 @@ local switch = {
 	 [21] = port_filter,
 	 [22] = ip_filter,
 	 [23] = mac_filter,
+	 [24] = ipmac_binding,
+	 [25] = speed_limit,
 	 [26] = url_filtet,
  	 [27] = port_redirect,
 	 [28] = default_action,
+	 [29] = acl_filter,
 	 [39] = clear_allrule,
 	 [43] = get_diviceinfo,
      [80] = iniPage,

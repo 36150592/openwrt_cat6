@@ -3,10 +3,13 @@
 <script type="text/javascript">
     $(document).ready(function(){
         TempUtil.render('tabsitems-template', 'tabsitems', networkconfightml.tab_menu);
+		TempUtil.render('tabsitems-template0', 'client_list0', networkconfightml.tab_menu);
+        TempUtil.render('tabsitems-template1', 'client_list1', networkconfightml.tab_menu);
+        TempUtil.render('tabsitems-template2', 'client_list2', networkconfightml.tab_menu);
         TempUtil.render('networkform1-template0', 'form0', networkconfightml.form1);
-		TempUtil.render('networkform1-template1', 'form1', networkconfightml.form1);
-		 TempUtil.render('networkform1-template2', 'form2', networkconfightml.form1);
-        TempUtil.render('networkipMacEdit-template', 'ipMacEdit', networkconfightml.ipMacEdit);
+        TempUtil.render('networkform1-template1', 'form1', networkconfightml.form1);
+        TempUtil.render('networkform1-template2', 'form2', networkconfightml.form1);
+       
         var showText = networkconfightml.prompt;
 
         var $lis = $("ul.tabs a");
@@ -14,47 +17,30 @@
         var $btnSaveLan = $('input[id^=btnSaveLan]');
         var $chkDHCP = $('input[id^=dhcpServer]');
         var ipMacs = [], firstRequest = true;
-		 
+
 
         var disableEdit = false;
-        function createIpMacTable() {
+        function createIpMacTable(inputId) {
 
             var length = ipMacs.length;
             var sb = new StringBuilder();
 
-           sb.append(String.format('<table class="list" cellspacing="0"><tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3}</th><th>{4}</th><th>{5}</th><th>{6}</th></tr>',
-                DOC.table.rowNo,DOC.device.name, DOC.net.mac, DOC.net.ip, DOC.net.connectTime, DOC.table.edit, DOC.table.del));
+            sb.append(String.format('<table class="list" cellspacing="0"  style="margin-top: 0px"><tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3}</th><th>{4}</th></tr>',
+                DOC.table.rowNo,DOC.device.name, DOC.net.mac, DOC.net.ip, DOC.net.connectTime));
             for (var i = 0; i < length; i++) {
                 var item = ipMacs[i];
                 sb.append(String.format('<tr><td>{0}</td>', i + 1));
-				sb.append(String.format('<td id="name{0}">{1}</td>', i, item.name));
+                sb.append(String.format('<td id="name{0}">{1}</td>', i, item.name));
                 sb.append(String.format('<td id="mac{0}">{1}</td>', i, item.mac));
                 sb.append(String.format('<td id="ip{0}">{1}</td>', i, item.ipaddr));
-				sb.append(String.format('<td id="time{0}">{1}</td>', i, item.connect_time));
-                sb.append(String.format('<td><a id="edit{0}" href="javascript:;">{1}</a></td>', i, disableEdit ? "" : showText.edit));
-                sb.append(String.format('<td><a id="del{0}" href="javascript:;">{1}</a></td></tr>', i, disableEdit ? "" : showText.del));
+                sb.append(String.format('<td id="time{0}">{1}</td>', i, item.connect_time));
+               
             }
             sb.append('</table>');
 
-            $('#ipBinds').html(sb.toString());
+            $('#ipBinds' +inputId).html(sb.toString());
 
-            $('a[id^=edit]').click(function() {
-                if (disableEdit) return false;
 
-                var id = this.id.substring(4);
-               // editIpMac(parseInt(id, 10), $('#mac' + id).text().trim(), $('#ip' + id).text().trim());
-            });
-
-            $('a[id^=del]').click(function() {
-                if (disableEdit) return false;
-
-                var id = this.id.substring(3);
-                if (!confirm(String.format(showText.confirmDel, $('#mac' + id).text(), $('#ip' + id).text()))) {
-                    return false;
-                }
-                ipMacs.splice(parseInt(id, 10), 1);
-                createIpMacTable();
-            });
         }
 
         $lis.click(function() {
@@ -67,50 +53,47 @@
                     Page.postJSON({
                         json: { cmd: 102 },
                         success: function(datas) {
-                             console.log(datas);
+                            console.log(datas);
                             var data = datas.data;
-							for(var i = 0; i <= data.length; i++){
+                            for(var i = 0; i <= data.length; i++){
                                 var dstatus = data[i].enable ? '1' : '0';
                                 if (dstatus == DHCPServer.CLOSED) {
                                     $('#dhcpServer' + i).prop("checked", false);
-                                     $('tr.dhcp' +i).hide();
+                                    $('tr.dhcp' +i).hide();
                                 } else {
                                     $('#dhcpServer' + i).prop("checked", true);
-                                     $('tr.dhcp' +i).show();
+                                    $('tr.dhcp' +i).show();
                                 }
                                 $('#dhcpServer' + i).attr('old',dstatus);
-								$('#lanName' + i).val(data[i].name);
+                                $('#lanName' + i).val(data[i].name);
                                 Page.setFormFieldValue2("lanIp"+i, data[i].server_ip);
                                 Page.setFormFieldValue2("netMask"+i, data[i].netmask);
                                 Page.setFormFieldValue2("ipBegin"+i, data[i].start_ip);
                                 Page.setFormFieldValue2("ipEnd"+i, data[i].end_ip);
                                 Page.setFormFieldValue2("expireTime"+i, data[i].leasetime);
                             }
-                            
+
                         }
                     });
                     Page.getHelperPage('html/config/networkConfig.html');
-                    $('.helper_box').show();
-                    break;
-				case 1:
-					$('.helper_box').show();
-					break;
-				case 2:
-					$('.helper_box').show();
-					break;
-                case 3:
-                   $('.helper_box').hide();
                     if (firstRequest) {
                         Page.postJSON({
                             json: {cmd: 103},
-                            success: function (datas) {
-                                console.log(datas);
-                                ipMacs = datas.data;
-                                createIpMacTable();
+                            success: function (datas1) {
+                                console.log(datas1);
+                                ipMacs = datas1.data;
+                                createIpMacTable(0);
                                 firstRequest = false;
                             }
                         });
                     }
+                    $('.helper_box').show();
+                    break;
+                case 1:
+                    $('.helper_box').show();
+                    break;
+                case 2:
+                    $('.helper_box').show();
                     break;
 
             }
@@ -119,12 +102,12 @@
         $lis.eq(0).click();
 
         $chkDHCP.click(function() {
-			var id = this.id.substring(10);
+            var id = this.id.substring(10);
             if ($(this).prop("checked")) {
-				$('tr.dhcp' +id).show();            
+                $('tr.dhcp' +id).show();
             } else {
-				$('tr.dhcp' +id).hide();
-              
+                $('tr.dhcp' +id).hide();
+
             }
         });
 
@@ -145,7 +128,7 @@
         };
 
         $btnSaveLan.click(function(){
-			var id = this.id.substring(10);
+            var id = this.id.substring(10);
             $(this).attr("disabled",true);
             var count = 0;
             var $form = $('#form'+id);
@@ -210,29 +193,29 @@
             json.cmd = RequestCmd.NETWORK_CONFIG;
 
             /*if(json.lanIp ) {
-                var isOk = false;
-                var timeoutCtl = setTimeout(function() {
-                    isOk = true;
-                }, 1000 * 90);
-                SysUtil.showProgress(ProgressTime.REBOOT, PROMPT.status.rebooting,
-                    function() {
-                        return isOk;
-                    },
-                    function() {
-                        clearTimeout(timeoutCtl);
-                        window.location.href = window.location.href.replace(window.location.host, json.lanIp);
-                    }
-                );
-            }*/
+             var isOk = false;
+             var timeoutCtl = setTimeout(function() {
+             isOk = true;
+             }, 1000 * 90);
+             SysUtil.showProgress(ProgressTime.REBOOT, PROMPT.status.rebooting,
+             function() {
+             return isOk;
+             },
+             function() {
+             clearTimeout(timeoutCtl);
+             window.location.href = window.location.href.replace(window.location.host, json.lanIp);
+             }
+             );
+             }*/
 
 
             console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
-                   // AlertUtil.alertMsg(PROMPT.saving.success);
+                    // AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(0).click();
-					if (AlertUtil.confirm(PROMPT.tips.rebootMessage)) {
+                    if (AlertUtil.confirm(PROMPT.tips.rebootMessage)) {
                         //reboot(json.lanIp);
                     }
                 },
@@ -240,17 +223,17 @@
                     $('#btnSaveLan').attr("disabled",false);
                 }
             });
-            
+
         });
-		
-		function reboot(ip) {
+
+        function reboot(ip) {
             // 发送重启命令
             Page.postJSON({
                 json: {
                     cmd: RequestCmd.SYS_REBOOT,
                     method: JSONMethod.POST
                 },
-                success: function() {	   
+                success: function() {
                     var isOk = false;
                     var timeoutCtl = setTimeout(function() {
                         isOk = true;
@@ -284,27 +267,26 @@
         <ul class="tabs" id="tabsitems">
             <script type="text/template" id="tabsitems-template">
                 <li><a href="javascript:;"><%- item1 %></a></li>
-				<li><a href="javascript:;"><%- item3 %></a></li>
-				<li><a href="javascript:;"><%- item4 %></a></li>
-                <li><a href="javascript:;"><%- item2 %></a></li>
+                <li><a href="javascript:;"><%- item3 %></a></li>
+                <li><a href="javascript:;"><%- item4 %></a></li>
             </script>
         </ul>
     </div>
     <div class="tab_menu_bottom"></div>
-    <div>
+    <div class="main_box" style="width: 60%">
         <div class="tab_boxes">
-            <div class="main_box">
+            <div>
                 <form id="form0">
                     <script type="text/template" id="networkform1-template0">
                         <table class="detail" cellspacing="0">
-						    <tr style = "display:none">
-							   <td><input type="text" id="lanName0" name="lanName" class="normal inputs_lan"  /></td>
-							</tr>
-							
-						    <tr>
-								<th><%- th1 %></th>
-								<td><input type="text" id="lanIp0" name="lanIp" class="normal inputs_lan"  /></td>
-							</tr>
+                            <tr style = "display:none">
+                                <td><input type="text" id="lanName0" name="lanName" class="normal inputs_lan"  /></td>
+                            </tr>
+
+                            <tr>
+                                <th><%- th1 %></th>
+                                <td><input type="text" id="lanIp0" name="lanIp" class="normal inputs_lan"  /></td>
+                            </tr>
 
                             <tr>
                                 <th><%- th2 %></th>
@@ -333,19 +315,26 @@
                         </table>
                     </script>
                 </form>
+				 <div id="client_list0"  style = "padding-top:15px " >
+					<script type="text/template" id="tabsitems-template0">
+					<div class="detail"><%- item5 %></div>
+					<div id="ipBinds0"></div>
+				</script>
             </div>
-			<div class="main_box">
+			
+        </div>
+            <div >
                 <form id="form1">
                     <script type="text/template" id="networkform1-template1">
                         <table class="detail" cellspacing="0">
-							<tr style = "display:none">
-							   <td><input type="text" id="lanName1" name="lanName" class="normal inputs_lan"  /></td>
-							</tr>
-						
-						    <tr>
-								<th><%- th1 %></th>
-								<td><input type="text" id="lanIp1" name="lanIp" class="normal inputs_lan"  /></td>
-							</tr>
+                            <tr style = "display:none">
+                                <td><input type="text" id="lanName1" name="lanName" class="normal inputs_lan"  /></td>
+                            </tr>
+
+                            <tr>
+                                <th><%- th1 %></th>
+                                <td><input type="text" id="lanIp1" name="lanIp" class="normal inputs_lan"  /></td>
+                            </tr>
 
                             <tr>
                                 <th><%- th2 %></th>
@@ -374,19 +363,25 @@
                         </table>
                     </script>
                 </form>
+				 <div id="client_list1" >
+                    <script type="text/template" id="tabsitems-template1">
+                        <div class="detail"><%- item5 %></div>
+                        <div id="ipBinds1"></div>
+                    </script>
+                </div>
             </div>
-			<div class="main_box">
+            <div >
                 <form id="form2">
                     <script type="text/template" id="networkform1-template2">
                         <table class="detail" cellspacing="0">
-							<tr style = "display:none">
-							   <td><input type="text" id="lanName2" name="lanName" class="normal inputs_lan"  /></td>
-							</tr>
-							
-							<tr>
-								<th><%- th1 %></th>
-								<td><input type="text" id="lanIp2" name="lanIp" class="normal inputs_lan"  /></td>
-							</tr>
+                            <tr style = "display:none">
+                                <td><input type="text" id="lanName2" name="lanName" class="normal inputs_lan"  /></td>
+                            </tr>
+
+                            <tr>
+                                <th><%- th1 %></th>
+                                <td><input type="text" id="lanIp2" name="lanIp" class="normal inputs_lan"  /></td>
+                            </tr>
 
                             <tr>
                                 <th><%- th2 %></th>
@@ -415,20 +410,19 @@
                         </table>
                     </script>
                 </form>
+				 <div id="client_list2" >
+                    <script type="text/template" id="tabsitems-template2">
+                        <div class="detail"><%- item5 %></div>
+                        <div id="ipBinds2"></div>
+                    </script>
+                </div>
             </div>
-			
-            <div id="ipMacEdit">
-                <script type="text/template" id="networkipMacEdit-template">
-                    <div id="ipBinds"><%- ipBinds %></div>
-                    <div id="divBtns" style="margin-top:5px;">
-                        <input id="btnAddIp" type="button" value="<%- btnAddIp %>" />
-                        <input id="btnDeleteAll" type="button" value="<%- btnDeleteAll %>" />
-                    </div>
-                </script>
-            </div>
+
         </div>
+
+       
     </div>
-    <div class="helper_box" style="display:none;">
+    <div class="helper_box" style="display:none;winth:40%">
         <div id="helper"></div>
     </div>
     <span style="clear:both"></span>

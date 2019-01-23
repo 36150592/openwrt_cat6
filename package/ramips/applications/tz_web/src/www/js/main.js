@@ -40,6 +40,7 @@ var RequestCmd = {
     URL_FILTER: 26,
     OTHER_FILTER: 27,
 	DEFAULT_FILTER: 28,
+	ACL_FILTER:29,
 	CLEAN_ALL_FILTER: 39,
 		
 	WIFI_CONTROL_INFO: 117,
@@ -71,6 +72,7 @@ var MenuItem = {
     FW_IP_MAC_BINDING: { cmd: RequestCmd.IP_MAC_BINDING, url: "html/firewall/firewall.html" },
     FW_URL_FILTER: { cmd: RequestCmd.URL_FILTER, url: "html/firewall/firewall.html" },
     FW_PORT_MAPPING: { cmd: RequestCmd.OTHER_FILTER, url: "html/firewall/firewall.html" },
+	FW_ACL_FILTER: { cmd: RequestCmd.ACL_FILTER, url: "html/firewall/firewall.html" },
     FW_SPEED_LIMIT: { cmd: RequestCmd.SPEED_LIMIT, url: "html/firewall/firewall.html" },
     FW_DMZ: { cmd: RequestCmd.NETWORK_SERVICE, url: "html/firewall/dmz.html" },
     FW_ALG: { cmd: RequestCmd.NETWORK_SERVICE, url: "html/firewall/alg.html" },

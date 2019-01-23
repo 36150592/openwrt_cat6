@@ -145,7 +145,6 @@
             Page.postJSON({
                 json: { cmd: RequestCmd.SYS_INFO },
                 success: function(datas) {
-
                     var data2 = datas.data;
                     console.log(data2);
 					
@@ -181,20 +180,15 @@
                     values_sim.push(pinPukStateInfo.pinState);
                     values_sim.push(pinPukStateInfo.pukState);
 
-                    names_net.push(DOC.lbl.dialMode);
-                    names_net.push(DOC.lbl.dialState);
-
-                    values_net.push(DOC.lbl.autoDial);
-                    values_net.push(DOC.status.connected);
 
 
                     names_net.push(DOC.lbl.netMode);
                     names_net.push(DOC.lbl.signal);
                     names_net.push(DOC.lbl.signalLevel);
                     names_net.push(DOC.lbl.plmn);
-                    names_net.push(DOC.lbl.regState);
-                    names_net.push(DOC.lbl.psReg);
-                    names_net.push(DOC.lbl.epsReg);
+                  //  names_net.push(DOC.lbl.regState);
+                //    names_net.push(DOC.lbl.psReg);
+                 //   names_net.push(DOC.lbl.epsReg);
 
                     //var netState = StatusUtil.getNetState(data.signalLevel, data.eregStat, data.act, 0);
                     var netState = getNetState(data_modem.act);
@@ -211,12 +205,12 @@
 
                     values_net.push(FormatUtil.formatPLMN(data_modem.plmn));
 
-                    var ps_cs = parseInt(data_modem.ps_cs, 10);
-                    var regState = getRegState(ps_cs);
-                    values_net.push(regState.csRegState);
-                    values_net.push(regState.psRegState);
-                  //  values_net.push(netState == "3G" ? DOC.status.noreg : StatusUtil.getRegState(data.eregStat));
-                    values_net.push("-");
+                  //  var ps_cs = parseInt(data_modem.ps_cs, 10);
+                  //  var regState = getRegState(ps_cs);
+                  //  values_net.push(regState.csRegState);
+                  //  values_net.push(regState.psRegState);
+                 // //  values_net.push(netState == "3G" ? DOC.status.noreg : StatusUtil.getRegState(data.eregStat));
+                 //   values_net.push("-");
 
                     names_lan.push(DOC.net.mac);
                     names_lan.push(DOC.net.ip);
@@ -293,7 +287,7 @@
                     $('#wan_info').html(wan_html);
                     $('#lan_info').html(lan_html);
 
-                    //        Page.setStripeTable();
+                   // Page.setStripeTable();
                     Page.isNULLToSpace = false;
                 }
             });
@@ -303,7 +297,7 @@
 
         function getWlanSecMode(encry)
         {
-            var secMode;
+            var secMode = "None";
 
             switch (encry){
                 case "none" :
@@ -409,18 +403,16 @@
                         values.push(data2.mac || loading);
 
                         names.push(DOC.wlan.ssidBroadcast);
-                        if(data2.hidden == "1"){
+                        if(data2.hidden_ssid == "0"){
                             values.push(DOC.status.opened);
                         } else {
                             values.push(DOC.status.closed);
                         }
 
                         names.push(DOC.wlan.secMode);
-                        if(data2.encryption == "none"){
-                            values.push("None");
-                        }else {
-                            values.push("WPA2PSK[AES]");
-                        }
+                        var encryp = data2.encryption.split("+")[0];
+                        values.push(getWlanSecMode(encryp));
+
                         //values.push(FormatUtil.formatField(getWlanSecMode(data.encKey.trim(), data.wpa.trim(), data.wpaKeyMgmt.trim(), data.wpaPairwise.trim())));
 
                         names.push(DOC.wlan.channel);
@@ -448,6 +440,7 @@
                     if (data.mode.trim() == "NULL") {
                         wlan5gHtml = Page.createTable(DOC.title.wlan5g + data.message, [], [], 0, 0);
                     } else {
+					  
                         var names = [];
                         var values = [];
                         var data2 = datas.data;
@@ -468,23 +461,25 @@
                         values.push(data2.mac || loading);
 
                         names.push(DOC.wlan.ssidBroadcast);
-                        if(data2.hidden == "1"){
+                        if(data2.hidden_ssid == "0"){
                             values.push(DOC.status.opened);
                         } else {
                             values.push(DOC.status.closed);
                         }
 
                         names.push(DOC.wlan.secMode);
-                        values.push(getWlanSecMode(data2.encryption));
+                        var encryp = data2.encryption.split("+")[0];
+                        values.push(getWlanSecMode(encryp));
 
                         names.push(DOC.wlan.channel);
                         values.push(data2.channel || loading);
 
                         names.push(DOC.wlan.txPower);
                         values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
-
+                                 
                         wlan5gHtml = Page.createTable(DOC.title.wlan5g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
                     }
+					
                     $('#wlan_5g_info').html(wlan5gHtml);
                     Page.setStripeTable("#wlan_5g_info");
                 }

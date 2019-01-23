@@ -1,0 +1,55 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render('#fwHead', '#fwHead_template');
+        Page.render('#fwBody', '#fwBody_template');
+
+        $('.hostname_head').text(Page.getPreHostname());
+
+        $('#btnCloseRule').click(function() {
+            var $box = $('#edit_box'), $mask = $('#mask');
+            $box.hide();
+            $mask.hide();
+        });
+    });
+</script>
+
+<div class="detail" id="fwHead">
+    <script type="text/template" id="fwHead_template">
+        <div id="edit_title"><%- title.addIpMacBinding %></div>
+        <div id="edit_close"><input id="btnCloseRule" type="button" value="<%- btn.close %>" /></div>
+        <div style="clear:both;"></div>
+    </script>
+</div>
+<div id="fwBody">
+    <script type="text/template" id="fwBody_template">
+        <table class="detail" cellspacing="0">
+            <tr style="display:none;">
+                <th><%- net.ipv46 %><%- colon %></th>
+                <td>
+                    <input type="radio" name="ippro" value="IPV4" checked="checked" /><%- net.ipv4 %>&nbsp;
+                    <input type="radio" name="ippro" value="IPV6" /><%- net.ipv6 %>&nbsp;
+                </td>
+            </tr>
+            <tr>
+                <th><%- net.ip %><%- colon %></th>
+                <td>
+                    <input type="text" id="txtIp" name="txtIp" class="large" maxlength="99" /><span class="cmt"><%- lbl.example %><%- colon %><span class="hostname_head"></span>100</span>
+                </td>
+            </tr>
+            <tr>
+                <th><%- net.mac %><%- colon %></th>
+                <td><input type="text" id="txtMac" name="txtMac" class="large" maxlength="30" /><span class="cmt"><%- lbl.example %><%- colon %>B8:AC:6F:BB:7E:3F</span></td>
+            </tr>
+            <tr>
+                <th><%- lbl.remark %><%- colon %></th>
+                <td><input type="text" id="txtRemark" name="txtRemark" class="larger" maxlength="99" /></td>
+            </tr>
+            <tr>
+                <th>&nbsp;</th>
+                <td><input type="button" id="btnSaveRule" value="<%- btn.save %>"/></td>
+            </tr>
+        </table>
+    </script>
+</div>
