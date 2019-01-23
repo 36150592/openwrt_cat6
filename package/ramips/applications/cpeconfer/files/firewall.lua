@@ -610,7 +610,7 @@ function firewall_module.firewall_get_speed_filter_list()
 		
 		local array = split(data[i], "##")
 		local temp = firewall_module.speed_filter:new(nil,nil)
-		temp["ip"] = array[3]
+		temp["ipaddr"] = array[3]
 		temp["speed"] = array[4]
 		temp["comment"] = array[5]
 		temp["iswork"] = rule_is_work(data[i])
@@ -701,7 +701,7 @@ function firewall_module.firewall_get_ipmac_bind_filter_list()
 		
 		local array = split(data[i], "##")
 		local temp = firewall_module.ipmac_bind_filter:new(nil,nil)
-		temp["ip"] = array[3]
+		temp["ipaddr"] = array[3]
 		temp["mac"] = array[4]
 		temp["comment"] = array[5]
 		temp["iswork"] = rule_is_work(data[i])
