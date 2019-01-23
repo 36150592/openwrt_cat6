@@ -102,6 +102,7 @@ fi
 
 
 check_ubuntu_version
+export TZ_PROJECT=${project}
 echo "The project is ${project}"
 
 
@@ -123,6 +124,23 @@ else
 fi
 
 echo "options is" $options
+
+if [ ! -d "${TOPDIR}/project/${project}/rootfs" ]; then
+	mkdir ${TOPDIR}/project/${project}/rootfs
+fi
+
+if [ -f ${TOPDIR}/project/${project}/key-message ]; then
+	TZ_BRANCH_NAME=`git branch -a| grep \* | cut -f2 -d" "`
+	TZ_RELEASE_NAME=`lsb_release -i|cut -f2`
+	GIT_COMMIT_SHA1=`git rev-parse --verify HEAD`
+	BUILD_TIME=`date +%F_%H:%M`
+	cp ${TOPDIR}/project/${project}/key-message ${TOPDIR}/project/${project}/rootfs/version
+	echo "type=${project}" >> ${TOPDIR}/project/${project}/rootfs/version
+	echo "branch=${TZ_BRANCH_NAME}" >> ${TOPDIR}/project/${project}/rootfs/version
+	echo "os=${TZ_RELEASE_NAME}" >> ${TOPDIR}/project/${project}/rootfs/version
+	echo "sha1=${GIT_COMMIT_SHA1}" >> ${TOPDIR}/project/${project}/rootfs/version
+	echo "build=${BUILD_TIME}" >> ${TOPDIR}/project/${project}/rootfs/version
+fi
 
 compile_result="fail"
 
