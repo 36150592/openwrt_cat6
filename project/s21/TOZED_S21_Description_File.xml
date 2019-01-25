@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<!--
+preface用于在配置文件的最开头增加一些字符串,这个可以自己定义
+format用于设置每个字段的配置输出的格式
+class用于对各个分类的意义进行描述,config中的class指示字段所述的分类
+config用于描述配置的字段/类型/含义/所属分类
+default表示字段的默认值
+none表示字段为空情况下的显示,例如TZ_ENABLE_DHCP_SERVER的配置为空,则查找配置为yes,显示开启
+type表示字段的类型,text表示需要进行输入的字符串;select表示所属选项为选项列表类型,option列出所有可以选择的选项;
+fixvalue表示指定的配置选项总是会被设置为指定的值
+int表示要设置的值为数字,rangestart指定最小的数字,rangeend指定最大的数字
+bitcomposite表示使用位进行组合的配置字段
+-->
+<project name="configset" version="V1.00-2019-01-25">
+	<preface value=""/>
+	<format value="export ${field}=&quot;quote{value}&quot;"/>
+	<class name="SYSTEM_CONFIG_FIELD" description="系统配置"  />
+	<class name="USER_CONFIG_FIELD" description="用户配置"  />
+ 	<class name="WIFI_CONFIG_FIELD" description="WIFI配置"  />
+	
+	<!--能够识别的字段,使用逗号进行分割-->
+	<recognizedfields list="MANRATE,MANRETRIES,RATECTL,AP_CHMODE,PUREG,PUREN,WIFIWORKMODE,AP_SECFILE,AP_WPA_GROUP_REKEY,AP_WPA_GMK_REKEY,AP_CYPHER,AP_WPA,AP_SEC_DEBUG,AP_SECMODE,PSK_KEY" />
+	<!--1.系统配置-->
+	<config name="TZSYSTEM_CONFIG_VERSION" type="text" critical_config="yes" description="配置文件版本" detail="配置文件版本" maxlength="20" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<default value="V1.00" />
+	</config>
+
+	<config name="TZSYSTEM_CUSTOMER_SOFT_VERSION" type="text" description="客户指定软件版本" detail="客户指定软件版本" maxlength="32" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<default value="" />
+	</config>
+
+	<config name="TZSYSTEM_PREFERRED_LANGUAGE" type="select" critical_config="yes" description="默认语言" detail="默认语言" class_name="SYSTEM_CONFIG_FIELD"  >
+		<option value="zh-cn" description="中文"/>
+		<option value="en" description="English"/>
+        	<default value="en"/>
+	</config>
+
+	<config name="TZSYSTEM_SNTP_TIMEZONE" type="text" description="时区" detail="时区(-12~12, 如5.5、-4.5、8)" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<default value="8" />
+	</config>
+
+	<!--2.用户配置-->
+	<config name="TZUSER_CUSTOMER" type="select" description="使用客户" detail="使用该配置的客户" class_name="USER_CONFIG_FIELD"  >
+		<option value="Dialog" description="斯里兰卡--DIALOG" />
+		<option value="SLT" description="斯里兰卡--SLT" />
+		<option value="General" description="通用配置" />
+        	<default value="General" />
+	</config>
+
+	<!--网页超级用户设置; -->
+	<config name="TZUSER_WEB_SUPER_USER_NAME" type="text" description="网页超级用户名" detail="网页超级用户名" class_name="USER_CONFIG_FIELD"  >
+        	<default value="sztozed" />
+	</config>
+
+	<config name="TZUSER_WEB_SUPER_USER_PWD_RANDOM" type="select" description="网页超级用户密码随机" detail="网页超级用户密码随机，若否，请填写网页超级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZUSER_WEB_SUPER_USER_PWD" type="text" description="网页超级用户固定密码" detail="网页超级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<config name="TZUSER_WEB_SUPER_USER_PWD_RANDOM_WAY" type="select" description="网页超级用户密码随机方式选择" detail="网页超级用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
+        	<option value="1" description="随机方式一" />
+		<default value="1"/>
+	</config>
+
+	<!--网页高级用户设置; -->
+	<config name="TZUSER_WEB_SENIOR_USER_NAME" type="text" description="网页高级用户名" detail="网页高级用户名" class_name="USER_CONFIG_FIELD"  >
+        	<default value="Operator" />
+	</config>
+
+	<config name="TZUSER_WEB_SENIOR_USER_PWD_RANDOM" type="select" description="网页高级用户密码随机" detail="网页高级用户密码随机，若否，请填写网页高级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZUSER_WEB_SENIOR_USER_PWD" type="text" description="网页高级用户固定密码" detail="网页高级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<config name="TZUSER_WEB_SENIOR_USER_PWD_RANDOM_WAY" type="select" description="网页高级用户密码随机方式选择" detail="网页高级用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
+        	<option value="1" description="随机方式一" />
+		<default value="1"/>
+	</config>
+	
+	<!--网页普通用户设置; -->
+	<config name="TZUSER_WEB_GENERAL_USER_NAME" type="text" description="网页普通用户名" detail="网页普通用户名" class_name="USER_CONFIG_FIELD"  >
+        	<default value="admin" />
+	</config>
+
+	<config name="TZUSER_WEB_GENERAL_USER_PWD_RANDOM" type="select" description="网页普通用户密码随机" detail="网页普通用户密码随机，若否，请填写网页普通用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZUSER_WEB_GENERAL_USER_PWD" type="text" description="网页普通用户固定密码" detail="网页普通用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<default value="admin" />
+	</config>
+	
+
+	<config name="TZUSER_WEB_GENERAL_USER_PWD_RANDOM_WAY" type="select" description="网页普通用户密码随机方式选择" detail="网页普通用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
+        	<option value="1" description="随机方式一" />
+		<default value="1"/>
+	</config>
+
+	<!--3.WIFI配置-->
+	
+	<!--2.4G WIFI 设置-->
+
+	<!--2.4G WIFI 主WIFI-->
+	<config name="TZWIFI_24G_MAIN_WIFI_ENABLE" type="select" description="2.4G 主wifi 开关" detail="2.4G 主wifi开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="y"/>
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_SSID" type="text" description="2.4G 主wifi 固定SSID名称" detail="2.4G 主wifi 固定SSID名称，默认为ZLT S21_XXXX" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX" />
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_PWD" type="text" description="2.4G 主wifi 固定密码" detail="设置 2.4G 主wifi 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<!--2.4G WIFI 辅WIFI 1-->
+	<config name="TZWIFI_24G_VICE_1_WIFI_ENABLE" type="select" description="2.4G 辅wifi 1 开关" detail="2.4G 辅wifi 1 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_24G_VICE_1_WIFI_SSID" type="text" description="2.4G 辅wifi 1 固定SSID名称" detail="2.4G 辅wifi 1 固定SSID名称，默认为ZLT S21_XXXX_1" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX_1" />
+	</config>
+
+	<config name="TZWIFI_24G_VICE_1_WIFI_PWD" type="text" description="2.4G 辅wifi 1 固定密码" detail="设置 2.4G 辅wifi 1 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<!--2.4G WIFI 辅WIFI 2-->
+	<config name="TZWIFI_24G_VICE_2_WIFI_ENABLE" type="select" description="2.4G 辅wifi 2 开关" detail="2.4G 辅wifi 2 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_24G_VICE_2_WIFI_SSID" type="text" description="2.4G 辅wifi 2 固定SSID名称" detail="2.4G 辅wifi 2 固定SSID名称，默认为ZLT S21_XXXX_2" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX_2" />
+	</config>
+
+	<config name="TZWIFI_24G_VICE_2_WIFI_PWD" type="text" description="2.4G 辅wifi 2 固定密码" detail="设置 2.4G 辅wifi 2 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+		
+	<!--5.8G WIFI 设置-->
+
+	<!--5.8G WIFI 主WIFI-->
+	<config name="TZWIFI_58G_MAIN_WIFI_ENABLE" type="select" description="5.8G 主wifi 开关" detail="5.8G 主wifi开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="y"/>
+	</config>
+
+	<config name="TZWIFI_58G_MAIN_WIFI_SSID" type="text" description="5.8G 主wifi 固定SSID名称" detail="5.8G 主wifi 固定SSID名称，默认为ZLT S21_XXXX_5G" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX_5G" />
+	</config>
+
+	<config name="TZWIFI_58G_MAIN_WIFI_PWD" type="text" description="5.8G 主wifi 固定密码" detail="设置 5.8G 主wifi 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<!--5.8G WIFI 辅WIFI 1-->
+	<config name="TZWIFI_58G_VICE_1_WIFI_ENABLE" type="select" description="5.8G 辅wifi 1 开关" detail="5.8G 辅wifi 1 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_58G_VICE_1_WIFI_SSID" type="text" description="5.8G 辅wifi 1 固定SSID名称" detail="5.8G 辅wifi 1 固定SSID名称，默认为ZLT S21_XXXX_5G_1" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX_5G_1" />
+	</config>
+
+	<config name="TZWIFI_58G_VICE_1_WIFI_PWD" type="text" description="5.8G 辅wifi 1 固定密码" detail="设置 5.8G 辅wifi 1 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<!--5.8G WIFI 辅WIFI 2-->
+	<config name="TZWIFI_58G_VICE_2_WIFI_ENABLE" type="select" description="5.8G 辅wifi 2 开关" detail="5.8G 辅wifi 2 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_58G_VICE_2_WIFI_SSID" type="text" description="5.8G 辅wifi 2 固定SSID名称" detail="5.8G 辅wifi 2 固定SSID名称，默认为ZLT S21_XXXX_5G_2" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX_5G_2" />
+	</config>
+
+	<config name="TZWIFI_58G_VICE_2_WIFI_PWD" type="text" description="5.8G 辅wifi 2 固定密码" detail="设置 5.8G 辅wifi 2 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+</project>
+
