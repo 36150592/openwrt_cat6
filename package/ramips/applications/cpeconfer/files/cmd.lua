@@ -261,9 +261,9 @@ end
 function firewall_set_url_filter()
 		print("in firewall_set_url_filter")
 		local urls={
-		{["url"]='sina.cn', ["action"]='ACCEPT', ["comment"]="test url filter",["iswork"]=true},
-		{["url"]='baidu.com', ["action"]='DROP', ["comment"]="test url filter",["iswork"]=true},
-		{["url"]='cn.bing.com', ["action"]='DROP', ["comment"]="test url filter",["iswork"]=false},
+		{["url"]='sina.cn', ["action"]='ACCEPT', ["comment"]=nil, ["interface"]=nil, ["iswork"]=true},
+		{["url"]='baidu.com', ["action"]='DROP', ["comment"]="", ["interface"]="lan", ["iswork"]=true},
+		{["url"]='cn.bing.com', ["action"]='DROP', ["comment"]="test url filter", ["interface"]="", ["iswork"]=false},
 		}
 
 		if firewall.firewall_set_url_filter_list(urls)

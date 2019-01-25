@@ -90,6 +90,7 @@ firewall_module.url_filter = {
 	["url"] = nil,
 	["action"] = nil, --DROP:refused  ACCEPT: accept connect 
 	["comment"] = nil, -- user note
+	["interface"] = nil, -- interface like lan lan1 or lan2  , nil if set to all interface
 	["iswork"] = nil  -- is apply this rule  true:apply  false:not apply
 }
 
@@ -287,8 +288,13 @@ local function format_get_ipmac_bind_filter_cmd()
 	return string.format("cat %s | grep %s", FIREWALL_CUSTOM_CONFIG_FILE, FIREWALL_IP_MAC_BIND_FILTER_PREX) 
 end
 
-local function format_set_url_filter_cmd(url,action,comment)
-	return string.format("echo 'iptables -I FORWARD -m string --string %s --algo bm -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+local function format_set_url_filter_cmd(url,action,comment, interface)
+	if nil == interface  or "" == interface
+	then
+		return string.format("echo 'iptables -I FORWARD -m string --string %s --algo bm -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+	else
+		return string.format("echo 'iptables -I FORWARD -i br-%s -m string --string %s --algo bm -j %s ##%s##%s##%s##%s##%s' >> %s",interface, url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, interface, FIREWALL_CUSTOM_CONFIG_FILE)		
+	end
 end
 
 local function format_get_url_filter_cmd() 
@@ -793,6 +799,7 @@ function firewall_module.firewall_get_url_filter_list()
 		temp["url"] = array[3]
 		temp["action"] = array[4]
 		temp["comment"] = array[5]
+		temp["interface"] = array[6]
 		temp["iswork"] = rule_is_work(data[i])
 		url_filter_list[i] = temp
 
@@ -806,8 +813,8 @@ end
 -- 		input example
 --[[
 local urls={
-		{["url"]='sina.cn', ["action"]='ACCEPT', ["comment"]="test url filter"},
-		{["url"]='baidu.com', ["action"]='DROP', ["comment"]="test url filter"}
+		{["url"]='sina.cn', ["action"]='ACCEPT', ["comment"]="test url filter", ["interface"]= nil},
+		{["url"]='baidu.com', ["action"]='DROP', ["comment"]="test url filter", ["interface"]="lan"}
 
 		}
 ]]--
@@ -839,7 +846,7 @@ function firewall_module.firewall_set_url_filter_list(filter_list)
 
 		if check_action(temp["action"]) 
 		then
-			execute_cmd(format_set_url_filter_cmd(temp["url"], temp["action"], temp["comment"]), temp["iswork"])
+			execute_cmd(format_set_url_filter_cmd(temp["url"], temp["action"], temp["comment"] or "", temp["interface"]), temp["iswork"])
 		else
 			debug("check fail ", temp["action"]," ", temp["url"], " ", temp["comment"])
 			return false
