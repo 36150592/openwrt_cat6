@@ -83,6 +83,14 @@ function firewall_set_default_action()
 end
 
 
+function firewall_get_default_action()
+	print("get default firewall action")
+
+	local ret = firewall.firewall_get_default_action()
+	print(ret)
+
+end
+
 function firewall_get_port_redirect()
 
 	print("in firewall_get_port_redirect")
@@ -1598,7 +1606,7 @@ local api_func = {
 	["firewall_get_speed_filter"] = firewall_get_speed_filter,
 	["firewall_set_speed_filter"] = firewall_set_speed_filter,
 
-	["firewall_get_default_action"] = firewall.firewall_get_default_action,
+	["firewall_get_default_action"] = firewall_get_default_action,
 	["firewall_set_default_action"] = firewall_set_default_action,
 	["firewall_start"] = firewall.firewall_start,
 	["firewall_stop"] = firewall.firewall_stop,

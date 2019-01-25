@@ -610,7 +610,7 @@ function firewall_module.firewall_get_speed_filter_list()
 		
 		local array = split(data[i], "##")
 		local temp = firewall_module.speed_filter:new(nil,nil)
-		temp["ipaddr"] = array[3]
+		temp["ip"] = array[3]
 		temp["speed"] = array[4]
 		temp["comment"] = array[5]
 		temp["iswork"] = rule_is_work(data[i])
@@ -701,7 +701,7 @@ function firewall_module.firewall_get_ipmac_bind_filter_list()
 		
 		local array = split(data[i], "##")
 		local temp = firewall_module.ipmac_bind_filter:new(nil,nil)
-		temp["ipaddr"] = array[3]
+		temp["ip"] = array[3]
 		temp["mac"] = array[4]
 		temp["comment"] = array[5]
 		temp["iswork"] = rule_is_work(data[i])
@@ -1250,20 +1250,52 @@ local function get_section_name_by_type(type_name)
 
 end
 
+local function check_section_is_exist(section_name)
+
+	if nil == section_name
+	then
+		debug("section_name nil")
+		return nil
+	end
+
+	debug("section_name = ", section_name)
+
+	local all_config = x:get_all(FIREWALL_CONFIG_FILE)
+
+	if nil == all_config 
+	then
+		debug("all_config = nil")
+	end
+
+	for k,v in pairs(all_config) do
+--		print(v[".type"])
+		if section_name == v[".name"] then
+			return true
+		end
+	end
+
+	return false
+end
+
 -- get default policy for firewall
 -- input:none
 -- return:
 --		ACCEPT: default pass forward packets
 --		DROP:  default drop forward packets
---		REJECT: default reject forward packets
+--		nil:get fail
 function firewall_module.firewall_get_default_action()
-	local section_name = get_section_name_by_type("defaults")
 
-	if nil ~= section_name
+	if check_section_is_exist("default_forward")
 	then
-		local temp = x:get(FIREWALL_CONFIG_FILE, section_name, "forward")
-		debug("default action = ", temp)
-		return temp
+		local src = x:get(FIREWALL_CONFIG_FILE, "default_forward", "src")
+		local dest = x:get(FIREWALL_CONFIG_FILE, "default_forward", "dest")
+
+		if "lan" == src and "wan" == dest
+		then
+			return "ACCEPT"
+		else
+			return "DROP"
+		end
 	end
 
 	debug("firewall get defaults action fail")
@@ -1280,15 +1312,31 @@ end
 --		true if success false if fail
 function firewall_module.firewall_set_default_action(action)
 
-	local section_name = get_section_name_by_type("defaults")
-
-	if nil~= section_name and check_action(action) and x:set(FIREWALL_CONFIG_FILE, section_name, "forward", action)
+	if check_action(action) == false
 	then
-		if x:commit(FIREWALL_CONFIG_FILE)
+		debug("check_action fail")
+		return false
+	end
+
+	if check_section_is_exist("default_forward")
+	then
+		if "ACCEPT" ~= action
 		then
-			debug("set firewall default action success")
-			return true
+			x:delete(FIREWALL_CONFIG_FILE, "default_forward", "src")
+			x:delete(FIREWALL_CONFIG_FILE, "default_forward", "dest")
+		else 
+			x:set(FIREWALL_CONFIG_FILE,"default_forward", "src", "lan")
+			x:set(FIREWALL_CONFIG_FILE,"default_forward", "dest", "wan")
 		end
+	else
+		debug("no default_forward section")
+		return false
+	end
+	
+	if x:commit(FIREWALL_CONFIG_FILE)
+	then
+		debug("set firewall default action success")
+		return true
 	end
 
 	debug("set firewall default action fail")
