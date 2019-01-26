@@ -35,8 +35,8 @@
             <tr>
                 <th><%- table.filterMode %><%- colon %></th>
                 <td>
-                    <input type="radio" name="enableLink" value="ACCEPT" checked="checked" /><span class="ok"><%- status.accept %>&nbsp;</span>
-                    <input type="radio" name="enableLink" value="DROP" /><span class="fail"><%- status.reject %>&nbsp;</span>
+                    <input type="radio" name="action" value="ACCEPT" checked="checked" /><span class="ok"><%- status.accept %>&nbsp;</span>
+                    <input type="radio" name="action" value="DROP" /><span class="fail"><%- status.reject %>&nbsp;</span>
                 </td>
             </tr>
             <tr>
@@ -50,13 +50,13 @@
             <tr>
                 <th><%- net.ip %><%- colon %></th>
                 <td>
-                    <input type="text" id="txtIp" name="txtIp" class="large" maxlength="99" />
+                    <input type="text" id="ipaddr" name="ipaddr" class="large" maxlength="99" />
                     <span class="cmt"><%- lbl.example %><%- colon %><span class="hostname_head"></span>100, <span class="hostname_head"></span>150-<span class="hostname_head"></span>200</span>
                 </td>
             </tr>
             <tr>
                 <th><%- lbl.remark %><%- colon %></th>
-                <td><input type="text" id="txtRemark" name="txtRemark" class="larger" maxlength="99" /></td>
+                <td><input type="text" id="comment" name="comment" class="larger" maxlength="99" /></td>
             </tr>
             <tr>
                 <th>&nbsp;</th>

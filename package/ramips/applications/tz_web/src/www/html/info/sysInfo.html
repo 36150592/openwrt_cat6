@@ -150,7 +150,7 @@
 					
                     var data_system = data2.system;
                     var data_sim = data2.sim;
-                    var data_lan = data2.lan[0];
+                    var data_lan = data2.lan;
                     var data_modem = data2.modem;
                     var data_wan = data2.network;
 
@@ -243,8 +243,8 @@
                     values_wan.push(data_wan.netmask || loading);
                     values_wan.push(data_wan.gateway || loading);
                     if(data_wan.ipaddr == undefined){
-                            values_wan.push("NULL");
-                            values_wan.push("NULL");
+                            values_wan.push("-");
+                            values_wan.push("-");
                     } else {
                             values_wan.push(data_wan.first_dns || loading);
                             values_wan.push(data_wan.second_dns || loading);

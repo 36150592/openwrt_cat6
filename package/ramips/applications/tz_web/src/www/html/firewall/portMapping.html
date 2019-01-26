@@ -35,20 +35,20 @@
             <tr>
                 <th><%- net.port %><%- colon %></th>
                 <td>
-                    <input type="text" id="txtPort" name="txtPort" class="normal" maxlength="10" /><span class="cmt"><%- lbl.example %><%- colon %>80(http), 443(https)</span>
+                    <input type="text" id="dest_port" name="dest_port" class="normal" maxlength="10" /><span class="cmt"><%- lbl.example %><%- colon %>80(http), 443(https)</span>
                 </td>
             </tr>
             <tr>
                 <th><%- net.mappingIp %><%- colon %></th>
-                <td><input type="text" id="txtMappingIp" name="txtMappingIp" class="normal" maxlength="50" /><span class="cmt"><%- lbl.example %><%- colon %><span class="hostname_head"></span>100</span></td>
+                <td><input type="text" id="redirect_addr" name="redirect_addr" class="normal" maxlength="50" /><span class="cmt"><%- lbl.example %><%- colon %><span class="hostname_head"></span>100</span></td>
             </tr>
             <tr>
                 <th><%- net.mappingPort %><%- colon %></th>
-                <td><input type="text" id="txtMappingPort" name="txtMappingPort" class="normal" maxlength="10" /><span class="cmt"><%- lbl.example %><%- colon %>8080</span></td>
+                <td><input type="text" id="redirect_port" name="redirect_port" class="normal" maxlength="10" /><span class="cmt"><%- lbl.example %><%- colon %>8080</span></td>
             </tr>
             <tr>
                 <th><%- lbl.remark %><%- colon %></th>
-                <td><input type="text" id="txtRemark" name="txtRemark" class="larger" maxlength="99" /></td>
+                <td><input type="text" id="comment" name="comment" class="larger" maxlength="99" /></td>
             </tr>
             <tr>
                 <th>&nbsp;</th>

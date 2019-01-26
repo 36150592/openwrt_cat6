@@ -33,8 +33,8 @@
             <tr>
                 <th><%- table.filterMode %><%- colon %></th>
                 <td>
-                    <input type="radio" name="enableLink" value="ACCEPT" checked="checked" /><span class="ok"><%- status.accept %>&nbsp;</span>
-                    <input type="radio" name="enableLink" value="DROP" /><span class="fail"><%- status.reject %>&nbsp;</span>
+                    <input type="radio" name="action" value="ACCEPT" checked="checked" /><span class="ok"><%- status.accept %>&nbsp;</span>
+                    <input type="radio" name="action" value="DROP" /><span class="fail"><%- status.reject %>&nbsp;</span>
                 </td>
             </tr>
             <tr>
@@ -47,12 +47,12 @@
             </tr>
             <tr>
                 <th><%- net.port %><%- colon %></th>
-                <td><input type="text" id="txtPort" name="txtPort" class="normal" maxlength="20" />
+                <td><input type="text" id="port" name="port" class="normal" maxlength="20" />
                     <span class="cmt"><%- lbl.example %><%- colon %>80(http), 443(https), 5000-5010, &gt;4000, &lt;1024</span></td>
             </tr>
             <tr>
                 <th><%- lbl.remark %><%- colon %></th>
-                <td><input type="text" id="txtRemark" name="txtRemark" class="larger" maxlength="99" /></td>
+                <td><input type="text" id="comment" name="comment" class="larger" maxlength="99" /></td>
             </tr>
             <tr>
                 <th>&nbsp;</th>

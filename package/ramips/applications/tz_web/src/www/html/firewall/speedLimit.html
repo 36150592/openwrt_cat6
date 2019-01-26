@@ -35,17 +35,17 @@
             <tr>
                 <th><%- net.ip %><%- colon %></th>
                 <td>
-                    <input type="text" id="txtIp" name="txtIp" class="large" maxlength="99" />
+                    <input type="text" id="ipaddr" name="ipaddr" class="large" maxlength="99" />
                     <span class="cmt"><%- lbl.example %><%- colon %><span class="hostname_head"></span>100</span>
                 </td>
             </tr>
             <tr>
                 <th><%- net.maxSpeed %><%- colon %></th>
-                <td><input type="text" id="txtMaxSpeed" name="txtMaxSpeed" class="txt3" maxlength="30" /><%- unit.kBPerSeconds %></td>
+                <td><input type="text" id="speed" name="speed" class="txt3" maxlength="30" /><%- unit.kBPerSeconds %></td>
             </tr>
             <tr>
                 <th><%- lbl.remark %><%- colon %></th>
-                <td><input type="text" id="txtRemark" name="txtRemark" class="larger" maxlength="99" /></td>
+                <td><input type="text" id="comment" name="comment" class="larger" maxlength="99" /></td>
             </tr>
             <tr>
                 <th>&nbsp;<input type="hidden" id="hddMtu" value="1500" /></th>

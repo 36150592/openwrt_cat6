@@ -16,6 +16,7 @@
         var currentPannelIndex = 0;
         var isPageRequests = [false, false, false, false, false, false, false, false];
         var defaultCmd = RequestCmd.DEFAULT_FILTER;
+        var Action_Event = {Default: -1, Add_New_Item: 1, Set_Shift_Stat: 2, Edit_Item: 3};
 
         $lis.click(function() {
             $lis.removeClass("current");
@@ -59,8 +60,8 @@
                         customFieldNames = ["dest_addr", "dest_port", "redirect_addr", "redirect_port", "comment"];
                         break;
                     case 4:
-                        customTitles = [DOC.net.ipv46, DOC.net.url, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "url", "comment"];
+                        customTitles = [DOC.net.ipv46, DOC.net.url,DOC.lbl.advancedOptions, DOC.lbl.remark];
+                        customFieldNames = ["ippro", "url","interface", "comment"];
                         break;
                     case 5:
                         hasEnableLink = false;
@@ -108,7 +109,7 @@
                     }
                 });
             } else {
-                createTableDelegate(99);
+                createTableDelegate(Action_Event.Set_Shift_Stat);
             }
         });
 
@@ -146,46 +147,54 @@
             });
         });
 
-        $btnAdd.click(function() {
+        function showEditBox(data)
+        {
             $mask.show();
             $box.show();
             SysUtil.setBoxStyle($box);
 
             switch(currentPannelIndex) {
                 case 0:
-                    processPortFilter();
+                    processPortFilter(data);
                     break;
 
                 case 1:
-                    processIpFilter();
+                    processIpFilter(data);
                     break;
 
                 case 2:
-                    processMacFilter();
+                    processMacFilter(data);
                     break;
 
                 case 3:
-                    processPortMapping();
+                    processPortMapping(data);
                     break;
 
                 case 4:
-                    processUrlFilter();
+                    processUrlFilter(data);
                     break;
 
                 case 5:
-                    processIpMacBinding();
+                    processIpMacBinding(data);
                     break;
 
                 case 6:
-                    processSpeedLimit();
+                    processSpeedLimit(data);
                     break;
+
                 case 7:
-                    processAclFilter();
+                    processAclFilter(data);
                     break;
+
                 default:
                     break;
             }
+        }
+
+        $btnAdd.click(function() {
+            showEditBox();
         });
+
 
         $btnApply.click(function() {
             // AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
@@ -254,6 +263,7 @@
             listBoxIds: ['port_box', 'ip_box', 'mac_box', 'port_mapping_box', 'url_box', 'ip_mac_binding_box', 'speed_limit_box', 'acl_box', 'default_box'],
             editBoxId: 'edit_box',
             btnSaveId: 'btnSaveRule',
+			lanArr:[],
             datas: [],
             getDatas: function() {
                 return this.datas;
@@ -345,14 +355,33 @@
             },
             setItem: function(item) {
                 $('#hddItem' + this.pannelIndex).val(JSON.stringify(item));
+            },
+			getLanArr: function () {
+                return $('#hddLAN').val();
+            },
+            setLanArr: function (arr) {
+				 $('#hddLAN').val(arr);
+            },
+            setRowDataInBox: function(data) {
+                if(data == undefined){
+                    return;
+                }else {
+                   // console.log(data);
+                    for(var name in data)
+                    {
+                        if($(String.format("input[name={0}]", name)).attr("type") == "radio"){
+                            $(String.format("input[name={0}][value={1}]", name, data[name])).attr("checked",true);
+                        }else {
+                            $(String.format("input[name={0}]", name)).val(data[name]);
+                        }
+                    }
+                }
             }
         };
 
         function createFilterTable(options) {
             options = $.extend({}, filterOptions, options || {});
-
             var datas = options.getDatas();
-
             if (options.requiredSave) {
                 Page.postJSON({
                     json: {
@@ -385,7 +414,10 @@
                 sb.append(String.format('<th>{0}</th><th>{1}</th>',
                     DOC.table.filterMode, DOC.table.changeFilterMode));
             }
-            sb.append(String.format('<th>{0}', DOC.table.delRule));
+            sb.append(String.format('<th>{0}</th><th>{1}', DOC.table.editRule,DOC.table.delRule));
+			if(pannelIndex == 4){
+                sb.append('<input type="hidden" id="hddLAN" value="null" />');
+            }
             sb.append(String.format('<input type="hidden" id="hddItem{0}" value="null" />', pannelIndex));
             sb.append(String.format('<input type="hidden" id="hddShiftIndex{0}" value="0" />', pannelIndex));
             sb.append(String.format('<span style="display:none"><input type="button" id="btnDelegate{0}" value="Delegate" /></span>', pannelIndex));
@@ -427,7 +459,9 @@
                     sb.append(String.format('<td><a href="javascript:;" id="lnkEnableLink{0}" class="common">{1}</a></td>', id,
                         item.action == "ACCEPT"? DOC.status.reject : DOC.status.accept));
                 }
+				sb.append(String.format('<td><a href="javascript:;" id="lnkRuleEdit{0}">{1}</a></td>', id, DOC.table.edit));
                 sb.append(String.format('<td><a href="javascript:;" id="lnkRuleDel{0}">{1}</a></td>', id, DOC.table.del));
+               
 
                 sb.append('</tr>');
             }
@@ -439,14 +473,16 @@
             $('#btnDelegate' + pannelIndex).click(function() {
 
                 var shiftIndex = parseInt($('#hddShiftIndex' + pannelIndex).val(), 10);
-                if (shiftIndex < 0) {
-                    // 小于0时为新增
+                if (shiftIndex  == Action_Event.Add_New_Item) {
                     datas.push(options.getItem());
-
                     options.setApplyButtonStatus(true);
                     options.setSelectedIndex(datas.length - 1);
-                } else if (shiftIndex == 99) {
+                } else if (shiftIndex == Action_Event.Set_Shift_Stat) {
                     options.setShiftButtonsStatus();
+                } else if (shiftIndex == Action_Event.Edit_Item) {
+                    var selectedIndex = options.getSelectedIndex();
+                    datas[selectedIndex] = $.extend({}, datas[selectedIndex], options.getItem());
+                    options.setApplyButtonStatus(true);
                 } else {
                     var selectedIndex = options.getSelectedIndex();
                     var item = datas[selectedIndex];
@@ -507,6 +543,19 @@
                 }
             });
 
+            $(String.format('a[id^=lnkRuleEdit{0}]', pannelIndex + 1)).click(function(e) {
+                e.stopPropagation();
+                var fullIndex = this.id.replace("lnkRuleEdit", "");
+                var selectedIndex = options.getIndexById(fullIndex);
+                try {
+                    $(String.format('input[id^=radRule{0}]', fullIndex)).attr("checked", true);
+                    options.setSelectedIndex(selectedIndex);
+                    options.setShiftButtonsStatus();
+                    showEditBox(datas[selectedIndex]);
+                } catch(e) {
+                }
+            });
+
             $(String.format('a[id^=lnkRuleDel{0}]', pannelIndex + 1)).click(function(e) {
                 e.stopPropagation();
 
@@ -534,17 +583,63 @@
                     width: options.width,
                     height: options.height
                 });
+				var title = $('#edit_title').text();
+                if(options.rowData == undefined) {
+                    $('#edit_title').text(DOC.table.add + title);
+                }
+                else{
+                    $('#edit_title').text(DOC.table.edit + title);
+                }
+
 
                 var tab = String.format('#{0} table', options.editBoxId);
                 Page.setStripeTable(tab);
                 $(tab + ' input[type=text]:first').focus();
+                if(options.pannelIndex == 4){
+                    var LanArr = options.getLanArr();
+                    if(LanArr != "null"){
+						var lan_arr = LanArr.split(",");
+                        $.each(lan_arr,function(index,value){
+                            $("#interface").append("<option value='"+value+"'>"+value+"</option>");
+                        });
+						if(options.rowData != undefined) {
+									 $("#interface").val(options.rowData["interface"]);
+						}
+ 
+                    }else {
+                        Page.postJSON({
+                            json: {
+                                cmd: 203,
+                                method: JSONMethod.GET
+                            },
+                            success: function(data) {
+                                var lan_arr = data.data;
+                                options.setLanArr(lan_arr);
+                                $.each(lan_arr,function(index,value){
+                                    $("#interface").append("<option value='"+value+"'>"+value+"</option>");
+                                });
+                                if(options.rowData != undefined) {
+									 $("#interface").val(options.rowData["interface"]);
+								}
+                            }
+                        });
+                    }
+
+                }
+                options.setRowDataInBox(options.rowData);
 
                 $('#' + options.btnSaveId).click(function() {
+				   
                     var item = options.getSavingItem();
                     if (!item) return;
 
                     options.setItem(item);
-                    createTableDelegate(-1);
+                    if(options.rowData == undefined){
+					 createTableDelegate(Action_Event.Add_New_Item);
+					}else{
+					 createTableDelegate(Action_Event.Edit_Item);
+					}
+
                     $mask.hide();
                     $box.hide();
                 });
@@ -558,12 +653,12 @@
             //item.enableRule = true;
             item.protocol = $('input[name=protocol]').filter(':checked').val();
 
-            var $enableLinks = $('input[name=enableLink]');
+            var $enableLinks = $('input[name=action]');
             if ($enableLinks.length > 0) {
                 item.action = $enableLinks.filter(':checked').val();
             }
             //item.remark = $('#txtRemark').val().trim();
-            item.comment = $('#txtRemark').val().trim();
+            item.comment = $('#comment').val().trim();
             if(hasIPV46){
                 item.ippro = $('input[name=ippro]').filter(':checked').val();
             }
@@ -571,12 +666,13 @@
             return item;
         }
 
-        function processSpeedLimit() {
+        function processSpeedLimit(data) {
             processFilter({
                 width: "700px",
                 height: "auto",
+                rowData: data,
                 getSavingItem: function() {
-                    var ip = $('#txtIp').val().trim().replace(/ /g, '');
+                    var ip = $('#ipaddr').val().trim().replace(/ /g, '');
                     if (ip == "") {
                         AlertUtil.alertMsg(CHECK.required.ip);
                         return false;
@@ -588,7 +684,7 @@
                         return false;
                     }
 
-                    var maxSpeed = $('#txtMaxSpeed').val().trim();
+                    var maxSpeed = $('#speed').val().trim();
                     if (maxSpeed == "") {
                         AlertUtil.alertMsg(CHECK.required.maxSpeed);
                         return false;
@@ -602,18 +698,21 @@
 
                     item.ipaddr = ip;
                     item.speed = theMaxSpeed ;
-                    item.iswork = false;
+                    if(data == undefined){
+                        item.iswork = false;
+                    }
                     return item;
                 }
             });
         }
 
-        function processIpMacBinding() {
+        function processIpMacBinding(data) {
             processFilter({
                 width: "700px",
                 height: "auto",
+                rowData: data,
                 getSavingItem: function() {
-                    var ip = $('#txtIp').val().trim().replace(/ /g, '');
+                    var ip = $('#ipaddr').val().trim().replace(/ /g, '');
                     if (ip == "") {
                         AlertUtil.alertMsg(CHECK.required.ip);
                         return false;
@@ -625,7 +724,7 @@
                         return false;
                     }
 
-                    var mac = $('#txtMac').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
+                    var mac = $('#mac').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
                     if (mac == "") {
                         AlertUtil.alertMsg(CHECK.required.mac);
                         return false;
@@ -638,21 +737,24 @@
 
                     item.ipaddr = ip;
                     item.mac = mac;
-                    item.iswork = false;
+                    if(data == undefined){
+                        item.iswork = false;
+                    }
                     return item;
                 }
             });
         }
 
-        function processPortMapping() {
+        function processPortMapping(data) {
             processFilter({
                 width: "700px",
                 height: "auto",
+                rowData: data,
                 getSavingItem: function() {
-                    var port = parsePort($('#txtPort').val());
+                    var port = parsePort($('#dest_port').val());
                     if (!port) return false;
 
-                    var mappingIp = $('#txtMappingIp').val();
+                    var mappingIp = $('#redirect_addr').val();
                     if (mappingIp == "") {
                         AlertUtil.alertMsg(CHECK.required.ip);
                         return false;
@@ -663,7 +765,7 @@
                         return false;
                     }
 
-                    var theMappingPort = $('#txtMappingPort').val();
+                    var theMappingPort = $('#redirect_port').val();
                     if (theMappingPort == "") {
                         AlertUtil.alertMsg(CHECK.required.port);
                         return false;
@@ -681,37 +783,46 @@
                     item.dest_port = port;
                     item.redirect_addr = mappingIp;
                     item.redirect_port = mappingPort;
-                    item.iswork = false;
+                    if(data == undefined){
+                        item.iswork = false;
+                    }
                     return item;
                 }
             });
         }
 
-        function processUrlFilter() {
+        function processUrlFilter(data) {
             processFilter({
                 width: "800px",
                 height: "auto",
+                rowData: data,
                 getSavingItem: function() {
-                    var url = $('#txtUrl').val().trim().replace(/ /g, '');
+                    var url = $('#url').val().trim().replace(/ /g, '');
                     if (url == "") {
                         AlertUtil.alertMsg(CHECK.required.urlKeyword);
                         return false;
                     }
 
+					var interface = $("#interface option:selected").val();
+					
                     var item = getCommonItem(false);
                     item.url = url;
-                    item.iswork = false;
+					item.interface = interface;
+                   if(data == undefined){
+                        item.iswork = false;
+                    }
                     return item;
                 }
             });
         }
 
-        function processMacFilter() {
+        function processMacFilter(data) {
             processFilter({
                 width: "700px",
                 height: "auto",
+                rowData: data,
                 getSavingItem: function() {
-                    var mac = $('#txtMac').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
+                    var mac = $('#m').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
                     if (mac == "") {
                         AlertUtil.alertMsg(CHECK.required.mac);
                         return false;
@@ -723,18 +834,21 @@
                     }
                     var item = getCommonItem(false);
                     item.mac = mac;
-                    item.iswork = false;
+                    if(data == undefined){
+                        item.iswork = false;
+                    }
                     return item;
                 }
             });
         }
 
-        function processIpFilter() {
+        function processIpFilter(data) {
             processFilter({
                 width: "800px",
                 height: "auto",
+                rowData: data,
                 getSavingItem: function() {
-                    var ip = $('#txtIp').val().trim().replace(/ /g, '');
+                    var ip = $('#ipaddr').val().trim().replace(/ /g, '');
                     if (ip == "") {
                         AlertUtil.alertMsg(CHECK.required.ip);
                         return false;
@@ -751,35 +865,41 @@
                     }
 
                     item.ipaddr = ip;
-                    item.iswork = false;
+                    if(data == undefined){
+                        item.iswork = false;
+                    }
                     return item;
                 }
             });
         }
 
-        function processPortFilter() {
+        function processPortFilter(data) {
             processFilter({
                 width: "800px",
                 height: "auto",
+                rowData: data,
                 getSavingItem: function() {
-                    var port = parsePort($('#txtPort').val());
+                    var port = parsePort($('#port').val());
                     if (!port) return false;
 
                     var item = getCommonItem(false);
                     item.port = port;
-                    item.iswork = false;
+					if(data == undefined){
+                        item.iswork = false;
+                    }
                     return item;
                 }
             });
         }
 
-        function processAclFilter() {
+        function processAclFilter(data) {
             processFilter({
                 width: "800px",
                 height: "auto",
+                rowData: data,
                 getSavingItem: function() {
-                    var srcip = $('#srcIpaddr').val().trim().replace(/ /g, '');
-                    var destip = $('#destIpaddr').val().trim().replace(/ /g, '');
+                    var srcip = $('#src_ipaddr').val().trim().replace(/ /g, '');
+                    var destip = $('#dest_ipaddr').val().trim().replace(/ /g, '');
                     if (srcip == "" || destip == "") {
                         AlertUtil.alertMsg(CHECK.required.ip);
                         return false;
@@ -805,7 +925,9 @@
 
                     item.src_ipaddr = srcip;
                     item.dest_ipaddr = destip;
-                    item.iswork = false;
+                    if(data == undefined){
+                        item.iswork = false;
+                    }
                     return item;
                 }
             });

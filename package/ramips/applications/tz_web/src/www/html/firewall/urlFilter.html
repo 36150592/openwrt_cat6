@@ -2,9 +2,10 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+
         Page.render('#fwHead', '#fwHead_template');
         Page.render('#fwBody', '#fwBody_template');
-
+		
         $('#btnCloseRule').click(function() {
             var $box = $('#edit_box'), $mask = $('#mask');
             $box.hide();
@@ -33,17 +34,25 @@
             <tr>
                 <th><%- table.filterMode %><%- colon %></th>
                 <td>
-                    <input type="radio" name="enableLink" value="ACCEPT" checked="checked" /><span class="ok"><%- status.accept %>&nbsp;</span>
-                    <input type="radio" name="enableLink" value="DROP" /><span class="fail"><%- status.reject %>&nbsp;</span>
+                    <input type="radio" name="action" value="ACCEPT" checked="checked" /><span class="ok"><%- status.accept %>&nbsp;</span>
+                    <input type="radio" name="action" value="DROP" /><span class="fail"><%- status.reject %>&nbsp;</span>
                 </td>
             </tr>
             <tr>
                 <th><%- lbl.urlKeyword %><%- colon %></th>
-                <td><input type="text" id="txtUrl" name="txtUrl" class="larger" maxlength="99" /><span class="cmt"><%- lbl.example %><%- colon %>google.com, baidu.com</span></td>
+                <td><input type="text" id="url" name="url" class="larger" maxlength="99" /><span class="cmt"><%- lbl.example %><%- colon %>google.com, baidu.com</span></td>
+            </tr>
+			<tr>
+                <th><%- lbl.advancedOptions %><%- colon %></th>
+				<td>
+					<select id="interface" name="interface">
+						<option value=""  selected="selected">Null</option>
+					</select>
+				</td>
             </tr>
             <tr>
                 <th><%- lbl.remark %><%- colon %></th>
-                <td><input type="text" id="txtRemark" name="txtRemark" class="larger" maxlength="99" /></td>
+                <td><input type="text" id="comment" name="comment" class="larger" maxlength="99" /></td>
             </tr>
             <tr>
                 <th>&nbsp;</th>

@@ -113,7 +113,12 @@ function get_sysinfo()
 	  then
 	    data_array["network"] = network.network_get_4g_net_info() or ''
 	end
-    data_array["lan"] = dhcp.dhcp_get_object_list()
+    --data_array["lan"] = dhcp.dhcp_get_object_list()
+	local array = wifi.wifi_get_dev()
+	local network 
+	network = array[1]['network']	
+	data_array["lan"] = dhcp.dhcp_get_object_by_network(network)
+	
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 0;
@@ -324,6 +329,39 @@ function set_ssidlist()
 	
 end
 
+function get_lan()
+ 
+   	local array = wifi.wifi_get_dev()
+	local network = {}
+	local wifi_id
+	local i = 1
+	network[i] = array[1]['network']	
+	i = i + 1
+	wifiId = array[1]['wifi_id']		
+    local data_lan = {}
+
+	local array2 = wifi.wifi_secondary_get_ssid_list()
+	for k,v in pairs(array2) do
+	   if(v["primary_id"] == wifiId)
+	     then
+		 network[i] = v['network']		
+         i = i + 1	 
+		end
+	end
+	
+	for k,v in pairs(network) do
+	    data_lan[k] = dhcp.dhcp_get_object_by_network(v)['interface']	
+	end
+	
+	local tz_answer = {};
+    tz_answer["success"] = true;
+	tz_answer["cmd"] = 203;
+	tz_answer["data"] = data_lan;
+	result_json = cjson.encode(tz_answer);
+	print(result_json);
+
+end
+
 function get_dhcp()
     local data_array = {}
 	--data_array["status"] = dhcp.dhcp_get_enable_status()
@@ -338,6 +376,40 @@ function get_dhcp()
 	tz_answer["data"] = data_array;
 	result_json = cjson.encode(tz_answer);
 	print(result_json);
+end
+
+
+function get_dhcp_list()
+	local array = wifi.wifi_get_dev()
+	local network = {}
+	local wifi_id
+	local i = 1
+	network[i] = array[1]['network']	
+	i = i + 1
+	wifiId = array[1]['wifi_id']		
+    local data_array = {}
+
+	local array2 = wifi.wifi_secondary_get_ssid_list()
+	for k,v in pairs(array2) do
+	   if(v["primary_id"] == wifiId)
+	     then
+		 network[i] = v['network']		
+         i = i + 1	 
+		end
+	end
+	
+	for k,v in pairs(network) do
+	    data_array[k] = dhcp.dhcp_get_object_by_network(v)
+	end
+	
+	local tz_answer = {};
+    tz_answer["success"] = true;
+	tz_answer["cmd"] = 102;
+	tz_answer["data"] = data_array;
+	result_json = cjson.encode(tz_answer);
+	print(result_json);
+	
+
 end
 
 function set_wifi()
@@ -1209,7 +1281,7 @@ local switch = {
 	 [97] = change_language,
 	 [100] = login,
 	 [101] = get_wifi,
-	 [102] = get_dhcp,
+	 [102] = get_dhcp_list,
 	 [103] = get_dhcpClient,
 	 [106] = update_partial,
 	 [113] = get_sysstatus,
@@ -1220,7 +1292,8 @@ local switch = {
 	 [133] = get_routerinfo,
 	 [145] = network_tool,
 	 [201] = get_wifi5,
-	 [202] = set_wifi5
+	 [202] = set_wifi5,
+	 [203] = get_lan,
  }
  
 cmdid = uti.get_env_cmdId(envv)
