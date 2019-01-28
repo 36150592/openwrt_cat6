@@ -1,0 +1,105 @@
+. /lib/functions.sh
+REMOTE_WEB_LOGIN=true ##REMOTE_WEB_LOGIN
+REMOTE_WEB_LOGIN_LIST=false ##REMOTE_WEB_LOGIN_LIST
+REMOTE_PING=true ##REMOTE_PING
+REMOTE_MINI_HTTP_LISTEN_PORT=`cat /tz_www/mini_httpd.conf | grep port | cut -d'=' -f2` ##REMOTE_MINI_HTTP_LISTEN_PORT
+REMOTE_WEB_LOGIN_LIST_ARRAY="" ##REMOTE_WEB_LOGIN_LIST_ARRAY
+#append REMOTE_WEB_LOGIN_LIST_ARRAY "192.168.2.1" ##REMOTE_WEB_LOGIN_LIST_ARRAY
+#append REMOTE_WEB_LOGIN_LIST_ARRAY "192.168.3.1" ##REMOTE_WEB_LOGIN_LIST_ARRAY
+
+#the abobe lines can not be move to other position
+local wan_sections=""
+local lan_sections=""
+local inter_sections=""
+local wan_interfaces=""
+load_interface() {
+        local cfgfile="$1"
+        DEVICES=
+        config_cb() {
+                local type="$1"
+                local section="$2"
+
+                config_get TYPE "$CONFIG_SECTION" TYPE
+                case "$TYPE" in
+                        interface)
+								local type=""
+                                config_get ifname "$CONFIG_SECTION" ifname
+                                config_get type "$CONFIG_SECTION" type
+                                if [  $type ];then
+									if [ $type == "bridge" ]
+                                	then 
+				       					lan_sections="$lan_sections $CONFIG_SECTION"
+
+                                	fi
+								else
+									if [ $CONFIG_SECTION != "loopback" -a `echo $wan_interfaces | grep $ifname |wc -l ` == "0" ]
+									then
+                                		wan_sections="$wan_sections $CONFIG_SECTION"
+										wan_interfaces="$wan_interfaces $ifname"
+									fi
+								fi                                     
+
+                                append inter_sections "$CONFIG_SECTION"
+                        ;;
+                esac                     
+        }                                
+        config_load "${cfgfile:-network}"
+}    
+
+redirect_lan(){
+	for lan in $lan_sections
+	do
+		iptables -t nat -I PREROUTING -i br-$lan -p tcp --dport 80 -j REDIRECT --to-ports $REMOTE_MINI_HTTP_LISTEN_PORT
+		iptables -t nat -I PREROUTING -i br-$lan -p udp --dport 80 -j REDIRECT --to-ports $REMOTE_MINI_HTTP_LISTEN_PORT
+
+	done
+
+}
+
+drop_wan(){
+	for wan in $wan_interfaces
+	do
+		iptables -I INPUT -i $wan -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j DROP
+		iptables -I INPUT -i $wan -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j DROP
+
+	done
+
+}
+
+turn_off_remote_web_login(){
+	drop_wan
+}
+
+turn_on_remote_web_login_list(){
+	
+	drop_wan
+
+	for ip in $REMOTE_WEB_LOGIN_LIST_ARRAY
+	do
+
+		iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
+		iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
+
+	done
+}
+
+turn_off_remote_ping(){
+	
+	for wan in $wan_interfaces
+	do
+		iptables  -I INPUT -i $wan -p icmp -j DROP
+	done
+}
+
+load_interface
+
+redirect_lan
+
+
+[ $REMOTE_WEB_LOGIN == "true" ] || turn_off_remote_web_login
+
+[ $REMOTE_WEB_LOGIN_LIST == "true" ] && turn_on_remote_web_login_list
+
+[ $REMOTE_PING == "true" ] || turn_off_remote_ping
+
+echo -n 

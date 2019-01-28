@@ -1350,4 +1350,146 @@ function firewall_module.firewall_set_default_action(action)
 	return false
 end
 
+
+--[[
+#turn off remote web login
+iptables -t nat -I PREROUTING -i $lanX -p tcp --dport 80 -j REDIRECT --to-ports XXXX
+iptables -t nat -I PREROUTING -i $lanX -p udp --dport 80 -j REDIRECT --to-ports XXXX
+iptables -I INPUT -i $wan -p tcp --dport XXXX -j DROP
+iptables -I INPUT -i $wan -p udp --dport XXXX -j DROP
+
+
+#turn on remote web login but ip list off
+iptables -t nat -I PREROUTING -i $lanX -p tcp --dport 80 -j REDIRECT --to-ports XXXX
+iptables -t nat -I PREROUTING -i $lanX -p udp --dport 80 -j REDIRECT --to-ports XXXX
+
+#turn on remote web login and ip list on
+iptables -t nat -I PREROUTING -i $lanX -p udp --dport 80 -j REDIRECT --to-ports XXXX
+iptables -t nat -I PREROUTING -i $lanX -p tcp --dport 80 -j REDIRECT --to-ports XXXX
+iptables -I INPUT -i $wan -p tcp --dport XXXX -j DROP
+iptables -I INPUT -i $wan -p udp --dport XXXX -j DROP
+iptables -I INPUT -s $IP -p tcp --dport XXX -j ACCEPT
+iptables -I INPUT -s $IP -p udp --dport XXX -j ACCEPT
+
+
+#trun off remote ping
+iptables  -I INPUT -i $wan -p icmp -j DROP
+#trun on remote ping
+iptables  -I INPUT -i $wan -p icmp -j ACCEPT
+
+
+]]--
+
+
+local MINI_HTTP_LISTEN_PORT=8080
+local FIREWALL_CONFIG_TZ = "/etc/firewall.tz"
+local FIREWALL_WEB_LOGIN_PREX="REMOTE_WEB_LOGIN"
+local FIREWALL_WEB_LOGIN_LIST_PREX="REMOTE_WEB_LOGIN_LIST"
+local FIREWALL_LOGIN_LIST_ARRAY="REMOTE_WEB_LOGIN_LIST_ARRAY"
+local FIREWALL_PING_PREX="REMOTE_PING"
+
+local  function format_replace_cmd(prex, onoff)
+	return  string.format("sed -i 's/%s=.* ##%s/%s=%s ##%s/g'  %s",prex,prex,prex,onoff,prex, FIREWALL_CONFIG_TZ)
+end
+
+local function get_is_on(prex)
+	local cmd = string.format("grep '%s=.* ##%s' %s | grep true| wc -l ", prex,prex, FIREWALL_CONFIG_TZ)
+	local f = io.popen(cmd)
+
+	local ret = f:read()
+	io.close(f)
+
+	if "1" == ret
+	then
+		return true
+	else
+		return false
+	end
+end
+
+-- input:none
+-- return:true for allow remote web login 
+--		  false for not allow remote web login
+function firewall_module.firewall_remote_get_web_login()
+		return get_is_on(FIREWALL_WEB_LOGIN_PREX)
+end
+
+-- input:onoff(number):1 for turn on the remote web login, 0 for turn off the remote web login
+-- return:true for set success ,false for set fail
+function firewall_module.firewall_remote_set_web_login(onoff)
+	if onoff == 1
+	then
+		return os.execute(format_replace_cmd(FIREWALL_WEB_LOGIN_PREX, "true"))
+	else
+		return os.execute(format_replace_cmd(FIREWALL_WEB_LOGIN_PREX, "false"))
+	end
+
+end
+
+-- input:none
+-- return:two value as following:
+--		boolean:is the remote web login ip list function open , true for enable, false for disable
+--		array:the ip list that allow to remote access the web 
+function firewall_module.firewall_remote_get_login_iplist()
+	local cmd = string.format("grep '^append %s'  %s | awk {'print $3'}", FIREWALL_LOGIN_LIST_ARRAY, FIREWALL_CONFIG_TZ)
+	local f = io.popen(cmd)
+	local ip_list = {}
+	local i = 1
+	if nil ~= f
+	then
+		local res = f:read()
+		while nil ~= res
+		do
+			ip_list[i] = res
+			res = f:read()
+			i=i+1
+		end
+		io.close(f)
+	end
+	
+	return get_is_on(FIREWALL_WEB_LOGIN_LIST_PREX), ip_list
+
+end
+
+-- input:
+--		onoff(number):1 for turn on remote ip list login function, 0 for trun off
+--		list:the array of ip which can access the web from remote network
+-- return:true for set success ,false for set fail
+function firewall_module.firewall_remote_set_login_iplist(onoff, list)
+	if onoff == 1
+	then 
+		os.execute( string.format("sed -i /##%s/d %s", FIREWALL_LOGIN_LIST_ARRAY, FIREWALL_CONFIG_TZ))
+		os.execute(string.format("sed -i '7i %s=\"\" ##%s' %s",FIREWALL_LOGIN_LIST_ARRAY, FIREWALL_LOGIN_LIST_ARRAY, FIREWALL_CONFIG_TZ))
+		for k,v in pairs(list)
+		do
+			ret = os.execute(string.format("sed -i '8i append %s %s ##%s' %s", FIREWALL_LOGIN_LIST_ARRAY,v,FIREWALL_LOGIN_LIST_ARRAY, FIREWALL_CONFIG_TZ))
+			if false == ret 
+			then 
+				return false
+			end
+		end
+		return true
+	else
+		return os.execute(format_replace_cmd(FIREWALL_PING_PREX, "false"))
+	end
+end
+
+-- input:none
+-- return:true for turn on the remote ping , false for turn off
+function firewall_module.firewall_remote_get_ping()
+	return get_is_on(FIREWALL_PING_PREX)
+end
+
+-- input:onoff(number):1 for turn on remote ping , 0 for turn off
+-- return:true for set success ,false for set fail
+function firewall_module.firewall_remote_set_ping(onoff)
+	if onoff == 1
+	then 
+		return os.execute(format_replace_cmd(FIREWALL_PING_PREX, "true"))
+	else
+		return os.execute(format_replace_cmd(FIREWALL_PING_PREX, "false"))
+	end
+
+end
+
 return firewall_module

@@ -76,6 +76,62 @@ function led_set_phone()
 	end
 end
 
+function firewall_remote_get_web_login()
+	print("in firewall_remote_get_web_login")
+	local ret = firewall.firewall_remote_get_web_login()
+	print(ret)
+end
+
+function firewall_remote_set_web_login()
+	print("in firewall_remote_set_web_login")
+	local ret = firewall.firewall_remote_set_web_login(tonumber(arg[2]))
+	if ret
+	then
+		print("set success")
+	else
+		print("set fail")
+	end
+end
+
+function firewall_remote_get_login_iplist()
+	print("in firewall_remote_get_login_iplist")
+	local ret,iplist= firewall.firewall_remote_get_login_iplist()
+	print("ret = ", ret)
+	for k,v in pairs(iplist)
+	do
+		print(k, " = ", v)
+	end
+
+end
+
+function firewall_remote_set_login_iplist()
+	print("in firewall_remote_set_login_iplist")
+	local iplist = {"192.168.2.9", "192.168.2.10", "192.168.2.11", "192.168.2.12"}
+	local ret = firewall.firewall_remote_set_login_iplist(1, iplist)
+	if ret
+	then
+		print("set success")
+	else
+		print("set fail")
+	end
+end
+
+function firewall_remote_get_ping()
+	print("in firewall_remote_get_ping")
+	local ret = firewall.firewall_remote_get_ping()
+	print(ret)
+end
+
+function firewall_remote_set_ping()
+	print("in firewall_remote_set_ping")
+	local ret = firewall.firewall_remote_set_ping(tonumber(arg[2]))
+	if ret
+	then
+		print("set success")
+	else
+		print("set fail")
+	end
+end
 
 function firewall_set_default_action()
 
@@ -1605,14 +1661,18 @@ local api_func = {
 	["firewall_set_port_redirect"] = firewall_set_port_redirect,
 	["firewall_get_speed_filter"] = firewall_get_speed_filter,
 	["firewall_set_speed_filter"] = firewall_set_speed_filter,
-
 	["firewall_get_default_action"] = firewall_get_default_action,
 	["firewall_set_default_action"] = firewall_set_default_action,
 	["firewall_start"] = firewall.firewall_start,
 	["firewall_stop"] = firewall.firewall_stop,
 	["firewall_restart"] = firewall.firewall_restart,
 	["firewall_clear_all_rules"] = firewall.firewall_clear_all_user_rule,
-
+	["firewall_remote_get_web_login"] = firewall_remote_get_web_login,
+	["firewall_remote_set_web_login"] = firewall_remote_set_web_login,
+	["firewall_remote_get_login_iplist"] = firewall_remote_get_login_iplist,
+	["firewall_remote_set_login_iplist"] = firewall_remote_set_login_iplist,
+	["firewall_remote_set_ping"] = firewall_remote_set_ping,
+	["firewall_remote_get_ping"] = firewall_remote_get_ping,
 
 	--led
 	["led_set_normal"] = led_set_normal,
