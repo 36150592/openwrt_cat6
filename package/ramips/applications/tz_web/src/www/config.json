@@ -16,7 +16,13 @@
 			"AUTH":"0x00F0E0"
 		}
   },
+  "LoginFail":{
+        "FailMaxNum":"2",
+        "FailTime":""
+  },
   "Language":"cn",
   "LanguageList":"6"
+
+  
   
 }

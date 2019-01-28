@@ -38,8 +38,7 @@
                 var $username = $('#username').focus(),
                     $passwd = $('#passwd'),
                     $btnLogin = $('#btnLogin');
-
-
+				sessionStorage['loginFail'] = sessionStorage['loginFail'] ? sessionStorage['loginFail'] : 0;
                // var loginText = $btnLogin.val();
                 $btnLogin.click(function () {
                     var username = $username.val(), passwd = $passwd.val();
@@ -68,6 +67,7 @@
                         cmd: RequestCmd.LOGIN,
                         method: JSONMethod.POST,
                         sessionId: sessionId,
+						loginFail: parseInt(sessionStorage['loginFail']),
                         username: username,
                         passwd: Md5.md5(passwd)
                     },
@@ -79,11 +79,27 @@
 						sessionStorage['sessionId'] = sessionId;
                         sessionStorage['loginName'] = username;
 						sessionStorage['auth'] = data.auth;
+						sessionStorage['loginFail'] = 0;
                         location.href = Page.getUrl("index.html");
                     },
                     fail: function(data) {
-                        var msg = data.message;
-                        AlertUtil.alertMsg(PROMPT.status.loginFail);
+                       var second = data.second;
+                        if(second){
+                            var lockMsg = PROMPT.status.lockFailTimes;
+                                AlertUtil.alertMsg(lockMsg.format(second));
+                        }else {
+						
+						   var failMsg = PROMPT.status.loginFail;
+                           AlertUtil.alertMsg(failMsg.format(3-parseInt(sessionStorage['loginFail'])));
+						   if(data.failRecount){
+                                sessionStorage['loginFail'] = 0;
+                            }else{
+								sessionStorage['loginFail'] = parseInt(sessionStorage['loginFail']) + 1;
+							}
+							
+                            //AlertUtil.alertMsg(PROMPT.status.loginFail);
+                           
+                        }
 
                     },
                     complete: function() {

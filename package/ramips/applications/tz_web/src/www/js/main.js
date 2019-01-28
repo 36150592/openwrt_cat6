@@ -67,6 +67,7 @@ var MenuItem = {
 	SYS_AT: { cmd: RequestCmd.SYS_AT, url: "html/manage/sysAt.html" },
 	NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
 	
+	FE_DEFAULT: { cmd: RequestCmd.DEFAULT_FILTER, url: "html/firewall/firewall.html" },
 	FW_RULE: { cmd: RequestCmd.PORT_FILTER, url: "html/firewall/firewall.html" },
     FW_MAC_FILTER: { cmd: RequestCmd.MAC_FILTER, url: "html/firewall/firewall.html" },
     FW_IP_MAC_BINDING: { cmd: RequestCmd.IP_MAC_BINDING, url: "html/firewall/firewall.html" },

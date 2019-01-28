@@ -171,24 +171,43 @@
                                     "Cached  " + (data_system.mem_cache ? FormatUtil.formatField(data_system.mem_cache, 'KB') : loading));
 
                     names_sim.push(DOC.lbl.usim);
-                    names_sim.push(DOC.lbl.pinCode);
-                    names_sim.push(DOC.lbl.pukCode);
+                   // names_sim.push(DOC.lbl.pinCode);
+                   // names_sim.push(DOC.lbl.pukCode);
+				    names_sim.push(DOC.device.imsi);
+                    names_sim.push(DOC.device.iccid);
+                    names_sim.push(DOC.lbl.plmn);
 
                     var stateInfo = "";
-                    var pinPukStateInfo = getPinPukState(data_sim.card_status);
+                   // var pinPukStateInfo = getPinPukState(data_sim.card_status);
                     values_sim.push(getCardState(data_sim.is_sim_exist));
-                    values_sim.push(pinPukStateInfo.pinState);
-                    values_sim.push(pinPukStateInfo.pukState);
+                  //  values_sim.push(pinPukStateInfo.pinState);
+                  //  values_sim.push(pinPukStateInfo.pukState);
+				  
+				    values_sim.push(data_sim.imsi || loading);
+                    values_sim.push(data_sim.iccid || loading);
+                    values_sim.push(FormatUtil.formatPLMN(data_modem.plmn));
 
 
 
                     names_net.push(DOC.lbl.netMode);
                     names_net.push(DOC.lbl.signal);
-                    names_net.push(DOC.lbl.signalLevel);
-                    names_net.push(DOC.lbl.plmn);
+                   // names_net.push(DOC.lbl.signalLevel);
+                  //  names_net.push(DOC.lbl.plmn);
                   //  names_net.push(DOC.lbl.regState);
-                //    names_net.push(DOC.lbl.psReg);
-                 //   names_net.push(DOC.lbl.epsReg);
+                  //    names_net.push(DOC.lbl.psReg);
+                  //   names_net.push(DOC.lbl.epsReg);
+				 
+				    names_net.push(DOC.lte.rsrp);
+                    names_net.push(DOC.lte.rssi);
+                    names_net.push(DOC.lte.rsrq);
+                    names_net.push(DOC.lte.sinr);
+                    names_net.push(DOC.lte.phyCellId);
+                    names_net.push(DOC.lte.freqPoint);
+                    names_net.push(DOC.lte.enodeB);
+                    names_net.push(DOC.lte.cellId);
+                    names_net.push(DOC.lte.cqi);
+                    names_net.push(DOC.lte.mcs);
+					names_net.push(DOC.lte.plmn);
 
                     //var netState = StatusUtil.getNetState(data.signalLevel, data.eregStat, data.act, 0);
                     var netState = getNetState(data_modem.act);
@@ -201,9 +220,21 @@
                     // }
                     values_net.push(netState);
                     values_net.push(StatusUtil.formatSingalLevel(singalLevel));
-                    values_net.push(data_modem.rsrp || loading);
+                   // values_net.push(data_modem.rsrp || loading);
 
-                    values_net.push(FormatUtil.formatPLMN(data_modem.plmn));
+                  //  values_net.push(FormatUtil.formatPLMN(data_modem.plmn));
+					
+					values_net.push(data_modem.rsrp ? FormatUtil.formatField(data_modem.rsrp, 'dBm') : loading);
+                    values_net.push(data_modem.rssi ? FormatUtil.formatField(data_modem.rssi, 'dBm') : loading);
+                    values_net.push(data_modem.rsrq ? FormatUtil.formatField(data_modem.rsrq, 'dB') : loading);
+                    values_net.push(data_modem.sinr ? FormatUtil.formatField(data_modem.sinr, 'dB') : loading);
+                    values_net.push(data_modem.cell_id || loading);
+                    values_net.push(loading);
+                    values_net.push(data_modem.enodebid || loading);
+                    values_net.push(loading);
+                    values_net.push(loading);
+                    values_net.push(loading);
+					values_net.push(data_modem.plmn || loading);
 
                   //  var ps_cs = parseInt(data_modem.ps_cs, 10);
                   //  var regState = getRegState(ps_cs);

@@ -25,15 +25,33 @@ function login()
 	local tz_answer = {};
 	tz_answer["cmd"] = 100;
 
-    local username = tz_req["username"]
-	local password = tz_req["passwd"]
-	
 	local file = io.open("../config.json", "r")
 	io.input(file)
 	local t =io.read("*a")
 	io.close(file)
 	local Jsondata = cjson.decode(t)
+	
+	local LoginFail = Jsondata["LoginFail"]
+	if "" ~= LoginFail["FailTime"]
+	  then
+	  local second  = os.time() - tonumber(LoginFail["FailTime"])
+	    if(second < 60)
+	      then
+		  	tz_answer["success"] = false;
+			tz_answer["second"] = 60 - second;
+			result_json = cjson.encode(tz_answer);
+			print(result_json);
+			return
+		end
+		shellcmd = string.format("sed -i 's/\"FailTime\":\"%s\"/\"FailTime\":\"\"/g' %s/config.json",LoginFail["FailTime"],WEB_PATH)
+	    os.execute(shellcmd)
+	end
+	
 	local Login = Jsondata["Login"]
+	
+	local username = tz_req["username"]
+	local password = tz_req["passwd"]
+	local loginFailNum = tz_req["loginFail"]
 	
 	for k,v in pairs(Login) do
 	  if(v["UserName"] == username) then
@@ -44,6 +62,12 @@ function login()
 			 print(result_json);
 			 return 
 		  else
+		     if loginFailNum >= tonumber(LoginFail["FailMaxNum"])
+			    then
+				shellcmd = string.format("sed -i 's/\"FailTime\":\"\"/\"FailTime\":\"%s\"/g' %s/config.json",os.time(),WEB_PATH)
+	            os.execute(shellcmd)
+				tz_answer["failRecount"] = true;
+			 end
 		     tz_answer["success"] = false;
 			 result_json = cjson.encode(tz_answer);
 			 print(result_json);
@@ -54,6 +78,12 @@ function login()
 	 
 	end
 	
+	if loginFailNum >= tonumber(LoginFail["FailMaxNum"])
+	   then
+		 shellcmd1 = string.format("sed -i 's/\"FailTime\":\"\"/\"FailTime\":\"%s\"/g' %s/config.json",os.time(),WEB_PATH)
+	     os.execute(shellcmd1)
+		 tz_answer["failRecount"] = true;
+	end
 	tz_answer["success"] = false;
 	result_json = cjson.encode(tz_answer);
 	print(result_json);
@@ -132,7 +162,8 @@ function get_diviceinfo()
 	local data_array = {}
 	data_array["sim"] = sim.sim_get_status() or ''
 	data_array["modem"] = modem.modem_get_info() or ''
-	data_array["device"] = device.device_get_info() or ''
+	--data_array["device"] = device.device_get_info() or ''
+	data_array["version"] = system.get_divice_version() or ''
     local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 43;
@@ -185,7 +216,7 @@ function get_wifi5()
 	data_array['wmm'] = wifi.wifi_get_wmm(id)
 	--data_array['ssid'] = wifi.wifi_get_ssid(id)
 	--data_array['mode'] = wifi.wifi_get_mode(id)
-	data_array['ht'] = wifi.wifi_get_ht_mode(id)
+	data_array['bandwidth'] = wifi.wifi_get_bandwidth(id)
 	--data_array['encryption'] = wifi.wifi_get_encryption(id)
 	--data_array['enType'] = wifi.wifi_get_encryption_type(id)
 	--data_array['pwd'] = wifi.wifi_get_password(id)
@@ -208,6 +239,7 @@ function get_ssidlist()
 	   if(v["primary_id"] == wifiId)
 	     then
 		  data_array[i] = v		
+		  data_array[i]['status'] = wifi.wifi_secondary_get_enable_status(v["secondary_id"])
           i = i+ 1	  
 		end
   end
@@ -227,6 +259,7 @@ function set_ssidlist()
 	
 	local wifiId = tonumber(tz_req["wifiId"])
 	local secondaryId = tonumber(tz_req["secondaryId"])
+	local wifiOpen = tonumber(tz_req["wifiOpen"])
 	local broadcast = tonumber(tz_req["broadcast"])
 	local wmm = tonumber(tz_req["wmm"])
     local ssid = tz_req["ssid"]
@@ -235,6 +268,24 @@ function set_ssidlist()
 	local encryptAlgorithm = tz_req["encryptAlgorithm"]
 	local key = tz_req["key"]
 	
+	if(nil ~= wifiOpen)
+	then
+		if(0 == wifiOpen)
+		 then
+	       ret = wifi.wifi_secondary_enable(secondaryId)
+		    if(not ret)
+			  then
+			  tz_answer["enablewifi"] = false
+		    end
+		elseif(1 == wifiOpen)
+		  then
+			ret = wifi.wifi_secondary_disable(secondaryId)
+			  if(not ret)
+		        then
+			     tz_answer["disablewifi"] = false
+              end
+	   end
+	end
 	
 	if(nil ~= broadcast)
 	then
@@ -597,7 +648,7 @@ function set_wifi5()
 	local ssid = tz_req["ssid"]
 	local channel = tz_req["channel"]
 	local mode = tonumber(tz_req["wifiWorkMode"])
-	local ht = tz_req["bandWidth"]
+	local bandWidth = tz_req["bandWidth"]
     local maxStation = tonumber(tz_req["maxStation"])
 	local authenticationType = tz_req["authenticationType"]
 	local encryptAlgorithm = tz_req["encryptAlgorithm"]
@@ -688,9 +739,9 @@ function set_wifi5()
 			end
 	end
 	
-	if(nil ~= ht)
+	if(nil ~= bandWidth)
 	 then
-		ret = wifi.wifi_set_ht_mode(id, ht)	
+		ret = wifi.wifi_set_bandwidth(id, bandWidth)	
 			if(not ret)
 				then
 				tz_answer["setHtMOde"] = false
@@ -1312,8 +1363,9 @@ else
 	    f()
 	end
 end
- 
- 
+
+
+
 
 
 

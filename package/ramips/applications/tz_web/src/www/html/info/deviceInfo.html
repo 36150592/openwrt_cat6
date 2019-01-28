@@ -7,14 +7,18 @@
             Page.postJSON({
                 json: { cmd: RequestCmd.DEVICE_VERSION_INFO },
                 success: function(datas) {
-                 
+
                     var names = [], names_lte = [];
                     var device = DOC.device;
                     names.push(device.name);
-                    //  names.push(device.buildTime);
                     names.push(device.softwarVersion);
                     names.push(device.hardwareVersion);
                     names.push(device.configVersion);
+					
+                    names.push(device.inlinesoftVersion);
+                    names.push(device.gitBranch);
+                    names.push(device.gitCommit);
+                    names.push(device.buildTime);
                     //   names.push(device.deviceId);
 
 
@@ -25,20 +29,23 @@
                     names_lte.push(device.imei);
                     names_lte.push(device.imsi);
                     names_lte.push(device.iccid);
+                    names_lte.push(device.sn);
 
                     //names_lte.push(device.lanMac);
                     Page.isNULLToSpace = true;
                     var data2 = datas.data;
                     var values = [], values_lte = [];
 
-                    values.push(data2.device.type || loading);
-                    //   values.push(FormatUtil.formatField(data2.device.build));
-
-
-                    values.push(loading);
-                    values.push(data2.device.hwversion || loading);
-                    values.push(data2.device.version || loading);
-                  
+                    values.push(data2.version.type || loading);
+                   
+                    values.push(data2.version.software_version || loading);
+                    values.push(data2.version.hwversion || loading);
+                    values.push( loading);
+					
+					values.push(data2.version.inline_soft_version || loading);
+					values.push(data2.version.branch || loading);
+					values.push(data2.version.sha1 || loading);
+					values.push(data2.version.build || loading);
 
                     values_lte.push(data2.modem.type || loading);
                     values_lte.push(data2.modem.softver || loading);
@@ -46,6 +53,7 @@
                     values_lte.push(data2.modem.imei || loading);
                     values_lte.push(data2.sim.imsi || loading);
                     values_lte.push(data2.sim.iccid || loading);
+					values_lte.push(data2.sim.iccid || loading);
 
                     var sys_html = Page.createTable(DOC.title.device, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
                     var lte_html = Page.createTable(DOC.title.lte, names_lte, values_lte, names_lte.length, 1);

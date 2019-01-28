@@ -94,7 +94,7 @@
                             Page.setFormFieldValue2("channel", data.channel);
                             Page.setFormFieldValue2("ssid", data.ssid);
                             Page.setFormFieldValue2("wifiWorkMode", data.mode);
-                            Page.setFormFieldValue2("bandWidth", data.ht);
+                            Page.setFormFieldValue2("bandWidth", data.bandwidth);
 							Page.setFormFieldValue2("maxStation", data.maxassoc);
 							var encryp = data.encryption.split("+")[0];
                             var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
@@ -117,6 +117,13 @@
                             console.log(datas);
                             var data = datas.data;
                             for(var i = 1; i <= data.length; i++) {
+							    if(data[i].status == 0){
+                                    $('#wifiOpen' + i).prop('checked', true);
+                                }else {
+                                    $('#wifiOpen' + i).prop('checked', false);
+                                }
+                                $('#wifiOpen' + i).attr('old',data[i].status);
+								
                                 if (data[i].hidden_ssid == 0) {
                                     $('#broadcast' + i).prop('checked', true);
                                 } else {
@@ -288,9 +295,15 @@
                     return false;
                 }
             }
+			
+			json.wifiOpen = json.wifiOpen ? '0' : '1';
             json.broadcast = json.broadcast ? '0' : '1';
             json.wmm = json.wmm ? '1' : '0';
 
+			if(json.wifiOpen ==  $("#wifiOpen" +id).attr('old')){
+                delete json["wifiOpen"];
+                count++;
+            }
             if(json.broadcast == $("#broadcast" +id).attr('old')){
                 delete json["broadcast"];
                 count++;
@@ -321,7 +334,7 @@
                 delete json["encryptAlgorithm"];
                 count++;
             }
-            if(count == 8){
+            if(count == 9){
                 AlertUtil.alertMsg(CHECK.required.noChanges);
                 $(this).attr("disabled",false);
                 return false;
@@ -428,7 +441,8 @@
                                     <select name="bandWidth" id="bandWidth">
                                         <option value="20"><%- bandWidth20 %></option>
                                         <option value="40"><%- bandWidth40 %></option>
-                                        <option value="20+40"><%- bandWidth80 %></option>
+                                        <option value="20+40"><%- bandWidth60 %></option>
+                                        <option value="80"><%- bandWidth80 %></option>
                                     </select>
                                 </td>
                             </tr>
@@ -486,6 +500,12 @@
                         <table class="detail" cellspacing="0">
                             <tr style = "display:none">
                                 <td> <input type="text" id="secondaryId1" name="secondaryId" /></td>
+                            </tr>
+							 <tr>
+                                <th><%- wifiFunction %></th>
+                                <td>
+                                    <input type="checkbox" id="wifiOpen1" name="wifiOpen" /><%- enable %>
+                                </td>
                             </tr>
                             <tr>
                                 <th><%- ssidBd %></th>
@@ -561,6 +581,12 @@
                         <table class="detail" cellspacing="0">
                             <tr style = "display:none">
                                 <td> <input type="text" id="secondaryId2" name="secondaryId" /></td>
+                            </tr>
+							 <tr>
+                                <th><%- wifiFunction %></th>
+                                <td>
+                                    <input type="checkbox" id="wifiOpen2" name="wifiOpen" /><%- enable %>
+                                </td>
                             </tr>
                             <tr>
                                 <th><%- ssidBd %></th>
