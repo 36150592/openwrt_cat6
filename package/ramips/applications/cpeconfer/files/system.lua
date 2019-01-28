@@ -8,6 +8,7 @@ local split = util.split
 local sleep = util.sleep
 local MEM_INFO_FILE="/proc/meminfo"
 local CPU_AVG_FILE="/proc/loadavg"
+local DEVICE_VERSION="/version"
 local GET_RUNTIME_CMD="cat /proc/uptime | awk '{print $1}'"
 local GET_MEM_TOTAL_CMD="cat /proc/meminfo | awk '{print $2}' | sed -n  1p"
 local GET_MEM_FREE_CMD="cat /proc/meminfo | awk '{print $2}' | sed -n  2p"
@@ -118,6 +119,23 @@ local function get_cpu_average()
 		return nil,nil,nil
 	end
 	return arr[1],arr[2],arr[3]
+end
+
+function system_module.get_divice_version()
+     local f = io.open(DEVICE_VERSION)
+	 local arr = nil
+	 local info = {}
+	 res = f:read()
+	 
+	 while nil ~= res
+		do
+		arr = split(res,'=')
+		info[arr[1]] = arr[2]
+        res = f:read()
+	end
+	 io.close(f)
+	 return info
+
 end
 
 -- get system run status
