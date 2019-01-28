@@ -1076,27 +1076,27 @@ function wifi_set_channel()
 end
 
 
-function wifi_get_ht_mode()
-	print("wifi_get_ht_mode")
-	local ret = wifi.wifi_get_ht_mode(tonumber(arg[2]))
+function wifi_get_bandwidth()
+	print("wifi_get_bandwidth")
+	local ret = wifi.wifi_get_bandwidth(tonumber(arg[2]))
 
 	if  nil ~= ret 
 	then
-		print("ht mode = ", ret)
+		print("bandwidth = ", ret)
 	else
-		print("get ht mode fail")
+		print("wifi_get_bandwidth fail")
 	end
 end
 
-function wifi_set_ht_mode()
-	print("wifi_set_ht_mode")
-	local ret = wifi.wifi_set_ht_mode(tonumber(arg[2]), tostring(arg[3]))
+function wifi_set_bandwidth()
+	print("wifi_set_bandwidth")
+	local ret = wifi.wifi_set_bandwidth(tonumber(arg[2]), tostring(arg[3]))
 
 	if  ret 
 	then
-		print("set ht mode success")
+		print("wifi_set_bandwidth success")
 	else
-		print("set ht fail")
+		print("wifi_set_bandwidth fail")
 	end
 end
 
@@ -1571,8 +1571,8 @@ local api_func = {
 	["wifi_disable_hidden_ssid"]=wifi_disable_hidden_ssid,
 	["wifi_get_mode"]=wifi_get_mode,
 	["wifi_set_mode"]=wifi_set_mode,
-	["wifi_get_ht_mode"]=wifi_get_ht_mode,
-	["wifi_set_ht_mode"]=wifi_set_ht_mode,
+	["wifi_get_bandwidth"]=wifi_get_bandwidth,
+	["wifi_set_bandwidth"]=wifi_set_bandwidth,
 	["wifi_get_encryption"]=wifi_get_encryption,
 	["wifi_set_encryption"]=wifi_set_encryption,
 	["wifi_get_encryption_type"]=wifi_get_encryption_type,

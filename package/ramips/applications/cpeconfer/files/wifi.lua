@@ -834,7 +834,7 @@ function wifi_module.wifi_set_mode(wifi_id,mode)
    return common_config_set(wifi_id, "mode", "WirelessMode", mode)
 end
 
---get HT mode
+--get bandwidth
 -- input:
 --		wifi_id get by wifi_get_dev
 -- return:
@@ -842,8 +842,35 @@ end
 -- 20 -->20M
 -- 40 -->40M
 -- 20+40 -->20/40M
-function wifi_module.wifi_get_ht_mode(wifi_id)
-   	local ret =  common_config_get(wifi_id, "ht", "HT_BW")
+-- 80M   -->80M
+function wifi_module.wifi_get_bandwidth(wifi_id)
+
+	local section = common_get_section_name_by_index(wifi_id)
+	local band
+	local ret
+	if nil ~= section
+	then
+		band = x:get(WIFI_CONFIG_FILE, section, "band")
+	end
+
+	if "5G" == band
+	then
+		ret = common_config_get(wifi_id, "bw", "VHT_BW")
+			if "1" == ret
+		   	then
+		   		return "40"
+		   	elseif "2"  == ret
+		   	then
+		   		return "80"
+		   	elseif "0" == ret
+		   	then
+		   		return "20"
+		   	else
+		   		return ret
+		   	end
+	end
+
+   	ret =  common_config_get(wifi_id, "ht", "HT_BW")
 
    	if "1" == ret
    	then
@@ -861,18 +888,43 @@ function wifi_module.wifi_get_ht_mode(wifi_id)
 
 end
 
---set HT mode
+--set bandwidth
 -- input:
 --		wifi_id get by wifi_get_dev
 --		mode string value as above
 -- return:
 --		boolean true if success false if fail
-function wifi_module.wifi_set_ht_mode(wifi_id,mode)
-	if "20" == mode or "40" == mode or "20+40" ==mode
+function wifi_module.wifi_set_bandwidth(wifi_id,mode)
+	if "20" == mode or "40" == mode or "20+40" ==mode or "80" == mode
 	then
+		local section = common_get_section_name_by_index(wifi_id)
+		local band
+		local ret
+		if nil ~= section
+		then
+			band = x:get(WIFI_CONFIG_FILE, section, "band")
+		end
+		if "5G" == band
+		then
+			if "20" == mode
+			then
+				mode = "0"
+			elseif "40" == mode
+			then
+				mode = "1"
+			elseif "80" == mode
+			then
+				mode = "2"
+			else
+				return false
+			end
+			return common_config_set(wifi_id, "bw", "VHT_BW", mode)
+		end
+
+
 	    return common_config_set(wifi_id, "ht", "HT_BW", mode)
 	else
-		debug("input error: must be [20 40 20+40]")
+		debug("input error: must be [20 40 20+40 80]")
 		return false
 	end
 end
