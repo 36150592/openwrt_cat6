@@ -191,6 +191,7 @@ firewall_module.port_redirect = {
 	["protocol"] = nil, --tcp  upd  all
 	["dest_addr"] = nil,--origin dest addr of ip  ,this can be nil if redirect all ip  
 	["dest_port"] = nil,--origin dest port 
+	["dest_port_end"] = nil, --the range of dest_port , this can be nil if dest_port is not a range
 	["redirect_addr"] = nil,-- redirect ip address 
 	["redirect_port"]  = nil,-- redirect port
 	["comment"] = nil, --user note
@@ -349,23 +350,23 @@ local function format_get_port_filter_cmd()
 end
 
 
-local function format_set_port_redirect_cmd(protocol,dest_addr,dest_port,redirect_addr,redirect_port,comment)
+local function format_set_port_redirect_cmd(protocol,dest_addr,dest_port,dest_port_end,redirect_addr,redirect_port,comment)
 	if "all" == protocol
 	then
 		local cmd1 ,cmd2
 		if nil == dest_addr
 		then 
-		cmd1 = string.format("echo 'iptables -t nat -I PREROUTING  -p tcp --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
-								 dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		cmd1 = string.format("echo 'iptables -t nat -I PREROUTING  -p tcp --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
+								 dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end, FIREWALL_CUSTOM_CONFIG_FILE)
 
-		cmd2 = string.format("echo 'iptables -t nat -I PREROUTING  -p udp --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
-								 dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		cmd2 = string.format("echo 'iptables -t nat -I PREROUTING  -p udp --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
+								 dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end, FIREWALL_CUSTOM_CONFIG_FILE)
 		else
-		cmd1 = string.format("echo 'iptables -t nat -I PREROUTING  -p tcp -d %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
-								 dest_addr, dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		cmd1 = string.format("echo 'iptables -t nat -I PREROUTING  -p tcp -d %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
+								 dest_addr, dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, dest_port_end, FIREWALL_CUSTOM_CONFIG_FILE)
 
-		cmd2 = string.format("echo 'iptables -t nat -I PREROUTING  -p udp -d %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
-								 dest_addr, dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		cmd2 = string.format("echo 'iptables -t nat -I PREROUTING  -p udp -d %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
+								 dest_addr, dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, dest_port_end, FIREWALL_CUSTOM_CONFIG_FILE)
 		
 		end
 
@@ -374,13 +375,13 @@ local function format_set_port_redirect_cmd(protocol,dest_addr,dest_port,redirec
 	else
 		if nil == dest_addr
 		then
-			return string.format("echo 'iptables -t nat -I PREROUTING  -p %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
-								 protocol, dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+			return string.format("echo 'iptables -t nat -I PREROUTING  -p %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
+								 protocol, dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end,FIREWALL_CUSTOM_CONFIG_FILE)
 
 		else
 
-		return string.format("echo 'iptables -t nat -I PREROUTING  -p %s -d %s --dport %s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
-								 protocol, dest_addr, dest_port, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		return string.format("echo 'iptables -t nat -I PREROUTING  -p %s -d %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
+								 protocol, dest_addr, dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, dest_port_end,FIREWALL_CUSTOM_CONFIG_FILE)
 
 
 		end
@@ -1162,8 +1163,9 @@ function firewall_module.firewall_get_port_redirect_list()
 		temp["redirect_addr"] = array[6]
 		temp["redirect_port"] = array[7]
 		temp["comment"] = array[8]
+		temp["dest_port_end"] = array[9]
 		temp["iswork"] = rule_is_work(data[i])
-		if '1' == array[9] or nil == array[9]
+		if '1' == array[10] or nil == array[10]
 		then
 			port_redirect_list[j] = temp
 			j = j+1
@@ -1180,7 +1182,7 @@ end
 --[[
 	local ports={
 		{["dest_addr"]=nil, ["dest_port"]="90", ["protocol"]='tcp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8080', ["comment"]="test port redirect1"},
-		{["dest_addr"]='192.168.2.131', ["dest_port"]="80", ["protocol"]='udp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8090', ["comment"]="test port redirect2"},
+		{["dest_addr"]='192.168.2.131', ["dest_port"]="80",["dest_port_end"]="89", ["protocol"]='udp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8090', ["comment"]="test port redirect2"},
 		{["dest_addr"]='192.168.2.131', ["dest_port"]="22", ["protocol"]='all', ["redirect_addr"]='192.168.2.1',["redirect_port"]='80', ["comment"]="test port redirect3"}
 		}
 ]]--
@@ -1218,7 +1220,7 @@ function firewall_module.firewall_set_port_redirect_list(redirect_list)
 				return false
 			end
 
-			execute_cmd(format_set_port_redirect_cmd(temp["protocol"], temp["dest_addr"], temp["dest_port"], temp["redirect_addr"], temp["redirect_port"], temp["comment"]), temp["iswork"])
+			execute_cmd(format_set_port_redirect_cmd(temp["protocol"], temp["dest_addr"], temp["dest_port"], temp["dest_port_end"] or temp["dest_port"], temp["redirect_addr"], temp["redirect_port"], temp["comment"]), temp["iswork"])
 		else
 			debug(temp["protocol"], " ", temp["dest_addr"]," ",  temp["dest_port"]," ",  temp["redirect_addr"]," ",  temp["redirect_port"]," ", temp["comment"])
 			return false

@@ -170,7 +170,7 @@ function firewall_set_port_redirect()
 		print("in firewall_set_port_redirect")
 		local ports={
 		{["dest_addr"]=nil, ["dest_port"]="90", ["protocol"]='tcp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8080', ["comment"]="test port redirect1",["iswork"]=true},
-		{["dest_addr"]='192.168.2.131', ["dest_port"]="80", ["protocol"]='udp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8090', ["comment"]="test port redirect2",["iswork"]=true},
+		{["dest_addr"]='192.168.2.131', ["dest_port"]="80", ["dest_port_end"]="89",["protocol"]='udp', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8090', ["comment"]="test port redirect2",["iswork"]=true},
 		{["dest_addr"]='192.168.2.131', ["dest_port"]="22", ["protocol"]='all', ["redirect_addr"]='192.168.2.1',["redirect_port"]='80', ["comment"]="test port redirect3",["iswork"]=true},
 		{["dest_addr"]='192.168.2.131', ["dest_port"]="8899", ["protocol"]='all', ["redirect_addr"]='192.168.2.1',["redirect_port"]='8896', ["comment"]="test port redirect3",["iswork"]=false}
 		
