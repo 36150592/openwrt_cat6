@@ -20,9 +20,9 @@
 int  call_decrypt_the_config_file(char* conf_file, char* target_file)
 {
 	print("conf_file=%s\t, target_file=%s\n",conf_file, target_file);
-	int ret = decry_tzupdate_config_file(conf_file, EXPORT_CONFIG_FILE);
-	if(ret == 0)
-		return export_file_to_param_file(EXPORT_CONFIG_FILE, target_file);
+	int ret = decry_tzupdate_config_file(conf_file, target_file);
+	//if(ret == 0)
+	//	return export_file_to_param_file(EXPORT_CONFIG_FILE, target_file);
 }
 
 void help_message()
