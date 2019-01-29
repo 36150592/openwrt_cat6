@@ -65,6 +65,12 @@ fi
 ##start update config
 
 #logo
+if [ -d ${CONFIG_WORK_STATION}/LOGO ]; then
+        logo_nums=`ls ${CONFIG_WORK_STATION}/LOGO/*.gif | wc -l`
+        if [ "${logo_nums}" = "1" ]; then
+                cp ${CONFIG_WORK_STATION}/LOGO/*.gif /tz_www/images/customer.gif
+        fi
+fi
 
 #get the config file
 tozed_tool -a ${CONFIG_WORK_STATION}/${config_file}
