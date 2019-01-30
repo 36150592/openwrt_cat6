@@ -57,6 +57,14 @@ download_something()
 	fi
 }
 
+download_some_dl()
+{
+	if [ ! -f dl/linux-firmware-2015-03-20-f404336ba808cbd57547196e13367079a23b822c.tar.bz2 ]; then
+		wget ftp://192.168.1.123/qsdk/dl/linux-firmware-2015-03-20-f404336ba808cbd57547196e13367079a23b822c.tar.bz2 -O dl/linux-firmware-2015-03-20-f404336ba808cbd57547196e13367079a23b822c.tar.bz2
+	fi
+}
+
+download_some_dl
 download_something
 load_compile_count
 check_bash
