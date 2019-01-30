@@ -20,7 +20,7 @@ include $(INCLUDE_DIR)/kernel.mk
 define Package/mini_httpd-1.19
   SECTION:=MTK Properties
   CATEGORY:=MTK Properties
-  DEPENDS:=+libpthread
+  DEPENDS:=+libpthread +libopenssl
   TITLE:=Mini_httpd
   SUBMENU:=Applications
 endef
@@ -45,7 +45,7 @@ define Package/mini_httpd-1.19/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mini_httpd $(1)/bin
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/mini_httpd.init $(1)/etc/init.d/mini_httpd
-
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mini_httpd.pem $(1)/etc/
 endef
 
 

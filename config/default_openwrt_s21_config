@@ -2643,7 +2643,15 @@ CONFIG_PACKAGE_libxtables=y
 # SSL
 #
 # CONFIG_PACKAGE_libcyassl is not set
-# CONFIG_PACKAGE_libopenssl is not set
+CONFIG_PACKAGE_libopenssl=y
+
+#
+# Configuration
+#
+CONFIG_OPENSSL_WITH_EC=y
+# CONFIG_OPENSSL_WITH_EC2M is not set
+# CONFIG_OPENSSL_WITH_SSL3 is not set
+# CONFIG_OPENSSL_ENGINE_CRYPTO is not set
 CONFIG_PACKAGE_libpolarssl=y
 # CONFIG_PACKAGE_argp-standalone is not set
 # CONFIG_PACKAGE_libbfd is not set
@@ -2754,7 +2762,7 @@ CONFIG_PACKAGE_libuci-lua=y
 # CONFIG_PACKAGE_linux-atm is not set
 # CONFIG_PACKAGE_terminfo is not set
 CONFIG_PACKAGE_uclibcxx=y
-# CONFIG_PACKAGE_zlib is not set
+CONFIG_PACKAGE_zlib=y
 
 #
 # LuCI(Tozed)
