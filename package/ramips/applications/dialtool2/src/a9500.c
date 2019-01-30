@@ -904,18 +904,37 @@ void ar9500_dial(int* Dial_proc_state )
 				snprintf(global_dial_vars.signal_rssi_value,sizeof(global_dial_vars.signal_rssi_value),"%0.f",rssi);
 
 				//supplier provide 
-				if(rssi >= 26 && rssi <= 31)
-					global_dial_vars.signal_rssi_level=5;
-				else if(rssi >= 22 && rssi <= 25)
-					global_dial_vars.signal_rssi_level=4;
-				else if(rssi >= 16 && rssi <= 21)
-					global_dial_vars.signal_rssi_level=3;
-				else if(rssi >= 10 && rssi <= 15)
-					global_dial_vars.signal_rssi_level=2;
-				else if(rssi >= 1 && rssi <= 9)
-					global_dial_vars.signal_rssi_level=1;
+				int *p = global_init_parms.signal_rssi_lvl;
+				if(p[0] < p[1] && p[1] < p[2] && p[2] < p[3] && p[3] < p[4])
+				{
+					if(rssi<=p[0])
+						global_dial_vars.signal_rssi_level=5;
+					else if(rssi>p[0] && rssi<=p[1])
+						global_dial_vars.signal_rssi_level=4;
+					else if(rssi>p[1] && rssi <= p[2])
+						global_dial_vars.signal_rssi_level=3;
+					else if(rssi >p[2] && rssi <= p[3])
+						global_dial_vars.signal_rssi_level=2;
+					else if(rssi> p[3] && rssi<= p[4])
+						global_dial_vars.signal_rssi_level=1;
+					else
+						global_dial_vars.signal_rssi_level=0;
+				}
 				else
-					global_dial_vars.signal_rssi_level=0;
+				{
+					 if(rssi >= 26 && rssi <= 31)
+	                      global_dial_vars.signal_rssi_level=5;
+	                 else if(rssi >= 22 && rssi <= 25)
+	                      global_dial_vars.signal_rssi_level=4;
+	                 else if(rssi >= 16 && rssi <= 21)
+	                       global_dial_vars.signal_rssi_level=3;
+	                 else if(rssi >= 10 && rssi <= 15)
+	                       global_dial_vars.signal_rssi_level=2;
+	                 else if(rssi >= 1 && rssi <= 9)
+	                       global_dial_vars.signal_rssi_level=1;
+	                 else
+	                       global_dial_vars.signal_rssi_level=0;
+				}
 				
 				global_dialtool.Dial_Lvl_1=DIAL_DEAMON;
 				*Dial_proc_state=AR9500_DIALST_CHECKPPP0;	
@@ -1339,18 +1358,38 @@ void ar9500_306a_deamon(int* Dial_proc_state)
 				snprintf(global_dial_vars.signal_rssi_value,sizeof(global_dial_vars.signal_rssi_value),"%0.f",rssi);
 
 				//supplier provide 
-				if(rssi >= 26 && rssi <= 31)
-					global_dial_vars.signal_rssi_level=5;
-				else if(rssi >= 22 && rssi <= 25)
-					global_dial_vars.signal_rssi_level=4;
-				else if(rssi >= 16 && rssi <= 21)
-					global_dial_vars.signal_rssi_level=3;
-				else if(rssi >= 10 && rssi <= 15)
-					global_dial_vars.signal_rssi_level=2;
-				else if(rssi >= 1 && rssi <= 9)
-					global_dial_vars.signal_rssi_level=1;
+				int *p = global_init_parms.signal_rssi_lvl;
+				if(p[0] < p[1] && p[1] < p[2] && p[2] < p[3] && p[3] < p[4])
+				{
+					if(rssi<=p[0])
+						global_dial_vars.signal_rssi_level=5;
+					else if(rssi>p[0] && rssi<=p[1])
+						global_dial_vars.signal_rssi_level=4;
+					else if(rssi>p[1] && rssi <= p[2])
+						global_dial_vars.signal_rssi_level=3;
+					else if(rssi >p[2] && rssi <= p[3])
+						global_dial_vars.signal_rssi_level=2;
+					else if(rssi> p[3] && rssi<= p[4])
+						global_dial_vars.signal_rssi_level=1;
+					else
+						global_dial_vars.signal_rssi_level=0;
+				}
 				else
-					global_dial_vars.signal_rssi_level=0;
+				{
+					 if(rssi >= 26 && rssi <= 31)
+	                      global_dial_vars.signal_rssi_level=5;
+	                 else if(rssi >= 22 && rssi <= 25)
+	                      global_dial_vars.signal_rssi_level=4;
+	                 else if(rssi >= 16 && rssi <= 21)
+	                       global_dial_vars.signal_rssi_level=3;
+	                 else if(rssi >= 10 && rssi <= 15)
+	                       global_dial_vars.signal_rssi_level=2;
+	                 else if(rssi >= 1 && rssi <= 9)
+	                       global_dial_vars.signal_rssi_level=1;
+	                 else
+	                       global_dial_vars.signal_rssi_level=0;
+				}
+				
 				
 				//global_dialtool.Dial_Lvl_1=DIAL_DEAMON;
 				*Dial_proc_state=AR9500_DIALST_CHECKPPP0;

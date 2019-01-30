@@ -139,6 +139,43 @@ void init_parms(PARMS *cfg,int len)
 		get_config_specified(cfg,len,scan_att_configs.scan_att_mcc_mnc.Name,scan_att_configs.scan_att_mcc_mnc.Value);
 		get_config_specified(cfg,len,scan_att_configs.scan_att_apn_name.Name,scan_att_configs.scan_att_apn_name.Value);
 	}
+
+	char value[64] = {0};
+	int *p = NULL;
+	get_config_specified(cfg,len,"TZ_CONFIG_SIGNAL_RSRP_LVL", value);
+	p = global_init_parms.signal_rssi_lvl;
+	p[0] = 0; p[1] = 0; p[2] = 0; p[3] = 0; p[4] = 0;
+	p = global_init_parms.signal_rsrp_lvl;
+	p[0] = 0; p[1] = 0; p[2] = 0; p[3] = 0; p[4] = 0;
+	if(strlen(value) > 0 )
+	{
+		p = global_init_parms.signal_rsrp_lvl;
+		sscanf(value, "%d:%d:%d:%d:%d\n", p, p+1,p+2,p+3,p+4);
+		if(!(p[0] < p[1] && p[1] < p[2] && p[2] < p[3] && p[3] < p[4]))
+		{
+			p[0] = -115; p[1] = -110; p[2] = -105; p[3] = -97; p[4] = -84;
+		}
+	}
+	else
+	{
+		get_config_specified(cfg,len,"TZ_CONFIG_SIGNAL_RSSI_LVL", value);
+		p = global_init_parms.signal_rssi_lvl;
+		p[0] = 0; p[1] = 0; p[2] = 0; p[3] = 0; p[4] = 0;
+		if(strlen(value) > 0 )
+		{
+			sscanf(value, "%d:%d:%d:%d:%d\n", p, p+1,p+2,p+3,p+4);
+			if(!(p[0] < p[1] && p[1] < p[2] && p[2] < p[3] && p[3] < p[4]))
+			{
+				p[0] = 58; p[1] = 78; p[2] = 98; p[3] = 108; p[4] = 118;
+			}
+		}
+		else
+		{
+			p = global_init_parms.signal_rsrp_lvl;
+			p[0] = -115; p[1] = -110; p[2] = -105; p[3] = -97; p[4] = -84;
+		}
+	}
+
 	
 	strcpy(global_init_parms.enable_pin,configs.enable_pin.Value);
 	strcpy(global_init_parms.apn,configs.apn.Value);

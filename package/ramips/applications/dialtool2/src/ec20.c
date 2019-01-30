@@ -1309,16 +1309,38 @@ void ec20_dial(int* Dial_proc_state )
 				snprintf(global_dial_vars.signal_sinr,sizeof(global_dial_vars.signal_sinr),"%0.f",snr);
 
 				//supplier provide 
-				if(rssi<=58)
-					global_dial_vars.signal_rssi_level=4;
-				else if(rssi>58 && rssi<=78)
-					global_dial_vars.signal_rssi_level=3;
-				else if(rssi>78 && rssi <=98)
-					global_dial_vars.signal_rssi_level=2;
-				else if(rssi>98&& rssi<=108)
-					global_dial_vars.signal_rssi_level=1;
+				int *p = global_init_parms.signal_rsrp_lvl;
+				if(p[0] < p[1] && p[1] < p[2] && p[2] < p[3] && p[3] < p[4])
+				{
+					if(rsrp>=p[4])
+						global_dial_vars.signal_rssi_level=5;
+					else if(rsrp>p[3]&& rsrp<=p[4])
+						global_dial_vars.signal_rssi_level=4;
+					else if(rsrp>p[2] && rsrp<=p[3])
+						global_dial_vars.signal_rssi_level=3;
+					else if(rsrp>p[1] && rsrp<=p[2])
+						global_dial_vars.signal_rssi_level=2;
+					else if(rsrp>p[0] && rsrp<=p[1])
+						global_dial_vars.signal_rssi_level=1;
+					else
+						global_dial_vars.signal_rssi_level=0;
+				}
 				else
-					global_dial_vars.signal_rssi_level=0;
+				{
+					p = global_init_parms.signal_rssi_lvl;
+					if(rssi<=p[0])
+						global_dial_vars.signal_rssi_level=5;
+					else if(rssi > p[0] && rssi <= p[1])
+						global_dial_vars.signal_rssi_level=4;
+					else if(rssi > p[1] && rssi <= p[2])
+						global_dial_vars.signal_rssi_level=3;
+					else if(rssi > p[2] && rssi <= p[3])
+						global_dial_vars.signal_rssi_level=2;
+					else if(rssi > p[3] && rssi <= p[4])
+						global_dial_vars.signal_rssi_level=1;
+					else
+						global_dial_vars.signal_rssi_level=0;
+				}
 				
 				global_dialtool.Dial_Lvl_1=DIAL_DEAMON;
 				*Dial_proc_state=Dial_State_BMTCELLINFO;	
@@ -2026,16 +2048,38 @@ void ec20_deamon(int* Dial_proc_state)
 				snprintf(global_dial_vars.signal_sinr,sizeof(global_dial_vars.signal_sinr),"%0.f",snr);
 
 				//supplier provide 
-				if(rssi<=58)
-					global_dial_vars.signal_rssi_level=4;
-				else if(rssi>58 && rssi<=78)
-					global_dial_vars.signal_rssi_level=3;
-				else if(rssi>78 && rssi <=98)
-					global_dial_vars.signal_rssi_level=2;
-				else if(rssi>98&& rssi<=108)
-					global_dial_vars.signal_rssi_level=1;
+				int *p = global_init_parms.signal_rsrp_lvl;
+				if(p[0] < p[1] && p[1] < p[2] && p[2] < p[3] && p[3] < p[4])
+				{
+					if(rsrp>=p[4])
+						global_dial_vars.signal_rssi_level=5;
+					else if(rsrp>p[3]&& rsrp<=p[4])
+						global_dial_vars.signal_rssi_level=4;
+					else if(rsrp>p[2] && rsrp<=p[3])
+						global_dial_vars.signal_rssi_level=3;
+					else if(rsrp>p[1] && rsrp<=p[2])
+						global_dial_vars.signal_rssi_level=2;
+					else if(rsrp>p[0] && rsrp<=p[1])
+						global_dial_vars.signal_rssi_level=1;
+					else
+						global_dial_vars.signal_rssi_level=0;
+				}
 				else
-					global_dial_vars.signal_rssi_level=0;	
+				{
+					p = global_init_parms.signal_rssi_lvl;
+					if(rssi <= p[0])
+						global_dial_vars.signal_rssi_level=5;
+					else if(rssi > p[0] && rssi <= p[1])
+						global_dial_vars.signal_rssi_level=4;
+					else if(rssi > p[1] && rssi <= p[2])
+						global_dial_vars.signal_rssi_level=3;
+					else if(rssi > p[2] && rssi <= p[3])
+						global_dial_vars.signal_rssi_level=2;
+					else if(rssi > p[3] && rssi <= p[4])
+						global_dial_vars.signal_rssi_level=1;
+					else
+						global_dial_vars.signal_rssi_level=0;
+				}
 
 //				log_info("csq:%.1f,%.1f,%.1f,%.1f\n",rssi,rsrp,rsrq,snr);
 			}
@@ -2118,8 +2162,8 @@ void ec20_report_handle(char* buffer)
 {
 	if(NULL!=strstr(buffer,"+SIGNALIND:"))
 	{
-		char* ptr_tmp=strstr(buffer,"+SIGNALIND:")+strlen("+SIGNALIND:");
-		global_dial_vars.signal_rssi_level=atoi(ptr_tmp);
+		//char* ptr_tmp=strstr(buffer,"+SIGNALIND:")+strlen("+SIGNALIND:");
+		//global_dial_vars.signal_rssi_level=atoi(ptr_tmp);
 	}
 	if(NULL!=strstr(buffer,"^DATACON:"))
 	{
@@ -2138,32 +2182,32 @@ void ec20_report_handle(char* buffer)
 		if(signal_lvl==0)
 		{
 			sprintf(global_dial_vars.signal_rssi_value,"0");
-			global_dial_vars.signal_rssi_level=0;
+			//global_dial_vars.signal_rssi_level=0;
 		}
 		else if(signal_lvl==20)
 		{
 			sprintf(global_dial_vars.signal_rssi_value,"105");
-			global_dial_vars.signal_rssi_level=1;
+			//global_dial_vars.signal_rssi_level=1;
 		}
 		else if(signal_lvl==40)
 		{
 			sprintf(global_dial_vars.signal_rssi_value,"100");
-			global_dial_vars.signal_rssi_level=2;
+			//global_dial_vars.signal_rssi_level=2;
 		}
 		else if(signal_lvl==60)
 		{
 			sprintf(global_dial_vars.signal_rssi_value,"80");
-			global_dial_vars.signal_rssi_level=3;
+			//global_dial_vars.signal_rssi_level=3;
 		}
 		else if(signal_lvl==80)
 		{
 			sprintf(global_dial_vars.signal_rssi_value,"65");
-			global_dial_vars.signal_rssi_level=4;
+			//global_dial_vars.signal_rssi_level=4;
 		}
 		else
 		{
 			sprintf(global_dial_vars.signal_rssi_value,"999");
-			global_dial_vars.signal_rssi_level=5;
+			//global_dial_vars.signal_rssi_level=5;
 		}
 	}
 	if(NULL!=strstr(buffer,"^ HRSSILVL:"))

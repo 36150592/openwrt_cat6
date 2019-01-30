@@ -59,6 +59,8 @@ typedef struct GLOBAL_INIT_PARAMS
 	char plmn[64];
 	int plmn_act;
 	char network_card_mtu[8];
+	int signal_rssi_lvl[5];
+	int signal_rsrp_lvl[5];
 }GIP;
 
 typedef struct  GLOBAL_DIAL_VARIABLES
