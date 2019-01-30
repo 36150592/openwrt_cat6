@@ -1,0 +1,103 @@
+#!/bin/sh
+
+UCI="uci -c /etc/config"
+CMD=$1
+ARGS=$2
+
+usage()
+{
+cat << EOF
+
+    Usage: cfg <command> [<arguments>]
+
+    Commands:
+        -a  <args>  set the parameter
+        -g  <args>  get the parameter
+        -c          save the parameters
+        -e          Export or list all the parameters
+        -t <config> Export some Specific parameters
+        -x          Clean all the parameters
+
+EOF
+}
+
+set_para()
+{
+    ## 保存参数时，变量不能以数字开头，否则export时出错。
+    res=`echo ${ARGS} | cut -d '=' -f1 |grep '^[0-9]'`
+    if [ -n "$res" ]; then
+        echo "Parameter error: The first character of a variable can't be a number."
+    else
+        ${UCI} set tozed.cfg."${ARGS}"
+    fi
+}
+
+get_para()
+{
+    if [ "$1" = "" ]; then
+        ${UCI} get tozed.cfg.${ARGS} 2> /dev/null
+    else
+        ${UCI} get tozed.cfg.${1} 2> /dev/null
+    fi
+}
+
+save_para()
+{
+    ${UCI} commit
+}
+
+clean_para()
+{
+    ${UCI} delete tozed.cfg
+    ${UCI} set tozed.cfg=value
+}
+
+show_para()
+{
+    ${UCI} show tozed.cfg | sed 's/tozed.cfg./export /g' |sed "s/'//g"
+}
+
+read_few_para()
+{
+    cat ${ARGS} | while read line; do
+        name=`echo ${line} |cut -d '=' -f1`
+        value=`get_para ${name}`
+        echo "${name}=${value}"
+    done
+}
+
+write_to_file()
+{
+    #create /tmp/rc.system.conf for some app to read cfg param
+    show_para > /tmp/rc.system.conf
+    chmod +x /tmp/rc.system.conf
+
+    #create /tmp/.apcfg for web
+    show_para > /tmp/.apcfg
+    chmod +x /tmp/.apcfg
+}
+
+case ${CMD} in
+    -a)
+        set_para
+        ;;
+    -g)
+        get_para
+        ;;
+    -c)
+        save_para
+        #write_to_file
+        ;;
+    -x)
+        clean_para
+        ;;
+    -e)
+        show_para
+        ;;
+    -t)
+        read_few_para
+        ;;
+    *)
+        usage
+        ;;
+esac

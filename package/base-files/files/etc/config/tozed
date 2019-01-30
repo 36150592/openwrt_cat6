@@ -1,0 +1,3 @@
+
+config value 'cfg'
+	option TZ_PREFERRED_LANGUAGE 'en'
