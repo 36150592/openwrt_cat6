@@ -13,6 +13,10 @@
 #endif
 
 extern int tz_ret(int num);
+extern int read_memory(char *shellcmd, char *out, int size);
+extern void util_strip_traling_spaces( char* one_string );
+extern void util_strip_traling_r_n_t( char* one_string );
 
+extern void set_param_to_config_tozed(char* name, char* value);
 
 #endif

@@ -1,5 +1,5 @@
 EXEC=tozed_tool
-SRC=update_config.c utility.c main.c
+SRC=update_config.c utility.c web_user_setting.c main.c
 
 all: $(EXEC)
 

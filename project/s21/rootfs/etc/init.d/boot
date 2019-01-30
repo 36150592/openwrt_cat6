@@ -45,6 +45,11 @@ boot() {
 	#2.4g wifi
 	/etc/tozed/tz_form_wifi
 
+	if [ -f /etc/.flag_factory_config ]; then
+		cp /rom/etc/config/tozed /etc/config/tozed
+		tozed_tool -c config -g WEB_USER -w rewrite
+	fi
+
 	/bin/board_detect
 	uci_apply_defaults
 	

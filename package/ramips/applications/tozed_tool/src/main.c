@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include "update_config.h"
 #include "utility.h"
+#include "include.h"
+#include "web_user_setting.h"
 
 
 #define CONFIG_PARAM_FILE "/tmp/config_param_file"
@@ -31,10 +33,18 @@ void help_message()
 	printf("-a:\tdecrypt the config file. after decrypt, you will get a param file: %s\n", CONFIG_PARAM_FILE);
 }
 
+char mac[24];
+char imei[24];
+
+
 int main(int argc, char** argv)
 {
 	int ret = 0;
-	while((ret= getopt(argc,argv,"a:h:")) != -1)
+	int isConfigure=0;
+	CONFIG_FUNC config_func = NONE_CONFIG;
+	CONFIG_WRITE_WAY config_write_way= APPEND;
+	
+	while((ret= getopt(argc,argv,"a:c:g:h:w:")) != -1)
 	{
 		switch(ret)
 		{
@@ -43,11 +53,54 @@ int main(int argc, char** argv)
 					char wait_decrypt_file[120] = "";
 					strncpy(wait_decrypt_file,optarg,sizeof(wait_decrypt_file));
 					call_decrypt_the_config_file(wait_decrypt_file, CONFIG_PARAM_FILE);
+					return 0;
 				}
 				
 				break;
 			case 'h':
 				help_message();
+				return 0;
+				break;
+				
+			case 'c':
+				isConfigure = 1;
+				break;
+
+			case 'g':
+				{
+					//char user_param[120] = "";
+					//strncpy(user_param,optarg,sizeof(user_param));
+					if(strcmp(optarg,"WEB_USER") == 0)
+					{
+						config_func = WEB_USER;
+					}
+				}
+				break;
+
+			case 'w':
+				{
+					if(strcmp(optarg,"rewrite") == 0 || strcmp(optarg,"REWRITE") == 0)
+					{
+						config_write_way = REWRITE;
+					}
+				}
+				break;
+				
+			default:
+				break;
+		}
+	}
+
+	strcpy(imei,"864485030032153");
+	strcpy(mac,"D8D866020A64");
+
+
+	if (isConfigure)
+	{
+		switch(config_func)
+		{
+			case WEB_USER:
+				web_user_config_rewrite();
 				break;
 			default:
 				break;
