@@ -3,22 +3,21 @@
 		"Usr":{
 		    "UserName":"root",
 			"PassWord":"63a9f0ea7bb98050796b649e85481845",
-			"AUTH":"0xE0F0E0"
+			"AUTH":"0xE0F0E0",
+			"LEVEL":"1"
 		},
         "Usr1":{
 		    "UserName":"admin",
 			"PassWord":"21232f297a57a5a743894a0e4a801fc3",
-			"AUTH":"0xF0F0E0"
+			"AUTH":"0xF0F0E0",
+			"LEVEL":"2"
 		},
 		 "Usr2":{
 		    "UserName":"test",
 			"PassWord":"098f6bcd4621d373cade4e832627b4f6",
-			"AUTH":"0x00F0E0"
+			"AUTH":"0x00F0E0",
+			"LEVEL":"3"
 		}
-  },
-  "LoginFail":{
-        "FailMaxNum":"2",
-        "FailTime":""
   },
   "Language":"cn",
   "LanguageList":"6"

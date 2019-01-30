@@ -38,9 +38,21 @@
                 var $username = $('#username').focus(),
                     $passwd = $('#passwd'),
                     $btnLogin = $('#btnLogin');
-				sessionStorage['loginFail'] = sessionStorage['loginFail'] ? sessionStorage['loginFail'] : 0;
-               // var loginText = $btnLogin.val();
+                var MaxFailNum = 2;
+                sessionStorage['loginFail'] = sessionStorage['loginFail'] ? sessionStorage['loginFail'] : 0;
+                sessionStorage['failTime'] = sessionStorage['loginFail'] ? sessionStorage['loginFail'] : "";
+                // var loginText = $btnLogin.val();
                 $btnLogin.click(function () {
+                    var timestamp = (new Date()).getTime();
+                    if(sessionStorage['failTime'] != ""){
+                        var second  = parseInt((timestamp - parseInt(sessionStorage['failTime']))/1000);
+                        if(second < 60){
+                            var lockMsg = PROMPT.status.lockFailTimes;
+                            AlertUtil.alertMsg(lockMsg.format(60-second));
+                            return;
+                        }
+                        sessionStorage['failTime'] = "";
+                    }
                     var username = $username.val(), passwd = $passwd.val();
                     if (username == "") {
                         AlertUtil.alertMsg(CHECK.required.username);
@@ -54,7 +66,7 @@
                         return false;
                     }
 
-               //     $btnLogin.disable();
+                    //     $btnLogin.disable();
                     var loginSuccess = false;
                     var sessionId = getSessionId();
                     //var option = { expireHours: 1, path: "/", domain: location.hostname };
@@ -62,52 +74,48 @@
 //                    CookieUtil.setCookie('loginName', username);
 //                    location.href = Page.getUrl("index.html");
 
-                Page.postJSON({
-                    json: {
-                        cmd: RequestCmd.LOGIN,
-                        method: JSONMethod.POST,
-                        sessionId: sessionId,
-						loginFail: parseInt(sessionStorage['loginFail']),
-                        username: username,
-                        passwd: Md5.md5(passwd)
-                    },
-                    success: function(data) {
-                        loginSuccess = data.success;
-                        CookieUtil.setCookie("sessionId", sessionId);
-                        CookieUtil.setCookie('loginName', username);
-						//CookieUtil.setCookie("auth", data.auth);
-						sessionStorage['sessionId'] = sessionId;
-                        sessionStorage['loginName'] = username;
-						sessionStorage['auth'] = data.auth;
-						sessionStorage['loginFail'] = 0;
-                        location.href = Page.getUrl("index.html");
-                    },
-                    fail: function(data) {
-                       var second = data.second;
-                        if(second){
-                            var lockMsg = PROMPT.status.lockFailTimes;
-                                AlertUtil.alertMsg(lockMsg.format(second));
-                        }else {
-						
-						   var failMsg = PROMPT.status.loginFail;
-                           AlertUtil.alertMsg(failMsg.format(3-parseInt(sessionStorage['loginFail'])));
-						   if(data.failRecount){
-                                sessionStorage['loginFail'] = 0;
-                            }else{
-								sessionStorage['loginFail'] = parseInt(sessionStorage['loginFail']) + 1;
-							}
-							
-                            //AlertUtil.alertMsg(PROMPT.status.loginFail);
-                           
-                        }
+                    Page.postJSON({
+                        json: {
+                            cmd: RequestCmd.LOGIN,
+                            method: JSONMethod.POST,
+                            sessionId: sessionId,
+                            username: username,
+                            passwd: Md5.md5(passwd)
+                        },
+                        success: function(data) {
+                            loginSuccess = data.success;
+                            CookieUtil.setCookie("sessionId", sessionId);
+                            CookieUtil.setCookie('loginName', username);
+                            //CookieUtil.setCookie("auth", data.auth);
+                            sessionStorage['sessionId'] = sessionId;
+                            sessionStorage['loginName'] = username;
+                            sessionStorage['auth'] = data.auth;
+							sessionStorage['level'] = data.level;
+                            sessionStorage['loginFail'] = 0;
+                            sessionStorage['failTime'] = "";
+                            location.href = Page.getUrl("index.html");
+                        },
+                        fail: function(data) {
+                               var failMsg = PROMPT.status.loginFail;
+                               AlertUtil.alertMsg(failMsg.format(3-parseInt(sessionStorage['loginFail'])));
 
-                    },
-                    complete: function() {
-                      //  if (!loginSuccess) {
-                      //      $btnLogin.enable();
-                      //  }
-                    }
-                });
+                               if(MaxFailNum >= parseInt(sessionStorage['loginFail'])){
+                                   sessionStorage['loginFail'] = parseInt(sessionStorage['loginFail']) + 1;
+                               }else {
+                                   sessionStorage['failTime'] = timestamp;
+                                   sessionStorage['loginFail'] = 0;
+                               }
+
+                                //AlertUtil.alertMsg(PROMPT.status.loginFail);
+
+
+                        },
+                        complete: function() {
+                            //  if (!loginSuccess) {
+                            //      $btnLogin.enable();
+                            //  }
+                        }
+                    });
                 });
 
                 $username.keydown(function (e) {
@@ -127,19 +135,19 @@
                 function getSessionId() {
                     return Md5.md5(Math.random().toString()) + Md5.md5(Math.random().toString());
                 }
-				
-				getOpenInfo();
-				StatusUtil.getSysStatus();
+
+                getOpenInfo();
+                StatusUtil.getSysStatus();
             }
 
             Page.postJSON({
-		        json: { cmd: RequestCmd.INIT_PAGE },
-		        success: function(data) {
-		            var ReturnData = data.data;
+                json: { cmd: RequestCmd.INIT_PAGE },
+                success: function(data) {
+                    var ReturnData = data.data;
                     Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue(ReturnData.languageList) || "3E");
                     Page.language = ReturnData.language.toUpperCase();
                     init();
-		        }
+                }
             });
 
 
@@ -150,14 +158,14 @@
 
 <body>
 <div id="header">
-    <div id="closeInternet"></div>
+	<div id="logoDiv"></div>
     <div id="siginfo">
         <table cellpadding="0" cellspacing="4">
             <tr>
                 <td id="simInfo"></td>
-				<td id="netInfo"></td>
+                <td id="netInfo"></td>
                 <td id="wifiInfo"></td>
-				<td id="wifiInfo5g"></td>
+                <td id="wifiInfo5g"></td>
                 <td id="lteUsbInfo"></td>
                 <td id="lan1" style="display:none;"></td>
                 <td id="lan2" style="display:none;"></td>
@@ -168,12 +176,11 @@
             </tr>
         </table>
     </div>
-    <div id="timeinfo"></div>
-    <div id="header_right"></div>
+
 </div>
 <div id="main">
     <div id="left">
-        <div id="left_t"></div>
+        <div id="left_t"><img src=""></div>
         <div id="left_m">
             <div id="login_container">
                 <script type="text/template" id="login_template">

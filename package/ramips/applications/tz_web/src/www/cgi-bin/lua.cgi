@@ -31,43 +31,21 @@ function login()
 	io.close(file)
 	local Jsondata = cjson.decode(t)
 	
-	local LoginFail = Jsondata["LoginFail"]
-	if "" ~= LoginFail["FailTime"]
-	  then
-	  local second  = os.time() - tonumber(LoginFail["FailTime"])
-	    if(second < 60)
-	      then
-		  	tz_answer["success"] = false;
-			tz_answer["second"] = 60 - second;
-			result_json = cjson.encode(tz_answer);
-			print(result_json);
-			return
-		end
-		shellcmd = string.format("sed -i 's/\"FailTime\":\"%s\"/\"FailTime\":\"\"/g' %s/config.json",LoginFail["FailTime"],WEB_PATH)
-	    os.execute(shellcmd)
-	end
-	
 	local Login = Jsondata["Login"]
 	
 	local username = tz_req["username"]
 	local password = tz_req["passwd"]
-	local loginFailNum = tz_req["loginFail"]
 	
 	for k,v in pairs(Login) do
 	  if(v["UserName"] == username) then
 	      if(v["PassWord"] == password) then
 		     tz_answer["success"] = true;
 			 tz_answer["auth"] = v["AUTH"];
+			 tz_answer["level"] = v["LEVEL"];
 			 result_json = cjson.encode(tz_answer);
 			 print(result_json);
 			 return 
 		  else
-		     if loginFailNum >= tonumber(LoginFail["FailMaxNum"])
-			    then
-				shellcmd = string.format("sed -i 's/\"FailTime\":\"\"/\"FailTime\":\"%s\"/g' %s/config.json",os.time(),WEB_PATH)
-	            os.execute(shellcmd)
-				tz_answer["failRecount"] = true;
-			 end
 		     tz_answer["success"] = false;
 			 result_json = cjson.encode(tz_answer);
 			 print(result_json);
@@ -78,12 +56,6 @@ function login()
 	 
 	end
 	
-	if loginFailNum >= tonumber(LoginFail["FailMaxNum"])
-	   then
-		 shellcmd1 = string.format("sed -i 's/\"FailTime\":\"\"/\"FailTime\":\"%s\"/g' %s/config.json",os.time(),WEB_PATH)
-	     os.execute(shellcmd1)
-		 tz_answer["failRecount"] = true;
-	end
 	tz_answer["success"] = false;
 	result_json = cjson.encode(tz_answer);
 	print(result_json);

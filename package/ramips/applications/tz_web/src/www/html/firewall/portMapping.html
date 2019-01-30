@@ -38,6 +38,12 @@
                     <input type="text" id="dest_port" name="dest_port" class="normal" maxlength="10" /><span class="cmt"><%- lbl.example %><%- colon %>80(http), 443(https)</span>
                 </td>
             </tr>
+			<tr>
+                <th><%- net.portRange %><%- colon %></th>
+                <td>
+                    <input type="text" id="dest_port_end" name="dest_port_end" class="normal" maxlength="10" /><span class="cmt"><%- lbl.example %><%- colon %>80(http), 443(https)</span>
+                </td>
+            </tr>
             <tr>
                 <th><%- net.mappingIp %><%- colon %></th>
                 <td><input type="text" id="redirect_addr" name="redirect_addr" class="normal" maxlength="50" /><span class="cmt"><%- lbl.example %><%- colon %><span class="hostname_head"></span>100</span></td>

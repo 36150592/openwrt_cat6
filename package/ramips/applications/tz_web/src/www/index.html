@@ -30,11 +30,13 @@ $(document).ready(function() {
         //var sessionId = CookieUtil.getCookie("sessionId");
 		//var auth = CookieUtil.getCookie("auth");
 		var auth = sessionStorage['auth'];
+		var level = sessionStorage['level'];
 		var sessionId = sessionStorage['sessionId'];
         var loginName = sessionStorage['loginName'];
         if(loginName && sessionId){
             Page.sessionId = sessionId;
 			Page.AUTH = auth;
+			Page.Level = level;
             $('#container').load('html/home.html');
         }else {
             location.href = Page.getUrl(Url.LOGIN);

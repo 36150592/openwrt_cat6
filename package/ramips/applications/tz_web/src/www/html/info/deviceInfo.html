@@ -7,7 +7,7 @@
             Page.postJSON({
                 json: { cmd: RequestCmd.DEVICE_VERSION_INFO },
                 success: function(datas) {
-
+                    
                     var names = [], names_lte = [];
                     var device = DOC.device;
                     names.push(device.name);
@@ -15,12 +15,13 @@
                     names.push(device.hardwareVersion);
                     names.push(device.configVersion);
 					
-                    names.push(device.inlinesoftVersion);
-                    names.push(device.gitBranch);
-                    names.push(device.gitCommit);
-                    names.push(device.buildTime);
+					if(Page.Level == 1){
+						names.push(device.inlinesoftVersion);
+						names.push(device.gitBranch);
+						names.push(device.gitCommit);
+						names.push(device.buildTime);
                     //   names.push(device.deviceId);
-
+                    }
 
 
                     names_lte.push(device.modemVersion);
@@ -41,11 +42,12 @@
                     values.push(data2.version.software_version || loading);
                     values.push(data2.version.hwversion || loading);
                     values.push( loading);
-					
-					values.push(data2.version.inline_soft_version || loading);
-					values.push(data2.version.branch || loading);
-					values.push(data2.version.sha1 || loading);
-					values.push(data2.version.build || loading);
+					if(Page.Level == 1){
+						values.push(data2.version.inline_soft_version || loading);
+						values.push(data2.version.branch || loading);
+						values.push(data2.version.sha1 || loading);
+						values.push(data2.version.build || loading);
+					}
 
                     values_lte.push(data2.modem.type || loading);
                     values_lte.push(data2.modem.softver || loading);

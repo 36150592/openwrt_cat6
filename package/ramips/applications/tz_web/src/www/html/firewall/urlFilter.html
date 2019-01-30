@@ -11,6 +11,16 @@
             $box.hide();
             $mask.hide();
         });
+		
+		$("#lanOptions").click(function () {
+            if ($(this).prop("checked")) {
+                $('#lanDiv').show();
+            } else {
+                $('#lanDiv').hide();
+
+            }
+        })
+		
     });
 </script>
 
@@ -42,13 +52,17 @@
                 <th><%- lbl.urlKeyword %><%- colon %></th>
                 <td><input type="text" id="url" name="url" class="larger" maxlength="99" /><span class="cmt"><%- lbl.example %><%- colon %>google.com, baidu.com</span></td>
             </tr>
+
 			<tr>
                 <th><%- lbl.advancedOptions %><%- colon %></th>
-				<td>
-					<select id="interface" name="interface">
-						<option value=""  selected="selected">Null</option>
-					</select>
-				</td>
+            <td>
+                 <input type="checkbox" id="lanOptions" name="lanOptions" style="float: left" />
+                 <div id ="lanDiv" style="float: left;display:none">
+                    <input type="radio" name="interface" value="" checked="checked" /><span name="faceSpan"></span>
+                    <input type="radio" name="interface" value="" /><span name="faceSpan"></span>
+                    <input type="radio" name="interface" value="" /><span name="faceSpan"></span>
+                </div>
+            </td>
             </tr>
             <tr>
                 <th><%- lbl.remark %><%- colon %></th>

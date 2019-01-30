@@ -587,6 +587,7 @@ var CheckUtil = {
 
 var Page = {
     AUTH:"",
+	Level:"",
 	menuItem: null,
     isNULLToSpace: false,
     currentId: 0,
@@ -956,7 +957,7 @@ function getOpenInfo() {
 
             values.push(status.imsi || loading);
             values.push(status.plmn || loading);
-            values.push(status.cell_id || loading);
+            values.push(status.pci || loading);
 
             values.push(status.sinr ? FormatUtil.formatField(status.sinr, 'dB') : loading);
             values.push(status.rsrp ? FormatUtil.formatField(status.rsrp, 'dBm') : loading);
@@ -973,7 +974,7 @@ function getOpenInfo() {
             names_advanced.push(DOC.device.imei);
 
             //values_advanced.push(lteInfo.tm ? FormatUtil.formatField('tm ' + lteInfo.tm) : loading);
-            values_advanced.push(loading);
+            values_advanced.push(status.earfcn ||loading);
             values_advanced.push(status.rsrq ? FormatUtil.formatField(status.rsrq, 'dB') : loading);
             values_advanced.push(loading);
             values_advanced.push(status.enodebid || loading);

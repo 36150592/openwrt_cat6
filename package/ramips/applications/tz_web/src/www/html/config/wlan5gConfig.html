@@ -68,6 +68,8 @@
                             var data = datas.data;
                             if(data.status == 0){
                                 $wifiOpen.prop('checked', true);
+								$lis.eq(1).show();
+                                $lis.eq(2).show();
                             }else {
                                 $wifiOpen.prop('checked', false);
 								$lis.eq(1).hide();
@@ -139,7 +141,6 @@
                                 $('#wmm' + i).attr('old', data[i].wmm || 0);
 
                                 $('#secondaryId' + i).val(data[i].secondary_id);
-                                Page.setFormFieldValue2("maxStation" +i, data[i].connect_sta_number);
                                 Page.setFormFieldValue2("ssid" +i, data[i].ssid);
                                 Page.setFormFieldValue2("authenticationType" +i, data[i].encryption);
 								$("#encryptAlgorithm" + i+">input[value=" +data[i].encry_algorithms +"]").attr("checked",true);
@@ -316,10 +317,6 @@
                 delete json["ssid"];
                 count++;
             }
-            if(json.maxStation ==   $('#maxStation' + id).attr('old')){
-                delete json["maxStation"];
-                count++;
-            }
             if(json.wifiWorkMode ==  $('#wifiWorkMode' + id).attr('old')){
                 delete json["wifiWorkMode"];
                 count++;
@@ -334,7 +331,7 @@
                 delete json["encryptAlgorithm"];
                 count++;
             }
-            if(count == 9){
+            if(count == 8){
                 AlertUtil.alertMsg(CHECK.required.noChanges);
                 $(this).attr("disabled",false);
                 return false;
@@ -525,13 +522,6 @@
                                 <td><input type="text" id="ssid1" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
                             </tr>
 
-							<tr>
-                                <th><%- maxStation %></th>
-                                <td>
-                                    <input type="text" id="maxStation1" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
-                                </td>
-                            </tr>
-
                             <tr>
                                 <th><%- authenticationType %></th>
                                 <td>
@@ -605,15 +595,6 @@
                                 <th><%- ssid %></th>
                                 <td><input type="text" id="ssid2" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
                             </tr>
-
-							<tr>
-                                <th><%- maxStation %></th>
-                                <td>
-                                    <input type="text" id="maxStation2" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
-                                </td>
-                            </tr>
-
-
 
                             <tr>
                                 <th><%- authenticationType %></th>

@@ -56,8 +56,8 @@
                         break;
                     case 3:
                         hasEnableLink = false;
-                        customTitles = [DOC.net.ip, DOC.net.port, DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
-                        customFieldNames = ["dest_addr", "dest_port", "redirect_addr", "redirect_port", "comment"];
+                        customTitles = [DOC.net.ip, DOC.net.port,DOC.net.portRange,DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
+                        customFieldNames = ["dest_addr", "dest_port","dest_port_end", "redirect_addr", "redirect_port", "comment"];
                         break;
                     case 4:
                         customTitles = [DOC.net.ipv46, DOC.net.url,DOC.lbl.advancedOptions, DOC.lbl.remark];
@@ -600,10 +600,15 @@
                     if(LanArr != "null"){
 						var lan_arr = LanArr.split(",");
                         $.each(lan_arr,function(index,value){
-                            $("#interface").append("<option value='"+value+"'>"+value+"</option>");
+                            $($('input[name=interface]')[index]).attr('value',value);	
+							$($('span[name=faceSpan]')[index]).html(value);						
                         });
 						if(options.rowData != undefined) {
-									 $("#interface").val(options.rowData["interface"]);
+							if(options.rowData["interface"] != undefined && options.rowData["interface"] != "" ){
+                                $("#lanOptions").click();
+                                $('#lanDiv').show();
+                                $(String.format("input[name=interface][value={0}]", options.rowData["interface"])).attr("checked",true);
+                            }
 						}
  
                     }else {
@@ -616,10 +621,15 @@
                                 var lan_arr = data.data;
                                 options.setLanArr(lan_arr);
                                 $.each(lan_arr,function(index,value){
-                                    $("#interface").append("<option value='"+value+"'>"+value+"</option>");
+								   $($('input[name=interface]')[index]).attr('value',value);
+								   $($('span[name=faceSpan]')[index]).html(value);
                                 });
                                 if(options.rowData != undefined) {
-									 $("#interface").val(options.rowData["interface"]);
+								  if(options.rowData["interface"] != undefined && options.rowData["interface"] != "" ){
+									$("#lanOptions").click();
+									$('#lanDiv').show();
+									$(String.format("input[name=interface][value={0}]", options.rowData["interface"])).attr("checked",true);
+								   }
 								}
                             }
                         });
@@ -751,8 +761,21 @@
                 height: "auto",
                 rowData: data,
                 getSavingItem: function() {
-                    var port = parsePort($('#dest_port').val());
+                     var port = parsePort($('#dest_port').val());
                     if (!port) return false;
+
+                    var portEnd = $('#dest_port_end').val();
+                    if (portEnd == "") {
+                        AlertUtil.alertMsg(CHECK.required.port);
+                        return false;
+                    }
+
+                    var portEndArr = CheckUtil.checkPort(portEnd);
+                    if (!portEndArr.isValid) {
+                        AlertUtil.alertMsg(CHECK.format.port);
+                        return false;
+                    }
+                    var thePortEnd = portEndArr.port;
 
                     var mappingIp = $('#redirect_addr').val();
                     if (mappingIp == "") {
@@ -781,6 +804,7 @@
                     var item = getCommonItem();
                     item.dest_addr = location.hostname;
                     item.dest_port = port;
+                    item.dest_port_end = thePortEnd;
                     item.redirect_addr = mappingIp;
                     item.redirect_port = mappingPort;
                     if(data == undefined){
@@ -803,8 +827,11 @@
                         return false;
                     }
 
-					var interface = $("#interface option:selected").val();
-					
+					if( $("#lanOptions").prop("checked")){
+                        var interface = $('input[name=interface]').filter(':checked').val();
+                    }else {
+                        var interface = ""
+                    }
                     var item = getCommonItem(false);
                     item.url = url;
 					item.interface = interface;

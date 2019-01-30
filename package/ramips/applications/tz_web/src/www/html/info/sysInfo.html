@@ -228,10 +228,10 @@
                     values_net.push(data_modem.rssi ? FormatUtil.formatField(data_modem.rssi, 'dBm') : loading);
                     values_net.push(data_modem.rsrq ? FormatUtil.formatField(data_modem.rsrq, 'dB') : loading);
                     values_net.push(data_modem.sinr ? FormatUtil.formatField(data_modem.sinr, 'dB') : loading);
-                    values_net.push(data_modem.cell_id || loading);
-                    values_net.push(loading);
+					values_net.push(data_modem.pci || loading);
+                    values_net.push(data_modem.earfcn ||loading);
                     values_net.push(data_modem.enodebid || loading);
-                    values_net.push(loading);
+                    values_net.push(data_modem.cell_id || loading);
                     values_net.push(loading);
                     values_net.push(loading);
 					values_net.push(data_modem.plmn || loading);
