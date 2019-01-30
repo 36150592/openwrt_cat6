@@ -157,19 +157,23 @@ local TMP_NETWORK_TOOL_LOG_FILE="/tmp/.network_tool_log"
 local TMP_TCPDUMP_FILE="/tmp/web_upload/tcpdump"
 local TMP_PKG_DOWNLOAD_FILE="/tz_www/html/manage/network_tool_log.tcpdump"
 local TMP_LOG_DOWNLOAD_FILE="/tz_www/html/manage/network_tool_log.log"
-
+local LOG_FILE_LIMIT=40960000 -- log file limit 40M
 function system_module.system_network_tool(tz_req)
 	
 	local tz_answer = {}
 	if "ping_start" == tz_req["tool"]
 	then
-		if "" ~= tz_req["pingUrl"] and "" ~= tz_req["pingNum"]
+		if "" ~= tz_req["pingUrl"]  
 		then
 			if "1" == tz_req["pingLoop"]
 			then
-				os.execute(string.format("ping %s > %s &", tz_req["pingUrl"],TMP_NETWORK_TOOL_LOG_FILE))
+				os.execute(string.format("softlimit -f %d ping %s > %s &",LOG_FILE_LIMIT, tz_req["pingUrl"],TMP_NETWORK_TOOL_LOG_FILE))
 			else
-				os.execute(string.format("ping -c %s %s > %s &", tz_req["pingNum"], tz_req["pingUrl"], TMP_NETWORK_TOOL_LOG_FILE))
+				if "" == tz_req["pingNum"]
+				then
+					tz_req["pingNum"] = "50"
+				end
+				os.execute(string.format("softlimit -f %d ping -c %s %s > %s &",LOG_FILE_LIMIT, tz_req["pingNum"], tz_req["pingUrl"], TMP_NETWORK_TOOL_LOG_FILE))
 			end
 		end
 	elseif "ping_stop" == tz_req["tool"]
@@ -192,7 +196,7 @@ function system_module.system_network_tool(tz_req)
 		if (util.is_file_exist(TMP_TCPDUMP_FILE) == true)
 		then
 			os.execute(string.format("chmod 755 %s", TMP_TCPDUMP_FILE))
-			os.execute(string.format("%s -i %s > %s &", TMP_TCPDUMP_FILE, tz_req["catchPackageIfname"],TMP_NETWORK_TOOL_LOG_FILE))
+			os.execute(string.format("softlimit -f %d %s -i %s > %s &", LOG_FILE_LIMIT, TMP_TCPDUMP_FILE, tz_req["catchPackageIfname"],TMP_NETWORK_TOOL_LOG_FILE))
 		else
 			tz_answer["data"] = "NOTCPDUMP"
 		end
@@ -210,14 +214,14 @@ function system_module.system_network_tool(tz_req)
 	then
 		if "" ~= tz_req["traceUrl"] 
 		then
-				os.execute(string.format("traceroute %s %s > %s &", tz_req["traceUrl"], tz_req["tracePort"],TMP_NETWORK_TOOL_LOG_FILE))
+				os.execute(string.format("softlimit -f %d traceroute %s %s > %s &",LOG_FILE_LIMIT, tz_req["traceUrl"], tz_req["tracePort"],TMP_NETWORK_TOOL_LOG_FILE))
 		end
 	elseif "trace_stop" == tz_req["tool"]
 	then
 		os.execute("ps | grep 'traceroute' | grep -v grep | awk '{print $1}' | xargs kill -9")
 	elseif "log_start" == tz_req["tool"]
 	then
-		os.execute(string.format("logread -f > %s &", TMP_NETWORK_TOOL_LOG_FILE))
+		os.execute(string.format("softlimit -f %d logread -f > %s &",LOG_FILE_LIMIT, TMP_NETWORK_TOOL_LOG_FILE))
 	elseif "log_stop" == tz_req["tool"]
 	then
 		os.execute("ps | grep 'logread' | grep -v grep | awk '{print $1}' | xargs kill -9")
