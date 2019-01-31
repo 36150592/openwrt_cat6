@@ -356,6 +356,17 @@
 
 
     });
+	
+	function showPsw(id){
+       var demoInput = document.getElementById("key"+id);
+       if (demoInput.type == "password") {
+            demoInput.type = "text";
+            $('#passwordImg'+id).attr('src','/images/open.png');
+       }else {
+            demoInput.type = "password";
+            $('#passwordImg'+id).attr('src','/images/close.png');
+       }
+    }
 </script>
 
 <div class="detail_box">
@@ -479,7 +490,8 @@
                             <tr>
                                 <th><%- key %></th>
                                 <td>
-                                    <input type="text" name="key" maxlength="63" id="key"/>
+                                     <input type="password" name="key" maxlength="63" id="key"/>
+									<img id="passwordImg" class="passwordImg" onclick="showPsw('')" src="/images/close.png">
                                 </td>
                             </tr>
                             <tr>
@@ -551,7 +563,8 @@
                             <tr>
                                 <th><%- key %></th>
                                 <td>
-                                    <input type="text" name="key" maxlength="63" id="key1"/>
+                                    <input type="password" name="key" maxlength="63" id="key1"/>
+									<img id="passwordImg1" class="passwordImg" onclick="showPsw(1)" src="/images/close.png">
                                 </td>
                             </tr>
 
@@ -625,7 +638,8 @@
                             <tr>
                                 <th><%- key %></th>
                                 <td>
-                                    <input type="text" name="key" maxlength="63" id="key2"/>
+                                    <input type="password" name="key" maxlength="63" id="key2"/>
+									<img id="passwordImg2" class="passwordImg" onclick="showPsw(2)" src="/images/close.png">
                                 </td>
                             </tr>
 

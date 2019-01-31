@@ -954,6 +954,12 @@ input.txt3 {
 input.txt4 {
 	width: 120px;
 }
+.passwordImg{
+    width: 30px;
+	height: 23px;
+	position: absolute;
+	margin-left: 5px;
+}
 /*-----------------------------表格END-----------------------------*/
 
 
