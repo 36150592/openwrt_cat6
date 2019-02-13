@@ -462,6 +462,84 @@ function device_get_info()
 
 end
 
+function system_ntp_enable()
+	local ret = system.system_ntp_enable()
+
+	if ret
+	then
+		print("enable success")
+	else
+		print("enable fail")
+	end
+
+end
+
+function system_ntp_disable()
+	local ret = system.system_ntp_disable()
+
+	if ret
+	then
+		print("disable success")
+	else
+		print("disable fail")
+	end
+
+end
+
+function system_ntp_get_timezone()
+	local timezone = system.system_ntp_get_timezone()
+
+	print("time zone = ", timezone)
+end
+
+function system_ntp_set_timezone()
+	local ret = system.system_ntp_set_timezone(arg[2])
+
+	if ret
+	then
+		print("set success")
+	else
+		print("set fail")
+	end
+end
+
+function system_ntp_get_server_address()
+	local server_list = system.system_ntp_get_server_address()
+
+	for key,value in pairs(server_list)
+	do
+		print(value)
+	end
+end
+
+function system_ntp_set_server_address()
+	local server_list =    {"0.openwrt.pool.ntp.org",
+  "1.openwrt.pool.ntp.org",
+  "2.openwrt.pool.ntp.org",
+  "3.openwrt.pool.ntp.org"}
+
+	local ret = system.system_ntp_set_server_address(server_list)
+
+	if ret
+	then
+		print("set success")
+	else
+		print("set fail")
+	end
+end
+
+function system_ntp_set_date()
+	local ret = system.system_ntp_set_date(arg[2])
+
+	if ret
+	then
+		print("set success")
+	else
+		print("set fail")
+	end
+
+end
+
 function system_get_status()
 
 	print("in system_get_status")
@@ -1640,8 +1718,15 @@ local api_func = {
 	--system
 	["system_get_status"] = system_get_status,
 	["system_network_tool"] = system_network_tool,
+	["system_ntp_enable"] = system_ntp_enable,
+	["system_ntp_disable"] = system_ntp_disable,
+	["system_ntp_get_timezone"] = system_ntp_get_timezone,
+	["system_ntp_set_timezone"] = system_ntp_set_timezone,
+	["system_ntp_get_server_address"] = system_ntp_get_server_address,
+	["system_ntp_set_server_address"] = system_ntp_set_server_address,
+	["system_ntp_set_date"] = system_ntp_set_date,
 
-	--device
+ 	--device
 	["device_get_info"] = device_get_info,
 
 	--firewall
