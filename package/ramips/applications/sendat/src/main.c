@@ -179,9 +179,16 @@ void thr_recv(void *arg)
 		}
 		else 
 		{
-			printf("%s",buffer_output);
-			fsync(f);
-			exit(0);
+			if(NULL!=strstr(buffer_output,CMD_EXE_OK) ||
+				NULL!=strstr(buffer_output,CMD_EXE_ERROR) || 
+				NULL!=strstr(buffer_output,CMD_RESULT_CME_ERROR) || 
+				NULL!=strstr(buffer_output,CMD_RESULT_CMS_ERROR) )
+			{
+				printf("%s",buffer_output);
+				fsync(f);
+				exit(0);
+			}
+			
 		}
 		
 	}
