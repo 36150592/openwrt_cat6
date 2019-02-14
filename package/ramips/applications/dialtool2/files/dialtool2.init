@@ -4,7 +4,8 @@
 START=60
 STOP=85
 start(){
-    /bin/dialtool_new -s /etc/dialogtool2_config  &
+	uci show tozed.dialtool2 | sed s/tozed.dialtool2.//g  | sed s/\'//g  | grep "=" > /tmp/dialtool2_config
+    /bin/dialtool_new -s /tmp/dialtool2_config  &
 }
 
 stop(){

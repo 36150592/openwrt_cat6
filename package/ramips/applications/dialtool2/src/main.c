@@ -684,8 +684,28 @@ void thr_process(void *args)
 	
 }
 
+char config_file_name[64]={0};
+
+
 void common_sendat(int num)
 {
+	FILE * f = NULL;
+	//printf("common_sendat\n");
+	if( (f = fopen(CONFIG_UPDATE_FLAG,"r")) !=  NULL)
+	{
+		//printf("update dialtool2 config");
+		log_info("update dialtool2 config");
+		fill_config(config_file_name,cfg);
+		init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
+		char cmd[64] = {0};
+		sprintf(cmd, "rm -f %s\n", CONFIG_UPDATE_FLAG);
+		system(cmd);
+
+		global_dialtool.Dial_Lvl_1=DIAL_INIT;
+		global_dialtool.Dial_proc_state=Dial_State_initialized;
+		fclose(f);
+	}
+	
 	sendAtFlag = 1;
 	(global_dialtool.board_func_set->sendat)(num);
 }
@@ -757,7 +777,7 @@ int main(int argc,char *argv[] )
 	extern int optind,opterr,optopt;
 	int ret;
 	unsigned int baudrate=115200;
-	char config_file_name[64]={0};
+	
 	int i;
 
 	char* vendor_id_file = NULL;
@@ -923,7 +943,7 @@ int main(int argc,char *argv[] )
 	cmd_echo("0",USB_SERIAL_STATUS);
 	//system("echo ready >> /tmp/test");
 	log_info("imei:%s\n",global_system_info.module_info.imei);
-	if(FALSE==get_version("/etc/dialogtool2_version",&global_system_info))
+	if(FALSE==get_version("/etc/dialtool2_version",&global_system_info))
 	{
 		char buffer_tmp[1024];
 		snprintf(buffer_tmp,sizeof(buffer_tmp),"%s:get version error\n",__FUNCTION__);
