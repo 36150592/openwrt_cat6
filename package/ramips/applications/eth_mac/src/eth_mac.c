@@ -25,6 +25,9 @@
 #define MACADDR_LEN     6
 #define WIFIRF_LEN  512
 
+//tozed_param
+#define IMEI 0xe010
+
 #define MEMGETINFO  _IOR('M', 1, struct mtd_info_user)
 #define MEMERASE    _IOW('M', 2, struct erase_info_user)
 #define MEMUNLOCK   _IOW('M', 6, struct erase_info_user)
@@ -132,6 +135,49 @@ int mtd_read(char *side)
 
     return 0;
 }
+
+mtd_read_tz_param(char *side)
+{
+	int fd = open(MTD_FACTORY, O_RDWR | O_SYNC);
+	int i = 0;
+	unsigned char mac_addr[8];
+	char output[128] = "";
+
+	if(fd < 0)
+	{
+		printf("Could not open mtd device: %s\n", MTD_FACTORY);
+		return -1;
+	}
+
+	if (!strcmp(side, "imei"))
+		lseek(fd, IMEI, SEEK_SET);
+	else
+	{
+		close(fd);
+		return -1;
+	}
+
+	if(read(fd, mac_addr, 8) != 8)
+	{
+		printf("read() failed\n");
+		close(fd);
+		return -1;
+	}
+	for (i = 0; i < 8; i++)
+	{
+		sprintf(output + i*2, "%02X", mac_addr[i]);
+		if (i == 7)
+		{
+			output[15] =0;
+			printf("%s\n",output);
+		}
+			
+	}
+	close(fd);
+
+    return 0;
+}
+
 
 int mtd_write(char *side, char **value)
 {
@@ -264,11 +310,105 @@ write_fail:
     return -1;
 }
 
+int mtd_write_tozed_param(char *side, char *value)
+{
+    int sz = 0;
+    int i;
+    struct mtd_info_user mtdInfo;
+    struct erase_info_user mtdEraseInfo;
+    int fd = open(MTD_FACTORY, O_RDWR | O_SYNC);
+    unsigned char *buf, *ptr;
+	unsigned char imei_value[8];
+
+	if(strlen(value) != 15)
+	{
+		fprintf(stderr, "The imei value's len is not 15\n");
+        	return -1;
+	}
+
+	for(i = 0; i < 15; i++)
+	{
+		if(value[i] < '0' || value[i] > '9')
+		{
+			fprintf(stderr, "The imei format is not right\n");
+        		return -1;
+		}
+	}
+
+	for(i = 0; i < 8; i++)
+	{
+		int high = value[i*2] - '0';
+		int low = 0;
+		if(i == 7)
+			low = 0;
+		else
+			low = value[i*2 +1] - '0';
+		imei_value[i] = high * 16 + low;
+	}
+	
+    if(fd < 0)
+    {
+        fprintf(stderr, "Could not open mtd device: %s\n", MTD_FACTORY);
+        return -1;
+    }
+    if(ioctl(fd, MEMGETINFO, &mtdInfo))
+    {
+        fprintf(stderr, "Could not get MTD device info from %s\n", MTD_FACTORY);
+        close(fd);
+        return -1;
+    }
+    mtdEraseInfo.length = sz = mtdInfo.erasesize;
+    buf = (unsigned char *)malloc(sz);
+	if(NULL == buf){
+		printf("Allocate memory for sz failed.\n");
+		close(fd);
+		return -1;        
+	}
+	if(read(fd, buf, sz) != sz){
+        fprintf(stderr, "read() %s failed\n", MTD_FACTORY);
+        goto write_fail;
+    }
+    mtdEraseInfo.start = 0x0;
+    for (mtdEraseInfo.start; mtdEraseInfo.start < mtdInfo.size; mtdEraseInfo.start += mtdInfo.erasesize)
+    {
+        ioctl(fd, MEMUNLOCK, &mtdEraseInfo);
+        if(ioctl(fd, MEMERASE, &mtdEraseInfo))
+        {
+            fprintf(stderr, "Failed to erase block on %s at 0x%x\n", MTD_FACTORY, mtdEraseInfo.start);
+            goto write_fail;
+        }
+    }
+	if (!strcmp(side, "imei"))
+		ptr = buf + IMEI;
+	else
+		goto write_fail;
+	
+    for (i = 0; i < 8; i++, ptr++)
+        *ptr = imei_value[i];
+    lseek(fd, 0, SEEK_SET);
+    if (write(fd, buf, sz) != sz)
+    {
+        fprintf(stderr, "write() %s failed\n", MTD_FACTORY);
+        goto write_fail;
+    }
+
+    close(fd);
+        free(buf);
+    return 0;
+write_fail:
+    close(fd);
+    free(buf);
+    return -1;
+}
+
+
 void usage(char **str)
 {
     printf("How to use:\n");
     printf("\tread:   %s r <wlan|lan|wan|wlan_5g>\n", str[0]);
     printf("\twrite:  %s w <wlan|lan|wan|wlan_5g> <MACADDR[0]> <MACADDR[1]> ...\n", str[0]);
+	 printf("\tread tozed param:   %s g <imei|...>\n", str[0]);
+	 printf("\twrite tozed param:  %s s <imei|...> <value> ...\n", str[0]);
 	printf("\tread own:  %s p offset[hex] size\n", str[0]);
 	printf("\twrite own: %s t offset[hex] size value[0] value[1] ...\n", str[0]);
 }
@@ -312,6 +452,14 @@ int main(int argc,char **argv)
 				goto CmdFail;
 			
 			 if (mtd_write_own(strtol(argv[2],NULL,16), argv+4, atoi(argv[3])) < 0)
+		case 'g':
+			if (mtd_read_tz_param(argv[2]) < 0)
+                		goto Fail;
+			break;
+		case 's':
+			if (mtd_write_tozed_param(argv[2], argv[3]) < 0)
+                		goto Fail;
+			break;
                 goto Fail;
 			break;
         default:
