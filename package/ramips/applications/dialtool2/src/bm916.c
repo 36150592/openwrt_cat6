@@ -580,6 +580,16 @@ void bm916_sendat(int num)
 		case Dial_State_CMEE:
 			util_send_cmd(global_dialtool.dev_handle,"AT+CMEE=1\r",&global_dialtool.pthread_moniter_flag);  	//report ERROR
 			break;
+		case Dial_State_PLMN_LOCK:
+			{
+				char cmd_buffer[64] = {0};
+				if ('0' == global_init_parms.plmn_lock[0])
+					strcpy(cmd_buffer,"AT+NWLSET=0\r");
+				else// plmn_lock like : "46011,46002" 
+					snprintf(cmd_buffer,sizeof(cmd_buffer),"AT+NWLSET=1,\"%s\"\r",global_init_parms.plmn_lock);
+				util_send_cmd(global_dialtool.dev_handle,cmd_buffer,&global_dialtool.pthread_moniter_flag);  	
+				break;
+			}
 		case Dial_State_ICCID:
 			util_send_cmd(global_dialtool.dev_handle,"AT+ICCID\r",&global_dialtool.pthread_moniter_flag);
 			break;
@@ -1001,9 +1011,16 @@ void bm916_init(int*  Dial_proc_state)
 		case Dial_State_CMEE:
 				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
 				{
-					*Dial_proc_state=Dial_State_BMBANDPREF_SUPPORT_BAND_QUERY;
+					*Dial_proc_state=Dial_State_PLMN_LOCK;
 				}
 				
+				break;
+		case Dial_State_PLMN_LOCK:
+				if (NULL == strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				{
+					log_error("plmn lock error");
+				}
+				*Dial_proc_state=Dial_State_BMBANDPREF_SUPPORT_BAND_QUERY;
 				break;
 		case Dial_State_BMBANDPREF_SUPPORT_BAND_QUERY:
 			{

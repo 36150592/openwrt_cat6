@@ -58,6 +58,7 @@ typedef struct GLOBAL_INIT_PARAMS
 	int plmn_mode;
 	char plmn[64];
 	int plmn_act;
+	char plmn_lock[64];
 	char network_card_mtu[8];
 	int signal_rssi_lvl[5];
 	int signal_rsrp_lvl[5];
@@ -129,6 +130,7 @@ typedef struct CONFIG_PARAMS
 	PARMS plmn_mode;
 	PARMS plmn;
 	PARMS plmn_act;
+	PARMS plmn_lock;
 	PARMS ipstack;
 	PARMS network_card_mtu;
 }CPS;

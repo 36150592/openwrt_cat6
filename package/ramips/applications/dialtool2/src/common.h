@@ -69,6 +69,7 @@ typedef enum
 {
 	Dial_State_initialized,			//send AT for test AT is ok
 	Dial_State_CMEE,			//enable result code +CME ERROR:<num>
+	Dial_State_PLMN_LOCK,		//lock plmn 
 	Dial_State_ICCID,			//query iccid
 	Dial_State_BMIMEI,			//query module imei
 	Dial_State_CPIN_QUERY,			//query card exit or not

@@ -57,24 +57,25 @@ extern int project_info_len(void);
 
 void init_parms(PARMS *cfg,int len)
 {
-	strcpy(configs.enable_pin.Name,"TZ_CONFIG_ENABLED_PIN");
-	strcpy(configs.pin.Name,"TZ_CONFIG_PIN_CODE");
-	strcpy(configs.puk.Name,"TZ_CONFIG_PUK_CODE");
-	strcpy(configs.apn.Name,"TZ_CONFIG_APN_NAME");
-	strcpy(configs.network_mode_web.Name,"TZ_LTE_MODULE_MODE");
-	strcpy(configs.ppp_auth_type.Name,"TZ_PPP_AUTH_TYPE");
-	strcpy(configs.ppp_username.Name,"TZ_PPP_USERNAME");
-	strcpy(configs.ppp_password.Name,"TZ_PPP_PASSWORD");
-	strcpy(configs.lte_band_choose.Name,"TZ_BAND_PREF");
-	strcpy(configs.plmn_mode.Name,"TZ_PLMN_MODE");
-	strcpy(configs.plmn.Name,"TZ_PLMN_NUMBER");
-	strcpy(configs.plmn_act.Name,"TZ_PLMN_ACT");
-	strcpy(configs.ipstack.Name,"TZ_IP_STACK_MODE");
-	strcpy(configs.network_card_mtu.Name,"TZ_MTU_USB0");
+	strcpy(configs.enable_pin.Name,"TZ_DIALTOOL2_ENABLE_PIN");
+	strcpy(configs.pin.Name,"TZ_DIALTOOL2_PIN_CODE");
+	strcpy(configs.puk.Name,"TZ_DIALTOOL2_PUK_CODE");
+	strcpy(configs.apn.Name,"TZ_DIALTOOL2_APN_NAME");
+	strcpy(configs.network_mode_web.Name,"TZ_DIALTOOL2_LTE_MODULE_MODE");
+	strcpy(configs.ppp_auth_type.Name,"TZ_DIALTOOL2_PPP_AUTH_TYPE");
+	strcpy(configs.ppp_username.Name,"TZ_DIALTOOL2_PPP_USERNAME");
+	strcpy(configs.ppp_password.Name,"TZ_DIALTOOL2_PPP_PASSWORD");
+	strcpy(configs.lte_band_choose.Name,"TZ_DIALTOOL2_BAND_PREF");
+	strcpy(configs.plmn_mode.Name,"TZ_DIALTOOL2_PLMN_MODE");
+	strcpy(configs.plmn.Name,"TZ_DIALTOOL2_PLMN_NUMBER");
+	strcpy(configs.plmn_act.Name,"TZ_DIALTOOL2_PLMN_ACT");
+	strcpy(configs.plmn_lock.Name,"TZ_DIALTOOL2_PLMN_LOCK");
+	strcpy(configs.ipstack.Name,"TZ_DIALTOOL2_IP_STACK_MODE");
+	strcpy(configs.network_card_mtu.Name,"TZ_DIALTOOL2_MTU_USB0");
 	//check scan att sim card
-	strcpy(scan_att_configs.scan_att_check_enable.Name,"TZ_SCAN_ATT_CHECK_ENABLE");
-	strcpy(scan_att_configs.scan_att_mcc_mnc.Name,"TZ_SCAN_ATT_MCC_MNC");
-	strcpy(scan_att_configs.scan_att_apn_name.Name,"TZ_SCAN_ATT_APN_NAME");
+	strcpy(scan_att_configs.scan_att_check_enable.Name,"TZ_DIALTOOL2_SCAN_ATT_CHECK_ENABLE");
+	strcpy(scan_att_configs.scan_att_mcc_mnc.Name,"TZ_DIALTOOL2_SCAN_ATT_MCC_MNC");
+	strcpy(scan_att_configs.scan_att_apn_name.Name,"TZ_DIALTOOL2_SCAN_ATT_APN_NAME");
 
 	get_config_specified(cfg,len,configs.enable_pin.Name,configs.enable_pin.Value);
 	get_config_specified(cfg,len,configs.pin.Name,configs.pin.Value);
@@ -112,6 +113,11 @@ void init_parms(PARMS *cfg,int len)
 	{
 		strcpy(configs.plmn_mode.Value,"0");
 	}
+	get_config_specified(cfg,len,configs.plmn_lock.Name,configs.plmn_lock.Value);
+	if(configs.plmn_lock.Value[0] =='\0')
+	{
+		strcpy(configs.plmn_lock.Value,"0");
+	}
 	get_config_specified(cfg,len,configs.plmn.Name,configs.plmn.Value);
 	if(configs.plmn.Value[0] =='\0')
 	{
@@ -142,7 +148,7 @@ void init_parms(PARMS *cfg,int len)
 
 	char value[64] = {0};
 	int *p = NULL;
-	get_config_specified(cfg,len,"TZ_CONFIG_SIGNAL_RSRP_LVL", value);
+	get_config_specified(cfg,len,"TZ_DIALTOOL2_SIGNAL_RSRP_LVL", value);
 	p = global_init_parms.signal_rssi_lvl;
 	p[0] = 0; p[1] = 0; p[2] = 0; p[3] = 0; p[4] = 0;
 	p = global_init_parms.signal_rsrp_lvl;
@@ -158,7 +164,7 @@ void init_parms(PARMS *cfg,int len)
 	}
 	else
 	{
-		get_config_specified(cfg,len,"TZ_CONFIG_SIGNAL_RSSI_LVL", value);
+		get_config_specified(cfg,len,"TZ_DIALTOOL2_SIGNAL_RSRP_LVL", value);
 		p = global_init_parms.signal_rssi_lvl;
 		p[0] = 0; p[1] = 0; p[2] = 0; p[3] = 0; p[4] = 0;
 		if(strlen(value) > 0 )
@@ -185,6 +191,7 @@ void init_parms(PARMS *cfg,int len)
 	strcpy(global_init_parms.lte_band_choose,configs.lte_band_choose.Value);
 	global_init_parms.network_mode_web=atoi(configs.network_mode_web.Value);
 	strcpy(global_init_parms.plmn,configs.plmn.Value);
+	strcpy(global_init_parms.plmn_lock,configs.plmn_lock.Value);
 	global_init_parms.plmn_mode=atoi(configs.plmn_mode.Value);
 	global_init_parms.plmn_act=atoi(configs.plmn_act.Value);
 	strcpy(global_init_parms.ppp_auth_type,configs.ppp_auth_type.Value);
@@ -194,13 +201,14 @@ void init_parms(PARMS *cfg,int len)
 	strcpy(global_init_parms.network_card_mtu,configs.network_card_mtu.Value);
 
 
-	log_info("%s_%d:[%s %s] [%s %s] [%s %s] [%s %s] [%s %s] [%s %s] \n"
+	log_info("%s_%d:\n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n"
 		,__FUNCTION__,__LINE__,	configs.pin.Name,configs.puk.Value,
 		configs.puk.Name,configs.puk.Value,configs.apn.Name,configs.apn.Value,
 		configs.ppp_auth_type.Name,configs.ppp_auth_type.Value,
 		configs.ppp_username.Name,configs.ppp_username.Value,
+		configs.plmn_lock.Name,configs.plmn_lock.Value,
 		configs.ppp_password.Name,configs.ppp_password.Value);
-	log_info("%s_%d:[%s %s] [%s %s] [%s %s] [%s %s] [%s %s] [%s %s] [%s %s]\n"
+	log_info("%s_%d:\n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s]\n"
 		,__FUNCTION__,__LINE__,
 		configs.network_mode_web.Name,configs.network_mode_web.Value,
 		configs.lte_band_choose.Name,configs.lte_band_choose.Value,
