@@ -91,10 +91,33 @@ int main(int argc, char** argv)
 		}
 	}
 
-	strcpy(imei,"864485030032153");
-	strcpy(mac,"D8D866020A64");
+	//strcpy(imei,"864485030032153");
+	//strcpy(mac,"D8D866020A64");
+	
+	char shellcmd[128] = "";
+	strcpy(shellcmd,"eth_mac g imei");
+	read_memory(shellcmd, imei, sizeof(imei));
+	util_strip_traling_spaces(imei);
 
+	char lanmac[56] = "";
+	memset(shellcmd, 0, sizeof(shellcmd));
+	strcpy(shellcmd, "eth_mac r lan");
+	read_memory(shellcmd, lanmac, sizeof(lanmac));
+	util_strip_traling_spaces(lanmac);
 
+	int i = 0, j = 0; 
+	for(i = 0; i < 17; i++)
+	{
+		if(lanmac[i] != ':')
+		{
+			mac[j] = lanmac[i];
+			j++;
+		}
+	}
+
+	printf("mac = %s\n", mac);
+	printf("imei = %s\n", imei);
+	
 	if (isConfigure)
 	{
 		switch(config_func)
