@@ -683,6 +683,33 @@ function network_get_4g_net_info()
 
 end
 
+function modem_set_lock_operator()
+
+	print("in modem_set_lock_operator")
+	local operator_list = {"46011","46002", "46003"}
+	local ret = modem.modem_set_lock_operator(operator_list)
+
+	if ret 
+	then
+		print("set success")
+	else 
+		print("set fail")
+	end
+
+end
+
+function modem_get_lock_operator()
+
+	print("in modem_get_lock_operator")
+	local list = modem.modem_get_lock_operator()
+
+	for k,v in pairs(list)
+	do
+		print(v)
+	end
+
+end
+
 function modem_set_network_mode()
 
 	print("in modem_set_network_mode")
@@ -1754,6 +1781,8 @@ local api_func = {
 	["modem_set_network_mode"] = modem_set_network_mode,
 	["modem_get_lock_band"] = modem_get_lock_band,
 	["modem_set_lock_band"] = modem_set_lock_band,
+	["modem_set_lock_operator"] = modem_set_lock_operator,
+	["modem_get_lock_operator"] = modem_get_lock_operator,
 
 	--network
 	["network_get_wan_info"] = network_get_wan_info,

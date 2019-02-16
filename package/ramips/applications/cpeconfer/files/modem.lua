@@ -570,6 +570,9 @@ local function band_hex_to_band_list(type,hex)
 	return band_name
 end
 
+-- set lock band
+-- input:the list of band name as tds_band_bit gw_band_bit and lte_band_bit 's key name
+-- return:true if success false if fail
 function modem_module.modem_set_lock_band(band_list)
 		
 	local lte_band = 0x0
@@ -627,6 +630,9 @@ function modem_module.modem_set_lock_band(band_list)
 
 end
 
+-- get lock band
+-- input:none
+-- return:the list of band name as tds_band_bit gw_band_bit and lte_band_bit 's key name
 function modem_module.modem_get_lock_band()
 	local gw_lock_band, lte_lock_band, tds_lock_band = get_lock_band()
 	local gw_ar, lte_ar, tds_ar
@@ -672,6 +678,46 @@ function modem_module.modem_get_lock_band()
 	end
 
 	return ret_ar
+end
+
+-- lock operator 
+-- input: the list of operator mcc mnc
+-- return:true if success false if fail
+function modem_module.modem_set_lock_operator(operator_list)
+
+	if nil == operator_list
+	then
+		debug("operator_list is nil")
+		return false
+	end
+
+
+	local operator_str = ""
+	for k,v in pairs(operator_list)
+	do
+		operator_str = operator_str .. "," .. v
+
+	end
+
+	operator_str = string.sub(operator_str, 2, string.len(operator_str))
+
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PLMN_LOCK", operator_str)
+	return x:commit(TOZED_CONFIG_FILE)
+
+end
+
+-- get the operator lock list 
+-- input:none
+-- return:the list of operator mcc mnc
+function modem_module.modem_get_lock_operator()
+
+	local operator_list = {}
+
+	local operator_str = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PLMN_LOCK")
+	operator_list = util.split(operator_str,',')
+
+	return operator_list
+
 end
 
 return modem_module
