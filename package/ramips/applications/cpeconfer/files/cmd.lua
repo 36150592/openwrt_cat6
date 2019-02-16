@@ -683,6 +683,53 @@ function network_get_4g_net_info()
 
 end
 
+function modem_set_network_mode()
+
+	print("in modem_set_network_mode")
+	local ret = modem.modem_set_network_mode(tonumber(arg[2]))
+
+	if ret 
+	then
+		print("set success")
+	else 
+		print("set fail")
+	end
+
+end
+
+function modem_get_network_mode()
+
+	print("in modem_get_network_mode")
+	local ret = modem.modem_get_network_mode()
+
+	print("network mode = ", ret)
+end
+
+function modem_set_lock_band()
+	print("in modem_set_lock_band")
+
+	local band_list = {"EUTRAN_BAND40", "EUTRAN_BAND41", "EUTRAN_BAND42"}
+	local ret = modem.modem_set_lock_band(band_list)
+
+	if ret 
+	then
+		print("set success")
+	else 
+		print("set fail")
+	end
+end
+
+function modem_get_lock_band()
+	print("in modem_get_lock_band")
+
+	local band_list = modem.modem_get_lock_band()
+
+	for k, v in pairs(band_list)
+	do
+		print(v)
+	end
+
+end
 
 function modem_get_status()
 
@@ -1703,6 +1750,10 @@ local api_func = {
 	--modem
 	["modem_get_status"] = modem_get_status,
 	["modem_get_info"] = modem_get_info,
+	["modem_get_network_mode"] = modem_get_network_mode,
+	["modem_set_network_mode"] = modem_set_network_mode,
+	["modem_get_lock_band"] = modem_get_lock_band,
+	["modem_set_lock_band"] = modem_set_lock_band,
 
 	--network
 	["network_get_wan_info"] = network_get_wan_info,

@@ -147,4 +147,155 @@ function module.get_upload_file_name(lines)
 
 end
 
+local function  to_binary(arg)
+	local data64 = {}
+	local bit={}
+	for i=1,64
+	do
+    	data64[i]=2^(64-i)
+	end
+
+ 	for i=1,64 
+ 	do 
+ 		if arg >= data64[i] 
+ 		then 
+ 			bit[i]=1 
+ 			arg=arg-data64[i] 
+ 		else 
+ 			bit[i]=0 
+ 		end 
+ 	end
+ 	return bit
+end
+
+
+function  module.to_hex_string(arg)  
+
+	if arg > 10^15
+	then
+		debug("arg out of range")
+		return arg
+	end
+
+	if arg == 0 
+	then
+		return '0'
+	end
+
+    local data64 = {}    
+    local bit={}                                
+    for i=1,64                                  
+    do                                          
+    	data64[i]=16^(64-i)                         
+    end                                         
+                                                
+    for i=1,64                                  
+    do                                          
+            local j = 1                         
+            local temp =0                       
+            local tmp =0                        
+            while j < 16                        
+            do                                  
+                    if arg >= j*data64[i]     
+                    then                      
+                            tmp = j           
+                            if j == 10        
+                            then              
+                                    temp = 'a'
+                            elseif j == 11    
+                            then              
+                                    temp = 'b'
+                            elseif j == 12    
+                            then              
+                                    temp = 'c'
+                            elseif j == 13       
+                            then                 
+                                    temp = 'd'   
+                            elseif j == 14       
+                            then                 
+                                    temp = 'e'   
+                            elseif j == 15       
+                            then                 
+                                    temp = 'f'   
+                            else                 
+                                    temp=j       
+                            end                  
+                    else                         
+                            break    
+                    end              
+                    j = j + 1        
+            end                      
+                                     
+            bit[i]=temp              
+            arg = arg - tmp*data64[i]
+    end 
+
+
+    local hex = ""                                       
+	local flag = false                                   
+	for k,v in pairs(bit)   
+	do                                       
+        if v ~= 0                        
+        then                             
+                flag = true              
+        end                             
+        if flag == true               
+        then                          
+                hex = hex .. v        
+        end                           
+	end                  
+
+    return hex                    
+end               
+
+
+local function to_digit(arg) 
+		local dig=0 
+		for i=1,64 
+		do 
+			if arg[i] ==1 
+			then 
+				dig=dig+2^(64-i) 
+			end 
+		end 
+
+		return dig 
+end
+
+local function show_digit_array(dig)
+
+	for i = 1,64
+	do
+		io.write(dig[i])
+	end
+	io.write("\n")
+end
+
+function module._and(a, b)
+	local t1 = to_binary(a)
+	local t2 = to_binary(b)
+
+	local dig = {}
+
+	--[[print("t1")
+	show_digit_array(t1)
+	print("t2")
+	show_digit_array(t2)]]--
+
+	for i = 1,64 do
+
+		if t1[i] == 1 and t2[i] == 1 
+		then
+			dig[i] = 1
+		else
+			dig[i] = 0
+		end
+	end
+
+	return to_digit(dig)
+
+
+end
+
+
 return module

@@ -65,7 +65,9 @@ void init_parms(PARMS *cfg,int len)
 	strcpy(configs.ppp_auth_type.Name,"TZ_DIALTOOL2_PPP_AUTH_TYPE");
 	strcpy(configs.ppp_username.Name,"TZ_DIALTOOL2_PPP_USERNAME");
 	strcpy(configs.ppp_password.Name,"TZ_DIALTOOL2_PPP_PASSWORD");
-	strcpy(configs.lte_band_choose.Name,"TZ_DIALTOOL2_BAND_PREF");
+	strcpy(configs.lte_band_choose.Name,"TZ_DIALTOOL2_LTE_BAND_PREF");
+	strcpy(configs.gw_band_choose.Name,"TZ_DIALTOOL2_GW_BAND_PREF");
+	strcpy(configs.tds_band_choose.Name,"TZ_DIALTOOL2_TDS_BAND_PREF");
 	strcpy(configs.plmn_mode.Name,"TZ_DIALTOOL2_PLMN_MODE");
 	strcpy(configs.plmn.Name,"TZ_DIALTOOL2_PLMN_NUMBER");
 	strcpy(configs.plmn_act.Name,"TZ_DIALTOOL2_PLMN_ACT");
@@ -107,6 +109,8 @@ void init_parms(PARMS *cfg,int len)
 		strcpy(configs.ppp_password.Value,"0");
 	}
 	get_config_specified(cfg,len,configs.lte_band_choose.Name,configs.lte_band_choose.Value);
+	get_config_specified(cfg,len,configs.gw_band_choose.Name,configs.gw_band_choose.Value);
+	get_config_specified(cfg,len,configs.tds_band_choose.Name,configs.tds_band_choose.Value);
 
 	get_config_specified(cfg,len,configs.plmn_mode.Name,configs.plmn_mode.Value);
 	if(configs.plmn_mode.Value[0] =='\0')
@@ -189,6 +193,8 @@ void init_parms(PARMS *cfg,int len)
 	strcpy(global_init_parms.pin,configs.pin.Value);
 	strcpy(global_init_parms.puk,configs.puk.Value);
 	strcpy(global_init_parms.lte_band_choose,configs.lte_band_choose.Value);
+	strcpy(global_init_parms.gw_band_choose,configs.gw_band_choose.Value);
+	strcpy(global_init_parms.tds_band_choose,configs.tds_band_choose.Value);
 	global_init_parms.network_mode_web=atoi(configs.network_mode_web.Value);
 	strcpy(global_init_parms.plmn,configs.plmn.Value);
 	strcpy(global_init_parms.plmn_lock,configs.plmn_lock.Value);

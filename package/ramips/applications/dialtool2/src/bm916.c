@@ -392,34 +392,44 @@ struct ASBM806
 #endif
 
 /*reporter indicator define*/
+/*
+network_web_mode:value
+1-4g only 5
+2-4g pro 2(TDS) or 11(CDMA) or 17(WCDMA)
+3-3g only 7 or 10(EVDO) or 1:WCDMA ONLY
+4-3g pro 4(GSM) or 12(EVDO) or 16(LTE) 18(GSM) or 19(LTE)
+0-2g 3g 21:WCDMA+GSM 14:CDMA+EVDO 8:TDS+GSM 
+
+
+*/
 MCT bm916c_mode_table[]=
 {
-	{"China",	"China Mobile",	"46000",	{{3,5},	{0,2},	{13,7},	{18,8},	{20,21}},},
-	{"China",	"China Mobile",	"46002",	{{3,5},	{0,2},	{13,7},	{18,8},	{20,21}},},
-	{"China",	"China Mobile",	"46004",	{{3,5},	{0,2},	{13,7},	{18,8},	{20,21}},},
-	{"China",	"China Mobile",	"46007",	{{3,5},	{0,2},	{13,7},	{18,8},	{20,21}},},
-	{"China",	"China Telecom",	"46003",	{{3,5},	{0,11},	{13,10},	{18,14},	{20,15}},},
-	{"China",	"China Telecom",	"46005",	{{3,5},	{0,11},	{13,10},	{18,14},	{20,15}},	},
-	{"China",	"China Telecom",	"46011",	{{3,5},	{0,11},	{13,10},	{18,14},	{20,15}},},
-	{"China",	"China TieTong",	"46020",	{{3,5},	{0,2},	{13,7},	{18,8},	{20,21}},},			//TieTong card can not query,use China Mobile
-	{"China",	"China Unicom",	"46001",	{{3,5},	{0,17},	{13,1},	{18,21},	{20,3}},},
+	{"China",	"China Mobile",	"46000",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,8}},},
+	{"China",	"China Mobile",	"46002",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,8}},},
+	{"China",	"China Mobile",	"46004",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,21}},},
+	{"China",	"China Mobile",	"46007",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,21}},},
+	{"China",	"China Telecom",	"46003",	{{1,5},	{2,11},	{3,10},	{4,12},	{0,14}},},
+	{"China",	"China Telecom",	"46005",	{{1,5},	{2,11},	{3,10},	{4,12},	{0,14}},	},
+	{"China",	"China Telecom",	"46011",	{{1,5},	{2,11},	{3,10},	{4,12},	{0,14}},},
+	{"China",	"China TieTong",	"46020",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,21}},},			//TieTong card can not query,use China Mobile
+	{"China",	"China Unicom",	"46001",	{{1,5},	{2,17},	{3,1},	{4,19},	{0,21}},},
 //	{"Sri Lanka",	"Airtel",	"41305",	{{3,5},	{0,17},	{13,1},	{18,21},	{20,3}},},
-	{"default",	"default",	"default",	{{3,5},	{0,17},	{13,6},	{18,7},	{20,21}},},					//default use China Mobile mode
+	{"default",	"default",	"default",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,21}},},					//default use China Mobile mode
 };
 
 const MCT bm916_mode_table[]=
 {
-	{"China",	"China Mobile",	"46000",	{{3,5},	{0,2},	{13,7},	{18,8},	{20,21}},},
-	{"China",	"China Mobile",	"46002",	{{3,5},	{0,2},	{13,7},	{18,8},	{20,21}},},
-	{"China",	"China Mobile",	"46004",	{{3,5},	{0,2},	{13,7},	{18,8},	{20,21}},},
-	{"China",	"China Mobile",	"46007",	{{3,5},	{0,2},	{13,7},	{18,8},	{20,21}},},
-	{"China",	"China Telecom",	"46003",	{{3,5},	{0,5},	{13,5},	{18,5},	{20,5}},},
-	{"China",	"China Telecom",	"46005",	{{3,5},	{0,5},	{13,5},	{18,5},	{20,5}},},
-	{"China",	"China Telecom",	"46011",	{{3,5},	{0,5},	{13,5},	{18,5},	{20,5}},},
-	{"China",	"China TieTong",	"46020",	{{3,5},	{0,2},	{13,7},	{18,8},	{20,21}},},			//TieTong card can not query,use China Mobile
-	{"China",	"China Unicom",	"46001",	{{3,5},	{0,17},	{13,1},	{18,21},	{20,3}},},
+	{"China",	"China Mobile",	"46000",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,8}},},
+	{"China",	"China Mobile",	"46002",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,8}},},
+	{"China",	"China Mobile",	"46004",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,21}},},
+	{"China",	"China Mobile",	"46007",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,21}},},
+	{"China",	"China Telecom",	"46003",	{{1,5},	{2,11},	{3,10},	{4,12},	{0,14}},},
+	{"China",	"China Telecom",	"46005",	{{1,5},	{2,11},	{3,10},	{4,12},	{0,14}},},
+	{"China",	"China Telecom",	"46011",	{{1,5},	{2,11},	{3,10},	{4,12},	{0,14}},},
+	{"China",	"China TieTong",	"46020",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,21}},},			//TieTong card can not query,use China Mobile
+	{"China",	"China Unicom",	"46001",	{{1,5},	{2,17},	{3,1},	{4,19},	{0,21}},},
 //	{"Sri Lanka",	"Airtel",	"41305",	{{3,5},	{0,17},	{13,1},	{18,21},	{20,3}},},
-	{"default",	"default",	"default",	{{3,5},	{0,17},	{13,7},	{18,8},	{20,21}},},					//default use China Mobile mode
+	{"default",	"default",	"default",	{{1,5},	{2,2},	{3,7},	{4,16},	{0,21}},},					//default use China Mobile mode
 };
 
 #if 0
@@ -524,6 +534,7 @@ static int get_network_mode_module(int network_mode_web,char* module_hardware)
 	}
 	for(j=0;j<len;j++)
 	{
+		log_info("imsi = %s, operator_num = %s",global_dial_vars.imsi, (p+j)->operator_num);
 		if(A_CMP_B_ACCORDING_B(global_dial_vars.imsi,(p+j)->operator_num))
 		{
 			for(i=0;i<5;i++)
@@ -568,6 +579,29 @@ static int get_network_mode_module(int network_mode_web,char* module_hardware)
 		}
 	}
 	
+}
+
+void check_band_bit(int max_bit, char *band_bit_str, char * output_str)
+{
+/*	if(strlen(band_bit_str)<max_bit)
+	{
+		snprintf(output_str,max_bit+1,"%0*d%s",max_bit-strlen(band_bit_str),0,band_bit_str);
+	}
+	else
+	{*/
+		int i = 0;
+		for(i=0; i < strlen(band_bit_str); i++)
+		{
+			if(band_bit_str[i] !='0')
+				break;
+		}
+		if(i == strlen(band_bit_str))
+			snprintf(output_str,max_bit+1,"%s","0" );
+		else
+			snprintf(output_str,max_bit+1,"%s",&band_bit_str[i] );
+	//}
+
+
 }
 
 void bm916_sendat(int num)
@@ -791,29 +825,16 @@ void bm916_sendat(int num)
 		case Dial_State_BMBANDPREF:
 			{
 				char cmd_buffer[256] = "";
-				char str[12] ="";
-				char* lte_band_lock=global_init_parms.lte_band_choose;
-				if(strlen(lte_band_lock)<11)
-				{
-					snprintf(str,sizeof(str),"%0*d%s",11-strlen(lte_band_lock),0,lte_band_lock);
-				}
-				else
-				{
-					int i = 0;
-					for(i=0; i < strlen(lte_band_lock); i++)
-					{
-						if(lte_band_lock[i] !='0')
-							break;
-					}
-					if(i == strlen(lte_band_lock))
-						snprintf(str,sizeof(str),"%s","0" );
-					else
-						snprintf(str,sizeof(str),"%s",&lte_band_lock[i] );
-				}
-				lte_band_lock=str;
-				log_info("lte_lock_band:%s\n",lte_band_lock);
-				snprintf(cmd_buffer,sizeof(cmd_buffer),"AT+BMBANDPREF=,%s,\r",
-					lte_band_lock);
+				char lte_str[64] ="";
+				char gw_str[64] ="";
+				char tds_str[64] ="";
+				check_band_bit(63, global_init_parms.lte_band_choose, lte_str);
+				check_band_bit(63, global_init_parms.gw_band_choose, gw_str);
+				check_band_bit(63, global_init_parms.tds_band_choose, tds_str);
+				log_info("lte_lock_band:%s\n",lte_str);
+				log_info("gw_lock_band:%s\n",gw_str);
+				log_info("tds_lock_band:%s\n",tds_str);
+				snprintf(cmd_buffer,sizeof(cmd_buffer),"AT+BMBANDPREF=%s,%s,%s\r",gw_str,lte_str,tds_str);
 				util_send_cmd(global_dialtool.dev_handle,cmd_buffer,&global_dialtool.pthread_moniter_flag);
 				break;
 			}

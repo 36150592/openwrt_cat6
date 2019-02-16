@@ -55,6 +55,8 @@ typedef struct GLOBAL_INIT_PARAMS
 	char ppp_username[64];
 	char ppp_password[64];
 	char lte_band_choose[64];
+	char gw_band_choose[64];
+	char tds_band_choose[64];
 	int plmn_mode;
 	char plmn[64];
 	int plmn_act;
@@ -127,6 +129,8 @@ typedef struct CONFIG_PARAMS
 	PARMS ppp_username;
 	PARMS ppp_password;
 	PARMS lte_band_choose;
+	PARMS gw_band_choose;
+	PARMS tds_band_choose;
 	PARMS plmn_mode;
 	PARMS plmn;
 	PARMS plmn_act;
