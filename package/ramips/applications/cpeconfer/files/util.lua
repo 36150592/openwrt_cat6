@@ -49,9 +49,11 @@ function module.split(szFullString, szSeparator)
 end 
 function module.sleep(n)
 
-   local t0 = os.clock()
+   --local t0 = os.clock()
 
-   while os.clock() - t0 <= n do end
+   --while os.clock() - t0 <= n do end
+
+   socket.select(nil,nil,n)
 
 end
 
