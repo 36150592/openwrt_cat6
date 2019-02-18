@@ -340,6 +340,11 @@ function modem_module.modem_get_info()
 
 end
 
+function modem_module.modem_reload_config()
+	local ret1 = os.execute("uci show tozed.dialtool2 | sed s/tozed.dialtool2.//g  | sed s/\\'//g  | grep '=' > /tmp/dialtool2_config")
+	local ret2 = os.execute("touch /tmp/.dialtool2_config_update_flag")
+	return ret1 and ret2
+end
 -- lock band
 -- input:mode(number):
 --1-4g only 5

@@ -683,6 +683,18 @@ function network_get_4g_net_info()
 
 end
 
+function modem_reload_config()
+	print("in modem_reload_config")
+	local ret = modem.modem_reload_config()
+
+	if ret 
+	then
+		print("reload success")
+	else 
+		print("reload fail")
+	end
+end
+
 function modem_set_lock_operator()
 
 	print("in modem_set_lock_operator")
@@ -1783,6 +1795,7 @@ local api_func = {
 	["modem_set_lock_band"] = modem_set_lock_band,
 	["modem_set_lock_operator"] = modem_set_lock_operator,
 	["modem_get_lock_operator"] = modem_get_lock_operator,
+	["modem_reload_config"] = modem_reload_config,
 
 	--network
 	["network_get_wan_info"] = network_get_wan_info,
