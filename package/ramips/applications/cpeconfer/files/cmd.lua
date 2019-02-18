@@ -493,7 +493,7 @@ function system_ntp_get_timezone()
 end
 
 function system_ntp_set_timezone()
-	local ret = system.system_ntp_set_timezone(arg[2])
+	local ret = system.system_ntp_set_timezone(tonumber(arg[2]))
 
 	if ret
 	then

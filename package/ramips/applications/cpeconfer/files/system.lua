@@ -1,5 +1,6 @@
 require("uci")
 require("io")
+require("math")
 system_module = {}
 local util=require("tz.util")
 local x = uci.cursor()
@@ -659,25 +660,32 @@ local timezone_location = {
 	 ["Pacific/Wake"]= "WAKT-12",
 	 ["Pacific/Wallis"]= "WFT-12",
  }
+local function reload_config()
+	return os.execute("/etc/init.d/system restart")
+end
+
 
 --enable ntp
 function system_module.system_ntp_enable()
 	x:set(SYSTEM_CONFIG_FILE, "ntp", "enabled", "1")
 
-	return x:commit(SYSTEM_CONFIG_FILE)
+	local ret =  x:commit(SYSTEM_CONFIG_FILE)
+	return ret and reload_config()
 end
 
 --disenable ntp
 function system_module.system_ntp_disable()
 	x:set(SYSTEM_CONFIG_FILE, "ntp", "enabled", "0")
 
-	return x:commit(SYSTEM_CONFIG_FILE)
+
+	local ret =  x:commit(SYSTEM_CONFIG_FILE)
+	return ret and reload_config()
 end
 
 --get time zone name
 --input:none
 --return:the time zone name which in the key string of timezone_location above
-function system_module.system_ntp_get_timezone()
+function system_module.system_ntp_get_zonename()
 	local timezone
 	x:foreach(SYSTEM_CONFIG_FILE, "system", function(s)
 		timezone = s["zonename"]
@@ -686,10 +694,10 @@ function system_module.system_ntp_get_timezone()
 	return timezone
 end
 
---set time zone 
+--set time zone by zone name
 --input:zonename(string):the key string of array timezone_location above
 --return:true if success  false if fail
-function system_module.system_ntp_set_timezone(zonename)
+function system_module.system_ntp_set_zonename(zonename)
 
 	for key,value in pairs(timezone_location)
 	do
@@ -703,12 +711,51 @@ function system_module.system_ntp_set_timezone(zonename)
 
 			end)
 			ret = x:commit(SYSTEM_CONFIG_FILE)
-			return ret
+			return ret and reload_config()
 		end
 
 	end
 	debug("error:please check input value.")
 	return false
+end
+
+--get time time zone 
+--input:none
+--return:the number represent the time zone like +8 = "west 8"  -8="east 8"
+function system_module.system_ntp_get_timezone()
+	local timezone
+	x:foreach(SYSTEM_CONFIG_FILE, "system", function(s)
+		timezone = s["timezone"]
+		local index = string.find(timezone, ">")
+		timezone = string.sub(timezone, index+1, string.len(timezone))
+	end)
+
+	return tonumber(timezone)
+end
+
+--set time zone by time zone
+--input:zonename(string):the number represent the time zone like +8 = "west 8"  -8="east 8"
+--return:true if success  false if fail
+function system_module.system_ntp_set_timezone(timezone)
+
+	if type(timezone) ~= "number"
+	then
+		debug("timezone error")
+		return false
+	end
+
+	x:foreach(SYSTEM_CONFIG_FILE, "system", function(s)
+		if timezone > 0
+		then
+			x:set(SYSTEM_CONFIG_FILE,s[".name"], "timezone", "<-0"..timezone .. ">+"..timezone)
+		else
+			x:set(SYSTEM_CONFIG_FILE,s[".name"], "timezone", "<+0"..math.abs(timezone) .. ">"..timezone)
+		end
+
+	end)
+
+	return  x:commit(SYSTEM_CONFIG_FILE) and reload_config()
+
 end
 
 --get ntp server address list
@@ -726,7 +773,7 @@ end
 function system_module.system_ntp_set_server_address(server_list)
 	x:set(SYSTEM_CONFIG_FILE,"ntp","server", server_list)
 
-	return x:commit(SYSTEM_CONFIG_FILE)
+	return x:commit(SYSTEM_CONFIG_FILE) and reload_config()
 end
 
 --set date
