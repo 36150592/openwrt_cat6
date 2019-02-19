@@ -664,6 +664,14 @@ local function reload_config()
 	return os.execute("/etc/init.d/system restart")
 end
 
+-- get ntp time sync enable or disable
+-- input:none
+-- return:
+--		1:enable
+--		0:disable
+function system_module.system_ntp_get_enable_status()
+	return x:get(SYSTEM_CONFIG_FILE,"ntp", "enabled")
+end
 
 --enable ntp
 function system_module.system_ntp_enable()

@@ -486,6 +486,19 @@ function system_ntp_disable()
 
 end
 
+function system_ntp_get_enable_status()
+	local ret = system.system_ntp_get_enable_status()
+
+	if ret == "1"
+	then
+		print("ntp is enable")
+	else
+		print("ntp is disable")
+	end
+
+end
+
+
 function system_ntp_get_timezone()
 	local timezone = system.system_ntp_get_timezone()
 
@@ -1813,6 +1826,7 @@ local api_func = {
 	["system_network_tool"] = system_network_tool,
 	["system_ntp_enable"] = system_ntp_enable,
 	["system_ntp_disable"] = system_ntp_disable,
+	["system_ntp_get_enable_status"] = system_ntp_get_enable_status,
 	["system_ntp_get_timezone"] = system_ntp_get_timezone,
 	["system_ntp_set_timezone"] = system_ntp_set_timezone,
 	["system_ntp_get_server_address"] = system_ntp_get_server_address,
