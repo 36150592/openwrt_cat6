@@ -69,10 +69,7 @@
                     //     $btnLogin.disable();
                     var loginSuccess = false;
                     var sessionId = getSessionId();
-                    //var option = { expireHours: 1, path: "/", domain: location.hostname };
-                    //CookieUtil.setCookie("sessionId", data.sessionId, option);
-//                    CookieUtil.setCookie('loginName', username);
-//                    location.href = Page.getUrl("index.html");
+
 
                     Page.postJSON({
                         json: {
@@ -84,10 +81,7 @@
                         },
                         success: function(data) {
                             loginSuccess = data.success;
-                            CookieUtil.setCookie("sessionId", sessionId);
-                            CookieUtil.setCookie('loginName', username);
-                            //CookieUtil.setCookie("auth", data.auth);
-                            sessionStorage['sessionId'] = sessionId;
+                            sessionStorage['sessionId'] = data.sessionId;
                             sessionStorage['loginName'] = username;
                             sessionStorage['auth'] = data.auth;
 							sessionStorage['level'] = data.level;
@@ -133,7 +127,7 @@
                 });
 
                 function getSessionId() {
-                    return Md5.md5(Math.random().toString()) + Md5.md5(Math.random().toString());
+                    return Md5.md5(Math.random().toString());
                 }
 
                 getOpenInfo();

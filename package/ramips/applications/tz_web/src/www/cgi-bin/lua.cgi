@@ -35,11 +35,25 @@ function login()
 	
 	local username = tz_req["username"]
 	local password = tz_req["passwd"]
+	local sessionId = tz_req["sessionId"]
 	
 	for k,v in pairs(Login) do
 	  if(v["UserName"] == username) then
 	      if(v["PassWord"] == password) then
+		     if (uti.is_file_exist("/tmp/sessionsave") ~= true)
+				then
+					os.execute("cd /tmp && mkdir  sessionsave")
+			 end
+			 
+			 local logintime = os.time()   
+		     local fileDir = "../../tmp/sessionsave/."
+			 local fileName = string.format("%s%s%s",fileDir,sessionId,logintime)
+			 local file1 = io.open(fileName,"w")
+			 io.input(file1)
+			 file1:write("updateTime:"..logintime)
+			 io.close(file1)
 		     tz_answer["success"] = true;
+			 tz_answer["sessionId"] = sessionId..logintime;
 			 tz_answer["auth"] = v["AUTH"];
 			 tz_answer["level"] = v["LEVEL"];
 			 result_json = cjson.encode(tz_answer);
@@ -62,6 +76,18 @@ function login()
 	return
    
 	
+	
+end
+
+function logout()
+      
+	local tz_answer = {};
+	tz_answer["cmd"] = 99;
+	local fileName = string.format("rm ../../tmp/sessionsave/.%s",tz_req["sessionId"])
+	os.execute(fileName)
+	tz_answer["success"] = true;
+	result_json = cjson.encode(tz_answer);
+	print(result_json);
 	
 end
 
@@ -458,6 +484,7 @@ function set_wifi()
 	local maxStation = tonumber(tz_req["maxStation"])
 	local channel = tz_req["channel"]
 	local mode = tonumber(tz_req["wifiWorkMode"])
+	local ht = tz_req["ht"]
 	local authenticationType = tz_req["authenticationType"]
 	local encryptAlgorithm = tz_req["encryptAlgorithm"]
 	local key = tz_req["key"]
@@ -560,9 +587,18 @@ function set_wifi()
 		ret = wifi.wifi_set_mode(id, mode)	
 			if(not ret)
 				then
-				tz_answer["setMOde"] = false
+				tz_answer["setMode"] = false
 			end
 	end 
+	
+	if(nil ~= ht)
+	 then
+		ret = wifi.wifi_set_bandwidth(id, ht)	
+			if(not ret)
+				then
+				tz_answer["setHtMode"] = false
+			end
+	end
 	
 	
 	if(nil ~= authenticationType)
@@ -707,7 +743,7 @@ function set_wifi5()
 		ret = wifi.wifi_set_mode(id, mode)	
 			if(not ret)
 				then
-				tz_answer["setMOde"] = false
+				tz_answer["setMode"] = false
 			end
 	end
 	
@@ -716,7 +752,7 @@ function set_wifi5()
 		ret = wifi.wifi_set_bandwidth(id, bandWidth)	
 			if(not ret)
 				then
-				tz_answer["setHtMOde"] = false
+				tz_answer["setBwMode"] = false
 			end
 	end
 	
@@ -1302,6 +1338,7 @@ local switch = {
 	 [43] = get_diviceinfo,
      [80] = iniPage,
 	 [97] = change_language,
+	 [99] = logout,
 	 [100] = login,
 	 [101] = get_wifi,
 	 [102] = get_dhcp_list,
@@ -1330,10 +1367,41 @@ then
 else
 	data1=io.read();
 	tz_req = cjson.decode(data1)
-	local f = switch[tz_req["cmd"]]
-	if(f) then
-	    f()
+	local cmd = tz_req["cmd"]
+	if(cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 113 )
+	  then
+	     local fileName = string.format("../../tmp/sessionsave/.%s",tz_req["sessionId"])
+	      if (uti.is_file_exist(fileName) ~= true)
+		    then
+			    local tz_answer = {};
+				tz_answer["cmd"] = tz_req["cmd"];
+				tz_answer["success"] = false
+				result_json = cjson.encode(tz_answer);
+				print(result_json);
+				return
+		  
+		  else
+
+		      local f = switch[tz_req["cmd"]]
+			   if(f) then
+				f()
+			   end
+			  if(tz_req["cmd"] ~= 99) then
+				local logintime = os.time()    
+				local file = io.open(fileName,"w")
+				io.input(file)
+				file:write("updateTime:"..logintime)
+				io.close(file)
+			  end
+	      end
+		  
+	   else
+	   local f = switch[tz_req["cmd"]]
+		if(f) then
+		  f()
+	    end
 	end
+	
 end
 
 

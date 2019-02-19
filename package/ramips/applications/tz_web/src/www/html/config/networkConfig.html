@@ -1,6 +1,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <script type="text/javascript">
+
     $(document).ready(function(){
         TempUtil.render('tabsitems-template', 'tabsitems', networkconfightml.tab_menu);
         TempUtil.render('networkform1-template0', 'form0', networkconfightml.form1);
@@ -106,6 +107,24 @@
                 $('tr.dhcp' +id).hide();
 
             }
+        });
+		
+		var $InputLanIp = $('input[name=lanIp]');
+
+        $InputLanIp.change(function () {
+           var id = this.id.substring(5);
+		   var lanip = $(this).val();
+		   var newip = lanip.substring(0, lanip.lastIndexOf('.'));
+			
+		   var ipbegin = $("#ipBegin"+id).val();
+           var ipend = $("#ipEnd"+id).val();
+		   
+		   var begin = ipbegin.substring(ipbegin.lastIndexOf('.'));
+		   var end = ipend.substring(ipend.lastIndexOf('.'));
+		   
+		    $("#ipBegin"+id).val(newip+begin);
+			$("#ipEnd"+id).val(newip+end);
+
         });
 
         var lan_rules = {

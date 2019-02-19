@@ -104,23 +104,21 @@
         });
 
         $('#logout').click(function() {
-//            Page.postJSON({
-//                json: {
-//                    cmd: RequestCmd.LOGOUT,
-//                    method: JSONMethod.POST
-//                },
-//                success: function(data) {
-//                    CookieUtil.deleteCookie("sessionId");
-//                    CookieUtil.deleteCookie("sessionId");
-//                    location.href = Page.getUrl(Url.LOGIN);
-//                }
-//            });
-            CookieUtil.deleteCookie("sessionId");
-			CookieUtil.deleteCookie("loginName");
-            CookieUtil.deleteCookie("auth");
-			sessionStorage['sessionId'] = '';
-            sessionStorage['loginName'] = '';
-            location.href = Page.getUrl(Url.LOGIN);
+			Page.postJSON({
+                json: {
+                    cmd: RequestCmd.LOGOUT,
+                    method: JSONMethod.POST
+                },
+                success: function(data) {
+                  sessionStorage['sessionId'] = '';
+				  sessionStorage['loginName'] = '';
+			      sessionStorage['auth'] = '';
+			      sessionStorage['level'] ='';
+                  location.href = Page.getUrl(Url.LOGIN);
+                }
+            });
+
+			
         });
 
         var apnGuideClick = false;

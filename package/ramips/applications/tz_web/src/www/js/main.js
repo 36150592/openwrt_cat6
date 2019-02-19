@@ -24,6 +24,7 @@ var RequestCmd = {
     DEVICE_VERSION_INFO: 43,
     INIT_PAGE: 80,
     CHANGE_LANGUAGE: 97,
+	LOGOUT: 99,
     LOGIN: 100,
     CHANGE_PASSWD: 102,
 	UPDATE_PARTIAL: 106,
@@ -403,8 +404,6 @@ var SysUtil = {
                 }else {
                     return false;
                 }
-
-
 
             },
             success: function(data) {
@@ -850,6 +849,10 @@ var Page = {
             json.language = Page.language;
         }
 		
+		if(!json.sessionId){
+            json.sessionId = Page.sessionId;
+        }
+		
 		var asyns;
         if(isIE()){
             asyns = false;
@@ -907,6 +910,10 @@ var Page = {
         timeout: 0,
         returnHtml: false,
         success: function(){},
+		fail: function() {
+		  $('#logout').click();
+          location.href = Page.getUrl(Url.LOGIN);
+        },
         complete: function(){}
     }
 

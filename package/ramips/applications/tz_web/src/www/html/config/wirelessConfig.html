@@ -104,6 +104,7 @@
                             Page.setFormFieldValue2("channel", data.channel);
                             Page.setFormFieldValue2("ssid", data.ssid);
                             Page.setFormFieldValue2("wifiWorkMode", data.mode);
+                            Page.setFormFieldValue2("ht", data.ht);
                             var encryp = data.encryption.split("+")[0];
                             var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
                             Page.setFormFieldValue2("authenticationType", encryp);
@@ -251,6 +252,10 @@
                 delete json["wifiWorkMode"];
                 count++;
             }
+			if(json.ht ==  $("#ht").attr('old')){
+                delete json["ht"];
+                count++;
+            }
             if(json.authenticationType == $("#authenticationType").attr('old')){
                 delete json["authenticationType"];
                 count++;
@@ -261,7 +266,7 @@
                 delete json["encryptAlgorithm"];
                 count++;
             }
-            if(count == 11){
+            if(count == 12){
                 AlertUtil.alertMsg(CHECK.required.noChanges);
                 $(this).attr("disabled",false);
                 return false;
@@ -489,6 +494,16 @@
                                     <option value="9">11bgn mixed</option>
                                     <option value="10">11AGN mixed</option>
                                 </select></td>
+                            </tr>
+							
+							 <tr id="bandWidthTr">
+                                <th><%- bandWidth %></th>
+                                <td>
+                                    <select name="ht" id="ht">
+                                        <option value="20"><%- bandWidth20 %></option>
+                                        <option value="20+40"><%- bandWidth60 %></option>
+                                    </select>
+                                </td>
                             </tr>
 
                             <!--<tr>-->
