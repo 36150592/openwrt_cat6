@@ -626,6 +626,9 @@ void thr_recv(void* args)
 		}
 	}
 }
+
+char config_file_name[64]={0};
+
 void thr_process(void *args)
 {
 	log_info("go into:%s\n",__FUNCTION__);
@@ -652,8 +655,10 @@ void thr_process(void *args)
 			queue_tail=(void* )dequeue(&at_recv_buff);
 			log_info("dequeue:%s\n",(char *) queue_tail);
 		}
+
 //		queue_tail_sub=strip_head_tail_space((void*)queue_tail);
 //		log_info("%s_%d:%s\n",__FUNCTION__,__LINE__,(char*)queue_tail);
+		
 		if(NULL== queue_tail)
 			free(queue_tail);
 		else if(NULL != strstr(queue_tail,CMD_EXE_OK)  ||
@@ -686,6 +691,20 @@ void thr_process(void *args)
 			}
 			free(queue_tail);
 			global_dialtool.refresh_timer_flag=1;
+
+			if( check_file_exist(CONFIG_UPDATE_FLAG))
+			{
+				printf("update dialtool2 config");
+				log_info("update dialtool2 config");
+				fill_config(config_file_name,cfg);
+				init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
+				char cmd[64] = {0};
+				sprintf(cmd, "rm -f %s\n", CONFIG_UPDATE_FLAG);
+				system(cmd);
+
+				global_dialtool.Dial_Lvl_1=DIAL_INIT;
+				global_dialtool.Dial_proc_state=Dial_State_initialized;
+			}
 			raise(SIGALRM);
 		}
 		else
@@ -698,28 +717,8 @@ void thr_process(void *args)
 	
 }
 
-char config_file_name[64]={0};
-
-
 void common_sendat(int num)
-{
-	FILE * f = NULL;
-	//printf("common_sendat\n");
-	if( (f = fopen(CONFIG_UPDATE_FLAG,"r")) !=  NULL)
-	{
-		//printf("update dialtool2 config");
-		log_info("update dialtool2 config");
-		fill_config(config_file_name,cfg);
-		init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
-		char cmd[64] = {0};
-		sprintf(cmd, "rm -f %s\n", CONFIG_UPDATE_FLAG);
-		system(cmd);
-
-		global_dialtool.Dial_Lvl_1=DIAL_INIT;
-		global_dialtool.Dial_proc_state=Dial_State_initialized;
-		fclose(f);
-	}
-	
+{	
 	sendAtFlag = 1;
 	(global_dialtool.board_func_set->sendat)(num);
 }
