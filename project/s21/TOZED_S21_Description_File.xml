@@ -83,7 +83,7 @@ bitcomposite表示使用位进行组合的配置字段
 	</config>
 
 	<config name="TZUSER_WEB_SENIOR_USER_PWD_RANDOM_WAY" type="select" description="网页高级用户密码随机方式选择" detail="网页高级用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
-        	<option value="1" description="随机方式一" />
+        	<option value="1" description="随机方式一,Dialog规则" />
 		<default value="1"/>
 	</config>
 	
@@ -104,7 +104,7 @@ bitcomposite表示使用位进行组合的配置字段
 	
 
 	<config name="TZUSER_WEB_GENERAL_USER_PWD_RANDOM_WAY" type="select" description="网页普通用户密码随机方式选择" detail="网页普通用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
-        	<option value="1" description="随机方式一" />
+        	<option value="1" description="随机方式一,Dialog规则" />
 		<default value="1"/>
 	</config>
 

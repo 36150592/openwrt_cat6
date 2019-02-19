@@ -125,6 +125,7 @@ static void set_web_general_user()
 	char tz_config_general_user_name[56] = "";
 	char tz_config_general_user_pwd[56] = "";
 	char tz_config_general_user_pwd_random[56]="";
+	char tz_config_general_user_pwd_random_way[56]="";
 	char general_user_pwd_md5[64] = ""; 
 	char shellcmd[256] = "";
 
@@ -157,20 +158,33 @@ static void set_web_general_user()
 	}
 	else
 	{
-		int i = 0;
-		int j = 0;
-		char mac_buff[20] = {0};
-		while (i < 12)
+		memset(shellcmd, 0, sizeof(shellcmd));
+		sprintf(shellcmd,"cat %s | grep %s= | awk -F '\"' '{print $2}'", FACTORY_CONFIG_FILE, "TZUSER_WEB_GENERAL_USER_PWD_RANDOM_WAY");
+		read_memory(shellcmd, tz_config_general_user_pwd_random_way, sizeof(tz_config_general_user_pwd_random_way));
+		util_strip_traling_spaces(tz_config_general_user_pwd_random_way);
+		if( tz_config_general_user_pwd_random_way[0] == '1' ) // for Dialog
 		{
-			mac_buff[j++] = mac[i++];
-			mac_buff[j++] = mac[i++];
-			if (i < 12)
+			int i = 0;
+			int j = 0;
+			char mac_buff[20] = {0};
+			while (i < 12)
 			{
-				mac_buff[j++] = ':';
+				mac_buff[j++] = mac[i++];
+				mac_buff[j++] = mac[i++];
+				if (i < 12)
+				{
+					mac_buff[j++] = ':';
+				}
 			}
+			memset(tz_config_general_user_pwd, 0, sizeof(tz_config_general_user_pwd));
+			util_calculate_pin_by_mac(mac_buff, tz_config_general_user_pwd, 0, 1);
 		}
-		memset(tz_config_general_user_pwd, 0, sizeof(tz_config_general_user_pwd));
-		util_calculate_pin_by_mac(mac_buff, tz_config_general_user_pwd, 0, 1);
+		else
+		{
+			memset(tz_config_general_user_pwd, 0, sizeof(tz_config_general_user_pwd));
+			strcpy(tz_config_general_user_pwd,"admin");
+		}
+		
 	}
 
 	memset(shellcmd, 0, sizeof(shellcmd));
@@ -190,6 +204,7 @@ static void set_web_seniro_user()
 	char tz_config_senior_user_name[56] = "";
 	char tz_config_senior_user_pwd[56] = "";
 	char tz_config_senior_user_pwd_random[56]="";
+	char tz_config_senior_user_pwd_random_way[56]="";
 	char senior_user_pwd_md5[64] = ""; 
 	char shellcmd[256] = "";
 
@@ -221,8 +236,20 @@ static void set_web_seniro_user()
 	}
 	else
 	{
-		memset(tz_config_senior_user_pwd, 0, sizeof(tz_config_senior_user_pwd));
-		util_calculate_pin_by_imei(imei, tz_config_senior_user_pwd, 0);
+		memset(shellcmd, 0, sizeof(shellcmd));
+		sprintf(shellcmd,"cat %s | grep %s= | awk -F '\"' '{print $2}'", FACTORY_CONFIG_FILE, "TZUSER_WEB_SENIOR_USER_PWD_RANDOM_WAY");
+		read_memory(shellcmd, tz_config_senior_user_pwd_random_way, sizeof(tz_config_senior_user_pwd_random_way));
+		util_strip_traling_spaces(tz_config_senior_user_pwd_random_way);
+		if( tz_config_senior_user_pwd_random_way[0] == '1' ) // for Dialog
+		{
+			memset(tz_config_senior_user_pwd, 0, sizeof(tz_config_senior_user_pwd));
+			util_calculate_pin_by_imei(imei, tz_config_senior_user_pwd, 0);
+		}
+		else
+		{
+			strcpy(tz_config_senior_user_pwd,"superadmin");
+		}
+		
 	}
 	
 	memset(shellcmd, 0, sizeof(shellcmd));
