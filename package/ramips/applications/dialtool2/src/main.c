@@ -627,6 +627,47 @@ void thr_recv(void* args)
 	}
 }
 
+#include<sys/socket.h>
+#include<sys/types.h>
+#include<string.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
+#include<linux/un.h>
+#define UNIX_SOCKET_FILE	"/tmp/dialtool2.socket"
+void thr_listen(void *args)
+{
+
+	int listenfd = socket(AF_UNIX, SOCK_STREAM, 0);  
+    if (listenfd == -1)  
+        exit(-1);
+   
+    unlink(UNIX_SOCKET_FILE);
+	struct sockaddr_un servAddr;  
+    servAddr.sun_family = AF_UNIX;  
+    strcpy(servAddr.sun_path, UNIX_SOCKET_FILE);  
+    if (bind(listenfd, (struct sockaddr *)&servAddr, sizeof(servAddr)) == -1)  
+        exit(-1);  
+    if (listen(listenfd, 2) == -1)  
+        exit(-1);  
+
+   	while(1)
+   	{
+		int connfd = accept(listenfd, NULL, NULL);  
+		if (connfd == -1)  
+		{
+			    exit(-1);
+		}
+
+		int n = 0;
+		char buf[1024];
+		n = read(connfd,buf,1024);
+		if (n>0)
+			write(connfd,buf,n);
+
+		close(connfd);
+   	}
+}
+
 char config_file_name[64]={0};
 
 void thr_process(void *args)
@@ -784,7 +825,7 @@ int main(int argc,char *argv[] )
 {
 	IDPV * ids_module=&global_system_info.module_info.module_serial;		//store module pid and vid
 	initqueue(&at_recv_buff);
-	pthread_t  thread_recv,thread_process;
+	pthread_t  thread_recv,thread_process, thread_listen;
 /* first read configs into program */
 	extern char *optarg;
 	extern int optind,opterr,optopt;
@@ -1001,6 +1042,16 @@ then compare with AT sended ,if yes keep result, else abandon the result */
 		exit(-1);
 	}
 
+
+	if(0 != pthread_create(&thread_listen,NULL,(void*)thr_listen,NULL))
+	{
+		log_error("thread_listen create failed\n");
+		write_str_file(DIAL_INDICATOR,"thread_listen create failed","w+");	
+		close(global_dialtool.dev_handle);
+		exit(-1);
+	}
+
+
 /*we use a interupt to send AT,check return result then to next state,
  write a dial process for every module,and we invoke the function pointer*/
  	int res;
@@ -1035,6 +1086,7 @@ then compare with AT sended ,if yes keep result, else abandon the result */
 		{
 			pthread_join(thread_recv,NULL);
 			pthread_join(thread_process,NULL);
+			pthread_join(thread_listen, NULL);
 			global_dialtool.pthread_moniter_flag = 0;
 		}
 		if(global_dialtool.refresh_timer_flag==1)
