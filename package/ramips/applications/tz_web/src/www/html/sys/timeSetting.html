@@ -6,20 +6,43 @@
         Page.setStripeTable();
 
         function getDateTime() {
-            return new Date().format('yyyy-mm-dd HH:MM');
+            return new Date().format('yyyy-mm-dd HH:MM:ss');
         }
+
+        $('input[id=ntpOpen]').click(function() {
+            if ($(this).prop("checked")) {
+                $('tr.ntptd').show();
+                $('tr.datatd').hide();
+            } else {
+                $('tr.ntptd').hide();
+                $('tr.datatd').show();
+            }
+        });
 
         Page.postJSON({
             json:{
-                cmd: RequestCmd.SET_DATETIME,
-                method: JSONMethod.GET
+                cmd: RequestCmd.GET_DATETIME
             },
-            success: function(data){
-                $('#lblTime').text(data.systime);
-                $('#timeServer').val(FormatUtil.formatField(data.timeServer).trim());
-                $('#timeServer2').val(FormatUtil.formatField(data.timeServer2).trim());
-                $('#timeServer3').val(FormatUtil.formatField(data.timeServer3).trim());
-                $('#timezone').val(data.timezone);
+            success: function(datas){
+                var data = datas.data;
+				$('#lblTime').text(data.lbltime);
+                if(data.status ==  "1"){
+                    $('#ntpOpen').prop("checked", true);
+                    $('tr.ntptd').show();
+                    $('tr.datatd').hide();
+                }else{
+                    $('#ntpOpen').prop("checked", false);
+                    $('tr.ntptd').hide();
+                    $('tr.datatd').show();
+                }
+                $('#ntpOpen').attr('old',data.status);
+
+                Page.setFormFieldValue2("timezone", data.timezone);
+                Page.setFormFieldValue2("timeServer", data.server[0]);
+                Page.setFormFieldValue2("timeServer2", data.server[1]);
+                Page.setFormFieldValue2("timeServer3", data.server[2]);
+                Page.setFormFieldValue2("timeServer4", data.server[3]);
+
             }
         });
 
@@ -28,6 +51,7 @@
                 return false;
             }
         });
+
 
         //$('#timezone').html(Timezone.getAllZones());
 
@@ -45,60 +69,150 @@
 
         var $btnSave = $('#btnSave');
         $btnSave.bind('click', function() {
+            $(this).attr("disabled",true);
+            var count = 0;
             var $form = $('#form1');
             if(!CheckUtil.checkForm($form, rules, messages)){
+                $(this).attr("disabled",false);
                 return false;
             }
 
             var json = JSON.parmsToJSON($form);
+            json.ntpOpen = json.ntpOpen ? '1' : '0';
+
+            if(json.ntpOpen == "1"){
+
+                if(json.timezone ==  $("#timezone").attr('old')){
+                    delete json["timezone"];
+                    count++;
+                }
+
+                var count1 = 0;
+                if(json.timeServer ==  $("#timeServer").attr('old')){
+                    count1++;
+                }
+                if(json.timeServer2 ==  $("#timeServer2").attr('old')){
+                    count1++;
+                }
+                if(json.timeServer3 ==  $("#timeServer3").attr('old')){
+                    count1++;
+                }
+                if(json.timeServer4 ==  $("#timeServer4").attr('old')){
+                    count1++;
+                }
+                if(count1 == 4){
+                    delete json["timeServer"];
+                    delete json["timeServer2"];
+                    delete json["timeServer3"];
+                    delete json["timeServer4"];
+                    count += 4;
+                }
+
+                delete json["datetime"];
+                count++;
+
+
+            }else {
+                delete json["timezone"];
+                delete json["timeServer"];
+                delete json["timeServer2"];
+                delete json["timeServer3"];
+                delete json["timeServer4"];
+                count += 5;
+            }
+
+            if(json.ntpOpen == $("#ntpOpen").attr('old')){
+                delete json["ntpOpen"];
+                count++;
+            }
+
+
+            if(count == 7){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+            }
+
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.SET_DATETIME;
-
-            try {
-                var theDateTime = json.datetime;
-                var datetime = theDateTime.replace(/[\-|\:|\s]/g, "");
-                json.datetime = datetime.slice(4) + datetime.substring(0, 4);
-
+            console.log(json);
                 Page.postJSON({
-                    $id: $btnSave,
                     json: json,
                     success: function(data) {
-                        $('#lblTime').text(theDateTime + ":00");
                         AlertUtil.alertMsg(PROMPT.saving.systemTime);
+                    },
+                    complete: function(){
+                        $('#btnSave').attr("disabled",false);
                     }
                 });
-            } catch (ex) {
-                AlertUtil.alertMsg(CHECK.format.systemTime);
-            }
+
         });
     });
 </script>
 
-<div class="tab_box" id="child_container">
+<div class="detail_box" id="child_container">
     <script type="text/template" id="child_template">
         <form id="form1">
             <table class="detail" cellspacing="0">
-                <tr>
-                    <th><%- sys.systemTime %><%- colon %></th>
-                    <td><label id="lblTime"></label></td>
+				<tr>
+					<th><%- sys.systemTime %><%- colon %></th>
+					<td><label id="lblTime"></label></td>
                 </tr>
                 <tr>
+                    <th><%- sys.ntp %><%- colon %></th>
+                    <td>
+                        <input type="checkbox" id="ntpOpen" name="ntpOpen" value="1" checked="checked" class="inputs_lan" /><%- sys.ntpEnabled %>
+                    </td>
+                </tr>
+                <tr class="ntptd">
                     <th><%- sys.timezone %><%- colon %></th>
-                    <td><input type="text" id="timezone" name="timezone" class="large" maxlength="100" /></td>
+                    <td>
+					 <select id="timezone" name="timezone">
+                        <option value="12"><%- timezone.item %></option>
+                        <option value="11"><%- timezone.item1 %></option>
+                        <option value="10"><%- timezone.item2 %></option>
+                        <option value="9"><%- timezone.item3 %></option>
+                        <option value="8"><%- timezone.item4 %></option>
+                        <option value="7"><%- timezone.item5 %></option>
+                        <option value="6"><%- timezone.item6 %></option>
+                        <option value="5"><%- timezone.item7 %></option>
+                        <option value="4"><%- timezone.item8 %></option>
+                        <option value="3"><%- timezone.item9 %></option>
+                        <option value="2"><%- timezone.item10 %></option>
+                        <option value="1"><%- timezone.item11 %></option>
+                        <option value="0"><%- timezone.item12 %></option>
+                        <option value="-1"><%- timezone.item13 %></option>
+                        <option value="-2"><%- timezone.item14 %></option>
+                        <option value="-3"><%- timezone.item15 %></option>
+                        <option value="-4"><%- timezone.item16 %></option>
+                        <option value="-5"><%- timezone.item17 %></option>
+                        <option value="-6"><%- timezone.item18 %></option>
+                        <option value="-7"><%- timezone.item19 %></option>
+                        <option value="-8"><%- timezone.item20 %></option>
+                        <option value="-9"><%- timezone.item21 %></option>
+                        <option value="-10"><%- timezone.item22 %></option>
+                        <option value="-11"><%- timezone.item23 %></option>
+                        <option value="-12"><%- timezone.item24 %></option>
+                    </select>
+					</td>
                 </tr>
-                <tr>
-                    <th><%- sys.ntp %>1<%- colon %></th>
+                <tr class="ntptd">
+                    <th><%- sys.ntpServer %>1<%- colon %></th>
                     <td><input type="text" id="timeServer" name="timeServer" class="large" maxlength="100" /></td>
                 </tr>
-                <tr>
-                    <th><%- sys.ntp %>2<%- colon %></th>
+                <tr class="ntptd">
+                    <th><%- sys.ntpServer %>2<%- colon %></th>
                     <td><input type="text" id="timeServer2" name="timeServer2" class="large" maxlength="100" /></td>
                 </tr>
-                <tr>
-                    <th><%- sys.ntp %>3<%- colon %></th>
+                <tr class="ntptd">
+                    <th><%- sys.ntpServer %>3<%- colon %></th>
                     <td><input type="text" id="timeServer3" name="timeServer3" class="large" maxlength="100" /></td>
                 </tr>
-                <tr>
+                <tr class="ntptd">
+                    <th><%- sys.ntpServer %>4<%- colon %></th>
+                    <td><input type="text" id="timeServer4" name="timeServer4" class="large" maxlength="100" /></td>
+                </tr>
+                <tr class="datatd">
                     <th><%- sys.clientTime %><%- colon %></th>
                     <td>
                         <input type="text" id="datetime" name="datetime" class="normal" maxlength="20" />&nbsp;&nbsp;

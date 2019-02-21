@@ -406,7 +406,7 @@
 
         function loadWlanPage() {
             Page.postJSON({
-                json: {cmd: 101},
+                json: {cmd: RequestCmd.WIFI_INFO},
                 success: function (datas) {
                     var data = {"mode":"Master","message":"WLAN未开启"};
                     var wirelessHtml = "";
@@ -464,7 +464,7 @@
 
         function loadWlan5gPage() {
             Page.postJSON({
-                json: {cmd: 201},
+                json: {cmd: RequestCmd.WIFI5_INFO},
                 success: function (datas) {
                     var data = {"mode":"Master","message":"WLAN未开启"};
                     var wlan5gHtml = "";

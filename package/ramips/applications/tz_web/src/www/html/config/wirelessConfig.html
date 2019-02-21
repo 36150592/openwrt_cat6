@@ -68,7 +68,7 @@
             switch (pannelIndex) {
                 case 0:
                     Page.postJSON({
-                        json: { cmd: 101 },
+                        json: { cmd: RequestCmd.WIFI_INFO },
                         success: function(datas) {
                             console.log(datas);
                             var data = datas.data;
@@ -120,7 +120,7 @@
                 case 1:
                 case 2:
                     Page.postJSON({
-                        json: { cmd: 120,wifiId: $wifiId.val() },
+                        json: { cmd: RequestCmd.SSIDLIST_INFO,wifiId: $wifiId.val() },
                         success: function(datas) {
                             console.log(datas);
                             var data = datas.data;
@@ -352,7 +352,7 @@
                 return false;
             }
 
-            json.cmd = 121;
+            json.cmd = RequestCmd.SSIDLIST_CONFIG;;
 			json.wifiId = $wifiId.val();
             console.log(json);
             Page.postJSON({

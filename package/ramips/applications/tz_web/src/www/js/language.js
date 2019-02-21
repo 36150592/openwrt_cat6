@@ -72,6 +72,8 @@ var DOC = {
 	volte: {},
 	tzapn: {},
 	lockband: {},
+	timezone:{},
+	week:{},
 	
 	networkMode: { helper: {} },
 	dial: { helper: {} },

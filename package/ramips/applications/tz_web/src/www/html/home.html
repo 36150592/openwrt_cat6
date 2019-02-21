@@ -51,6 +51,7 @@
          menus.push(fwMenu);
          // FW END 
 		
+		console.log(Sysauth);
         if(parseInt(Sysauth.charAt(0),10)) {
 			var sysMenu = new MenuHead("manage_menu", MENU.sys.manage);
 			//sysMenu.push(new MenuBody("SYS_SET", MENU.sys.settings));
@@ -60,10 +61,14 @@
             }
 			
 			if(parseInt(Sysauth.charAt(2),10)) {
-                sysMenu.push(new MenuBody("NETWORK_TOOL", MENU.sys.networkTools));
+                sysMenu.push(new MenuBody("SYS_TIME", MENU.sys.timeSetting));
             }
 			
 			if(parseInt(Sysauth.charAt(3),10)) {
+                sysMenu.push(new MenuBody("NETWORK_TOOL", MENU.sys.networkTools));
+            }
+			
+			if(parseInt(Sysauth.charAt(4),10)) {
                 sysMenu.push(new MenuBody("SYS_AT", MENU.sys.at));
             }
 			
@@ -191,6 +196,43 @@
 
         }
 
+		function showSysTime() {
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.GET_SYSTEM_TIME
+                },
+                success: function(data) {
+				  // var timeTo = new Date(parseInt(data.systime)*1000).toLocaleString();
+				 //  var time = timetrans(data.systime);
+                 //   $('#sysTime').text(time);
+				 // var timestamp = new Date(data.systime1).getTime();
+				// var timestamp = (new Date()).getTime();
+				// console.log(timestamp);
+				// console.log(data.systime);
+				
+				  var systime = data.systime;
+                    var intervalId2 = setInterval(function () {
+                        var time = timetrans(systime);
+                        $('#sysTime').text(time);
+                        systime ++;
+                    },1000)
+                }
+            });
+        }
+		
+		function timetrans(date){
+            var date = new Date(date*1000);//如果date为13位不需要乘1000
+            var Y = date.getFullYear() + '-';
+            var M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
+            var D = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate()) + ' ';
+            var h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
+            var m = (date.getMinutes() <10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
+            var s = (date.getSeconds() <10 ? '0' + date.getSeconds() : date.getSeconds()) + ' ';
+			var a = new Array(DOC.week.item, DOC.week.item1, DOC.week.item2, DOC.week.item3, DOC.week.item4, DOC.week.item5, DOC.week.item6);
+            var w = a[date.getDay()];
+            return Y+M+D+h+m+s+w;
+        }
+		
         function getVersionInfo(callback) {
             // 获取模块版本信息
             Page.postJSON({
@@ -235,7 +277,9 @@
         StatusUtil.getSysStatus();
         $('#menu h3').eq(0).next().find("a").eq(0).click();
         $('#container').show();
+		showSysTime();
 		listenOperation ();
+		
     });
 </script>
 <script type="text/template" id="index_template">
@@ -248,7 +292,9 @@
             <!-- HELP -->
             <a id="onlineHelp" href="javascript:;" style="display:none;"><%- link.help %></a>
         </div>
-        <div id="timeinfo"></div>
+        <div id="timeinfo">
+		 <label id="sysTime"></label>
+		 </div>
         <div id="header_right"></div>
         <div id="siginfo">
             <table cellpadding="0" cellspacing="4">

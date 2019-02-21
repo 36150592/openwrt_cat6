@@ -614,7 +614,7 @@
                     }else {
                         Page.postJSON({
                             json: {
-                                cmd: 203,
+                                cmd: RequestCmd.LAN_INFO,
                                 method: JSONMethod.GET
                             },
                             success: function(data) {

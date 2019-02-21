@@ -47,7 +47,7 @@
             switch (pannelIndex) {
                 case 0:
                     Page.postJSON({
-                        json: { cmd: 102 },
+                        json: { cmd: RequestCmd.DHCP_INFO },
                         success: function(datas) {
                             console.log(datas);
                             var data = datas.data;
@@ -83,7 +83,7 @@
                 case 3:
                     if (firstRequest) {
                         Page.postJSON({
-                            json: {cmd: 103},
+                            json: {cmd: RequestCmd.DHCPCLIENT_INFO},
                             success: function (datas) {
                                 console.log(datas);
                                 ipMacs = datas.data;
@@ -325,7 +325,7 @@
                                 <td>
                                     <input type="text" id="ipBegin0" name="ipBegin" class="txt4 inputs_lan"/> -
                                     <input type="text" id="ipEnd0" name="ipEnd" class="txt4 inputs_lan"/></td></tr>
-                            <tr class="nat dhcp">
+                            <tr class="nat dhcp0">
                                 <th><%- th5 %></th>
                                 <td>
                                     <input type="text" id="expireTime0" name="expireTime" class="txt2 inputs_lan"/>&nbsp;<%- td5 %></td>
@@ -366,7 +366,7 @@
                                 <td>
                                     <input type="text" id="ipBegin1" name="ipBegin" class="txt4 inputs_lan"/> -
                                     <input type="text" id="ipEnd1" name="ipEnd" class="txt4 inputs_lan"/></td></tr>
-                            <tr class="nat dhcp">
+                            <tr class="nat dhcp1">
                                 <th><%- th5 %></th>
                                 <td>
                                     <input type="text" id="expireTime1" name="expireTime" class="txt2 inputs_lan"/>&nbsp;<%- td5 %></td>
@@ -407,7 +407,7 @@
                                 <td>
                                     <input type="text" id="ipBegin2" name="ipBegin" class="txt4 inputs_lan"/> -
                                     <input type="text" id="ipEnd2" name="ipEnd" class="txt4 inputs_lan"/></td></tr>
-                            <tr class="nat dhcp">
+                            <tr class="nat dhcp2">
                                 <th><%- th5 %></th>
                                 <td>
                                     <input type="text" id="expireTime2" name="expireTime" class="txt2 inputs_lan"/>&nbsp;<%- td5 %></td>

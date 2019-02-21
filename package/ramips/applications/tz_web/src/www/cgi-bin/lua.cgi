@@ -1317,12 +1317,113 @@ function deal_at()
 	print(result_json)
 end
 
+function get_datetime()
+	local tz_answer = {}
+	tz_answer["cmd"] = 10  
+	
+	local data_array = {}
+	data_array["status"] = system.system_ntp_get_enable_status()
+	data_array["timezone"] = system.system_ntp_get_timezone() or ''
+	data_array["server"] = system.system_ntp_get_server_address() or ''
+	
+	local lbltime = os.date("%Y-%m-%d %H:%M:%S %A")
+	data_array["lbltime"] = lbltime
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function set_datetime()
+    local tz_answer = {}
+	tz_answer["cmd"] = 11
+	local ret 
+	
+	local ntpOpen = tonumber(tz_req["ntpOpen"])
+	local timezone = tonumber(tz_req["timezone"])
+	local timeServer = tz_req["timeServer"]
+	local datetime = tz_req["datetime"]
+	
+	if(nil ~= ntpOpen)
+	then
+		if(0 == ntpOpen)
+		 then
+	       ret = system.system_ntp_disable(id)
+		    if(not ret)
+			  then
+			  tz_answer["disablentp"] = false
+		    end
+		elseif(1 == ntpOpen)
+		  then
+			ret = system.system_ntp_enable(id)
+			  if(not ret)
+		        then
+			     tz_answer["enablentp"] = false
+              end
+	   end
+	end
+	
+	if(nil ~= timezone)
+	 then
+		ret = system.system_ntp_set_timezone(timezone)
+			if(not ret)
+				then
+				tz_answer["setTimezone"] = false
+			end
+	end
+	
+	if(nil ~= timeServer)
+	 then
+	 local serverArr = {timeServer,tz_req["timeServer2"],tz_req["timeServer3"],tz_req["timeServer4"]}
+	
+	 ret = system.system_ntp_set_server_address(serverArr)
+		 if(not ret)
+			then
+				tz_answer["setTimeserver"] = false
+			end
+	 
+	end
+	
+	if(nil ~= datetime)
+	 then
+		ret = system.system_ntp_set_date(datetime)
+			if(not ret)
+				then
+				tz_answer["setDatetime"] = false
+			end
+	end
+	
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json);
+
+end
+
+function get_systime()
+	local tz_answer = {}
+	tz_answer["cmd"] = 1 
+	
+	local timezone = system.system_ntp_get_timezone()
+	local systime = os.time() + 3600*(-timezone-8)
+	
+	tz_answer["success"] = true
+	tz_answer["systime"] = systime
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 
 local switch = {
      [0] = get_sysinfo,
+	 [1] = get_systime,
      [2] = set_wifi,
 	 [3] = set_dhcp,
 	 [6] = reboot_sys,
+	 [10] = get_datetime,
+	 [11] = set_datetime,
 	 [19] = deal_at,
 	 [20] = firewall_restart,
 	 [21] = port_filter,

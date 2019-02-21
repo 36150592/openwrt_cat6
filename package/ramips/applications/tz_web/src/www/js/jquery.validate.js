@@ -1268,7 +1268,7 @@ $.validator.addMethod("mac",
 
 $.validator.addMethod("datetime",
 	function(value, element) {
-		var reg = /^\d{4}\-\d{2}\-\d{2} [0-5]\d\:[0-5]\d$/;
+		var reg = /^\d{4}\-\d{2}\-\d{2} [0-5]\d\:[0-5]\d\:[0-5]\d$/;
 		return this.optional(element) || reg.test(value);
 	}, "时间格式不正确"
 );

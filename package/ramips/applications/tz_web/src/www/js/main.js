@@ -15,42 +15,59 @@ var ProgressTime = {
 
 var RequestCmd = {
     SYS_INFO: 0,
+	GET_SYSTEM_TIME: 1,
     WIRELESS_CONFIG: 2,
     NETWORK_CONFIG: 3,
     SYS_UPDATE: 5,
 	SYS_REBOOT: 6,
+	
+	GET_DATETIME:10,
+    SET_DATETIME: 11,
+	
     SYS_LOG: 17,
 	SYS_AT:19,
-    DEVICE_VERSION_INFO: 43,
-    INIT_PAGE: 80,
-    CHANGE_LANGUAGE: 97,
-	LOGOUT: 99,
-    LOGIN: 100,
-    CHANGE_PASSWD: 102,
-	UPDATE_PARTIAL: 106,
-    GET_SYS_STATUS: 113,
-    ROUTER_INFO: 133,
-    NETWORK_TOOL: 145,
-	
-	APPLY_FILTER: 20,
-	PORT_FILTER: 21,
-	IP_FILTER: 22,
+
+    APPLY_FILTER: 20,
+    PORT_FILTER: 21,
+    IP_FILTER: 22,
     MAC_FILTER: 23,
     IP_MAC_BINDING: 24,
     SPEED_LIMIT: 25,
     URL_FILTER: 26,
     OTHER_FILTER: 27,
-	DEFAULT_FILTER: 28,
-	ACL_FILTER:29,
-	CLEAN_ALL_FILTER: 39,
-		
-	WIFI_CONTROL_INFO: 117,
-	WIFI5_CONTROL_INFO: 118,	
-	
-    NETWORK_TOOLS: 145,
-	
-    BACKUP_FIREWALL: 163,
-    NETWORK_SERVICE: 172
+    DEFAULT_FILTER: 28,
+    ACL_FILTER:29,
+    CLEAN_ALL_FILTER: 39,
+
+
+    DEVICE_VERSION_INFO: 43,
+    INIT_PAGE: 80,
+    CHANGE_LANGUAGE: 97,
+	LOGOUT: 99,
+    LOGIN: 100,
+
+    WIFI_INFO: 101,
+    DHCP_INFO:102,
+    DHCPCLIENT_INFO:103,
+
+	UPDATE_PARTIAL: 106,
+    GET_SYS_STATUS: 113,
+
+    WIFI_CONTROL_INFO: 117,
+    WIFI5_CONTROL_INFO: 118,
+
+    SSIDLIST_INFO:120,
+    SSIDLIST_CONFIG:121,
+
+    ROUTER_INFO: 133,
+
+    CHANGE_PASSWD: 144,
+    NETWORK_TOOL: 145,
+	SYS_TIME:146,
+
+    WIFI5_INFO: 201,
+    WIRELESS5_CONFIG: 202,
+	LAN_INFO: 203
 
 };
 
@@ -67,6 +84,7 @@ var MenuItem = {
     SYS_UPDATE:	{ cmd: RequestCmd.SYS_UPDATE, url: "html/update/sysUpdate.html" },
 	SYS_AT: { cmd: RequestCmd.SYS_AT, url: "html/manage/sysAt.html" },
 	NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
+	SYS_TIME:{ cmd: RequestCmd.SYS_TIME, url: "html/sys/timeSetting.html" },
 	
 	FE_DEFAULT: { cmd: RequestCmd.DEFAULT_FILTER, url: "html/firewall/firewall.html" },
 	FW_RULE: { cmd: RequestCmd.PORT_FILTER, url: "html/firewall/firewall.html" },
@@ -75,10 +93,8 @@ var MenuItem = {
     FW_URL_FILTER: { cmd: RequestCmd.URL_FILTER, url: "html/firewall/firewall.html" },
     FW_PORT_MAPPING: { cmd: RequestCmd.OTHER_FILTER, url: "html/firewall/firewall.html" },
 	FW_ACL_FILTER: { cmd: RequestCmd.ACL_FILTER, url: "html/firewall/firewall.html" },
-    FW_SPEED_LIMIT: { cmd: RequestCmd.SPEED_LIMIT, url: "html/firewall/firewall.html" },
-    FW_DMZ: { cmd: RequestCmd.NETWORK_SERVICE, url: "html/firewall/dmz.html" },
-    FW_ALG: { cmd: RequestCmd.NETWORK_SERVICE, url: "html/firewall/alg.html" },
-    FW_BACKUP_FIREWALL: { cmd: RequestCmd.BACKUP_FIREWALL, url: "html/firewall/backup.html" }
+    FW_SPEED_LIMIT: { cmd: RequestCmd.SPEED_LIMIT, url: "html/firewall/firewall.html" }
+    
 };
 
 var JSONMethod = {
