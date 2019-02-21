@@ -32,8 +32,6 @@
 
 #define MODULE_ABNORMAL_FILE "/tmp/module_abnormal_file"
 #define MODULE_ERROR_FILE "/mnt/module_error"
-#define CONFIG_UPDATE_FLAG             "/tmp/.dialtool2_config_update_flag"
-
 
 #define PLMN_SELECTION_MODE_AUTOMATIC 0
 #define PLMN_SELECTION_MODE_MANUAL 1

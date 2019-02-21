@@ -883,7 +883,7 @@ int main(int argc,char *argv[] )
 	initqueue(&at_recv_buff);
 	pthread_t  thread_recv,thread_process, thread_listen;
 /* first read configs into program */
-	extern char *optarg;
+	//extern char *optarg;
 	extern int optind,opterr,optopt;
 	int ret;
 	unsigned int baudrate=115200;
@@ -899,13 +899,27 @@ int main(int argc,char *argv[] )
 	//printf("compile at %s %s\n", __DATE__,__TIME__);
 	openlog(argv[0],  LOG_PID, 0);  
 	log_info("program start:%s %d\n",__FUNCTION__,__LINE__);
-	while((ret= getopt(argc,argv,"s:")) != -1)
+	while((ret= getopt(argc,argv,"p:s:")) != -1)
 	{
 		switch(ret)
 		{
 			case 's':
 				strncpy(config_file_name,optarg,sizeof(config_file_name));
 				break;
+			case 'p':
+				{
+					char process_pid_file_name[64] = {0};
+					strncpy(process_pid_file_name,optarg,sizeof(process_pid_file_name));
+					FILE* fd = fopen(process_pid_file_name,"w+");
+					if(NULL != fd)
+					{
+						char buf[64] = {0};
+						sprintf(buf, "%d", getpid());
+						fwrite(buf, sizeof(buf), 1, fd);
+						fclose(fd);
+					}
+					break;
+				}
 			default:
 				log_error("missing config file\n");
 				write_str_file(DIAL_INDICATOR,"missing config file","w+");

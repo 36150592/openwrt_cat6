@@ -5,10 +5,10 @@ START=60
 STOP=85
 start(){
     cfg -e |grep -v 'export value' |  awk '{print $2}' | grep "TZ_DIALTOOL2" > /tmp/dialtool2_config
-    /bin/dialtool_new -s /tmp/dialtool2_config  &
+    /bin/dialtool_new -s /tmp/dialtool2_config  -p /tmp/.dialtool_new.pid &
 }
 
 stop(){
-    ps | grep dialtool_new | grep -v grep | cut -d' ' -f 2 | xargs kill -9
+    cat /tmp/.dialtool_new.pid | xargs  kill -9
     rmmod bm_gobi_net_906.ko
 }
