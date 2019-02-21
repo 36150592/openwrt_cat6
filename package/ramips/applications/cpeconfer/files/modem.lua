@@ -2,12 +2,14 @@ require("uci")
 require("io")
 modem_module = {}
 local util=require("tz.util")
+local tzlib = require("luatzlib")
 local x = uci.cursor()
 local MODEM_CONFIG_FILE="network"
 local TOZED_CONFIG_FILE="tozed"
-local UCI_SECTION_DIALTOOL2="dialtool2"
+local UCI_SECTION_DIALTOOL2="cfg"
 local MODEM_DYNAMIC_STATUS_PATH="/tmp/.system_info_dynamic"
 local MODEM_STATIC_INFO_PATH="/tmp/.system_info_static"
+local DIALTOOL2_SOCKET_FILE="/tmp/dialtool2.socket"
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
@@ -341,9 +343,25 @@ function modem_module.modem_get_info()
 end
 
 function modem_module.modem_reload_config()
-	local ret1 = os.execute("uci show tozed.dialtool2 | sed s/tozed.dialtool2.//g  | sed s/\\'//g  | grep '=' > /tmp/dialtool2_config")
-	local ret2 = os.execute("touch /tmp/.dialtool2_config_update_flag")
-	return ret1 and ret2
+	local ret1 = os.execute("cfg -e |grep -v 'export value' |  awk '{print $2}' | grep 'TZ_DIALTOOL2' > /tmp/dialtool2_config")
+	
+	local fd = tzlib.unix_connect(DIALTOOL2_SOCKET_FILE)
+	local cmd = "USER_CMD_UPDATE_CONFIG####abdc"
+	local n = tzlib.unix_write(fd, cmd,string.len(cmd));
+	if n ~= string.len(cmd)
+	then
+		debug("write cmd fail")
+		return false
+	end
+
+	local str = tzlib.unix_read(fd)
+	tzlib.unix_close(fd)
+
+	if "OK" == str
+	then
+		return true;
+	end
+	return false
 end
 -- lock band
 -- input:mode(number):

@@ -633,13 +633,31 @@ void thr_recv(void* args)
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<linux/un.h>
+#include <pthread.h>
+pthread_mutex_t mutex_user;
+pthread_mutex_t mutex_init_param;
+pthread_cond_t cond;
+
 #define UNIX_SOCKET_FILE	"/tmp/dialtool2.socket"
+
+int cmd_str_to_num(char *cmd_str)
+{
+	if(NULL == cmd_str)
+		return -1;
+						
+	if(strcmp(cmd_str,"USER_CMD_UPDATE_CONFIG") == 0)
+		return USER_CMD_UPDATE_CONFIG;
+
+
+	return -1;
+}
+
 void thr_listen(void *args)
 {
-
 	int listenfd = socket(AF_UNIX, SOCK_STREAM, 0);  
     if (listenfd == -1)  
         exit(-1);
+
    
     unlink(UNIX_SOCKET_FILE);
 	struct sockaddr_un servAddr;  
@@ -659,11 +677,30 @@ void thr_listen(void *args)
 		}
 
 		int n = 0;
-		char buf[1024];
-		n = read(connfd,buf,1024);
-		if (n>0)
-			write(connfd,buf,n);
+		char cmd[1024];
+		n = read(connfd,cmd,1024);
+		char cmd_str[64] = {0};
+		char cmd_param[128] = {0};
+		sscanf(cmd,"%[^####]####%s*s",cmd_str, cmd_param);
 
+		log_info("cmd_str = %s, cmd_param = %s\n",cmd_str, cmd_param);
+		
+		switch(cmd_str_to_num(cmd_str))
+		{
+			case USER_CMD_UPDATE_CONFIG:
+				pthread_mutex_lock(&mutex_user);
+				log_info("user command %d \n",USER_CMD_UPDATE_CONFIG);
+				global_dialtool.user_cmd = USER_CMD_UPDATE_CONFIG;
+				strcpy(global_dialtool.user_param, cmd_param);
+				pthread_cond_wait(&cond, &mutex_user);
+				write(connfd,global_dialtool.user_result,n);
+				pthread_mutex_unlock(&mutex_user);
+				break;
+			
+
+		}
+		
+		
 		close(connfd);
    	}
 }
@@ -733,19 +770,36 @@ void thr_process(void *args)
 			free(queue_tail);
 			global_dialtool.refresh_timer_flag=1;
 
-			if( check_file_exist(CONFIG_UPDATE_FLAG))
+			log_info("pthread_mutex_lock mutex lock\n");
+			pthread_mutex_lock(&mutex_user);
+			if(global_dialtool.user_cmd != USER_CMD_WAITING)
 			{
-				printf("update dialtool2 config");
-				log_info("update dialtool2 config");
-				fill_config(config_file_name,cfg);
-				init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
-				char cmd[64] = {0};
-				sprintf(cmd, "rm -f %s\n", CONFIG_UPDATE_FLAG);
-				system(cmd);
-
-				global_dialtool.Dial_Lvl_1=DIAL_INIT;
-				global_dialtool.Dial_proc_state=Dial_State_initialized;
+				//printf("command = %d\n", global_dialtool.user_cmd);
+				switch((int)(global_dialtool.user_cmd))
+				{
+					case USER_CMD_UPDATE_CONFIG:
+					{
+						//printf("update dialtool2 config");
+						log_info("update dialtool2 config");
+						fill_config(config_file_name,cfg);
+						pthread_mutex_lock(&mutex_init_param);
+						init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
+						pthread_mutex_unlock(&mutex_init_param);
+						global_dialtool.Dial_Lvl_1=DIAL_INIT;
+						global_dialtool.Dial_proc_state=Dial_State_initialized;
+						strcpy(global_dialtool.user_result, "OK");	
+						global_dialtool.user_cmd = USER_CMD_WAITING;;
+						break;
+					}
+					default:
+						break;
+				}
 			}
+
+			pthread_mutex_unlock(&mutex_user);
+			log_info("pthread_mutex_unlock mutex unlock\n");
+			pthread_cond_signal(&cond);
+			log_info("pthread_cond_signal cond signal\n");
 			raise(SIGALRM);
 		}
 		else
@@ -761,7 +815,9 @@ void thr_process(void *args)
 void common_sendat(int num)
 {	
 	sendAtFlag = 1;
+	pthread_mutex_lock(&mutex_init_param);
 	(global_dialtool.board_func_set->sendat)(num);
+	pthread_mutex_unlock(&mutex_init_param);
 }
 
 
@@ -836,6 +892,9 @@ int main(int argc,char *argv[] )
 
 	char* vendor_id_file = NULL;
 	char* product_id_file = NULL;
+	pthread_mutex_init(&mutex_init_param, NULL);
+	pthread_mutex_init(&mutex_user, NULL);
+	pthread_cond_init(&cond, NULL);
 	
 	//printf("compile at %s %s\n", __DATE__,__TIME__);
 	openlog(argv[0],  LOG_PID, 0);  
