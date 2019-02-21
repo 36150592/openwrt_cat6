@@ -1,0 +1,7 @@
+ ./configure --build=i386-linux --host=mips --prefix=`pwd`/__install/
+
+#sed -i '16c CMD_LIB_OBJ_FILE=../../../cmdlib/cmdlib.o\nCMD_LIB_INCLUDE_PATH=../../../cmdlib' cwmpd/src/Makefile
+#sed -i '93c CPPFLAGS = -D_GNU_SOURCE -Wall -g -I${CMD_LIB_INCLUDE_PATH}' cwmpd/src/Makefile
+#sed -i '198c cwmpd_LDADD = -L$(top_srcdir)/libpool/src -L$(top_srcdir)/libxmlet/src -L$(top_srcdir)/libcwmp/src  -lpool -lxmlet  -lcwmp  -lpthread -o $(CMD_LIB_OBJ_FILE)' cwmpd/src/Makefile
+
+#./configure --prefix=`pwd`/__install/
