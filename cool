@@ -47,7 +47,7 @@ check_ubuntu_version()
 
 FTPADDR=ftp://soft:83583000@192.168.1.154:14147/openwrt_cat6
 download_flag=.flag_download_something_2018_12_20
-LASTDOCS=.doc20190220
+LASTDOCS=.doc20190222
 download_something()
 {
 	if [ ! -f ${download_flag} ]; then
