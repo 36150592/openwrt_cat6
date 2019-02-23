@@ -74,6 +74,8 @@ void init_parms(PARMS *cfg,int len)
 	strcpy(configs.plmn_lock.Name,"TZ_DIALTOOL2_PLMN_LOCK");
 	strcpy(configs.ipstack.Name,"TZ_DIALTOOL2_IP_STACK_MODE");
 	strcpy(configs.network_card_mtu.Name,"TZ_DIALTOOL2_MTU_USB0");
+	strcpy(configs.lte_pci_lock.Name, "TZ_DIALTOOL2_LTE_PCI_LOCK");
+	strcpy(configs.lte_earfcn_lock.Name, "TZ_DIALTOOL2_LTE_EARFCN_LOCK");
 	//check scan att sim card
 	strcpy(scan_att_configs.scan_att_check_enable.Name,"TZ_DIALTOOL2_SCAN_ATT_CHECK_ENABLE");
 	strcpy(scan_att_configs.scan_att_mcc_mnc.Name,"TZ_DIALTOOL2_SCAN_ATT_MCC_MNC");
@@ -111,6 +113,9 @@ void init_parms(PARMS *cfg,int len)
 	get_config_specified(cfg,len,configs.lte_band_choose.Name,configs.lte_band_choose.Value);
 	get_config_specified(cfg,len,configs.gw_band_choose.Name,configs.gw_band_choose.Value);
 	get_config_specified(cfg,len,configs.tds_band_choose.Name,configs.tds_band_choose.Value);
+
+	get_config_specified(cfg,len,configs.lte_pci_lock.Name,configs.lte_pci_lock.Value);
+	get_config_specified(cfg,len,configs.lte_earfcn_lock.Name,configs.lte_earfcn_lock.Value);
 
 	get_config_specified(cfg,len,configs.plmn_mode.Name,configs.plmn_mode.Value);
 	if(configs.plmn_mode.Value[0] =='\0')
@@ -205,24 +210,28 @@ void init_parms(PARMS *cfg,int len)
 	strcpy(global_init_parms.ppp_password,configs.ppp_password.Value);
 	strcpy(global_init_parms.ipstack,configs.ipstack.Value);
 	strcpy(global_init_parms.network_card_mtu,configs.network_card_mtu.Value);
+	strcpy(global_init_parms.lte_pci_lock,configs.lte_pci_lock.Value);
+	strcpy(global_init_parms.lte_earfcn_lock,configs.lte_earfcn_lock.Value);
 
 
-	log_info("%s_%d:\n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n"
-		,__FUNCTION__,__LINE__,	configs.pin.Name,configs.puk.Value,
-		configs.puk.Name,configs.puk.Value,configs.apn.Name,configs.apn.Value,
-		configs.ppp_auth_type.Name,configs.ppp_auth_type.Value,
-		configs.ppp_username.Name,configs.ppp_username.Value,
-		configs.plmn_lock.Name,configs.plmn_lock.Value,
-		configs.ppp_password.Name,configs.ppp_password.Value);
-	log_info("%s_%d:\n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s]\n"
-		,__FUNCTION__,__LINE__,
-		configs.network_mode_web.Name,configs.network_mode_web.Value,
+	log_info("%s:\n[%s %s] \n[%s %s] \n[%s %s]\n[%s %s]\n [%s %s]\n [%s %s]\n [%s %s]\n",__FUNCTION__,
+		configs.pin.Name,configs.puk.Value,
+		configs.puk.Name,configs.puk.Value,
+		configs.apn.Name,configs.apn.Value,
 		configs.lte_band_choose.Name,configs.lte_band_choose.Value,
 		configs.plmn.Name,configs.plmn.Value,
 		configs.plmn_mode.Name,configs.plmn_mode.Value,
-		configs.plmn_act.Name,configs.plmn_act.Value,
+		configs.plmn_act.Name,configs.plmn_act.Value);
+	log_info("%s:\n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s] \n[%s %s]\n[%s %s]\n[%s %s]\n",__FUNCTION__,
+		configs.ppp_auth_type.Name,configs.ppp_auth_type.Value,
+		configs.ppp_username.Name,configs.ppp_username.Value,
+		configs.plmn_lock.Name,configs.plmn_lock.Value,
+		configs.ppp_password.Name,configs.ppp_password.Value,
+		configs.network_mode_web.Name,configs.network_mode_web.Value,
 		configs.ipstack.Name,configs.ipstack.Value,
 		configs.network_card_mtu.Name,configs.network_card_mtu.Value);
+	log_info("%s:[%s %s]\n",__FUNCTION__,configs.lte_pci_lock.Name,configs.lte_pci_lock.Value);
+	log_info("%s:[%s %s]\n",__FUNCTION__,configs.lte_earfcn_lock.Name,configs.lte_earfcn_lock.Value);
 }
 
 int get_version(char* file_name,GSI* p)
@@ -451,6 +460,32 @@ int install_module_driver(char* driver_name)
 			return WEXITSTATUS(status);
 	}
 }
+int remove_module_driver(char* driver_name)
+{
+#ifdef DEBUG
+	return 0;
+#endif
+	char buffer[1024];
+	int status;
+	//snprintf(buffer,sizeof(buffer),"modprobe %s",driver_name);
+	snprintf(buffer,sizeof(buffer),"rmmod %s",driver_name);
+	status=system(buffer);
+	if(-1==status)
+		return status;
+	else
+	{
+		if(WIFEXITED(status))
+		{
+			if(WEXITSTATUS(status)==0)
+				return 0;
+			else
+				return WEXITSTATUS(status);
+		}
+		else
+			return WEXITSTATUS(status);
+	}
+
+}
 int up_module_networkcard(char* card_name,char* mtu)
 {
 	char cmd_buffer[1024];
@@ -647,13 +682,31 @@ int cmd_str_to_num(char *cmd_str)
 						
 	if(strcmp(cmd_str,"USER_CMD_UPDATE_CONFIG") == 0)
 		return USER_CMD_UPDATE_CONFIG;
-
-
+	else if(strcmp(cmd_str,"USER_CMD_LOCK_BAND") == 0)
+		return USER_CMD_LOCK_BAND;
+	else if(strcmp(cmd_str,"USER_CMD_LOCK_PLMN") == 0)
+		return USER_CMD_LOCK_PLMN;
+	else if(strcmp(cmd_str,"USER_CMD_SET_NETWORK_MODE") == 0)
+		return USER_CMD_SET_NETWORK_MODE;
+	else if(strcmp(cmd_str,"USER_CMD_LTE_LOCK_CELL") == 0)
+		return USER_CMD_LTE_LOCK_CELL;
+	else if(strcmp(cmd_str,"USER_CMD_SEND_AT") == 0)
+		return USER_CMD_SEND_AT;
 	return -1;
 }
 
+void cleanup(void *arg)
+{    
+	printf("cleanup thread\n");
+    pthread_mutex_unlock(&mutex_user);
+	pthread_mutex_unlock(&mutex_init_param);
+}
+
+
 void thr_listen(void *args)
 {
+	//pthread_setcanceltype(PTHREAD_CANCEL_ASYCHRONOUS);
+	pthread_cleanup_push(cleanup,NULL);
 	int listenfd = socket(AF_UNIX, SOCK_STREAM, 0);  
     if (listenfd == -1)  
         exit(-1);
@@ -670,6 +723,13 @@ void thr_listen(void *args)
 
    	while(1)
    	{
+
+		if(Dial_State_Module_Reset == global_dialtool.Dial_proc_state ||
+			Dial_State_Stop == global_dialtool.Dial_proc_state)
+		{
+			close(listenfd);
+			return ;
+		}
 		int connfd = accept(listenfd, NULL, NULL);  
 		if (connfd == -1)  
 		{
@@ -682,27 +742,28 @@ void thr_listen(void *args)
 		char cmd_str[64] = {0};
 		char cmd_param[128] = {0};
 		sscanf(cmd,"%[^####]####%s*s",cmd_str, cmd_param);
-
 		log_info("cmd_str = %s, cmd_param = %s\n",cmd_str, cmd_param);
-		
-		switch(cmd_str_to_num(cmd_str))
-		{
-			case USER_CMD_UPDATE_CONFIG:
-				pthread_mutex_lock(&mutex_user);
-				log_info("user command %d \n",USER_CMD_UPDATE_CONFIG);
-				global_dialtool.user_cmd = USER_CMD_UPDATE_CONFIG;
-				strcpy(global_dialtool.user_param, cmd_param);
-				pthread_cond_wait(&cond, &mutex_user);
-				write(connfd,global_dialtool.user_result,n);
-				pthread_mutex_unlock(&mutex_user);
-				break;
-			
 
+		int cmd_num = cmd_str_to_num(cmd_str);
+		
+		log_info("user command %d \n", cmd_num);
+		if(cmd_num)
+		{
+			pthread_mutex_lock(&mutex_user);
+			strcpy(global_dialtool.user_param, cmd_param);
+			global_dialtool.user_cmd = cmd_num;
+			pthread_cond_wait(&cond, &mutex_user);
+			write(connfd,global_dialtool.user_result,n);
+			pthread_mutex_unlock(&mutex_user);
 		}
-		
-		
+		else
+		{
+			log_error("user cmd error");
+		}
 		close(connfd);
    	}
+
+	pthread_cleanup_pop(0);
 }
 
 char config_file_name[64]={0};
@@ -713,6 +774,9 @@ void thr_process(void *args)
 	MP *b=global_dialtool.boardtype_module_combine;
 	DialProc *p=global_dialtool.board_func_set;
 	void* queue_tail=NULL;
+	static int user_cmd_state = Dial_State_Stop;
+	static int dial_process_last_lvl = DIAL_INIT;
+	static int dial_process_last_state = Dial_State_Stop;
 //	void* queue_tail_sub=NULL;
 	while(1)
 	{
@@ -749,24 +813,50 @@ void thr_process(void *args)
 			memset(global_dialtool.buffer_at_sponse,0,sizeof(global_dialtool.buffer_at_sponse));
 			strncpy(global_dialtool.buffer_at_sponse,queue_tail,strlen(queue_tail));
 			/*different state,different treat*/
-			switch(global_dialtool.Dial_Lvl_1)
+
+			if(user_cmd_state == global_dialtool.Dial_proc_state && user_cmd_state != Dial_State_Stop)
 			{
-				case DIAL_INIT:
-						b->init_boardtype();
-						p->init_proc_func(&global_dialtool.Dial_proc_state);
-						break;
-				case DIAL_DIAL:
-						p->dial_proc_func(&global_dialtool.Dial_proc_state);
-						break;
-				case DIAL_DEAMON:
-						p->deamon_proc_func(&global_dialtool.Dial_proc_state);
-						b->update_boardtype();
-						sleep(2);
-						break;
-				default:
-						p->init_proc_func(&global_dialtool.Dial_proc_state);
-						break;
+				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				{
+					strcpy(global_dialtool.user_result, "OK");	
+				}
+				else
+				{
+					strcpy(global_dialtool.user_result, "ERROR");
+				}
+
+				pthread_cond_signal(&cond);
+				log_info("pthread_cond_signal cond signal\n");
+				global_dialtool.user_cmd = USER_CMD_WAITING;
+				global_dialtool.Dial_Lvl_1 = dial_process_last_lvl;
+				global_dialtool.Dial_proc_state = dial_process_last_state;
+				dial_process_last_state = Dial_State_Stop;
+				user_cmd_state = Dial_State_Stop;
+				dial_process_last_lvl = DIAL_INIT;
 			}
+			else
+			{
+				switch(global_dialtool.Dial_Lvl_1)
+				{
+					case DIAL_INIT:
+							b->init_boardtype();
+							p->init_proc_func(&global_dialtool.Dial_proc_state);
+							break;
+					case DIAL_DIAL:
+							p->dial_proc_func(&global_dialtool.Dial_proc_state);
+							break;
+					case DIAL_DEAMON:
+							p->deamon_proc_func(&global_dialtool.Dial_proc_state);
+							b->update_boardtype();
+							sleep(2);
+							break;
+					default:
+							p->init_proc_func(&global_dialtool.Dial_proc_state);
+							break;
+				}
+			}
+		
+
 			free(queue_tail);
 			global_dialtool.refresh_timer_flag=1;
 
@@ -786,9 +876,71 @@ void thr_process(void *args)
 						init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
 						pthread_mutex_unlock(&mutex_init_param);
 						global_dialtool.Dial_Lvl_1=DIAL_INIT;
-						global_dialtool.Dial_proc_state=Dial_State_initialized;
+						global_dialtool.Dial_proc_state=Dial_State_Config;
 						strcpy(global_dialtool.user_result, "OK");	
 						global_dialtool.user_cmd = USER_CMD_WAITING;;
+						pthread_cond_signal(&cond);
+						log_info("pthread_cond_signal cond signal\n");
+						break;
+					}
+					case USER_CMD_LOCK_BAND:
+					{
+						log_info("user cmd lock band");
+						fill_config(config_file_name,cfg);
+						pthread_mutex_lock(&mutex_init_param);
+						init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
+						pthread_mutex_unlock(&mutex_init_param);
+						dial_process_last_lvl = global_dialtool.Dial_Lvl_1;
+						global_dialtool.Dial_Lvl_1=DIAL_INIT;
+						dial_process_last_state = global_dialtool.Dial_proc_state;
+						global_dialtool.Dial_proc_state=Dial_State_BMBANDPREF;
+						user_cmd_state = Dial_State_BMBANDPREF;
+						
+						break;
+					}
+					case USER_CMD_LOCK_PLMN:
+					{
+						log_info("user cmd lock plmn");
+						fill_config(config_file_name,cfg);
+						pthread_mutex_lock(&mutex_init_param);
+						init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
+						pthread_mutex_unlock(&mutex_init_param);
+						dial_process_last_lvl = global_dialtool.Dial_Lvl_1;
+						global_dialtool.Dial_Lvl_1=DIAL_INIT;
+						dial_process_last_state = global_dialtool.Dial_proc_state;
+						global_dialtool.Dial_proc_state=Dial_State_PLMN_LOCK;
+						user_cmd_state = Dial_State_PLMN_LOCK;
+						
+						break;
+					}
+					case USER_CMD_SET_NETWORK_MODE:
+					{
+						log_info("user cmd set network mode");
+						fill_config(config_file_name,cfg);
+						pthread_mutex_lock(&mutex_init_param);
+						init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
+						pthread_mutex_unlock(&mutex_init_param);
+						dial_process_last_lvl = global_dialtool.Dial_Lvl_1;
+						global_dialtool.Dial_Lvl_1=DIAL_INIT;
+						dial_process_last_state = global_dialtool.Dial_proc_state;
+						global_dialtool.Dial_proc_state=Dial_State_BMMODODR;
+						user_cmd_state = Dial_State_BMMODODR;
+						
+						break;
+					}
+					case USER_CMD_LTE_LOCK_CELL:
+					{
+						log_info("user cmd lock pci");
+						fill_config(config_file_name,cfg);
+						pthread_mutex_lock(&mutex_init_param);
+						init_parms(cfg,sizeof(cfg)/sizeof(PARMS));
+						pthread_mutex_unlock(&mutex_init_param);
+						dial_process_last_lvl = global_dialtool.Dial_Lvl_1;
+						global_dialtool.Dial_Lvl_1=DIAL_INIT;
+						dial_process_last_state = global_dialtool.Dial_proc_state;
+						global_dialtool.Dial_proc_state=Dial_State_PCI_LOCK;
+						user_cmd_state = Dial_State_PCI_LOCK;
+						
 						break;
 					}
 					default:
@@ -798,8 +950,8 @@ void thr_process(void *args)
 
 			pthread_mutex_unlock(&mutex_user);
 			log_info("pthread_mutex_unlock mutex unlock\n");
-			pthread_cond_signal(&cond);
-			log_info("pthread_cond_signal cond signal\n");
+			
+			
 			raise(SIGALRM);
 		}
 		else
@@ -814,6 +966,10 @@ void thr_process(void *args)
 
 void common_sendat(int num)
 {	
+	if(Dial_State_Module_Reset == global_dialtool.Dial_proc_state)
+	{
+		return ;
+	}
 	sendAtFlag = 1;
 	pthread_mutex_lock(&mutex_init_param);
 	(global_dialtool.board_func_set->sendat)(num);
@@ -851,7 +1007,7 @@ static int usb_id2dev(char* dev_name, char *id, int len)
 	 return 1;
 }
 
-
+#if 0
 static int read_memory(char *shellcmd, char *out, int size) {
 
 	FILE *stream;
@@ -872,10 +1028,13 @@ static int read_memory(char *shellcmd, char *out, int size) {
 
 	return -1;
 }
-
-
 #define modem_in_usb2_0 "1"
 #define modem_in_usb3_0 "2"
+
+
+#endif
+
+
 
 int main(int argc,char *argv[] )
 {
@@ -932,30 +1091,23 @@ int main(int argc,char *argv[] )
 
 	while(1)
 	{
-		char cmd[512] = "dmesg | grep ttyUSB | grep -v DT | grep ttyUSB0 | awk '{print $4}' | awk -F \"-\" '{print $1}'";
-		char usbx_flag[8] = "";
-		read_memory(cmd, usbx_flag,sizeof(usbx_flag));
-		if(usbx_flag[0])
-		{
-			if( strncmp(usbx_flag, modem_in_usb2_0, 1) == 0 )
-			{
-				//usb2.0
-				product_id_file = PRODUCTID_MT7621_FILE_2_0;
-				vendor_id_file = VENDORID_MT7621_FILE_2_0;
-				break;
-			}
-			else if( strncmp(usbx_flag, modem_in_usb3_0, 1) == 0 )
+			if(check_file_exist(PRODUCTID_MT7621_FILE_3_0) && check_file_exist(VENDORID_MT7621_FILE_3_0))
 			{
 				//usb3.0 
 				product_id_file = PRODUCTID_MT7621_FILE_3_0;
 				vendor_id_file = VENDORID_MT7621_FILE_3_0;
 				break;
 			}
+			else if(check_file_exist(PRODUCTID_MT7621_FILE_2_0) && check_file_exist(VENDORID_MT7621_FILE_2_0))
+			{
+				//usb2.0
+				product_id_file = PRODUCTID_MT7621_FILE_2_0;
+				vendor_id_file = VENDORID_MT7621_FILE_2_0;
+				break;
+			}
 			
 			log_info("%s %d: wait ttyUSBx...\n",__FUNCTION__,__LINE__);
 			sleep(3);
-		}
-		
 	}
 
 	
@@ -1045,22 +1197,47 @@ int main(int argc,char *argv[] )
 	}
 	/*ifconfig up usb0 or other*/
 	if(global_system_info.module_info.network_card_name[0])
-	if(0!=up_module_networkcard(global_system_info.module_info.network_card_name,global_init_parms.network_card_mtu))
 	{
-		char buffer_tmp[1024];
-		snprintf(buffer_tmp,sizeof(buffer_tmp),"up module network card  failed:%s\n",global_system_info.module_info.driver_name);
-		log_error(buffer_tmp);
-		write_str_file(DIAL_INDICATOR,buffer_tmp,"w+");
-		exit(-1);
+		int count = 10;
+		while(0!=up_module_networkcard(global_system_info.module_info.network_card_name,global_init_parms.network_card_mtu))
+		{
+			sleep(3);
+			if(count--)
+				break;
+		}
+
+		if(count <= 0)
+		{
+			char buffer_tmp[1024];
+			snprintf(buffer_tmp,sizeof(buffer_tmp),"up module network card  failed:%s\n",global_system_info.module_info.driver_name);
+			log_error(buffer_tmp);
+			write_str_file(DIAL_INDICATOR,buffer_tmp,"w+");
+			remove_module_driver(global_system_info.module_info.driver_name);
+			exit(-1);
+		}
 	}
+	
 	global_dialtool.dev_handle=open(global_system_info.module_info.dev_name,O_RDWR);
 	if(-1== global_dialtool.dev_handle)
 	{
-		char buffer_tmp[1024];
-		snprintf(buffer_tmp,sizeof(buffer_tmp),"open %s failed!\n",global_system_info.module_info.dev_name);
-		log_error("%s %d", buffer_tmp, errno);
-		write_str_file(DIAL_INDICATOR,buffer_tmp,"w+");
-		return TRUE;
+
+		int count = 10;
+
+		while(count-- && global_dialtool.dev_handle < 0 )
+		{
+			sleep(3);
+			global_dialtool.dev_handle=open(global_system_info.module_info.dev_name,O_RDWR);
+		}
+
+		if(count <= 0 )
+		{
+			char buffer_tmp[1024];
+			snprintf(buffer_tmp,sizeof(buffer_tmp),"open %s failed!\n",global_system_info.module_info.dev_name);
+			log_error("%s %d", buffer_tmp, errno);
+			write_str_file(DIAL_INDICATOR,buffer_tmp,"w+");
+			remove_module_driver(global_system_info.module_info.driver_name);
+			return TRUE;
+		}
 	}
 
 	config_device_mode(global_dialtool.dev_handle,baudrate,8,1,'s');
@@ -1076,6 +1253,7 @@ int main(int argc,char *argv[] )
 		snprintf(buffer_tmp,sizeof(buffer_tmp),"%s:get version error\n",__FUNCTION__);
 		log_error(buffer_tmp);
 		write_str_file(DIAL_INDICATOR,buffer_tmp,"w+");
+		remove_module_driver(global_system_info.module_info.driver_name);
 		close(global_dialtool.dev_handle);
 		exit(-1);
 	}
@@ -1087,6 +1265,7 @@ int main(int argc,char *argv[] )
 			global_system_info.sys_hardware,global_system_info.module_info.hardver);
 		log_error(buffer_tmp);
 		write_str_file(DIAL_INDICATOR,buffer_tmp,"w+");	
+		remove_module_driver(global_system_info.module_info.driver_name);
 		close(global_dialtool.dev_handle);
 		exit(-1);
 	}
@@ -1100,7 +1279,8 @@ int main(int argc,char *argv[] )
 	if(0 != pthread_create(&thread_recv,NULL,(void* )thr_recv,NULL))
 	{
 		log_error("thr_recv create failed\n");
-		write_str_file(DIAL_INDICATOR,"thr_recv create failed","w+");	
+		write_str_file(DIAL_INDICATOR,"thr_recv create failed","w+");
+		remove_module_driver(global_system_info.module_info.driver_name);
 		close(global_dialtool.dev_handle);
 		exit(-1);
 	}
@@ -1110,7 +1290,8 @@ then compare with AT sended ,if yes keep result, else abandon the result */
 	if(0 != pthread_create(&thread_process,NULL,(void*)thr_process,NULL))
 	{
 		log_error("thr_process create failed\n");
-		write_str_file(DIAL_INDICATOR,"thr_process create failed","w+");	
+		write_str_file(DIAL_INDICATOR,"thr_process create failed","w+");
+		remove_module_driver(global_system_info.module_info.driver_name);
 		close(global_dialtool.dev_handle);
 		exit(-1);
 	}
@@ -1119,7 +1300,8 @@ then compare with AT sended ,if yes keep result, else abandon the result */
 	if(0 != pthread_create(&thread_listen,NULL,(void*)thr_listen,NULL))
 	{
 		log_error("thread_listen create failed\n");
-		write_str_file(DIAL_INDICATOR,"thread_listen create failed","w+");	
+		write_str_file(DIAL_INDICATOR,"thread_listen create failed","w+");
+		remove_module_driver(global_system_info.module_info.driver_name);
 		close(global_dialtool.dev_handle);
 		exit(-1);
 	}
@@ -1143,6 +1325,7 @@ then compare with AT sended ,if yes keep result, else abandon the result */
 	{
 		log_error("settitimer error\n");
 		write_str_file(DIAL_INDICATOR,"settitimer error","w+");
+		remove_module_driver(global_system_info.module_info.driver_name);
 		close(global_dialtool.dev_handle);
 		exit(-1);
 	}
@@ -1171,6 +1354,34 @@ then compare with AT sended ,if yes keep result, else abandon the result */
 		}
 		update_web_4g_status();
 		write_sysinfo_dynamic(&global_dial_vars);	
+
+		if(Dial_State_Module_Reset == global_dialtool.Dial_proc_state )
+		{
+			
+			log_info("RESET MODULE");
+			remove_module_driver(global_system_info.module_info.driver_name);
+			stop_timer();
+			sendAtFlag = 1;
+			printf("cancel thread_listen\n");
+			pthread_cancel(thread_listen);
+
+			pthread_cancel(thread_process);
+			pthread_cancel(thread_recv);
+			(global_dialtool.board_func_set->sendat)(0);
+			
+			sleep(30);
+			close(global_dialtool.dev_handle);
+			closelog();
+			printf("before execl\n");
+			if(execl("/bin/dialtool_new","dialtool_new","-s","/tmp/dialtool2_config","-p","/tmp/.dialtool_new.pid",NULL) == -1)
+			{
+				log_error("execl failed! RESET MODULE FAIL!!!\n");	
+				exit(-1);
+			}
+			printf("execl success\n");
+			break;
+		}
 	}
 
+	return 0;
 }

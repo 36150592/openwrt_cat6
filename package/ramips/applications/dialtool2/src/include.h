@@ -15,6 +15,12 @@ typedef enum
 {
 	USER_CMD_WAITING,
 	USER_CMD_UPDATE_CONFIG,
+	USER_CMD_LOCK_BAND,
+	USER_CMD_LOCK_PLMN,
+	USER_CMD_SET_NETWORK_MODE,
+	USER_CMD_LTE_LOCK_CELL,
+	USER_CMD_SEND_AT,
+	
 	USER_CMD_END,
 }UserCmd;
 
@@ -71,6 +77,8 @@ typedef struct GLOBAL_INIT_PARAMS
 	int plmn_act;
 	char plmn_lock[64];
 	char network_card_mtu[8];
+	char lte_pci_lock[64];
+	char lte_earfcn_lock[64];
 	int signal_rssi_lvl[5];
 	int signal_rsrp_lvl[5];
 }GIP;
@@ -144,6 +152,8 @@ typedef struct CONFIG_PARAMS
 	PARMS plmn;
 	PARMS plmn_act;
 	PARMS plmn_lock;
+	PARMS lte_pci_lock;
+	PARMS lte_earfcn_lock;
 	PARMS ipstack;
 	PARMS network_card_mtu;
 }CPS;

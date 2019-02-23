@@ -10,6 +10,7 @@ local UCI_SECTION_DIALTOOL2="cfg"
 local MODEM_DYNAMIC_STATUS_PATH="/tmp/.system_info_dynamic"
 local MODEM_STATIC_INFO_PATH="/tmp/.system_info_static"
 local DIALTOOL2_SOCKET_FILE="/tmp/dialtool2.socket"
+local GENERATE_DIALTOOL_CONFIG_CMD="cfg -e |grep -v 'export value' |  awk '{print $2}' | grep 'TZ_DIALTOOL2' > /tmp/dialtool2_config"
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
@@ -342,11 +343,14 @@ function modem_module.modem_get_info()
 
 end
 
-function modem_module.modem_reload_config()
-	local ret1 = os.execute("cfg -e |grep -v 'export value' |  awk '{print $2}' | grep 'TZ_DIALTOOL2' > /tmp/dialtool2_config")
-	
+local function send_dialtool_socket_cmd(cmd)
 	local fd = tzlib.unix_connect(DIALTOOL2_SOCKET_FILE)
-	local cmd = "USER_CMD_UPDATE_CONFIG####abdc"
+	if nil == fd
+	then
+		debug("open socket error")
+		return false
+	end
+	
 	local n = tzlib.unix_write(fd, cmd,string.len(cmd));
 	if n ~= string.len(cmd)
 	then
@@ -363,6 +367,15 @@ function modem_module.modem_reload_config()
 	end
 	return false
 end
+
+function modem_module.modem_reload_config()
+	local ret1 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
+	
+	return ret1 and send_dialtool_socket_cmd("USER_CMD_UPDATE_CONFIG####abdc")
+end
+
+
+
 -- lock band
 -- input:mode(number):
 --1-4g only 5
@@ -386,7 +399,9 @@ function modem_module.modem_set_network_mode(mode)
 	end
 
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_MODULE_MODE", mode)
-	return x:commit(TOZED_CONFIG_FILE)
+	local ret1 = x:commit(TOZED_CONFIG_FILE)
+	local ret2 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
+	return ret1 and ret2 and send_dialtool_socket_cmd("USER_CMD_SET_NETWORK_MODE####abdc")
 end
 
 -- get network mode 
@@ -649,7 +664,8 @@ function modem_module.modem_set_lock_band(band_list)
 	end
 
 	x:commit(TOZED_CONFIG_FILE)
-	return gw_ret and lte_ret and tds_ret
+	local ret1 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
+	return gw_ret and lte_ret and tds_ret and ret1 and send_dialtool_socket_cmd("USER_CMD_LOCK_BAND####abdc")
 
 end
 
@@ -725,7 +741,9 @@ function modem_module.modem_set_lock_operator(operator_list)
 	operator_str = string.sub(operator_str, 2, string.len(operator_str))
 
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PLMN_LOCK", operator_str)
-	return x:commit(TOZED_CONFIG_FILE)
+	local ret2 = x:commit(TOZED_CONFIG_FILE) 
+	local ret1 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
+	return ret1 and ret2 and send_dialtool_socket_cmd("USER_CMD_LOCK_PLMN####abdc")
 
 end
 
@@ -742,5 +760,51 @@ function modem_module.modem_get_lock_operator()
 	return operator_list
 
 end
+
+-- lock LTE CELL 
+-- input: 
+--		pci:LTE physical cell id range from 0 ~503 , nil or '' mean disable this function
+--		earfcn:LTE earfcn range from 0 ~ 65535 , nil or '' mean disable this function
+-- return:true if success false if fail
+function modem_module.modem_set_lte_lock_cell(pci, earfcn)
+
+	if '' == pci or '' == earfcn or nil == pci or nil == earfcn
+	then
+		x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_PCI_LOCK", "")
+		x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_EARFCN_LOCK", "")
+	elseif	pci >=0 and pci <= 503 and earfcn <=65535 and earfcn >=0
+	then
+		x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_PCI_LOCK", pci)
+		x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_EARFCN_LOCK", earfcn)
+	else
+		debug("input error")
+		return false
+	end
+	local ret2  = x:commit(TOZED_CONFIG_FILE)
+	local ret1 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
+	return  ret2 and ret1 and send_dialtool_socket_cmd("USER_CMD_LTE_LOCK_CELL####abdc")
+end
+
+-- get lock LTE CELL
+-- input:none
+-- return:
+-- 		pci,earfcn 
+--		or  nil --> that this fucntion is disable
+function modem_module.modem_get_lte_lock_cell()
+
+	local pci = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_PCI_LOCK")
+	local earfcn = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_EARFCN_LOCK")
+
+	if nil == pci or nil == earfcn 
+	then
+		debug("lte lock cell is disable")
+		return nil,nil
+	end
+
+
+	return pci,earfcn
+end
+
+
 
 return modem_module

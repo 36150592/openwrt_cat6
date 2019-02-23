@@ -608,6 +608,11 @@ void bm916_sendat(int num)
 {
 	switch(global_dialtool.Dial_proc_state)
 	{
+		case Dial_State_Module_Reset:
+			{
+				util_send_cmd(global_dialtool.dev_handle,"AT+BMCMD=reboot\r",&global_dialtool.pthread_moniter_flag);
+				break;
+			}
 		case Dial_State_initialized:
 			util_send_cmd(global_dialtool.dev_handle,"ATE0\r",&global_dialtool.pthread_moniter_flag);			//test AT
 			break;
@@ -624,6 +629,24 @@ void bm916_sendat(int num)
 				util_send_cmd(global_dialtool.dev_handle,cmd_buffer,&global_dialtool.pthread_moniter_flag);  	
 				break;
 			}
+		case Dial_State_PCI_LOCK:
+			{
+				char cmd_buffer[64] = {0};
+				if('\0' == global_init_parms.lte_pci_lock[0] ||
+					'\0' == global_init_parms.lte_earfcn_lock[0] )
+					strcpy(cmd_buffer,"AT+BMPCILOCK=0,2\r");
+				else
+				{
+					int pci = atoi(global_init_parms.lte_pci_lock );
+					int earfcn = atoi(global_init_parms.lte_earfcn_lock );
+					if(pci>=0 && pci<=503 && earfcn >=0 && earfcn <= 65535)
+						sprintf(cmd_buffer,"AT+BMPCILOCK=1,2,%d,%d\r",earfcn, pci);
+					else
+						strcpy(cmd_buffer,"AT+BMPCILOCK=0,2\r");
+				}
+				util_send_cmd(global_dialtool.dev_handle,cmd_buffer,&global_dialtool.pthread_moniter_flag); 
+			}
+			break;
 		case Dial_State_ICCID:
 			util_send_cmd(global_dialtool.dev_handle,"AT+ICCID\r",&global_dialtool.pthread_moniter_flag);
 			break;
@@ -1023,7 +1046,53 @@ void bm916_init(int*  Dial_proc_state)
 	static int hasSetPin = 0;
 	switch(*Dial_proc_state)
 	{
-		//write query function is  troublesome  ,maybe it not safe only judge by OK or ERROR,i just try it
+		case Dial_State_Config:
+				*Dial_proc_state=Dial_State_PCI_LOCK;
+				break;
+		case Dial_State_PCI_LOCK:
+				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				{
+					*Dial_proc_state=Dial_State_PLMN_LOCK;
+				}
+				break;
+		case Dial_State_PLMN_LOCK:
+				if (NULL == strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				{
+					log_error("plmn lock error");
+				}
+				if(global_init_parms.lte_band_choose[0]=='\0')
+				{
+					if( 0 == strcmp(global_dial_vars.lte_all_band, global_dial_vars.lte_lock_band))
+					{
+						*Dial_proc_state=Dial_State_Module_Reset;
+					}
+					else
+						*Dial_proc_state=Dial_State_RECOVERY_BAND;
+				}
+				else
+					*Dial_proc_state=Dial_State_BMBANDPREF;
+				break;
+		case Dial_State_RECOVERY_BAND:
+				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				{
+					*Dial_proc_state=Dial_State_Module_Reset;
+				}
+					
+				break;
+		case Dial_State_BMBANDPREF:
+				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				{
+					*Dial_proc_state=Dial_State_Module_Reset;
+					
+				}
+					
+				break;
+		case Dial_State_Module_Reset:
+				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				{
+					*Dial_proc_state=Dial_State_Stop;
+				}
+				break;
 		case Dial_State_initialized:
 				memcpy(global_dial_vars.moduleType,"bm916",5);
 				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
@@ -1032,16 +1101,9 @@ void bm916_init(int*  Dial_proc_state)
 		case Dial_State_CMEE:
 				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
 				{
-					*Dial_proc_state=Dial_State_PLMN_LOCK;
+					*Dial_proc_state=Dial_State_BMBANDPREF_SUPPORT_BAND_QUERY;
 				}
 				
-				break;
-		case Dial_State_PLMN_LOCK:
-				if (NULL == strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
-				{
-					log_error("plmn lock error");
-				}
-				*Dial_proc_state=Dial_State_BMBANDPREF_SUPPORT_BAND_QUERY;
 				break;
 		case Dial_State_BMBANDPREF_SUPPORT_BAND_QUERY:
 			{
@@ -1102,29 +1164,11 @@ void bm916_init(int*  Dial_proc_state)
 							strncpy(global_dial_vars.lte_lock_band,ptr_lte,strlen(ptr_lte));
 							strncpy(global_dial_vars.tds_lock_band,ptr_tds,strlen(ptr_tds));
 						}
-						if(global_init_parms.lte_band_choose[0]=='\0')
-						{
-							if( 0 == strcmp(global_dial_vars.lte_all_band, global_dial_vars.lte_lock_band))
-							{
-								*Dial_proc_state=Dial_State_BMDATASTATUSEN;
-							}
-							else
-								*Dial_proc_state=Dial_State_RECOVERY_BAND;
-						}
-							
-						else
-							*Dial_proc_state=Dial_State_BMBANDPREF;
+						
+						*Dial_proc_state=Dial_State_BMDATASTATUSEN;
 					}
 				}
 				break;	
-		case Dial_State_RECOVERY_BAND:
-				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
-					*Dial_proc_state=Dial_State_CFUN_DISABLE;
-				break;
-		case Dial_State_BMBANDPREF:
-				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
-					*Dial_proc_state=Dial_State_BMDATASTATUSEN;
-				break;
 		case Dial_State_BMDATASTATUSEN:
 				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
 					*Dial_proc_state=Dial_State_PSDIALIND;

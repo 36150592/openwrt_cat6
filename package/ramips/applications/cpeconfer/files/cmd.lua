@@ -708,6 +708,36 @@ function modem_reload_config()
 	end
 end
 
+
+function modem_set_lte_lock_cell()
+
+	print("in modem_set_lte_lock_cell")
+	local ret = modem.modem_set_lte_lock_cell(tonumber(arg[2]), tonumber(arg[3]))
+
+	if ret 
+	then
+		print("set success")
+	else 
+		print("set fail")
+	end
+
+end
+
+function modem_get_lte_lock_cell()
+
+	print("in modem_get_lte_lock_cell")
+	local pci,earfcn = modem.modem_get_lte_lock_cell()
+
+	if nil == pci or nil == earfcn
+	then
+		print("lte locl cell is disable")
+	else
+		print("lock pci = ", pci)
+		print("lock earfcn = ", earfcn)
+	end
+end
+
+
 function modem_set_lock_operator()
 
 	print("in modem_set_lock_operator")
@@ -1809,6 +1839,8 @@ local api_func = {
 	["modem_set_lock_operator"] = modem_set_lock_operator,
 	["modem_get_lock_operator"] = modem_get_lock_operator,
 	["modem_reload_config"] = modem_reload_config,
+	["modem_set_lte_lock_cell"] = modem_set_lte_lock_cell,
+	["modem_get_lte_lock_cell"] = modem_get_lte_lock_cell,
 
 	--network
 	["network_get_wan_info"] = network_get_wan_info,

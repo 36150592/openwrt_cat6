@@ -65,9 +65,13 @@
 
 typedef enum
 {
+	Dial_State_Stop,
+	Dial_State_Config,				//config 
+	Dial_State_Module_Reset,		//reset LTE Module 
 	Dial_State_initialized,			//send AT for test AT is ok
 	Dial_State_CMEE,			//enable result code +CME ERROR:<num>
 	Dial_State_PLMN_LOCK,		//lock plmn 
+	Dial_State_PCI_LOCK,
 	Dial_State_ICCID,			//query iccid
 	Dial_State_BMIMEI,			//query module imei
 	Dial_State_CPIN_QUERY,			//query card exit or not
@@ -293,6 +297,7 @@ extern void* m_malloc_two(int m,int n);
 extern void free_two(char** ptr,int m,int n);
 extern void * m_malloc(unsigned int  size) ;
 extern int refresh_timer(int sec);
+extern int stop_timer();
 extern int  get_value(char* file_path,int base);
 extern int getpid_by_pidfile(char* pidfile_path);
 extern void num_asciistr_to_decimalstr(char * input,char * output);

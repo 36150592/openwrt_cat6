@@ -351,7 +351,25 @@ void free_two(char** ptr,int m,int n)
 		m_free(ptr[i]);
 	m_free(ptr);
 }
-
+int stop_timer()
+{
+	int res;
+	struct itimerval tick;
+	memset(&tick,0,sizeof(tick));
+	tick.it_value.tv_sec = 0;
+	tick.it_value.tv_usec =0;
+	tick.it_interval.tv_sec = 0;
+	tick.it_interval.tv_usec =0;
+	
+	res=setitimer(ITIMER_REAL,&tick,NULL);
+	if(res!=0)
+	{
+		log_error("settitimer error\n");
+		return FALSE;
+	}
+	else
+		return TRUE;
+}
 int refresh_timer(int sec)
 {
  	int res;
@@ -375,15 +393,12 @@ int  get_value(char* file_path,int base)
 {
 	FILE *f=fopen(file_path,"r");
 	char buffer[512]={0};
-	if(NULL!=f)
+	if(NULL!=f && NULL!=fgets(buffer,sizeof(buffer),f))
 	{
-		if(NULL!=fgets(buffer,sizeof(buffer),f))
-			return strtol(buffer,NULL,base);
-		else
-			return -1;
+		fclose(f);
+		return strtol(buffer,NULL,base);
 	}
-	else
-		return -1;
+	return -1;
 }
 #if 0
 int write_pid(char* path)
