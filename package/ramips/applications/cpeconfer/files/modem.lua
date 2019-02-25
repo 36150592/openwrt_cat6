@@ -370,8 +370,47 @@ end
 
 function modem_module.modem_reload_config()
 	local ret1 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
-	
-	return ret1 and send_dialtool_socket_cmd("USER_CMD_UPDATE_CONFIG####abdc")
+	local ret2 =  send_dialtool_socket_cmd("USER_CMD_UPDATE_CONFIG####abdc")
+	local ret3 = false
+	local rte4 = false
+
+	if ret2 ~= true
+	then
+		debug("send module reset command error")
+		return false
+	end
+
+	sleep(20)
+	local f = io.popen("sendat -d/dev/ttyUSB1 -e at\r")
+
+
+	local res = f:read("*a")
+	local count = 10
+	while string.find(res,"OK") == nil and count > 0
+	do
+		debug(res)
+		io.close(f)
+		sleep(5)
+		f = io.popen("sendat -d/dev/ttyUSB1 -e at\r")
+		res = f:read("*a")
+		count = count - 1
+	end
+
+	io.close(f)
+	debug("count = ", count)
+	if count > 0
+	then
+		ret3 = true
+	end
+
+	debug("ret3 = ", ret3)
+	if ret3
+	then
+		ret4 = os.execute("/etc/init.d/dialtool2 start")
+	end
+
+
+	return ret1 and ret2 and ret3 and ret4
 end
 
 

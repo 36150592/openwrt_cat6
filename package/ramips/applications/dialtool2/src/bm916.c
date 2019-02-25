@@ -1902,17 +1902,17 @@ void bm916_dial(int* Dial_proc_state )
 			if(NULL!= strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
 			{
 				int ip_type=3;
-				int udhcpc_pid;
-				char buffer_cmd[1024];
+				//int udhcpc_pid;
+				//char buffer_cmd[1024];
 				char* ptr_tmp=strstr(global_dialtool.buffer_at_sponse,"$QCRMCALL:");
 				if(NULL!= ptr_tmp)
 				{
-					static int udhcpc_sig_count=0;
+					//static int udhcpc_sig_count=0;
 					ptr_tmp=strip_head_tail_space(ptr_tmp+strlen("$QCRMCALL:"));
 					ip_type=atoi(ptr_tmp);
 					global_dial_vars.ipstack_registered=ip_type;
 					//here we dial successful,so we should told udhcpc to get ip and dns
-					snprintf(buffer_cmd,sizeof(buffer_cmd),"udhcpc -b -i %s -p %s -s /etc/udhcpc.script",
+					/*snprintf(buffer_cmd,sizeof(buffer_cmd),"udhcpc -b -i %s -p %s -s /etc/udhcpc.script",
 					global_system_info.module_info.network_card_name,UDHCPC_PIDFILE_PATH);
 			REGET_IP_BY_UDHCPC:
 					udhcpc_pid=getpid_by_pidfile(UDHCPC_PIDFILE_PATH);
@@ -1933,7 +1933,7 @@ void bm916_dial(int* Dial_proc_state )
 					}
 					else
 						system(buffer_cmd);
-
+					*/
 					exception_count=0;
 					global_sleep_interval_long = 1;
 					sleep(5);

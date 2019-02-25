@@ -697,7 +697,7 @@ int cmd_str_to_num(char *cmd_str)
 
 void cleanup(void *arg)
 {    
-	printf("cleanup thread\n");
+	log_info("cleanup thread\n");
     pthread_mutex_unlock(&mutex_user);
 	pthread_mutex_unlock(&mutex_init_param);
 }
@@ -1362,23 +1362,13 @@ then compare with AT sended ,if yes keep result, else abandon the result */
 			remove_module_driver(global_system_info.module_info.driver_name);
 			stop_timer();
 			sendAtFlag = 1;
-			printf("cancel thread_listen\n");
+			log_info("cancel thread_listen\n");
 			pthread_cancel(thread_listen);
-
 			pthread_cancel(thread_process);
 			pthread_cancel(thread_recv);
 			(global_dialtool.board_func_set->sendat)(0);
-			
-			sleep(30);
 			close(global_dialtool.dev_handle);
 			closelog();
-			printf("before execl\n");
-			if(execl("/bin/dialtool_new","dialtool_new","-s","/tmp/dialtool2_config","-p","/tmp/.dialtool_new.pid",NULL) == -1)
-			{
-				log_error("execl failed! RESET MODULE FAIL!!!\n");	
-				exit(-1);
-			}
-			printf("execl success\n");
 			break;
 		}
 	}
