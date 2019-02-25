@@ -28,3 +28,4 @@ git-src
 .flag*
 .config
 target/linux/ramips/mt7621/config-3.18
+.doc*
