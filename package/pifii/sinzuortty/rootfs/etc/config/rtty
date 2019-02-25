@@ -1,0 +1,10 @@
+# You must specify an interface or id,
+# If the id is not specified, RTTY will uses the MAC address
+# of the interface you specify as its ID, otherwise the id
+# you specify is used as its ID
+
+config rtty
+   option  host        'sinzuo.cn'  # Server host
+   option  port        '5912'              # Server Port
+   option  description        'zhengda'              # Server Port
+   option  enable        '1'              # Server Port
