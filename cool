@@ -165,7 +165,7 @@ if [ "$options" = "1" ]; then
 	echo "快速编译"
 	cp config/default_openwrt_${project}_config .config
 	cp config/default_kernel_${project}_config target/linux/ramips/mt7621/config-3.18
-	make V=99
+	make V=99 -j 8
 elif [ "$options" = "2" ]; then
 	echo "完全编译(暂时不支持)"
 elif [ "$options" = "a" ]; then
