@@ -8,6 +8,7 @@ FACTORY_FLAG=/etc/.flag_factory_config
 
 
 if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
+	touch ${FACTORY_FLAG}
 	mkdir -p ${FORM_CONFIG_STATION}
 
 	#export param
