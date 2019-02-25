@@ -17,6 +17,7 @@ bitcomposite表示使用位进行组合的配置字段
 	<class name="SYSTEM_CONFIG_FIELD" description="系统配置"  />
 	<class name="USER_CONFIG_FIELD" description="用户配置"  />
  	<class name="WIFI_CONFIG_FIELD" description="WIFI配置"  />
+	<class name="DHCP_CONFIG_FIELD" description="DHCP配置"/>
 	
 	<!--能够识别的字段,使用逗号进行分割-->
 	<recognizedfields list="MANRATE,MANRETRIES,RATECTL,AP_CHMODE,PUREG,PUREN,WIFIWORKMODE,AP_SECFILE,AP_WPA_GROUP_REKEY,AP_WPA_GMK_REKEY,AP_CYPHER,AP_WPA,AP_SEC_DEBUG,AP_SECMODE,PSK_KEY" />
@@ -203,6 +204,112 @@ bitcomposite表示使用位进行组合的配置字段
 	<config name="TZWIFI_58G_VICE_2_WIFI_PWD" type="text" description="5.8G 辅wifi 2 固定密码" detail="设置 5.8G 辅wifi 2 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
         	<default value="12345678" />
 	</config>
+
+	<!--主dhcp-->
+	<config name="TZDHCP_MAIN_ENABLE" type="select" description="主DHCP服务器" detail="设置是否启用主DHCP服务,启用时为本路由器上连接的所有客户端自动分配IP地址. " class_name="DHCP_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="y"/>
+	</config>
+
+	<config name="TZDHCP_MAIN_IP" type="text" description="主DHCP的IP地址" detail="设置无线路由器LAN口的IP地址,默认为192.168.2.1" class_name="DHCP_CONFIG_FIELD"  >
+        	<default value="192.168.2.1" />
+	</config>
+
+	<!--路由器的局域网IP地址对应的子网掩码;-->
+	<config name="TZDHCP_MAIN_NETMASK" type="text" description="主DHCP的子网掩码" detail="子网掩码为IP地址中的网络号,默认为255.255.255.0. " class_name="DHCP_CONFIG_FIELD">
+		<default value="255.255.255.0"/>
+	</config>
+
+	<!--动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,否则将导致无法访问路由器的网页的问题; -->
+	<config name="TZDHCP_MAIN_DHCPSTART" type="text" description="主DHCP的IP地址池开始IP地址" detail="动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题;" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.2.100"/>
+	</config>
+
+	<!--动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,否则将导致无法访问路由器的网页的问题;-->
+	<config name="TZDHCP_MAIN_DHCPEND" type="text" description="主DHCP的IP地址池结束IP地址" detail="动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.2.200"/>
+	</config>
+
+	<!--DHCP DNS-->
+	<config name="TZDHCP_MAIN_DNS" type="text" description="主DHCP的DNS地址" detail="DNS地址" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.2.1"/>
+	</config>
+
+	<!--DHCP租期时间，单位小时,默认为86400=24×60×60秒=1天;-->
+	<config name="TZDHCP_MAIN_DHCPLEASE" type="text" description="主DHCP的DHCP租期时间(小时)" detail="启用DHCP服务时,设置租期时间.默认为一天,非专业人士不建议修改,默认为86400=24×60×60秒=1天" class_name="DHCP_CONFIG_FIELD">
+		<default value="24"/>
+	</config>
+
+	<!--辅dhcp1-->
+	<config name="TZDHCP_VICE_1_ENABLE" type="select" description="辅DHCP 1 服务器" detail="设置是否启用主DHCP服务,启用时为本路由器上连接的所有客户端自动分配IP地址. " class_name="DHCP_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="n"/>
+	</config>
+
+	<config name="TZDHCP_VICE_1_IP" type="text" description="辅DHCP 1的IP地址" detail="设置无线路由器LAN口的IP地址,默认为192.168.2.1" class_name="DHCP_CONFIG_FIELD"  >
+        	<default value="192.168.3.1" />
+	</config>
+
+	<!--路由器的局域网IP地址对应的子网掩码;-->
+	<config name="TZDHCP_VICE_1_NETMASK" type="text" description="辅DHCP 1的子网掩码" detail="子网掩码为IP地址中的网络号,默认为255.255.255.0. " class_name="DHCP_CONFIG_FIELD">
+		<default value="255.255.255.0"/>
+	</config>
+
+	<!--动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,否则将导致无法访问路由器的网页的问题; -->
+	<config name="TZDHCP_VICE_1_DHCPSTART" type="text" description="辅DHCP 1的IP地址池开始IP地址" detail="动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题;" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.3.100"/>
+	</config>
+
+	<!--动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,否则将导致无法访问路由器的网页的问题;-->
+	<config name="TZDHCP_VICE_1_DHCPEND" type="text" description="辅DHCP 1的IP地址池结束IP地址" detail="动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.3.200"/>
+	</config>
+
+	<!--DHCP DNS-->
+	<config name="TZDHCP_VICE_1_DNS" type="text" description="辅DHCP 1的DNS地址" detail="DNS地址" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.3.1"/>
+	</config>
+
+	<!--DHCP租期时间，单位小时,默认为86400=24×60×60秒=1天;-->
+	<config name="TZDHCP_VICE_1_DHCPLEASE" type="text" description="辅DHCP 1的DHCP租期时间(小时)" detail="启用DHCP服务时,设置租期时间.默认为一天,非专业人士不建议修改,默认为86400=24×60×60秒=1天" class_name="DHCP_CONFIG_FIELD">
+		<default value="24"/>
+	</config>
+
+	<!--辅dhcp2-->
+	<config name="TZDHCP_VICE_2_ENABLE" type="select" description="辅DHCP 2 服务器" detail="设置是否启用主DHCP服务,启用时为本路由器上连接的所有客户端自动分配IP地址. " class_name="DHCP_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="n"/>
+	</config>
+
+	<config name="TZDHCP_VICE_2_IP" type="text" description="辅DHCP 2的IP地址" detail="设置无线路由器LAN口的IP地址,默认为192.168.2.1" class_name="DHCP_CONFIG_FIELD"  >
+        	<default value="192.168.3.1" />
+	</config>
+
+	<config name="TZDHCP_VICE_2_NETMASK" type="text" description="辅DHCP 2的子网掩码" detail="子网掩码为IP地址中的网络号,默认为255.255.255.0. " class_name="DHCP_CONFIG_FIELD">
+		<default value="255.255.255.0"/>
+	</config>
+
+	<config name="TZDHCP_VICE_2_DHCPSTART" type="text" description="辅DHCP 2的IP地址池开始IP地址" detail="动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题;" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.4.100"/>
+	</config>
+
+	<config name="TZDHCP_VICE_2_DHCPEND" type="text" description="辅DHCP 2的IP地址池结束IP地址" detail="动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.4.200"/>
+	</config>
+
+	<!--DHCP DNS-->
+	<config name="TZDHCP_VICE_2_DNS" type="text" description="辅DHCP 2的DNS地址" detail="DNS地址" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.4.1"/>
+	</config>
+
+	<!--DHCP租期时间，单位小时,默认为86400=24×60×60秒=1天;-->
+	<config name="TZDHCP_VICE_2_DHCPLEASE" type="text" description="辅DHCP 2的DHCP租期时间(小时)" detail="启用DHCP服务时,设置租期时间.默认为一天,非专业人士不建议修改,默认为86400=24×60×60秒=1天" class_name="DHCP_CONFIG_FIELD">
+		<default value="24"/>
+	</config>
+
 
 </project>
 

@@ -50,7 +50,13 @@ boot() {
 		tozed_tool -c config -g WEB_USER -w rewrite
 	fi
 
+	#/etc/config/network
 	/bin/board_detect
+
+	if [ -f /etc/.flag_factory_config ]; then
+		/etc/tozed/tz_form_network
+	fi
+
 	uci_apply_defaults
 	
 	# temporary hack until configd exists
