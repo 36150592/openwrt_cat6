@@ -4,6 +4,8 @@ firewall_module = {}
 local util=require("tz.util")
 local x = uci.cursor()
 local FIREWALL_CONFIG_FILE="firewall"
+local NETWORK_CONFIG_FILE="network"
+local NETWORK_UCI_INTERFACE="inteface"
 local FIREWALL_CUSTOM_CONFIG_FILE="/etc/firewall.user"
 
 local FIREWALL_MAC_FILTER_PREX="MAC-FILTER"
@@ -14,6 +16,7 @@ local FIREWALL_ACL_FILTER_PREX="ACL-FILTER"
 local FIREWALL_IP_MAC_BIND_FILTER_PREX="IP-MAC-BIND-FILTER"
 local FIREWALL_SPEED_LIMIT_FILTER_PREX="SPEED-LIMIT-FILTER"
 local FIREWALL_PORT_REDIRECT_PREX="PORT-REDIRECT"
+local FIREWALL_UCI_ZONE="zone"
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
@@ -1492,6 +1495,153 @@ function firewall_module.firewall_remote_set_ping(onoff)
 		return os.execute(format_replace_cmd(FIREWALL_PING_PREX, "false"))
 	end
 
+end
+
+
+local function get_sub_net_by_ip(ip, netmask)
+		local cmd = string.format("/bin/ipcalc.sh %s %s", ip, netmask)
+		local f = io.popen(cmd)
+		local res = f:read()
+		local sub_net = nil
+
+		while nil ~= res
+		do
+			if nil ~= string.find(res,"NETWORK")
+			then
+				local ar = split(res, "=")
+				sub_net = ar[2]
+				break
+			end
+
+			res = f:read()
+		end
+		io.close(f)
+
+		return sub_net
+end
+
+
+-- set mutil nat 
+-- input:
+--	  network:string the network of wifi config(the interface dhcp config)  
+--		 lan --> main ssid  --> main dhcp
+--		 lan1 --> secondary ssid --> secondary dhcp
+--		 lan2  --> third ssid --> third dhcp
+--	  onoff:
+--		 1:enable nat
+--		 0:disable nat
+-- return:
+--		true if success  false if fail
+function firewall_module.firewall_set_mutil_nat(network,onoff)
+
+		x:foreach(FIREWALL_CONFIG_FILE, FIREWALL_UCI_ZONE, function(s)
+			if "wan" == s["name"]
+			then
+				local ipaddr = x:get(NETWORK_CONFIG_FILE,network,"ipaddr")
+				local netmask = x:get(NETWORK_CONFIG_FILE,network,"netmask")
+				if nil == ipaddr or nil == network
+				then
+					debug("unknown network,input error")
+					return false
+				end
+
+				local sub_net = get_sub_net_by_ip(ipaddr, netmask)
+				if nil == sub_net
+				then
+					debug("error subnet")
+					return false
+				end
+
+				local temp = {}
+				local i = 1
+				local flag = false
+
+				if nil ~= s["masq_src"]
+				then
+					for k,v in pairs(s["masq_src"])
+					do
+						if string.find(v, sub_net .. "/" .. netmask) ~= nil
+						then
+							flag = true
+							if 1 == onoff
+							then
+								temp[i] = v
+								i = i+1
+							end
+						elseif "" ~= v
+						then
+							temp[i] = v
+							i = i+1
+						end
+					end
+				end
+
+				if false == flag and 1 == onoff
+				then
+					temp[i] = sub_net .. "/" .. netmask
+					i = i +1
+				end
+
+				if 	table.maxn(temp) == 0
+				then
+					x:set(FIREWALL_CONFIG_FILE,s[".name"],"masq_src", '')
+					x:set(FIREWALL_CONFIG_FILE,s[".name"], "masq", "0")
+				else
+					x:set(FIREWALL_CONFIG_FILE,s[".name"],"masq_src", temp)
+					x:set(FIREWALL_CONFIG_FILE,s[".name"], "masq", "1")
+				end
+
+			end
+
+		end)
+
+		return x:commit(FIREWALL_CONFIG_FILE)
+end
+
+-- get mutil onoff
+-- input(string):
+--		network:string the network of wifi config(the interface dhcp config) 
+-- return(number):
+--		1: on
+--		0:off
+--		nil:get error
+function firewall_module.firewall_get_mutil_nat(network)
+
+		local flag = 0
+		x:foreach(FIREWALL_CONFIG_FILE, FIREWALL_UCI_ZONE, function(s)
+			if "wan" == s["name"]
+			then
+				local ipaddr = x:get(NETWORK_CONFIG_FILE,network,"ipaddr")
+				local netmask = x:get(NETWORK_CONFIG_FILE,network,"netmask")
+				if nil == ipaddr or nil == network
+				then
+					debug("unknown network,input error")
+					return nil
+				end
+
+				local sub_net = get_sub_net_by_ip(ipaddr, netmask)
+				if nil == sub_net
+				then
+					debug("error subnet")
+					return nil
+				end
+
+				if nil ~= s["masq_src"]
+				then
+					for k,v in pairs(s["masq_src"])
+					do
+						if string.find(v, sub_net .. "/" .. netmask) ~= nil
+						then
+							flag = 1
+						end
+					end
+				end
+				
+			end
+
+		end)
+
+		return flag
 end
 
 return firewall_module
