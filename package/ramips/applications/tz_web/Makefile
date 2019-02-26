@@ -52,6 +52,7 @@ define Package/tz_web/install
 	$(INSTALL_DIR) $(1)/tz_www/images/shatel
 
 	$(INSTALL_DIR) $(1)/tz_www/html
+	$(INSTALL_DIR) $(1)/tz_www/html/advance
 	$(INSTALL_DIR) $(1)/tz_www/html/config
 	$(INSTALL_DIR) $(1)/tz_www/html/info
 	$(INSTALL_DIR) $(1)/tz_www/html/sys
@@ -74,6 +75,7 @@ define Package/tz_web/install
 
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/*.json $(1)/tz_www
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/html/*.html $(1)/tz_www/html
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/html/advance/* $(1)/tz_www/html/advance
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/html/config/* $(1)/tz_www/html/config
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/html/info/* $(1)/tz_www/html/info
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/html/sys/* $(1)/tz_www/html/sys
