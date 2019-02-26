@@ -178,7 +178,7 @@ if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
 config wifi-device  mt7603e
 	option type     mt7603e
 	option mode 	7
-	option channel  ${TZ_24G_WIFI_MAIN_CHANNEL}
+	option channel  '${TZ_24G_WIFI_MAIN_CHANNEL}'
 	option txpower '${TZ_24G_WIFI_MAIN_TX_POWER}'
 	option ht 	20
 	option country CN
@@ -188,11 +188,11 @@ config wifi-iface
 	option device   mt7603e
 	option network	lan
 	option mode     ap
-	option ssid     ${TZ_24G_WIFI_MAIN_SSID}
+	option ssid     '${TZ_24G_WIFI_MAIN_SSID}'
 	option encryption psk2+ccmp
-	option key      ${TZ_24G_WIFI_MAIN_PWD}
-	option maxassoc ${TZ_24G_WIFI_MAIN_MAX_STATION_NUM}
-	option disabled ${TZ_24G_WIFI_MAIN_DISABLE}
+	option key      '${TZ_24G_WIFI_MAIN_PWD}'
+	option maxassoc '${TZ_24G_WIFI_MAIN_MAX_STATION_NUM}'
+	option disabled '${TZ_24G_WIFI_MAIN_DISABLE}'
 
 config wifi-device      mt7612e
 	option type     mt7612e
@@ -214,7 +214,7 @@ config wifi-iface
 	option mode     ap
 	option ssid     '${TZ_58G_WIFI_MAIN_SSID}'
 	option encryption psk2+ccmp
-	option key      ${TZ_58G_WIFI_MAIN_PWD}
+	option key      '${TZ_58G_WIFI_MAIN_PWD}'
 	option maxassoc 20
 	option disabled ${TZ_58G_WIFI_MAIN_DISABLE}
                            
