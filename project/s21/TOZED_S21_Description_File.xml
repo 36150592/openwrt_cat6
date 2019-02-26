@@ -120,12 +120,66 @@ bitcomposite表示使用位进行组合的配置字段
 		<default value="y"/>
 	</config>
 
+	<config name="TZWIFI_24G_MAIN_WIFI_SSID_STATIC_SWITCH" type="select" description="2.4G 主wifi 固定ssid开关" detail="2.4G 主wifi 固定ssid开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="y"/>
+	</config>
+	
 	<config name="TZWIFI_24G_MAIN_WIFI_SSID" type="text" description="2.4G 主wifi 固定SSID名称" detail="2.4G 主wifi 固定SSID名称，默认为ZLT S21_XXXX" class_name="WIFI_CONFIG_FIELD"  >
         	<default value="ZLT S21_XXXX" />
 	</config>
 
+	<config name="TZWIFI_24G_MAIN_WIFI_SSID_PREFIX" type="text" description="2.4G 主wifi SSID名称前缀" detail="2.4G 主wifi 固定SSID前缀，默认为ZLT S21_" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_" />
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_SSID_SUFFIX" type="select" description="2.4G 主wifi SSID名称后缀" detail="2.4G 主wifi SSID名称后缀" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="1" description="mac后6位" />
+		<option value="2" description="mac后3位" />
+		<default value="1"/>
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_PWD_RANDOM" type="select" description="2.4G 主wifi 密码随机开关" detail="2.4G 主wifi 密码随机开关" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_PWD_RANDOM_WAY" type="select" description="2.4G 主wifi 密码随机方式" detail="2.4G 主wifi 密码随机方式" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="1" description="数字、大写字母" />
+		<option value="2" description="数字、大写字母、小写字母" />
+		<default value="1"/>
+	</config>
+
 	<config name="TZWIFI_24G_MAIN_WIFI_PWD" type="text" description="2.4G 主wifi 固定密码" detail="设置 2.4G 主wifi 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
         	<default value="12345678" />
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_MAX_STATION_NUM" type="text" description="2.4G wifi 最大连接用户数" detail="2.4G wifi 最大连接用户数" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="32" />
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_CHANNEL" type="select" description="2.4G wifi 信道" detail="2.4G wifi 信道" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="auto" description="自动" />
+		<option value="1" description="信道1" />
+		<option value="2" description="信道2" />
+		<option value="3" description="信道3" />
+		<option value="4" description="信道4" />
+		<option value="5" description="信道5" />
+		<option value="6" description="信道6" />
+		<option value="7" description="信道7" />
+		<option value="8" description="信道8" />
+		<option value="9" description="信道9" />
+		<option value="10" description="信道10" />
+		<option value="11" description="信道11" />
+		<option value="12" description="信道12" />
+		<option value="13" description="信道13" />
+		<default value="auto"/>
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_TX_POWER" type="text" description="2.4G wifi 发射功率" detail="2.4G wifi 发射功率" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="23" />
 	</config>
 
 	<!--2.4G WIFI 辅WIFI 1-->
