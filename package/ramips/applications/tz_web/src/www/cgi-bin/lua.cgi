@@ -143,10 +143,14 @@ function get_sysinfo()
 	end
     --data_array["lan"] = dhcp.dhcp_get_object_list()
 	local array = wifi.wifi_get_dev()
-	local network 
-	network = array[1]['network']	
-	data_array["lan"] = dhcp.dhcp_get_object_by_network(network)
-	
+	if next(array) ~= nil
+	then
+		local network = array[1]['network']
+		data_array["lan"] = dhcp.dhcp_get_object_by_network(network) or ''
+	else
+		data_array["lan"] = ''
+	end
+		
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 0;
@@ -174,56 +178,69 @@ end
 function get_wifi()
 	local array = wifi.wifi_get_dev()
 	local data_array
-	local id
-	for k,v in pairs(array) do
-	   if(v["band"] == "2.4G")
-	     then
-		   data_array = v
-		   id = v['wifi_id']				  
+	if next(array) ~= nil
+	then
+		
+		local id
+		for k,v in pairs(array) do
+			if(v["band"] == "2.4G")
+				then
+					data_array = v
+					id = v['wifi_id']				  
+			end
 		end
+		data_array['status'] = wifi.wifi_get_enable_status(id)
+		data_array['hidden_ssid'] = wifi.wifi_get_hidden_ssid(id)
+		data_array['wmm'] = wifi.wifi_get_wmm(id)
+		--data_array['ssid'] = wifi.wifi_get_ssid(id)
+		--data_array['maxNum'] = wifi.wifi_get_connect_sta_number(id)
+		--data_array['encryption'] = wifi.wifi_get_encryption(id)
+		--data_array['pwd'] = wifi.wifi_get_password(id)
+		
+	else
+	    data_array = ''
 	end
-	data_array['status'] = wifi.wifi_get_enable_status(id)
-	data_array['hidden_ssid'] = wifi.wifi_get_hidden_ssid(id)
-	data_array['wmm'] = wifi.wifi_get_wmm(id)
-	--data_array['ssid'] = wifi.wifi_get_ssid(id)
-	--data_array['maxNum'] = wifi.wifi_get_connect_sta_number(id)
-	--data_array['encryption'] = wifi.wifi_get_encryption(id)
-	--data_array['pwd'] = wifi.wifi_get_password(id)
-	local tz_answer = {};
-    tz_answer["success"] = true;
-	tz_answer["cmd"] = 101;
-	tz_answer["data"] = data_array;
-	result_json = cjson.encode(tz_answer);
-	print(result_json);
+	
+		local tz_answer = {};
+		tz_answer["success"] = true;
+		tz_answer["cmd"] = 101;
+		tz_answer["data"] = data_array;
+		result_json = cjson.encode(tz_answer);
+		print(result_json);
 end
 
 function get_wifi5()
 	local array = wifi.wifi_get_dev()
 	local data_array
-	local id
-	for k,v in pairs(array) do
-	   if(v["band"] == "5G")
-	     then
-		   data_array = v
-		   id = v['wifi_id']				  
+	if next(array) ~= nil
+	then
+		local id
+		for k,v in pairs(array) do
+			if(v["band"] == "5G")
+				then
+					data_array = v
+					id = v['wifi_id']				  
+			end
 		end
-	end
 	
-	data_array['status'] = wifi.wifi_get_enable_status(id)
-	data_array['hidden_ssid'] = wifi.wifi_get_hidden_ssid(id)
-	data_array['wmm'] = wifi.wifi_get_wmm(id)
-	--data_array['ssid'] = wifi.wifi_get_ssid(id)
-	--data_array['mode'] = wifi.wifi_get_mode(id)
-	data_array['bandwidth'] = wifi.wifi_get_bandwidth(id)
-	--data_array['encryption'] = wifi.wifi_get_encryption(id)
-	--data_array['enType'] = wifi.wifi_get_encryption_type(id)
-	--data_array['pwd'] = wifi.wifi_get_password(id)
-	local tz_answer = {};
-    tz_answer["success"] = true;
-	tz_answer["cmd"] = 201;
-	tz_answer["data"] = data_array;
-	result_json = cjson.encode(tz_answer);
-	print(result_json);
+		data_array['status'] = wifi.wifi_get_enable_status(id)
+		data_array['hidden_ssid'] = wifi.wifi_get_hidden_ssid(id)
+		data_array['wmm'] = wifi.wifi_get_wmm(id)
+		--data_array['ssid'] = wifi.wifi_get_ssid(id)
+		--data_array['mode'] = wifi.wifi_get_mode(id)
+		data_array['bandwidth'] = wifi.wifi_get_bandwidth(id)
+		--data_array['encryption'] = wifi.wifi_get_encryption(id)
+		--data_array['enType'] = wifi.wifi_get_encryption_type(id)
+		--data_array['pwd'] = wifi.wifi_get_password(id)
+	else
+		data_array = ''
+	end
+		local tz_answer = {};
+		tz_answer["success"] = true;
+		tz_answer["cmd"] = 201;
+		tz_answer["data"] = data_array;
+		result_json = cjson.encode(tz_answer);
+		print(result_json);
 	
 end
 
@@ -1290,6 +1307,19 @@ function update_partial()
 	print(result_json)
 end
 
+function config_update()
+   local UploadDir = "/tmp/web_upload/"
+   local tz_answer = {}
+   tz_answer["cmd"] = 184
+
+   local fileName = tz_req["fileName"]
+   tz_answer["success"] = true
+   tz_answer["data"] = system.update_config(UploadDir..fileName)
+   result_json = cjson.encode(tz_answer)
+   print(result_json)
+
+end
+
 function reboot_sys()
 
 	local tz_answer = {}
@@ -1469,6 +1499,7 @@ local switch = {
 	 [133] = get_routerinfo,
 	 [145] = network_tool,
 	 [162] = get_lockceel,
+	 [184] = config_update,
 	 [201] = get_wifi5,
 	 [202] = set_wifi5,
 	 [203] = get_lan,

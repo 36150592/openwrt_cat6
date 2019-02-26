@@ -67,6 +67,8 @@ var RequestCmd = {
 	SYS_TIME:146,
 	
 	LOCK_ONE_CELL: 162,
+	
+	CONFIG_UPDATE: 184,
 
     WIFI5_INFO: 201,
     WIRELESS5_CONFIG: 202,
@@ -86,6 +88,7 @@ var MenuItem = {
     SYS_SET: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/sys/sysConfigIndex.html" },
     SYS_LOG: { cmd: RequestCmd.SYS_LOG, url: "html/manage/sysLog.html" },
     SYS_UPDATE:	{ cmd: RequestCmd.SYS_UPDATE, url: "html/update/sysUpdate.html" },
+	CONFIG_UPDATE:	{ cmd: RequestCmd.CONFIG_UPDATE, url: "html/update/configUpdate.html" },
 	SYS_AT: { cmd: RequestCmd.SYS_AT, url: "html/manage/sysAt.html" },
 	NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
 	SYS_TIME:{ cmd: RequestCmd.SYS_TIME, url: "html/sys/timeSetting.html" },

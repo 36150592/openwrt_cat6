@@ -1,0 +1,126 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+
+        var theUpdateFileName = "";
+        var $btnUpload = $('#btnUpload');
+        var datas;
+        $btnUpload.bind('click', function() {
+            SysUtil.upload($('#form1'), $('#fp'), "system", function(fileName) {
+                theUpdateFileName = fileName;
+                closeBox();
+            });
+        });
+
+        function update() {
+            var isOk = false;
+            datas = null;
+            SysUtil.showProgress(ProgressTime.UPDATE_PARTIAL, PROMPT.status.updating,
+                function() {
+                    return datas != null || isOk;
+                },
+                function() {
+                    if(datas == -1 || datas == -2)
+                    {
+                        AlertUtil.alertMsg(PROMPT.status.updateFalse);
+                        location.reload();
+                    }else {
+                        AlertUtil.alertMsg(PROMPT.status.updateSuccess);
+                        reboot();
+
+                    }
+
+                }
+            );
+
+        }
+		
+		function reboot(ip) {
+            // 发送重启命令
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.SYS_REBOOT,
+                    method: JSONMethod.POST
+                },
+                success: function() {
+                    var isOk = false;
+                    var timeoutCtl = setTimeout(function() {
+                        isOk = true;
+                    }, 1000 * 90);
+                    SysUtil.showProgress(ProgressTime.REBOOT, PROMPT.status.rebooting,
+                        function() {
+                            return isOk;
+                        },
+                        function() {
+                            clearTimeout(timeoutCtl);
+                            if(ip){
+                                window.location.href = window.location.href.replace(window.location.host, ip);
+                            }else {
+                                location.reload();
+                            }
+
+                        }
+                    );
+                },
+                fail: function() {
+
+                }
+            });
+        }
+
+
+        $('#btnUpdatePartial').bind('click', function() {
+
+            if (theUpdateFileName == "") {
+                AlertUtil.alertMsg(CHECK.required.uploadFile);
+                return false;
+            }
+
+
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.CONFIG_UPDATE,
+                    method: JSONMethod.POST,
+                    fileName: theUpdateFileName
+                },
+                success: function(data) {
+                    console.log("success" + data);
+                    datas = data.data;
+                },
+                fail: function(data) {
+                    console.log("fail" + data);
+                    datas = data.data;
+                }
+            });
+
+            update();
+        });
+    });
+
+</script>
+
+<div class="detail_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <div class="detail"><%- menu.sys.configUpdate %></div>
+        <table class="detail" cellspacing="0">
+            <tr>
+                <th><%- sys.selectUpdateFile %><%- colon %></th>
+                <td>
+                    <form id="form1" enctype="multipart/form-data" method="post">
+                        <input type="file" id="fp" name="fp" value="<%- btn.browse %>" size="40" />
+                        <input type="button" id="btnUpload" value="<%- btn.upload %>"/>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <th>&nbsp;</th>
+                <td>
+                    <input type="button" id="btnUpdatePartial" value="<%- btn.update %>" />
+                </td>
+            </tr>
+        </table>
+    </script>
+</div>

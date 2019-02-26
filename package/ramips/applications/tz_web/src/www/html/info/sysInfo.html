@@ -440,9 +440,13 @@
                             values.push(DOC.status.closed);
                         }
 
-                        names.push(DOC.wlan.secMode);
-                        var encryp = data2.encryption.split("+")[0];
-                        values.push(getWlanSecMode(encryp));
+                       names.push(DOC.wlan.secMode);
+                        if(data2.encryption){
+                            var encryp = data2.encryption.split("+")[0];
+                            values.push(getWlanSecMode(encryp));
+                        }else{
+                            values.push(loading);
+                        }
 
                         //values.push(FormatUtil.formatField(getWlanSecMode(data.encKey.trim(), data.wpa.trim(), data.wpaKeyMgmt.trim(), data.wpaPairwise.trim())));
 
@@ -499,8 +503,12 @@
                         }
 
                         names.push(DOC.wlan.secMode);
-                        var encryp = data2.encryption.split("+")[0];
-                        values.push(getWlanSecMode(encryp));
+                        if(data2.encryption){
+                            var encryp = data2.encryption.split("+")[0];
+                            values.push(getWlanSecMode(encryp));
+                        }else{
+                            values.push(loading);
+                        }
 
                         names.push(DOC.wlan.channel);
                         values.push(data2.channel || loading);
