@@ -6,8 +6,10 @@ STOP=75
 
 start(){
     /bin/mini_httpd -C /tz_www/mini_httpd.conf  &
+    /bin/mini_httpd -C /tz_www/mini_httpd_https.conf  &
 }
 
 stop(){
-    ps | grep mini_httpd | grep -v grep | cut -d' ' -f 2 | xargs kill -9
+    #ps | grep mini_httpd | grep -v grep | cut -d' ' -f 2 | xargs kill -9
+    killall -9 mini_httpd
 }

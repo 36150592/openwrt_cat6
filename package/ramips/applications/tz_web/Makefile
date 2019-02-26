@@ -62,6 +62,7 @@ define Package/tz_web/install
 
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/cgi-bin/* $(1)/tz_www/cgi-bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/mini_httpd.conf $(1)/tz_www
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/mini_httpd_https.conf $(1)/tz_www
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/*.html $(1)/tz_www
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/js/*.js $(1)/tz_www/js
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/js/language/* $(1)/tz_www/js/language
