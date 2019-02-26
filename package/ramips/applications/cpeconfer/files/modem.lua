@@ -759,14 +759,16 @@ function modem_module.modem_get_lock_band()
 end
 
 -- lock operator 
--- input: the list of operator mcc mnc
+-- input: 
+--		the list of operator mcc mnc
+--		nil if do not lock any operator / disable lock operator
 -- return:true if success false if fail
 function modem_module.modem_set_lock_operator(operator_list)
 
 	if nil == operator_list
 	then
-		debug("operator_list is nil")
-		return false
+		debug("operator_list is nil disable lock operator")
+		operator_list = {""}
 	end
 
 
@@ -788,12 +790,19 @@ end
 
 -- get the operator lock list 
 -- input:none
--- return:the list of operator mcc mnc
+-- return:
+-- 		the list of operator mcc mnc
+--		nil if not lock any mcc mnc
 function modem_module.modem_get_lock_operator()
 
 	local operator_list = {}
 
 	local operator_str = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PLMN_LOCK")
+	if nil == operator_str or "" == operator_str
+	then
+		return nil
+	end
+
 	operator_list = util.split(operator_str,',')
 
 	return operator_list

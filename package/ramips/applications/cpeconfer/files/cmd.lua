@@ -786,6 +786,12 @@ function modem_get_lock_operator()
 	print("in modem_get_lock_operator")
 	local list = modem.modem_get_lock_operator()
 
+	if nil == list
+	then
+		print("not lock any operator")
+		return 
+	end
+
 	for k,v in pairs(list)
 	do
 		print(v)
