@@ -3,6 +3,8 @@
 
 #include <syslog.h>
 #include <stdio.h>
+#include <stdio.h>
+#include <string.h>
 
 #define DEBUG
 

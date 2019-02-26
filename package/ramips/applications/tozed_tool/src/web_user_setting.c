@@ -2,8 +2,9 @@
 #include "include.h"
 #include "utility.h"
 
-extern char* mac;
-extern char* imei;
+extern char mac[24];
+extern char imei[24];
+
 
 static void util_calculate_pin_by_mac( char* original_imei,char* pin,int only_output_digit,int rm_special_letters)
 {

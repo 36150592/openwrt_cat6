@@ -14,6 +14,9 @@ typedef enum{
 	REWRITE=1,
 }CONFIG_WRITE_WAY;
 
+//char mac[24];
+//char imei[24];
+
 
 #endif
 
