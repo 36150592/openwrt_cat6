@@ -260,6 +260,35 @@ function system_module.update_system(file_path)
 
 end
 
+--[[
+ret: 
+	0: success
+	-1: file is not exist
+	-2: file format is error
+]]--
+function system_module.update_config(file_path)
+	if (util.is_file_exist(file_path) ~= true)
+	then
+		return -1
+	end
+	
+	os.execute(string.format("/etc/tozed/config_update %s 0",file_path))
+	
+	if (util.is_file_exist("/tmp/.update_config_success") == true)
+	then
+		return 0
+	end
+	
+	if (util.is_file_exist("/tmp/.update_config_fail") == true)
+	then
+		return -2
+	end
+	
+	return -2
+	
+
+end
+
 
 local timezone_location = {
 	["Africa/Abidjan"]= "GMT0",
