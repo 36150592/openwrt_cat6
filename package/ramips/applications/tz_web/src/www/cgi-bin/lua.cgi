@@ -804,7 +804,7 @@ function set_dhcp()
 	local tz_answer = {}
 	tz_answer["cmd"] = 3
     local ret 
-
+	
 	local lanName = tz_req["lanName"]
 	local lanIp = tz_req["lanIp"]
 	local netMask = tz_req["netMask"]
@@ -813,6 +813,7 @@ function set_dhcp()
 	local ipEnd = tz_req["ipEnd"]
 	local limitNum = tz_req["limitNum"]
 	local expireTime = tonumber(tz_req["expireTime"])
+	
    
 	if(nil ~= lanIp)
 	  then
@@ -1415,6 +1416,21 @@ function get_systime()
 
 end
 
+function get_lockceel()
+    local tz_answer = {}
+	tz_answer["cmd"] = 162 
+	
+	local lockceel = modem.modem_get_lte_lock_cell() or ''
+	local modem  = modem.modem_get_status() or ''
+
+	tz_answer["success"] = true
+	tz_answer["lockceel"] = lockceel
+	tz_answer["modem"] = modem
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 
 local switch = {
      [0] = get_sysinfo,
@@ -1452,6 +1468,7 @@ local switch = {
 	 [121] = set_ssidlist,
 	 [133] = get_routerinfo,
 	 [145] = network_tool,
+	 [162] = get_lockceel,
 	 [201] = get_wifi5,
 	 [202] = set_wifi5,
 	 [203] = get_lan,

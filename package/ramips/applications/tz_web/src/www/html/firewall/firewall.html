@@ -56,7 +56,7 @@
                         break;
                     case 3:
                         hasEnableLink = false;
-                        customTitles = [DOC.net.ip, DOC.net.port,DOC.net.portRange,DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
+                        customTitles = [DOC.net.ip, DOC.net.portStart,DOC.net.portEnd,DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
                         customFieldNames = ["dest_addr", "dest_port","dest_port_end", "redirect_addr", "redirect_port", "comment"];
                         break;
                     case 4:
@@ -757,25 +757,35 @@
 
         function processPortMapping(data) {
             processFilter({
-                width: "700px",
+                width: "800px",
                 height: "auto",
                 rowData: data,
                 getSavingItem: function() {
-                     var port = parsePort($('#dest_port').val());
-                    if (!port) return false;
+                 var destport = parseInt($('#dest_port').val(),10);
+                      var portend = parseInt($('#dest_port_end').val(),10);
+                        if (isNaN(destport)) {
+                            AlertUtil.alertMsg(CHECK.required.port);
+                            return false;
+                        }
 
-                    var portEnd = $('#dest_port_end').val();
-                    if (portEnd == "") {
-                        AlertUtil.alertMsg(CHECK.required.port);
-                        return false;
-                    }
+                        if (destport < 0 || destport > 65535 ) {
+                            AlertUtil.alertMsg(CHECK.range.port);
+                            return false;
+                        }
 
-                    var portEndArr = CheckUtil.checkPort(portEnd);
-                    if (!portEndArr.isValid) {
-                        AlertUtil.alertMsg(CHECK.format.port);
-                        return false;
-                    }
-                    var thePortEnd = portEndArr.port;
+                        if(isNaN(portend)){
+                            portend = destport;
+                        }else {
+                            if (portend < 0 || portend > 65535) {
+                                AlertUtil.alertMsg(CHECK.range.port);
+                                return false;
+                            }
+
+                            if (portend < destport) {
+                                AlertUtil.alertMsg(CHECK.format.portRange);
+                                return false;
+                            }
+                        }
 
                     var mappingIp = $('#redirect_addr').val();
                     if (mappingIp == "") {
@@ -803,8 +813,8 @@
 
                     var item = getCommonItem();
                     item.dest_addr = location.hostname;
-                    item.dest_port = port;
-                    item.dest_port_end = thePortEnd;
+                    item.dest_port = destport;
+                    item.dest_port_end = portend;
                     item.redirect_addr = mappingIp;
                     item.redirect_port = mappingPort;
                     if(data == undefined){

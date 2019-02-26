@@ -1,0 +1,190 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+
+
+        var $btnSave = $('#btnSave');
+        var $tr069 = $('.tr069').hide(),
+            $noticeInterval = $('#noticeInterval'),
+            $trNotice = $('.trNotice'),
+            $trAcs = $('.trAcs'),
+            $trAcsInput = $('.trAcs input'),
+            $trCpe = $('.trCpe'),
+            $trCpeInput = $('.trCpe input');
+
+        function setTr069CtrlsStatus(enabled, noticeEnabled, acsAuthEnabled, cpeAuthEnabled) {
+            if (enabled) {
+                $tr069.show();
+                if (!noticeEnabled) {
+                    $trNotice.hide();
+                    $noticeInterval.addClass('ignore');
+                } else {
+                    $noticeInterval.removeClass('ignore');
+                }
+                if (!acsAuthEnabled) {
+                    $trAcs.hide();
+                    $trAcsInput.addClass('ignore');
+                } else {
+                    $trAcsInput.removeClass('ignore');
+                }
+                if (!cpeAuthEnabled) {
+                    $trCpe.hide();
+                    $trCpeInput.addClass('ignore');
+                } else {
+                    $trCpeInput.removeClass('ignore');
+                }
+            } else {
+                $tr069.hide();
+            }
+        }
+
+        var $enabled = $('#enabled'),
+            $noticeEnabled = $('#noticeEnabled'),
+            $acsAuthEnabled = $('#acsAuthEnabled'),
+            $cpeAuthEnabled = $('#cpeAuthEnabled');
+
+        $('input[type=checkbox]').bind('click', function() {
+            setTr069CtrlsStatus(
+                $enabled.prop("checked"),
+                $noticeEnabled.prop("checked"),
+                $acsAuthEnabled.prop("checked"),
+                $cpeAuthEnabled.prop("checked"));
+        });
+
+        // 获取TR069数据
+//        Page.postJSON({
+//            json: {
+//                cmd: RequestCmd.TR069_CONFIG,
+//                method: JSONMethod.GET
+//                //subcmd: 0
+//            },
+//            success: function(data) {
+//                $('#noticeInterval').val(FormatUtil.formatField(data.noticeInterval));
+//                $('#url').val(FormatUtil.formatField(data.url));
+//                $('#userName').val(FormatUtil.formatField(data.userName));
+//                $('#passwd').val(FormatUtil.formatField(data.passwd));
+//                $('#linkUserName').val(FormatUtil.formatField(data.linkUserName));
+//                $('#linkPasswd').val(FormatUtil.formatField(data.linkPasswd));
+//
+//                var enabled = (data.enabled == "1");
+//                var noticeEnabled = (data.noticeEnabled == "1");
+//                var acsAuthEnabled = (data.acsAuthEnabled == "1");
+//                var cpeAuthEnabled = (data.cpeAuthEnabled == "1");
+//                setTr069CtrlsStatus(enabled, noticeEnabled, acsAuthEnabled, cpeAuthEnabled);
+//
+//                $enabled.prop("checked", enabled ? "checked" : "");
+//                $noticeEnabled.prop("checked", noticeEnabled ? "checked" : "");
+//                $acsAuthEnabled.prop("checked", acsAuthEnabled ? "checked" : "");
+//                $cpeAuthEnabled.prop("checked", cpeAuthEnabled ? "checked" : "");
+//
+//                Page.setStripeTable('#childTable');
+//            }
+//        });
+        var rules = {
+                noticeInterval: { required: true, number: true, min: 10 },
+                userName: { required: true },
+                passwd: { required: true },
+                linkUserName: { required: true },
+                linkPasswd: { required: true }
+            },
+            messages = {
+                noticeInterval: { required: CHECK.required.noticeInterval, number: CHECK.format.inputNumber, min: CHECK.min.noticeInterval },
+                userName: { required: CHECK.required.acsUsername },
+                passwd: { required: CHECK.required.acsPasswd },
+                linkUserName: { required: CHECK.required.cpeUsername },
+                linkPasswd: { required: CHECK.required.cpePasswd }
+            };
+
+        $btnSave.bind('click', function() {
+            var $form = $('#childForm');
+            if(!CheckUtil.checkForm($form, rules, messages)){
+                return false;
+            }
+
+            var json = JSON.parmsToJSON($form);
+			console.log(json);
+            json.cmd = RequestCmd.TR069_CONFIG;
+            json.method = JSONMethod.POST;
+            json.enabled = (json.enabled) ? "1" : "0";
+            json.noticeEnabled = (json.noticeEnabled) ? "1" : "0";
+            json.acsAuthEnabled = (json.acsAuthEnabled) ? "1" : "0";
+            json.cpeAuthEnabled = (json.cpeAuthEnabled) ? "1" : "0";
+
+			
+ //           Page.postJSON({
+ //               $id: $btnSave,
+ //               json: json,
+ //               success: function() {
+ //                   //SysUtil.rebootDevice();
+//                    AlertUtil.alertMsg(PROMPT.saving.success);
+//                }
+ //           });
+        });
+    });
+</script>
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="childForm">
+            <table id="childTable" class="detail" cellspacing="0">
+                <tr>
+                    <th><%- tr069.enable %><%- colon %></th>
+                    <td>
+                        <input type="checkbox" id="enabled" name="enabled" /><%- status.enable %>
+                    </td>
+                </tr>
+                <tr class="tr069">
+                    <th><%- tr069.url %><%- colon %></th>
+                    <td><input type="text" id="url" name="url" class="larger" maxlength="100" /></td>
+                </tr>
+                <tr class="tr069">
+                    <th><%- tr069.enableNotice %><%- colon %></th>
+                    <td>
+                        <input type="checkbox" id="noticeEnabled" name="noticeEnabled" /><%- status.enable %>
+                    </td>
+                </tr>
+                <tr class="tr069 trNotice">
+                    <th><%- tr069.noticeInterval %><%- colon %></th>
+                    <td><input type="text" id="noticeInterval" name="noticeInterval" maxlength="10" class="txt2" /><span class="cmt"><%- unit.second %></span></td>
+                </tr>
+                <tr class="tr069">
+                    <th><%- tr069.enableAcsAuth %><%- colon %></th>
+                    <td>
+                        <input type="checkbox" id="acsAuthEnabled" name="acsAuthEnabled" /><%- status.enable %>
+                    </td>
+                </tr>
+                <tr class="tr069 trAcs">
+                    <th><%- tr069.acsUsername %><%- colon %></th>
+                    <td><input type="text" id="userName" name="userName" maxlength="30" /></td>
+                </tr>
+                <tr class="tr069 trAcs">
+                    <th><%- tr069.acsPasswd %><%- colon %></th>
+                    <td><input type="password" id="passwd" name="passwd" maxlength="30" /></td>
+                </tr>
+                <tr class="tr069">
+                    <th><%- tr069.enableCpeAuth %><%- colon %></th>
+                    <td>
+                        <input type="checkbox" id="cpeAuthEnabled" name="cpeAuthEnabled" /><%- status.enable %>
+                    </td>
+                </tr>
+                <tr class="tr069 trCpe">
+                    <th><%- tr069.cpeUsername %><%- colon %></th>
+                    <td><input type="text" id="linkUserName" name="linkUserName" maxlength="30" /></td>
+                </tr>
+                <tr class="tr069 trCpe">
+                    <th><%- tr069.cpePasswd %><%- colon %></th>
+                    <td><input type="password" id="linkPasswd" name="linkPasswd" maxlength="30" /></td>
+                </tr>
+                <tr id="trSave">
+                    <th>&nbsp;</th>
+                    <td>
+                        <input type="button" id="btnSave" value="<%- btn.save %>"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </script>
+</div>
+

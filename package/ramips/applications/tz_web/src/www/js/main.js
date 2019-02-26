@@ -21,6 +21,7 @@ var RequestCmd = {
     SYS_UPDATE: 5,
 	SYS_REBOOT: 6,
 	
+	BASIC_CONFIG: 9,
 	GET_DATETIME:10,
     SET_DATETIME: 11,
 	
@@ -64,6 +65,8 @@ var RequestCmd = {
     CHANGE_PASSWD: 144,
     NETWORK_TOOL: 145,
 	SYS_TIME:146,
+	
+	LOCK_ONE_CELL: 162,
 
     WIFI5_INFO: 201,
     WIRELESS5_CONFIG: 202,
@@ -78,7 +81,8 @@ var MenuItem = {
     NETWORK_CONFIG: { cmd: RequestCmd.NETWORK_CONFIG, url: "html/config/networkConfig.html" },
     WIRELESS_CONFIG: { cmd: RequestCmd.WIRELESS_CONFIG, url: "html/config/wirelessConfig.html" },
     WLAN_5G_CONFIG: { cmd: RequestCmd.WLAN_5G_CONFIG, url: "html/config/wlan5gConfig.html" },
-
+	ADVANCED_CONFIG: { cmd: RequestCmd.BASIC_CONFIG, url: "html/advance/advancedConfig.html" },
+	
     SYS_SET: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/sys/sysConfigIndex.html" },
     SYS_LOG: { cmd: RequestCmd.SYS_LOG, url: "html/manage/sysLog.html" },
     SYS_UPDATE:	{ cmd: RequestCmd.SYS_UPDATE, url: "html/update/sysUpdate.html" },
@@ -1140,6 +1144,51 @@ function getOpenInfo() {
     getRouterInfo();
 
 }
+
+var MasterPage = {
+    defaultSettings: {
+        containerId: '#child_container',
+        templateId: '#child_template',
+        requiredTemplate: true,
+        lang: {
+            rowNo: DOC.table.rowNo,
+            enabled: DOC.status.enabled,
+            add: DOC.table.add,
+            edit: DOC.table.edit,
+            del: DOC.table.del,
+            noEmpty: CHECK.required.noEmpty,
+            inputNumber: CHECK.format.inputNumber,
+            colon: DOC.colon,
+            loading: String.format('<span class="cmt">{0}</span>', DOC.loading),
+            btnSetting: DOC.btn.set,
+            btnSave: DOC.btn.save,
+            btnClose: DOC.btn.close,
+            success: PROMPT.saving.success,
+            requestTimeout: PROMPT.status.requestTimeout
+        },
+        init: function() {}
+    },
+    init: function(options) {
+        var opts = $.extend({}, this.defaultSettings, options);
+        var lang = $.extend({}, this.defaultSettings.lang, Page.isChinese() ? options.cn : options.en);
+        if (opts.global) {
+            lang = $.extend({}, opts.global, lang);
+        }
+      
+        if (opts.requiredTemplate) {
+            var html = _.template($(opts.templateId).html(), lang);
+            options.$id = $(opts.containerId).html(html);
+        } else {
+            options.$id = $(opts.containerId);
+        }
+
+        opts.init();
+
+        return lang;
+    },
+    initEnd: function($id) {
+    }
+};
 
 function MenuHead(css, text, bodys) {
     this.css = css;
