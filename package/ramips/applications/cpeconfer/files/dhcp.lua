@@ -24,12 +24,37 @@ function dhcp_module.dhcp_restart()
 	return os.execute("/etc/init.d/dnsmasq restart ")
 end
 
+
+-- enable dhcp server
 function dhcp_module.dhcp_enable()
 	return os.execute("/etc/init.d/dnsmasq enable")
 end
 
+-- disable dhcp server
 function dhcp_module.dhcp_disable()
 	return os.execute("/etc/init.d/dnsmasq disable ")
+end
+
+-- enable mutil dhcp config by name
+function dhcp_module.dhcp_config_enable(name)
+	if nil == name or  "" == name
+	then
+		debug("name is nil")
+		return false
+	end
+	x:set(DHCP_CONFIG_FILE, name, "ignore", "0")
+	return x:commit(DHCP_CONFIG_FILE)
+end
+
+-- disable mutil dhcp config by name
+function dhcp_module.dhcp_config_disable(name)
+	if nil == name or  "" == name
+	then
+		debug("name is nil")
+		return false
+	end
+	x:set(DHCP_CONFIG_FILE, name, "ignore", "1")
+	return x:commit(DHCP_CONFIG_FILE)
 end
 
 -- get the dhcp server if enable

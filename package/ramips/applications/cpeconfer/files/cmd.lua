@@ -1608,6 +1608,17 @@ function wifi_set_connect_sta_number()
 
 end
 
+
+function dhcp_config_enable()
+	local ret = dhcp.dhcp_config_enable(arg[2])
+	print(ret)
+end
+
+function dhcp_config_disable()
+	local ret = dhcp.dhcp_config_disable(arg[2])
+	print(ret)
+end
+
 function dhcp_get_object()
 
 	local temp = dhcp.dhcp_get_object_by_network(arg[2])
@@ -1862,6 +1873,8 @@ local api_func = {
 	["dhcp_get_enable_status"]=dhcp_get_enable_status,
 	["dhcp_get_list"] = dhcp_get_list,
 	["dhcp_get_object"] = dhcp_get_object,
+	["dhcp_config_disable"] = dhcp_config_disable,
+	["dhcp_config_enable"] = dhcp_config_enable,
 
 	--modem
 	["modem_get_status"] = modem_get_status,
