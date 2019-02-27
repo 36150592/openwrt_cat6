@@ -69,6 +69,7 @@ define Package/tz_web/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/js/language/* $(1)/tz_www/js/language
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/css/* $(1)/tz_www/css
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/images/*.gif $(1)/tz_www/images
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/images/*.png $(1)/tz_www/images
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/images/anhui/* $(1)/tz_www/images/anhui
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/images/orange/* $(1)/tz_www/images/orange
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/www/images/shatel/* $(1)/tz_www/images/shatel
