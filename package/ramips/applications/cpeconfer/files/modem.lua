@@ -530,6 +530,8 @@ local tds_band_bit = {
 	["TDS_BAND F"]=0x20,
 }
 
+
+
 local function get_support_band()
 	
 	local cmd = string.format("cat %s | grep ALL_BAND", MODEM_DYNAMIC_STATUS_PATH)
@@ -645,6 +647,35 @@ local function band_hex_to_band_list(type,hex)
 	end
 
 	return band_name
+end
+
+-- get modem support band name 
+-- input:none
+-- return:the list of support band names in gw , lte, tds, nil if  not support any band
+function modem_module.modem_get_support_band()
+	local gw_all_band, lte_all_band, tds_all_band
+	local gw_names, lte_names,tds_names
+	gw_all_band, lte_all_band, tds_all_band = get_support_band()
+	debug("gw_all_band = ", gw_all_band)
+	debug("lte_all_band = ", lte_all_band)
+	debug("tds_all_band = ", tds_all_band)
+	
+	if nil ~= gw_all_band
+	then
+		gw_names = band_hex_to_band_list("gw", gw_all_band)
+	end
+
+	if nil ~= lte_all_band
+	then
+		lte_names = band_hex_to_band_list("lte", lte_all_band)
+	end
+
+	if nil ~= tds_all_band
+	then
+		tds_names = band_hex_to_band_list("tds", tds_all_band)
+	end
+
+	return gw_names,lte_names,tds_names
 end
 
 -- set lock band

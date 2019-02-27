@@ -753,6 +753,29 @@ function modem_reload_config()
 	end
 end
 
+function modem_get_supprot_band()
+	local gw,lte,tds = modem.modem_get_support_band()
+
+	print("GW:")
+	for k,v in pairs(gw)
+	do
+		print(v)
+	end
+
+	print("LTE:")
+	for k,v in pairs(lte)
+	do
+		print(v)
+	end
+
+	print("TDS:")
+	for k,v in pairs(tds)
+	do
+		print(v)
+	end
+
+end
+
 
 function modem_set_lte_lock_cell()
 
@@ -1905,6 +1928,7 @@ local api_func = {
 	["modem_reload_config"] = modem_reload_config,
 	["modem_set_lte_lock_cell"] = modem_set_lte_lock_cell,
 	["modem_get_lte_lock_cell"] = modem_get_lte_lock_cell,
+	["modem_get_support_band"] = modem_get_supprot_band,
 
 	--network
 	["network_get_wan_info"] = network_get_wan_info,
