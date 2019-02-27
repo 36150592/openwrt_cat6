@@ -76,9 +76,26 @@ function led_set_phone()
 	end
 end
 
+function firewall_get_lan_network()
+	local list = firewall.firewall_get_lan_network()
+
+	if nil == list 
+	then
+		print("nil list")
+		return
+	end
+
+	for k,v in pairs(list)
+	do
+		print(v)
+	end
+
+end
+
 function firewall_set_mutil_nat()
 	print("in firewall_set_mutil_nat")
-	local ret = firewall.firewall_set_mutil_nat(arg[2], tonumber(arg[3]))
+	local mutil_nat = {arg[2], arg[3],arg[4]}
+	local ret = firewall.firewall_set_mutil_nat(mutil_nat)
 
 	if ret
 	then
@@ -1946,6 +1963,7 @@ local api_func = {
 	["firewall_remote_get_ping"] = firewall_remote_get_ping,
 	["firewall_set_mutil_nat"] = firewall_set_mutil_nat,
 	["firewall_get_mutil_nat"] = firewall_get_mutil_nat,
+	["firewall_get_lan_network"] = firewall_get_lan_network,
 
 	--led
 	["led_set_normal"] = led_set_normal,

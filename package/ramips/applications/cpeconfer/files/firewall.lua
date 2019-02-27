@@ -5,7 +5,7 @@ local util=require("tz.util")
 local x = uci.cursor()
 local FIREWALL_CONFIG_FILE="firewall"
 local NETWORK_CONFIG_FILE="network"
-local NETWORK_UCI_INTERFACE="inteface"
+local NETWORK_UCI_INTERFACE="interface"
 local FIREWALL_CUSTOM_CONFIG_FILE="/etc/firewall.user"
 
 local FIREWALL_MAC_FILTER_PREX="MAC-FILTER"
@@ -1521,66 +1521,63 @@ local function get_sub_net_by_ip(ip, netmask)
 end
 
 
+function  firewall_module.firewall_get_lan_network()
+	local list = {}
+	local i = 1
+	x:foreach(NETWORK_CONFIG_FILE, NETWORK_UCI_INTERFACE, function(s)
+		if "bridge" == s["type"] 
+		then
+			list[i] = s[".name"]
+			i = i+1
+		end
+	end)
+
+	return list
+end
+
 -- set mutil nat 
 -- input:
---	  network:string the network of wifi config(the interface dhcp config)  
---		 lan --> main ssid  --> main dhcp
---		 lan1 --> secondary ssid --> secondary dhcp
---		 lan2  --> third ssid --> third dhcp
---	  onoff:
---		 1:enable nat
---		 0:disable nat
+--	  network_list:the list of lan network name which want to turn on the  nat , the lan network name can get by firewall_get_lan_network
+--					if the network_list == nil or  have no member it will turn off all nat 
 -- return:
 --		true if success  false if fail
-function firewall_module.firewall_set_mutil_nat(network,onoff)
+function firewall_module.firewall_set_mutil_nat(network_list)
 
+		local ret = true
 		x:foreach(FIREWALL_CONFIG_FILE, FIREWALL_UCI_ZONE, function(s)
 			if "wan" == s["name"]
 			then
-				local ipaddr = x:get(NETWORK_CONFIG_FILE,network,"ipaddr")
-				local netmask = x:get(NETWORK_CONFIG_FILE,network,"netmask")
-				if nil == ipaddr or nil == network
-				then
-					debug("unknown network,input error")
-					return false
-				end
-
-				local sub_net = get_sub_net_by_ip(ipaddr, netmask)
-				if nil == sub_net
-				then
-					debug("error subnet")
-					return false
-				end
-
+			
 				local temp = {}
 				local i = 1
-				local flag = false
 
-				if nil ~= s["masq_src"]
+				if nil ~= network_list
 				then
-					for k,v in pairs(s["masq_src"])
+					for k,v in pairs(network_list)
 					do
-						if string.find(v, sub_net .. "/" .. netmask) ~= nil
+						local ipaddr = x:get(NETWORK_CONFIG_FILE,v,"ipaddr")
+						local netmask = x:get(NETWORK_CONFIG_FILE,v,"netmask")
+						if nil == ipaddr or nil == netmask
 						then
-							flag = true
-							if 1 == onoff
-							then
-								temp[i] = v
-								i = i+1
-							end
-						elseif "" ~= v
-						then
-							temp[i] = v
-							i = i+1
+							debug("unknown network,input error")
+							ret = false
+							return 
 						end
+
+						local sub_net = get_sub_net_by_ip(ipaddr, netmask)
+						if nil == sub_net
+						then
+							debug("error subnet")
+							ret = false
+							return 
+						end
+
+						temp[i] = sub_net .. "/" .. netmask
+						i = i + 1
+
 					end
 				end
 
-				if false == flag and 1 == onoff
-				then
-					temp[i] = sub_net .. "/" .. netmask
-					i = i +1
-				end
 
 				if 	table.maxn(temp) == 0
 				then
@@ -1595,12 +1592,17 @@ function firewall_module.firewall_set_mutil_nat(network,onoff)
 
 		end)
 
+		if false == ret 
+		then
+			return ret
+		end
+
 		return x:commit(FIREWALL_CONFIG_FILE)
 end
 
 -- get mutil onoff
 -- input(string):
---		network:string the network of wifi config(the interface dhcp config) 
+--		network: the lan network name which get by firewall_get_lan_network
 -- return(number):
 --		1: on
 --		0:off
@@ -1611,6 +1613,24 @@ function firewall_module.firewall_get_mutil_nat(network)
 		x:foreach(FIREWALL_CONFIG_FILE, FIREWALL_UCI_ZONE, function(s)
 			if "wan" == s["name"]
 			then
+				if "0" == s["masq"]
+				then
+					flag = 0
+					return
+				end
+
+				if "1" == s["masq"] and nil == s["masq_src"] 
+				then
+					flag = 1
+					return
+				end
+
+				if "1" == s["masq"] and "" == s["masq_src"][1]
+				then
+					flag = 1
+					return
+				end
+
 				local ipaddr = x:get(NETWORK_CONFIG_FILE,network,"ipaddr")
 				local netmask = x:get(NETWORK_CONFIG_FILE,network,"netmask")
 				if nil == ipaddr or nil == network
@@ -1636,6 +1656,8 @@ function firewall_module.firewall_get_mutil_nat(network)
 						end
 					end
 				end
+
+
 				
 			end
 
