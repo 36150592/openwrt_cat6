@@ -57,12 +57,20 @@ boot() {
 		/etc/tozed/tz_form_network
 	fi
 
+	#/etc/config/network
+
+	if [ -f /etc/.flag_factory_config ]; then
+		/etc/tozed/tz_form_dhcp
+	fi
+
 	uci_apply_defaults
 	
+	rm -rf /etc/.flag_factory_config
+
 	# temporary hack until configd exists
 	/sbin/reload_config
 
-	rm -rf /etc/.flag_factory_config 
+	 
 
 	# create /dev/root if it doesn't exist
 	[ -e /dev/root -o -h /dev/root ] || {
