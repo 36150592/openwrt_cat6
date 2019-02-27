@@ -28,11 +28,11 @@ DHCP_MAIN_MAC=`eth_mac r lan`
 
 DHCP_VICE_1_IP=
 DHCP_VICE_1_MASK=
-DHCP_VICE_1_MAC=$(macaddr_add "$DHCP_1_MAC" 2)
+DHCP_VICE_1_MAC=$(macaddr_add "$DHCP_MAIN_MAC" 2)
 
 DHCP_VICE_2_IP=
 DHCP_VICE_2_MASK=
-DHCP_VICE_2_MAC=$(macaddr_add "$DHCP_1_MAC" 3)
+DHCP_VICE_2_MAC=$(macaddr_add "$DHCP_MAIN_MAC" 3)
 
 WIRED_WAN_MAC=`eth_mac r wan`
 
