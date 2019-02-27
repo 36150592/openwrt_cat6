@@ -339,7 +339,7 @@ bitcomposite表示使用位进行组合的配置字段
 	</config>
 
 	<config name="TZDHCP_VICE_2_IP" type="text" description="辅DHCP 2的IP地址" detail="设置无线路由器LAN口的IP地址,默认为192.168.2.1" class_name="DHCP_CONFIG_FIELD"  >
-        	<default value="192.168.3.1" />
+        	<default value="192.168.4.1" />
 	</config>
 
 	<config name="TZDHCP_VICE_2_NETMASK" type="text" description="辅DHCP 2的子网掩码" detail="子网掩码为IP地址中的网络号,默认为255.255.255.0. " class_name="DHCP_CONFIG_FIELD">
