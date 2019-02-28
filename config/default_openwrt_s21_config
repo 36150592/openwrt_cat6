@@ -1888,7 +1888,7 @@ CONFIG_BUSYBOX_CONFIG_FEATURE_WGET_LONG_OPTIONS=y
 # Process Utilities
 #
 # CONFIG_BUSYBOX_CONFIG_IOSTAT is not set
-# CONFIG_BUSYBOX_CONFIG_LSOF is not set
+CONFIG_BUSYBOX_CONFIG_LSOF=y
 # CONFIG_BUSYBOX_CONFIG_MPSTAT is not set
 # CONFIG_BUSYBOX_CONFIG_NMETER is not set
 # CONFIG_BUSYBOX_CONFIG_PMAP is not set
@@ -2930,6 +2930,7 @@ CONFIG_PACKAGE_libffi=y
 # CONFIG_PACKAGE_mii_mgr is not set
 CONFIG_PACKAGE_mini_httpd-1.19=y
 # CONFIG_PACKAGE_mpstat is not set
+# CONFIG_PACKAGE_netcwmp is not set
 # CONFIG_PACKAGE_nfc is not set
 # CONFIG_PACKAGE_nvram is not set
 # CONFIG_PACKAGE_pcmtest is not set
@@ -3329,6 +3330,7 @@ CONFIG_PACKAGE_wpad-mini=y
 # PiFii
 #
 # CONFIG_PACKAGE_netcwmp-7621 is not set
+# CONFIG_PACKAGE_sinzuortty is not set
 
 #
 # Utilities
