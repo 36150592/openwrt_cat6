@@ -1649,6 +1649,36 @@ function wifi_set_connect_sta_number()
 end
 
 
+function dhcp_get_reserve_ip()
+	print("in dhcp_get_reserve_ip")
+	local list = dhcp.dhcp_get_reserve_ip()
+
+	print(table.maxn(list))
+	for k,v in pairs(list)
+	do
+		print("ip = ", v["ip"])
+		print("mac = ", v["mac"])
+		print("leasetime = ", v["leasetime"])
+
+		print("-------------------")
+	end
+
+end
+
+function dhcp_set_reserve_ip()
+	print("in dhcp_set_reserve_ip")
+
+	local list = {
+		{["ip"]="192.168.2.6",["mac"]="11:aa:99:22:88:bb"},
+		{["ip"]="192.168.2.8",["mac"]="11:aa:99:22:88:bc"},
+		{["ip"]="192.168.2.9",["mac"]="11:aa:99:22:88:bd"},
+	}
+
+	local ret = dhcp.dhcp_set_reserve_ip(list)
+
+	print(ret)
+end
+
 function dhcp_config_enable()
 	local ret = dhcp.dhcp_config_enable(arg[2])
 	print(ret)
@@ -1915,6 +1945,8 @@ local api_func = {
 	["dhcp_get_object"] = dhcp_get_object,
 	["dhcp_config_disable"] = dhcp_config_disable,
 	["dhcp_config_enable"] = dhcp_config_enable,
+	["dhcp_set_reserve_ip"] = dhcp_set_reserve_ip,
+	["dhcp_get_reserve_ip"] = dhcp_get_reserve_ip,
 
 	--modem
 	["modem_get_status"] = modem_get_status,

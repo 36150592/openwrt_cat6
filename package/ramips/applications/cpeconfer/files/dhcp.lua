@@ -4,6 +4,7 @@ local util = require("tz.util")
 local x = uci.cursor()
 local DHCP_CONFIG_FILE="dhcp"
 local DHCP_CONFIG_TYPE="dnsmasq"
+local DHCP_STATIC_IP_SECTION="host"
 local NETWORK_CONFIG_FILE="network"
 local DNSMASQ_CONFIG_PATH="/var/etc/dnsmasq.conf"
 local debug=util.debug
@@ -523,9 +524,9 @@ function dhcp_module.client:new(o,obj)
 	end
 	
 	self["mac"]	 = obj["mac"] or nil
-	self["name"]	 = 	obj["mac"] or nil
-	self["ipaddr"]	 = 	obj["mac"] or nil
-	self["connect_time"]	 = 	obj["mac"] or nil
+	self["name"]	 = 	obj["name"] or nil
+	self["ipaddr"]	 = 	obj["ipaddr"] or nil
+	self["connect_time"]	 = 	obj["connect_time"] or nil
    return o
 end
 
@@ -567,5 +568,108 @@ function dhcp_module.dhcp_get_client_list()
 end
 
 
+dhcp_module.reserve_ip = {
+	["ip"]	 = 	nil,
+	["mac"]	 = 	nil,
+	["leasetime"]	 = 	nil,
+}
+
+
+function dhcp_module.reserve_ip:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+	
+	self["ip"]	 = obj["ip"] or nil
+	self["mac"]	 = 	obj["mac"] or nil
+	self["leasetime"]	 = 	obj["leasetime"] or nil
+   return o
+end
+
+local function check_mac(mac)
+	if string.match(mac,"%x%x:%x%x:%x%x:%x%x:%x%x:%x%x") == nil
+	then
+		return false
+	end
+
+	return true
+end
+
+local function check_ip(ip)
+
+	local str = ip
+	str = string.gsub(str,'%.','#')
+	local ar = split(str,'#')
+
+	if table.maxn(ar) ~= 4
+	then
+		return false
+	end
+
+	if tonumber(ar[1]) > 255 or tonumber(ar[2]) > 255 or tonumber(ar[3]) > 255 or tonumber(ar[4]) > 255
+	then
+		return false
+	end
+
+	if tonumber(ar[1]) < 0 or tonumber(ar[2]) < 0 or tonumber(ar[3]) < 0 or tonumber(ar[4]) < 0
+	then
+		return false
+	end
+
+
+	if string.match(ip,"%d+%.%d+%.%d+%.%d+") == nil
+	then
+		debug("check ip fail")
+		return false
+	end
+
+	return true
+end
+
+function dhcp_module.dhcp_set_reserve_ip(reserve_list)
+
+	
+	x:foreach(DHCP_CONFIG_FILE,DHCP_STATIC_IP_SECTION,function(s)
+		x:delete(DHCP_CONFIG_FILE,s[".name"])
+	end)
+
+	for k,v in pairs(reserve_list)
+	do
+		if check_ip(v["ip"]) and check_mac(v["mac"])
+		then
+			local section = x:add(DHCP_CONFIG_FILE,DHCP_STATIC_IP_SECTION)
+			x:set(DHCP_CONFIG_FILE,section, "ip", v["ip"])
+			x:set(DHCP_CONFIG_FILE,section, "mac", v["mac"])
+			x:set(DHCP_CONFIG_FILE,section, "leasetime", v["leasetime"] or "")
+		end
+	end
+
+	return x:commit(DHCP_CONFIG_FILE)
+end
+
+
+function dhcp_module.dhcp_get_reserve_ip()
+
+	local list = {}
+	local i = 1
+
+	x:foreach(DHCP_CONFIG_FILE,DHCP_STATIC_IP_SECTION,function(s)
+
+		local temp = dhcp_module.reserve_ip:new(nil,nil)
+
+		temp["ip"] = s["ip"]
+		temp["mac"] = s["mac"]
+		temp["leasetime"] = s["leasetime"]
+
+		list[i] = temp
+		i = i + 1
+	end)
+
+
+	return list
+end
  
 return dhcp_module
