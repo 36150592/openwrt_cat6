@@ -52,26 +52,35 @@
             $btnSave = $('#btnSave'),
             $locks = $('.lock').hide(),
             $spanLockedStatus = $('#spanLockedStatus'),
-            $lockTypes = $('input[name=lockType]');
+            $lockTypes = $('input[name=lockType]').disable();
 
-        var lockType = -1;
+        var lockType = 0;
         var lockedStatus = -1;
         var currentFreqPoint = "", currentPhyCellId = "";
         var lockedFreqPoint = "", lockedPhyCellId = "";
 
+        $lockTypes.change(function() {
+            if(this.value == 2){
+                $locks.show();
+            }else {
+                $locks.hide();
+            }
+        });
+
+
         function showInfo() {
             if (lockedStatus == 1) {
                 $spanLockedStatus.html(lang.lockedStatus.locked);
-                InputUtil.setRadiosSelectedValue($lockTypes, lockType);
                 if(lockType == 2){
-                    $('#txtFreqPoint').val(lockedFreqPoint);
-                    $('#txtPhyCellId').val(lockedPhyCellId);
+                    Page.setFormFieldValue2("txtFreqPoint",lockedFreqPoint);
+                    Page.setFormFieldValue2("txtPhyCellId",lockedPhyCellId);
                     $locks.show();
                 }
-                $trSave.show();
             }else {
                 $spanLockedStatus.html(lang.lockedStatus.unlocked);
             }
+            InputUtil.setRadiosSelectedValue($lockTypes, lockType);
+            $('#lockType').attr('old',lockType);
         }
 
         function getInfo() {
@@ -81,20 +90,21 @@
                 },
                 success: function(datas) {
                       console.log(datas);
-                      if(datas.lockceel != '' && datas.modem != ''){
-                          lockedStatus = 1;
-                          var lockceelArr=datas.lockceel.split(",");
-                          lockedPhyCellId = lockceelArr[0];
-                          lockedFreqPoint = lockceelArr[1];
+                      if(datas.modem != ''){
                           currentPhyCellId = datas.modem.pci;
                           currentFreqPoint = datas.modem.earfcn;
-                          if(lockceelArr[0] == datas.modem.pci){
-                              lockType = 1;
-                          }else {
-                              lockType = 2;
+                          $lockTypes.enable();
+                          if(datas.pci != undefined && datas.pci != ''){
+                              lockedStatus = 1;
+                              lockedPhyCellId = datas.pci;
+                              lockedFreqPoint = datas.earfcn;
+                              if(datas.pci == datas.modem.pci){
+                                  lockType = 1;
+                              }else {
+                                  lockType = 2;
+                              }
                           }
                       }
-
                 },
                 complete: function() {
                     showInfo();
@@ -103,6 +113,66 @@
         }
 
         getInfo();
+
+        var rules = {
+                txtFreqPoint: { required: true, range:[0,65535]},
+                txtPhyCellId: { required: true, range:[0,503]}
+            },
+            messages = {
+                txtFreqPoint: { required: CHECK.required.freqPoint, range:CHECK.required.freqPointMax },
+                 txtPhyCellId: { required: CHECK.required.PhyCellId, range:CHECK.required.PhyCellIdMax }
+            };
+			
+
+        $btnSave.click(function() {
+            $(this).attr("disabled",true);
+            var $form = $('#lockPhyCellForm');
+            var json = JSON.parmsToJSON($form);
+
+            if(json.lockType == $("#lockType").attr('old')){
+                if(json.lockType == '2'){
+                    if(json.txtFreqPoint == $("#txtFreqPoint").attr('old') && json.txtPhyCellId == $("#txtPhyCellId").attr('old')){
+                        AlertUtil.alertMsg(CHECK.required.noChanges);
+                        $(this).attr("disabled",false);
+                        return false;
+                    }
+                }else {
+                    AlertUtil.alertMsg(CHECK.required.noChanges);
+                    $(this).attr("disabled",false);
+                    return false;
+                }
+
+            }else {
+                if(json.lockType == '1'){
+                    json.txtFreqPoint = currentFreqPoint;
+                    json.txtPhyCellId = currentPhyCellId;
+                }else if(json.lockType == '2'){
+                    if(!CheckUtil.checkForm($form, rules, messages)){
+                        $(this).attr("disabled",false);
+                        return false;
+                    }
+                }else if(json.lockType == '0'){
+                    json.txtFreqPoint = '';
+                    json.txtPhyCellId = '';
+                }
+            }
+			
+			delete json["lockType"];
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.LOCK_PHY_CELL;
+            console.log(json);
+			Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+					
+                },
+                complete: function(){
+                    $('#btnSave').attr("disabled",false);
+                }
+            });
+
+        });
 
      });
 </script>
@@ -118,8 +188,11 @@
                 <tr>
                     <th><%- lockTh %><%- colon %></th>
                     <td>
-                        <input type="radio" name="lockType" value="0" /><%= lockCurrent %>&nbsp;&nbsp;
-                        <input type="radio" name="lockType" value="1" /><%= lockSpecific %>&nbsp;&nbsp;
+                        <label id="lockType">
+                            <input type="radio" name="lockType" value="0" /><%= unlock %>&nbsp;&nbsp;
+                            <input type="radio" name="lockType" value="1" /><%= lockCurrent %>&nbsp;&nbsp;
+                            <input type="radio" name="lockType" value="2" /><%= lockSpecific %>&nbsp;&nbsp;
+                        </label>
                     </td>
                 </tr>
                 <tr class="lock">

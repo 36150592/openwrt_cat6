@@ -65,8 +65,12 @@ var RequestCmd = {
     CHANGE_PASSWD: 144,
     NETWORK_TOOL: 145,
 	SYS_TIME:146,
-	
+
+    LOCK_PHY_CELL: 160,	
 	LOCK_ONE_CELL: 162,
+	
+	NETWORKSET_GET:163,
+	NETWORKSET_SET:164,
 	
 	CONFIG_UPDATE: 184,
 
@@ -977,7 +981,7 @@ function getOpenInfo() {
             var wifidate = routerInfo.wifi;
             var network = routerInfo.network;
 
-            names.push(DOC.device.imsi);
+            //names.push(DOC.device.imsi);
             names.push(DOC.lte.plmn);
             names.push(lteNames.phyCellId);
             names.push(lteNames.sinr);
@@ -985,7 +989,7 @@ function getOpenInfo() {
             names.push(lteNames.rssi);
 
 
-            values.push(status.imsi || loading);
+            //values.push(status.imsi || loading);
             values.push(status.plmn || loading);
             values.push(status.pci || loading);
 
@@ -999,16 +1003,16 @@ function getOpenInfo() {
             names_advanced.push(lteNames.rsrq);
             names_advanced.push(lteNames.globalCellId);
             names_advanced.push(lteNames.enodeB);
-            names_advanced.push(lteNames.volteRegisterStatus);
+           // names_advanced.push(lteNames.volteRegisterStatus);
             names_advanced.push(TAB.advance.roaming);
             names_advanced.push(DOC.device.imei);
 
             //values_advanced.push(lteInfo.tm ? FormatUtil.formatField('tm ' + lteInfo.tm) : loading);
             values_advanced.push(status.earfcn ||loading);
             values_advanced.push(status.rsrq ? FormatUtil.formatField(status.rsrq, 'dB') : loading);
-            values_advanced.push(loading);
+            values_advanced.push(status.cell_id ||loading);
             values_advanced.push(status.enodebid || loading);
-            values_advanced.push(loading);
+         //   values_advanced.push(loading);
             var roam = loading;
             if(status.roam_status){
                 if(status.roam_status == 0){

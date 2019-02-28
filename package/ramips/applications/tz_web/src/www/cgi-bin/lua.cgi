@@ -46,7 +46,7 @@ function login()
 			 end
 			 
 			 local logintime = os.time()   
-		     local fileDir = "../../tmp/sessionsave/."
+		     local fileDir = "/tmp/sessionsave/."
 			 local fileName = string.format("%s%s%s",fileDir,sessionId,logintime)
 			 local file1 = io.open(fileName,"w")
 			 io.input(file1)
@@ -83,7 +83,7 @@ function logout()
       
 	local tz_answer = {};
 	tz_answer["cmd"] = 99;
-	local fileName = string.format("rm ../../tmp/sessionsave/.%s",tz_req["sessionId"])
+	local fileName = string.format("rm /tmp/sessionsave/.%s",tz_req["sessionId"])
 	os.execute(fileName)
 	tz_answer["success"] = true;
 	result_json = cjson.encode(tz_answer);
@@ -1446,21 +1446,90 @@ function get_systime()
 
 end
 
+function set_lockceel()
+    local tz_answer = {}
+	tz_answer["cmd"] = 160
+
+	local ret 
+    local earfcn = tonumber(tz_req["txtFreqPoint"])
+	local pci = tonumber(tz_req["txtPhyCellId"])
+	
+	ret = modem.modem_set_lte_lock_cell(pci,earfcn)
+		if(not ret)
+			then
+			tz_answer["setLockcell"] = false
+		end
+		
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json);
+
+
+
+end
+
 function get_lockceel()
     local tz_answer = {}
 	tz_answer["cmd"] = 162 
 	
-	local lockceel = modem.modem_get_lte_lock_cell() or ''
+	local pci,earfcn = modem.modem_get_lte_lock_cell()
 	local modem  = modem.modem_get_status() or ''
 
 	tz_answer["success"] = true
-	tz_answer["lockceel"] = lockceel
+	tz_answer["pci"] = pci
+	tz_answer["earfcn"] = earfcn
 	tz_answer["modem"] = modem
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
 end
 
+function get_networkSet()
+    local tz_answer = {}
+	tz_answer["cmd"] = 163
+	local data_array = {}
+	
+	data_array["act"] = modem.modem_get_network_mode()
+	data_array["plmn"] = modem.modem_get_lock_operator() or ''
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function set_networkSet()
+	local tz_answer = {}
+	tz_answer["cmd"] = 164
+
+	local ret 
+    local act = tonumber(tz_req["networkMode"])
+	local plmn = tz_req["lockPlmn"]
+
+	if(nil ~= act)
+	 then
+		ret = modem.modem_set_network_mode(act)
+			if(not ret)
+				then
+				tz_answer["setNetwork"] = false
+			end
+	end	
+	
+	if(nil ~= plmn)
+	 then
+		ret = modem.modem_set_lock_operator(plmn)
+			if(not ret)
+				then
+				tz_answer["setOperator"] = false
+			end
+	end	
+	
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json);
+
+end
 
 local switch = {
      [0] = get_sysinfo,
@@ -1498,7 +1567,10 @@ local switch = {
 	 [121] = set_ssidlist,
 	 [133] = get_routerinfo,
 	 [145] = network_tool,
+	 [160] = set_lockceel,
 	 [162] = get_lockceel,
+	 [163] = get_networkSet,
+	 [164] = set_networkSet,
 	 [184] = config_update,
 	 [201] = get_wifi5,
 	 [202] = set_wifi5,
@@ -1519,7 +1591,7 @@ else
 	local cmd = tz_req["cmd"]
 	if(cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 113 )
 	  then
-	     local fileName = string.format("../../tmp/sessionsave/.%s",tz_req["sessionId"])
+	     local fileName = string.format("/tmp/sessionsave/.%s",tz_req["sessionId"])
 	      if (uti.is_file_exist(fileName) ~= true)
 		    then
 			    local tz_answer = {};

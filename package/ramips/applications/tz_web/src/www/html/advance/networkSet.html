@@ -1,0 +1,100 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<script type="text/javascript">
+$(document).ready(function(){
+    Page.render();
+    Page.setStripeTable();
+
+
+    function getInfo() {
+        Page.postJSON({
+            json: {
+                cmd: RequestCmd.NETWORKSET_GET
+            },
+            success: function(datas) {
+                 var data = datas.data;
+                 Page.setFormFieldValue2("networkMode", data.act);
+				 Page.setFormFieldValue2("lockPlmn", data.plmn);
+            }
+        });
+    }
+
+    getInfo();
+	
+    var $btnSave = $('#btnSave');
+
+    $btnSave.click(function() {
+        $(this).attr("disabled",true);
+        var $form = $('#networkForm');
+        var json = JSON.parmsToJSON($form);
+
+        var count = 0;
+        if(json.networkMode == $("#networkMode").attr('old')){
+            delete json["networkMode"];
+            count++;
+        }
+		
+		if(json.lockPlmn == $("#lockPlmn").attr('old')){
+            delete json["lockPlmn"];
+            count++;
+        }else {
+            var plmnArr = json.lockPlmn.split(',');
+            json.lockPlmn = plmnArr;
+        }
+
+        if(count == 2){
+            AlertUtil.alertMsg(CHECK.required.noChanges);
+            $(this).attr("disabled",false);
+            return false;
+        }
+        
+		json.method = JSONMethod.POST;
+        json.cmd = RequestCmd.NETWORKSET_SET;
+        console.log(json);
+        Page.postJSON({
+            json: json,
+            success: function(data) {
+                 AlertUtil.alertMsg(PROMPT.saving.success);
+            },
+            complete: function(){
+                $('#btnSave').attr("disabled",false);
+            }
+        });
+
+
+    })
+
+
+});
+</script>
+
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="networkForm">
+            <table id="lockPhyCellTable" class="detail" cellspacing="0">
+                <tr>
+                    <th><%- lte.act %><%- colon %></th>
+                    <td><select id="networkMode" name="networkMode">
+                        <option value="1" selected="selected"><%- networkMode.modePriorityVal1 %></option>
+                        <option value="2"><%- networkMode.modePriorityVal1_1 %></option>
+                        <option value="3"><%- networkMode.modePriorityVal2 %></option>
+                        <option value="3"><%- networkMode.modePriorityVal2_1 %></option>
+                        <option value="0"><%- networkMode.modePriorityVal %></option>
+                    </select></td>
+                </tr>
+				
+				<tr>
+                    <th><%- lbl.lockPlmn %><%- colon %></th>
+                    <td><input type="text" id="lockPlmn" name="lockPlmn" /></td>
+                </tr>
+				
+				<tr>
+                     <th>&nbsp;</th>
+                     <td><input type="button" id="btnSave" value="<%- btn.set %>" /></td>
+                </tr>
+            </table>
+        </form>
+    </script>
+</div>
