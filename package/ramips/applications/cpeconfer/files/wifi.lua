@@ -503,12 +503,12 @@ function wifi_module.wifi_start(wifi_id)
 	then
 		debug("start fail for dev_type unknown")
 	end
-    return os.execute("wifi start " .. dev_type)
+    return os.execute("wifi start " .. dev_type .. "&")
 end
 
 -- wifi must be enable status when use this interface
 function wifi_module.wifi_start_all()
-     return os.execute("wifi  ")
+     return os.execute("wifi  &")
 end
 
 -- wifi must be enable status when use this interface
@@ -519,15 +519,11 @@ function wifi_module.wifi_restart(wifi_id)
 	then
 		debug("start fail for dev_type unknown")
 	end
-    os.execute("wifi down " .. dev_type)
-    sleep(1)
-    return os.execute("wifi start " .. dev_type)
+    return os.execute("wifi down " .. dev_type .. " && " .. "wifi start " .. dev_type .. "&")
 end
 
 function wifi_module.wifi_restart_all()
-    os.execute("wifi  down")
-    sleep(1)
-    return os.execute("wifi")
+    return os.execute("wifi down && wifi &")
 end
 
 function wifi_module.wifi_stop(wifi_id)
@@ -537,11 +533,11 @@ function wifi_module.wifi_stop(wifi_id)
 	then
 		debug("start fail for dev_type unknown")
 	end
-    return os.execute("wifi down " .. dev_type)
+    return os.execute("wifi down " .. dev_type .. "&")
 end
 
 function wifi_module.wifi_stop_all()
-   	return os.execute("wifi  down")
+   	return os.execute("wifi  down &")
 end
 
 -- enable wifi self boot 
