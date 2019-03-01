@@ -22,6 +22,14 @@ $(document).ready(function(){
 
     getInfo();
 	
+	var rules = {
+            lockPlmn: {plmnRules:true}
+        },
+        messages = {
+            lockPlmn: {plmnRules:CHECK.required.plmnError }
+        };
+
+	
     var $btnSave = $('#btnSave');
 
     $btnSave.click(function() {
@@ -39,6 +47,10 @@ $(document).ready(function(){
             delete json["lockPlmn"];
             count++;
         }else {
+			if(!CheckUtil.checkForm($form, rules, messages)){
+                $(this).attr("disabled",false);
+                return false;
+            }
             var plmnArr = json.lockPlmn.split(',');
             json.lockPlmn = plmnArr;
         }

@@ -48,8 +48,8 @@
         };
         var lang = MasterPage.init(opts);
 
-        var $trSave = $('#trSave'),
-            $btnSave = $('#btnSave'),
+       
+        var $btnSave = $('#btnSave').disable(),
             $locks = $('.lock').hide(),
             $spanLockedStatus = $('#spanLockedStatus'),
             $lockTypes = $('input[name=lockType]').disable();
@@ -77,7 +77,7 @@
                     $locks.show();
                 }
             }else {
-                $spanLockedStatus.html(lang.lockedStatus.unlocked);
+                $spanLockedStatus.html(DOC.lbl.noSim);
             }
             InputUtil.setRadiosSelectedValue($lockTypes, lockType);
             $('#lockType').attr('old',lockType);
@@ -93,6 +93,7 @@
                       if(datas.modem != ''){
                           currentPhyCellId = datas.modem.pci;
                           currentFreqPoint = datas.modem.earfcn;
+						  $btnSave.enable();
                           $lockTypes.enable();
                           if(datas.pci != undefined && datas.pci != ''){
                               lockedStatus = 1;

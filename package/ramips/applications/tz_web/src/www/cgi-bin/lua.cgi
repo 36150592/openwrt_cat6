@@ -1531,6 +1531,64 @@ function set_networkSet()
 
 end
 
+
+function get_simstatus()
+	local tz_answer = {}
+	tz_answer["cmd"] = 134
+	
+	local sim = sim.sim_get_status() or ''
+	
+	tz_answer["success"] = true
+	tz_answer["sim"] = sim
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+
+end
+
+
+function get_supprotband()   
+	local tz_answer = {}
+	tz_answer["cmd"] = 165
+	
+	local data_array = {}
+	local gw,lte,tds = modem.modem_get_support_band()
+	
+    data_array["gw"] = gw
+	data_array["lte"] = lte
+	data_array["tds"] = tds
+	
+	tz_answer["success"] = true
+	tz_answer["band"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+
+end
+
+
+function set_supprotband()
+	local tz_answer = {}
+	tz_answer["cmd"] = 166
+
+	local ret 
+	local band = tz_req["band"]
+
+	if(nil ~= band)
+	 then
+		ret = modem.modem_set_lock_band(band)
+			if(not ret)
+				then
+				tz_answer["setBand"] = false
+			end
+	end	
+	
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json);
+
+end
+
 local switch = {
      [0] = get_sysinfo,
 	 [1] = get_systime,
@@ -1566,11 +1624,14 @@ local switch = {
 	 [120] = get_ssidlist,
 	 [121] = set_ssidlist,
 	 [133] = get_routerinfo,
+	 [134] = get_simstatus,
 	 [145] = network_tool,
 	 [160] = set_lockceel,
 	 [162] = get_lockceel,
 	 [163] = get_networkSet,
 	 [164] = set_networkSet,
+	 [165] = get_supprotband,
+	 [166] = set_supprotband,
 	 [184] = config_update,
 	 [201] = get_wifi5,
 	 [202] = set_wifi5,

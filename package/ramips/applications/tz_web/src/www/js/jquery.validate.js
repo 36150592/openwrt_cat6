@@ -1291,3 +1291,9 @@ $.validator.addMethod("phoneformat",
 		return this.optional(element) || reg.test(value);
 	}, "手机号码是11位数字"
 );
+$.validator.addMethod("plmnRules",
+    function(value, element) {
+        var reg =  /^[0-9,]+$/;
+        return this.optional(element) || reg.test(value);
+    }, "plmn rules errors"
+);
