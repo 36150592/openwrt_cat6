@@ -1936,4 +1936,85 @@ function wifi_module.wifi_get_connect_sta_list(wifi_id)
 	
 end
  
+
+function wifi_module.wifi_set_mac_access_control(wifi_id, policy, mac_list)
+
+	local section_name = common_get_section_name_by_index(wifi_id)
+	local ret1 = false
+	local ret2 = false
+
+	if nil == section_name or nil == policy or nil == mac_list
+	then
+		debug("input error")
+		return false
+	end
+
+	if 0 == policy
+	then
+		--AccessPolicy0 AccessPolicy1 AccessPolicy2
+		ret1 = common_config_set(section_name, "macpolicy", "AccessPolicy0", "disable")
+	elseif 1 == policy
+	then
+		ret1 = common_config_set(section_name, "macpolicy", "AccessPolicy0", "allow")
+	elseif 2 == policy
+	then
+		ret1 = common_config_set(section_name, "macpolicy", "AccessPolicy0", "deny")
+	else
+		debug("policy input error")
+		return false
+	end
+
+
+	if table.maxn(mac_list) == 0
+	then
+		debug("mac_List = 0")
+		x:set(WIFI_CONFIG_FILE,section_name,"maclist", "")
+		ret2 = x:commit(WIFI_CONFIG_FILE)
+		return ret1  and ret2
+	end
+		
+	local str  = ""
+	for k,v in pairs(mac_list)
+	do
+		str = str .. " " .. v
+	end
+
+	-- AccessControlList0 AccessControlList1 AccessControlList2 AccessControlList3
+	ret2 = common_config_set(section_name, "maclist", "AccessControlList0", string.sub(str, 2, string.len(str)))
+
+	return ret1 and ret2
+end
+
+function wifi_module.wifi_get_mac_access_control(wifi_id)
+	local policy = common_config_get(wifi_id, "macpolicy", "AccessPolicy0")
+	local str = common_config_get(wifi_id, "maclist", "AccessControlList0")
+
+	if nil == policy
+	then
+		return 0,nil
+	end
+
+	if "allow" == policy
+	then
+		policy = 1
+	elseif "deny" == policy
+	then
+		policy = 2
+	else
+		policy = 0
+	end
+
+	if nil  == str
+	then
+		return policy,nil
+	end
+
+	str = string.gsub(str,' ', '#')
+	str = string.gsub(str,';','#')
+	local ar = split(str,'#')
+
+	return policy,ar
+
+end
+
 return wifi_module

@@ -921,6 +921,27 @@ function modem_get_info()
 
 end
 
+function wifi_set_mac_access_control()
+
+	--local macs = {"aa:bb:cc:dd:ee:11","aa:bb:cc:dd:ee:12","aa:bb:cc:dd:ee:13"}
+	local macs = {}
+	local ret = wifi.wifi_set_mac_access_control(tonumber(arg[2]), tonumber(arg[3]), macs)
+	print(ret)
+end
+
+
+function wifi_get_mac_access_control()
+
+	local policy, macs = wifi.wifi_get_mac_access_control(tonumber(arg[2]))
+
+	print("policy = ", policy)
+
+	for k,v  in pairs(macs)
+	do
+		print(v)
+	end
+end
+
 function wifi_secondary_get_ssid_list()
 	print("in wifi_secondary_get_ssid_list")
 	local array = wifi.wifi_secondary_get_ssid_list()
@@ -1923,6 +1944,8 @@ local api_func = {
 	["wifi_get_connect_sta_number"] = wifi_get_connect_sta_number,
 	["wifi_set_connect_sta_number"] = wifi_set_connect_sta_number,
 	["wifi_get_connect_sta_list"]=wifi_get_connect_sta_list,
+	["wifi_get_mac_access_control"] = wifi_get_mac_access_control,
+	["wifi_set_mac_access_control"] = wifi_set_mac_access_control,
 
 	--dhcp
 	["dhcp_get_server_ip"]=dhcp_get_server_ip,

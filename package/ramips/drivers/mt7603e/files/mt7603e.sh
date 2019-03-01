@@ -115,13 +115,15 @@ mt7603e_prepare_config() {
 #是否有MAC过滤
 	config_get macpolicy $device macpolicy
 	config_get macpolicyra1 $device macpolicy
-	
+    config_get macpolicyra2 $device macpolicy	
 #MAC地址过滤列表
 	config_get maclist $device maclist
 	config_get maclistra1 $device maclist
+	config_get maclistra2 $device maclist
 #字符格式转义
 	ra_maclist="${maclist// /;};"
 	ra_maclistra1="${maclistra1// /;};"
+	ra_maclistra2="${maclistra2// /;};"
 #是否支持GREEN AP功能
 	config_get_bool greenap $device greenap 0
 
@@ -244,6 +246,18 @@ done
 	;;
 	*|disable|none|0)
 	ra_macfilterra1=0;
+	;;
+    esac
+
+    case "$macpolicyra2" in
+	allow|2)
+	ra_macfilterra2=1;
+	;;
+	deny|1)
+	ra_macfilterra2=2;
+	;;
+	*|disable|none|0)
+	ra_macfilterra2=0;
 	;;
     esac
 	#FIXME:单独的STA模式无法启动。
@@ -472,8 +486,8 @@ AccessPolicy0=${ra_macfilter:-0}
 AccessControlList0=${ra_maclist:-0}
 AccessPolicy1=${ra_macfilterra1:-0}
 AccessControlList1=${ra_maclistra1:-0}
-AccessPolicy2=0
-AccessControlList2=
+AccessPolicy2=${ra_macfilterra2:-0}
+AccessControlList2=${ra_maclistra2:-0}
 AccessPolicy3=0
 AccessControlList3=
 AccessPolicy4=0

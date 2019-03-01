@@ -228,14 +228,14 @@ param CFG_ELEMENTS[] =
     {"Key4Str2", NULL, {0}, hooker, NULL},
     {"Key4Str3", NULL, {0}, hooker, NULL},
     {"Key4Str4", NULL, {0}, hooker, NULL},
-    {"AccessPolicy0", NULL, {0}, NULL, "0"},
-    {"AccessControlList0", NULL, {0}, NULL, NULL},
-    {"AccessPolicy1", NULL, {0}, NULL, "0"},
-    {"AccessControlList1", NULL, {0}, NULL, NULL},
-    {"AccessPolicy2", NULL, {0}, NULL, "0"},
-    {"AccessControlList2", NULL, {0}, NULL, NULL},
-    {"AccessPolicy3", NULL, {0}, NULL, "0"},
-    {"AccessControlList3", NULL, {0}, NULL, NULL},
+    {"AccessPolicy0", "macpolicy", {0}, hooker, "0"},
+    {"AccessControlList0", "maclist", {0}, hooker, NULL},
+    {"AccessPolicy1", "macpolicy", {0}, hooker, "0"},
+    {"AccessControlList1", "maclist", {0}, hooker, NULL},
+    {"AccessPolicy2", "macpolicy", {0}, hooker, "0"},
+    {"AccessControlList2", "maclist", {0}, hooker, NULL},
+    {"AccessPolicy3", "macpolicy", {0}, hooker, "0"},
+    {"AccessControlList3", "maclist", {0}, hooker, NULL},
     {"WdsEnable", "wds_enable", {0}, hooker, "0"},
     {"WdsEncrypType", "wds_enctype", {0}, hooker, "NONE"},
     {"WdsList", NULL, {0}, NULL, NULL},
@@ -1071,6 +1071,36 @@ void hooker(FILE * fp, param * p, const char * devname)
         else
             FPRINT(fp, p, "1");
     }
+	else if(0 == strcmp(p->dat_key, "AccessPolicy0")||
+			0 == strcmp(p->dat_key, "AccessPolicy1")||
+			0 == strcmp(p->dat_key, "AccessPolicy2")||
+			0 == strcmp(p->dat_key, "AccessPolicy2"))
+	{
+			if(0 == strcmp(p->value,"deny"))
+				FPRINT(fp, p, "2");
+			else if(0 == strcmp(p->value,"allow"))
+				FPRINT(fp, p, "1");
+			else//disable
+				FPRINT(fp, p, "0");
+			
+	}
+	else if(0 == strcmp(p->dat_key, "AccessControlList0") ||
+			0 == strcmp(p->dat_key, "AccessControlList1" )||
+			0 == strcmp(p->dat_key, "AccessControlList2" )||
+			0 == strcmp(p->dat_key, "AccessControlList3"))
+	{
+		int i = 0 ;
+		for(i;p->value[i] != '\0';i++)
+		{
+			if(' ' == p->value[i])
+			{
+				p->value[i] = ';';
+			}
+
+		}
+		FPRINT(fp, p, "%s", p->value);
+			
+	}
     else if(0 == strcmp(p->dat_key, "VHT_BW"))
     {
         if(0 == strcmp(p->value, "2"))
