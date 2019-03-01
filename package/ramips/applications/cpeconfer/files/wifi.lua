@@ -1936,7 +1936,16 @@ function wifi_module.wifi_get_connect_sta_list(wifi_id)
 	
 end
  
-
+-- set wifi mac access control list
+-- input:
+--		wifi_id(number):wifi index get by wifi_get_dev
+--		policy(number):
+--				0:disable mac access control 
+--				1:only allow the mac list  devices connect 
+--				2:only deny the mac list devices connect
+--		mac_list:the array of the mac 
+-- return:
+--		true if success   false if fail
 function wifi_module.wifi_set_mac_access_control(wifi_id, policy, mac_list)
 
 	local section_name = common_get_section_name_by_index(wifi_id)
@@ -1985,6 +1994,11 @@ function wifi_module.wifi_set_mac_access_control(wifi_id, policy, mac_list)
 	return ret1 and ret2
 end
 
+-- get the mac access control setting
+-- input:
+--		wifi_id(number):wifi index get by wifi_get_dev
+-- return:
+-- 		policy,ar: policy as above , ar --> the array of mac 
 function wifi_module.wifi_get_mac_access_control(wifi_id)
 	local policy = common_config_get(wifi_id, "macpolicy", "AccessPolicy0")
 	local str = common_config_get(wifi_id, "maclist", "AccessControlList0")
