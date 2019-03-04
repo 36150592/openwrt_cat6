@@ -685,7 +685,7 @@ function modem_module.modem_set_lock_band(band_list)
 		
 	local lte_band = 0x0
 	local tds_band = 0x0
-	local gw_bnad = 0x0
+	local gw_band = 0x0
 	local gw_all_band, lte_all_band, tds_all_band
 	local gw_ret = true
 	local lte_ret = true
