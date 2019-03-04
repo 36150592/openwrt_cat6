@@ -48,7 +48,7 @@
         };
         var lang = MasterPage.init(opts);
 
-       
+
         var $btnSave = $('#btnSave').disable(),
             $locks = $('.lock').hide(),
             $spanLockedStatus = $('#spanLockedStatus'),
@@ -69,7 +69,9 @@
 
 
         function showInfo() {
-            if (lockedStatus == 1) {
+            if(lockedStatus == 1){
+                $spanLockedStatus.html(lang.lockedStatus.unlocked);
+            }else if (lockedStatus == 2) {
                 $spanLockedStatus.html(lang.lockedStatus.locked);
                 if(lockType == 2){
                     Page.setFormFieldValue2("txtFreqPoint",lockedFreqPoint);
@@ -89,23 +91,24 @@
                     cmd: RequestCmd.LOCK_ONE_CELL
                 },
                 success: function(datas) {
-                      console.log(datas);
-                      if(datas.modem != ''){
-                          currentPhyCellId = datas.modem.pci;
-                          currentFreqPoint = datas.modem.earfcn;
-						  $btnSave.enable();
-                          $lockTypes.enable();
-                          if(datas.pci != undefined && datas.pci != ''){
-                              lockedStatus = 1;
-                              lockedPhyCellId = datas.pci;
-                              lockedFreqPoint = datas.earfcn;
-                              if(datas.pci == datas.modem.pci){
-                                  lockType = 1;
-                              }else {
-                                  lockType = 2;
-                              }
-                          }
-                      }
+                    console.log(datas);
+                    if(datas.modem != ''){
+                        lockedStatus = 1;
+                        currentPhyCellId = datas.modem.pci;
+                        currentFreqPoint = datas.modem.earfcn;
+                        $btnSave.enable();
+                        $lockTypes.enable();
+                        if(datas.pci != undefined && datas.pci != ''){
+                            lockedStatus = 2;
+                            lockedPhyCellId = datas.pci;
+                            lockedFreqPoint = datas.earfcn;
+                            if(datas.pci == datas.modem.pci){
+                                lockType = 1;
+                            }else {
+                                lockType = 2;
+                            }
+                        }
+                    }
                 },
                 complete: function() {
                     showInfo();
@@ -121,9 +124,9 @@
             },
             messages = {
                 txtFreqPoint: { required: CHECK.required.freqPoint, range:CHECK.required.freqPointMax },
-                 txtPhyCellId: { required: CHECK.required.PhyCellId, range:CHECK.required.PhyCellIdMax }
+                txtPhyCellId: { required: CHECK.required.PhyCellId, range:CHECK.required.PhyCellIdMax }
             };
-			
+
 
         $btnSave.click(function() {
             $(this).attr("disabled",true);
@@ -157,16 +160,16 @@
                     json.txtPhyCellId = '';
                 }
             }
-			
-			delete json["lockType"];
+
+            delete json["lockType"];
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.LOCK_PHY_CELL;
             console.log(json);
-			Page.postJSON({
+            Page.postJSON({
                 json: json,
                 success: function(data) {
                     AlertUtil.alertMsg(PROMPT.saving.success);
-					
+
                 },
                 complete: function(){
                     $('#btnSave').attr("disabled",false);
@@ -175,7 +178,7 @@
 
         });
 
-     });
+    });
 </script>
 
 <div class="tab_box" id="child_container">

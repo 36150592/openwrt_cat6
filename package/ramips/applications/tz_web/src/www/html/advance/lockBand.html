@@ -1,0 +1,142 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+
+        var $lteDiv = $('#lteDiv').hide(), $gwDiv = $('#gwDiv').hide(),
+		$tdsDiv = $('#tdsDiv').hide(),$bandStatus = $('#bandStatus').hide();
+
+		var $btnSave = $('#btnSave');
+		
+        function getInfo() {
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.LOCK_BAND_GET
+                },
+                success: function(datas) {
+                    console.log(datas);
+                    if(!$.isEmptyObject(datas.band)){
+                        var lte = datas.band.lte;
+                        var gw = datas.band.gw;
+                        var tds = datas.band.tds;
+                        if(!$.isEmptyObject(lte)){
+                            $lteDiv.show();
+                            var sb = new StringBuilder();
+                            for ( var i = 0; i <lte.length; i++){
+                                sb.append(String.format('<span><input type="checkbox" name="checkbox" id="checkbox" value="{0}">{1}</span>', lte[i],lte[i]));
+                            }
+                            $("'"+sb+"'").appendTo($('#lteLabel'));
+                        }
+                        if(!$.isEmptyObject(gw)){
+                            $gwDiv.show();
+                            var sb1 = new StringBuilder();
+                            for ( var j = 0; j <gw.length; j++){
+                                sb1.append(String.format('<span><input type="checkbox" name="checkbox" id="checkbox" value="{0}">{1}</span>', gw[j],gw[j]));
+                            }
+                            $("'"+sb1+"'").appendTo($('#gwLabel'));
+                        }
+                        if(!$.isEmptyObject(tds)){
+                            $tdsDiv.show();
+                            var sb2 = new StringBuilder();
+                            for ( var x = 0; x <tds.length; x++){
+                                sb2.append(String.format('<span><input type="checkbox" name="checkbox" id="checkbox" value="{0}">{1}</span>', tds[x],tds[x]));
+                            }
+                            $("'"+sb2+"'").appendTo($('#tdsLabel'));
+                        }
+
+                    }else {
+                        $bandStatus.show();
+                        $bandStatus.html(DOC.lbl.noSim)
+						$btnSave.disable();
+                    }
+					
+					setlockban(datas.lockband);
+
+                }
+            });
+        }
+
+        getInfo();
+		
+		function setlockban(bandArr) {
+            for ( var i = 0; i <bandArr.length; i++){
+                $('input[name="checkbox"][value="'+bandArr[i]+'"]').prop('checked', true)
+            }
+        }
+
+        $(document).on('click','input[name="allcheck"]',function(){
+            var $check = $(this).parent().next('label').find(':checkbox');
+            $check.prop('checked', $(this).prop('checked'));
+        });
+
+        
+
+        $btnSave.click(function() {
+            $(this).attr("disabled",true);
+            var check = new Array() ;
+            var id = document.getElementsByName('checkbox');
+            for (var i = 0; i < id.length; i++) {
+                if (id[i].checked)
+                    check.push(id[i].value);
+            }
+            var json = {band:check};
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.LOCK_BAND_SET;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                },
+                complete: function(){
+                    $('#btnSave').attr("disabled",false);
+                }
+            });
+        })
+    });
+
+</script>
+
+<div id="child_container">
+    <script type="text/template" id="child_template">
+        <table class="detail" cellspacing="0">
+
+            <tr id="displayBandsInfo">
+                <th><%- lockband.currentSupportBandTh %><%- colon %></th>
+                <td>
+					<span id="bandStatus"></span>
+                    <div id="lteDiv" style="width: 90%;font-size:18px;line-height:30px;margin-bottom: 5px" >
+                        <span>LTE<%- colon %></span>
+                        <span>  <input type="checkbox" name="allcheck">全部</span>
+                        <label id="lteLabel" class="bandLabel">
+
+                        </label>
+                    </div>
+                    <div id="gwDiv"  style="width: 90%;font-size:18px;line-height:30px;margin-bottom: 5px" >
+                        <span>GSM WCDMA<%- colon %></span>
+                        <span>  <input type="checkbox" name="allcheck">全部</span>
+                        <label id="gwLabel" class="bandLabel">
+
+                        </label>
+                    </div>
+                    <div id="tdsDiv"  style="width: 90%;font-size:18px;line-height:30px;margin-bottom: 5px" >
+                        <span>TDS<%- colon %></span>
+                        <span>  <input type="checkbox" name="allcheck">全部</span>
+                        <label id="tdsLabel" class="bandLabel">
+
+                        </label>
+
+                    </div>
+                </td>
+            </tr>
+
+            <tr id="trLockFreqBtns1">
+                <th>&nbsp;</th>
+                <td>
+                    <input type="button" id="btnSave" value="<%- btn.save %>" class="btn" />
+                </td>
+            </tr>
+
+        </table>
+    </script>
+</div>

@@ -77,6 +77,8 @@
                 sysMenu.push(new MenuBody("SYS_AT", MENU.sys.at));
             }
 			
+			//sysMenu.push(new MenuBody("SYS_REBOOT", MENU.sys.reboot));
+			
 			menus.push(sysMenu);
         }
 			
@@ -147,21 +149,14 @@
             var id = this.id;
             var item = MenuItem[id];
             if (item != null) {
-               // if (item.cmd == RequestCmd.SYS_REBOOT) {
-               //     SysUtil.rebootDevice(RENOOTTYPE.NORMAL_REBOOT, PROMPT.confirm.reboot);
-               // } else {
-                //    if (item == Page.menuItem) {
-                 //       if (item == MenuItem.LTE_INFO) {
-               //             if (!Page.isOK) return false;
-                 //           Page.isOK = false;
-                //        }
-                //    }
-
+                if (item.cmd == RequestCmd.SYS_REBOOT) {
+                    SysUtil.rebootDevice(PROMPT.confirm.reboot);
+                } else {
                     setMenuItem(id);
                     Page.menuItem = item;
                     Page.$iframe.load(item.url);
-                    //Page.get(item.url);
-               // }
+                    
+                }
             }
         });
 

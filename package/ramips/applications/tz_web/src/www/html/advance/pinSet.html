@@ -1,0 +1,139 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+		
+		var $btnSave = $('#btnSave').disable(),
+			  $pinTypes = $('input[name=radPins]').disable(),
+			  $pinStatus = $('#pinStatus');
+			  
+		var $box = $('#edit_box2'), $mask = $('#mask');
+		
+		var pingType = 0;
+		function getInfo() {
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.QUERY_SIM_STATUS
+                },
+                success: function(datas) {
+                    console.log(datas);
+					 if(datas.sim != ''){
+						if(datas.sim.card_status == '1'){
+                            $pinStatus.html(DOC.status.opened);
+                            pingType =1;
+                        }else {
+                            $pinStatus.html(DOC.status.closed);
+                            pingType =2;
+                        }
+                        InputUtil.setRadiosSelectedValue($pinTypes, pingType);
+                        $('#trPinOper').attr('old',pingType);
+                        $btnSave.enable();
+                        $pinTypes.enable();
+                    }else{
+						$pinStatus.html(DOC.lbl.noSim);
+					}
+                }
+            });
+        }
+
+        getInfo();
+		
+		$btnSave.click(function () {
+			$(this).attr("disabled",true);
+            var $form = $('#pingForm');
+            var json = JSON.parmsToJSON($form);
+            console.log(json);
+
+            if(json.radPins == $("#trPinOper").attr('old')){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+            }else {
+                $mask.show();
+                $box.show();
+                SysUtil.setBoxStyle1($box);
+            }
+           
+        });
+		
+		$('#btnClose').click(function() {
+            $box.hide();
+            $mask.hide();
+			$btnSave.enable();
+        });
+		
+		 $('#btnSavePin').click(function () {
+             if($('#pinPassword').val()){
+			     var json = {};
+                 json.type = $("input[name='radPins']:checked").val();
+                 json.passwd = $('#pinPassword').val();
+                 json.method = JSONMethod.POST;
+                 json.cmd = RequestCmd.SET_PIN_STATUS;
+                 console.log(json);
+				 Page.postJSON({
+                     json: json,
+                     success: function(data) {
+                         AlertUtil.alertMsg(PROMPT.saving.success);
+                     },
+					 fail: function(data) {
+                         AlertUtil.alertMsg(PROMPT.saving.fail);
+                     },
+                     complete: function(){
+                         $box.hide();
+                         $mask.hide();
+                         $btnSave.enable();
+                     }
+                 });
+             }else {
+                 AlertUtil.alertMsg(CHECK.required.pin);
+             }
+        })
+
+    });
+</script>
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <div>
+            <form id="pingForm" >
+                <table class="detail" cellspacing="0">
+                    <tr id="trPinStatus" class="pins">
+                        <th><%- lbl.pinVerification %><%- colon %></th>
+                        <td><span id="pinStatus"></span></td>
+                    </tr>
+                    <tr id="trPinOper" class="pins">
+                        <th><%- lbl.pinOper %><%- colon %></th>
+                        <td>
+                            <span id="spanOpenPin"><input type="radio" name="radPins" value="1" /><%- lbl.pinOper1 %>&nbsp;&nbsp;</span>
+                            <span id="spanClosePin"><input type="radio" name="radPins" value="2" /><%- lbl.pinOper2 %>&nbsp;&nbsp;</span>
+                        </td>
+                    </tr>
+					<tr>
+						<th>&nbsp;</th>
+						<td><input type="button" id="btnSave" value="<%- btn.set %>" /></td>
+					</tr>
+                </table>
+            </form>
+        </div>
+		<div id="edit_box2" style="width: 300px;height: 100px">
+            <div class="detail" id="fwHead">
+                <div id="edit_title"><%- lbl.pinCode %></div>
+                <div id="edit_close2"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
+                <div style="clear:both;"></div>
+            </div>
+            <div>
+                <table class="detail2" cellspacing="0">
+                <th><span><%-lbl.pinCode%><%- colon %></span></th>
+                <td><input type="text" id="pinPassword" name="pinPassword"></td>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td><input type="button" id="btnSavePin" value="<%- btn.savePinOk %>"/></td>
+                </tr>
+                </table>
+            </div>
+        </div>
+    </script>
+</div>
+
