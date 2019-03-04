@@ -1,0 +1,87 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+
+
+        function getInfo() {
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.REMOTE_LOGIN_GET
+                },
+                success: function(datas) {
+                        console.log(datas)
+                }
+            });
+        }
+		
+		getInfo();
+
+    });
+</script>
+
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <div>
+            <form id="childForm" action="/cgi-bin/http.cgi">
+                <table class="detail" cellspacing="0">
+                    <tr>
+                        <th><%- lbl.remoteLogin %><%- colon %></th>
+                        <td>
+                            <input type="checkbox" id="enableRemoteLogin" name="enableRemoteLogin" /><%- status.enable %>
+                            <span class="cmt">(<%- lbl.remoteLoginDesc %>)</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><%- lbl.ipv6RemoteLogin %><%- colon %></th>
+                        <td>
+                            <input type="checkbox" id="ipv6RemoteLogin" name="ipv6RemoteLogin" /><%- status.enable %>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><%- lbl.pingRemote %><%- colon %></th>
+                        <td>
+                            <input type="checkbox" id="pingRemote" name="pingRemote" /><%- status.enable %>
+                        </td>
+                    </tr>
+                    <tr id="trIcmpWanIp" >
+                        <th><%- lbl.remoteIp %><%- colon %></th>
+                        <td>
+                            <input type="text" id="icmpWanIp1" name="icmpWanIp1" />
+                            <input type="text" id="icmpWanIp2" name="icmpWanIp2" />
+                            <input type="text" id="icmpWanIp3" name="icmpWanIp3" />
+                            <input type="text" id="icmpWanIp4" name="icmpWanIp4" />
+                            <input type="text" id="icmpWanIp5" name="icmpWanIp5" />
+                            <br>
+                            <span style="height: 3px; display: block; width: 50px;"></span>
+                            <input type="text" id="icmpWanIp6" name="icmpWanIp6" />
+                            <input type="text" id="icmpWanIp7" name="icmpWanIp7" />
+                            <input type="text" id="icmpWanIp8" name="icmpWanIp8" />
+                            <input type="text" id="icmpWanIp9" name="icmpWanIp9" />
+                            <input type="text" id="icmpWanIp10" name="icmpWanIp10" />
+                            <br>
+                            <span class="cmt">(<%- lbl.icmpWanIpDesc %>)</span></td>
+                    </tr>
+                    <tr id="trRemotePort">
+                        <th><%- lbl.remotePort %><%- colon %></th>
+                        <td>
+                            <input type="text" id="remotePort" name="remotePort" value="80" class="normal"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>&nbsp;</th>
+                        <td><input type="button" id="btnSave" value="<%- btn.save %>" /></td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+        <div class="helper_box" style="display:none;">
+            <div id="helper">
+            </div>
+        </div>
+        <span style="clear:both"></span>
+    </script>
+</div>
