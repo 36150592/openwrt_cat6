@@ -37,10 +37,18 @@ function get_arp()
     end
     return res
 end
+
+function utilexec(command)                                                   
+        local pp   = io.popen(command)
+        local data = pp:read("*a")
+        pp:close()
+  
+        return data                    
+end
+
 function get_assoclist()
     local res = {}
-    local util = require("luci.util")
-    local ifn_list=util.exec([[ls /sys/devices/virtual/net/ | grep ra | tr -s '\n' ' ']])
+    local ifn_list=utilexec([[ls /sys/devices/virtual/net/ | grep ra | tr -s '\n' ' ']])
     local ifn_t = split(ifn_list," ")
     for _,ifn in pairs(ifn_t) do
         local cmd = "iwinfo "..ifn.." assoclist | grep -E \".{2}:.{2}:.{2}:.{2}:.{2}:.{2}\""
