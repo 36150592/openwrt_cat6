@@ -62,6 +62,7 @@ var RequestCmd = {
 
     ROUTER_INFO: 133,
 	QUERY_SIM_STATUS: 134,
+	SET_PIN_STATUS:135,
 
     CHANGE_PASSWD: 144,
     NETWORK_TOOL: 145,
@@ -75,6 +76,9 @@ var RequestCmd = {
 	
 	LOCK_BAND_GET: 165,
     LOCK_BAND_SET: 166,
+	
+	REMOTE_LOGIN_GET:167,
+    REMOTE_LOGIN_SET:168,
 	
 	CONFIG_UPDATE: 184,
 
@@ -100,6 +104,7 @@ var MenuItem = {
 	SYS_AT: { cmd: RequestCmd.SYS_AT, url: "html/manage/sysAt.html" },
 	NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
 	SYS_TIME:{ cmd: RequestCmd.SYS_TIME, url: "html/sys/timeSetting.html" },
+	SYS_REBOOT: { cmd: RequestCmd.SYS_REBOOT, url: "" },
 	
 	FE_DEFAULT: { cmd: RequestCmd.DEFAULT_FILTER, url: "html/firewall/firewall.html" },
 	FW_RULE: { cmd: RequestCmd.PORT_FILTER, url: "html/firewall/firewall.html" },
@@ -348,6 +353,43 @@ var SysUtil = {
         $box.css({
             "left": parseInt(((w || document.documentElement.clientWidth) - $box.width()) / 2, 10) + "px",
             "top": parseInt(((h || document.documentElement.clientHeight) - $box.height()) / 2, 10) + "px"
+        });
+    },
+    setBoxStyle1: function($box, w, h) {
+        $box.css({
+            "left": parseInt(((w || document.documentElement.clientWidth -600) - $box.width()) / 2, 10) + "px",
+            "top": parseInt(((h || document.documentElement.clientHeight -600) - $box.height()) / 2, 10) + "px"
+        });
+    },
+	rebootDevice: function(msg) {
+        if (!AlertUtil.confirm(msg)) {
+            return;
+        }
+        Page.postJSON({
+            json: {
+                cmd: RequestCmd.SYS_REBOOT,
+                method: JSONMethod.POST
+            },
+            success: function() {
+                var isOk = false;
+                var timeoutCtl = setTimeout(function() {
+                    isOk = true;
+                }, 1000 * 90);
+                SysUtil.showProgress(ProgressTime.REBOOT, PROMPT.status.rebooting,
+                    function() {
+                        return isOk;
+                    },
+                    function() {
+                        clearTimeout(timeoutCtl);
+                        location.reload();
+
+
+                    }
+                );
+            },
+            fail: function() {
+
+            }
         });
     },
     parseJSON: function(data) {

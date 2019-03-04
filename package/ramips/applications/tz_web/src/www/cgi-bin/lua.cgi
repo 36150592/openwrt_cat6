@@ -865,14 +865,14 @@ function set_dhcp()
 	   then
 	   if(0 == dhcpServer)
 		  then
-	        ret = dhcp.dhcp_disable()
+	        ret = dhcp.dhcp_config_disable(lanName)
 		     if(not ret)
 		       then
 			   tz_answer["disableDhcp"] = false
 			  end
 	    elseif(1 == dhcpServer)
 	      then
-	      ret = dhcp.dhcp_enable()
+	      ret = dhcp.dhcp_config_enable(lanName)
 	        if(not ret)
 		      then
 			  tz_answer["enableDhcp"] = false
@@ -1553,6 +1553,7 @@ function get_supprotband()
 	
 	local data_array = {}
 	local gw,lte,tds = modem.modem_get_support_band()
+	local lockband = modem.modem_get_lock_band()
 	
     data_array["gw"] = gw
 	data_array["lte"] = lte
@@ -1560,6 +1561,7 @@ function get_supprotband()
 	
 	tz_answer["success"] = true
 	tz_answer["band"] = data_array
+	tz_answer["lockband"] = lockband
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
@@ -1587,6 +1589,52 @@ function set_supprotband()
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
 
+end
+
+
+function get_remoteLogin()
+	local tz_answer = {}
+	tz_answer["cmd"] = 167
+	
+	local data_array = {}
+	data_array["enremote"] = firewall.firewall_remote_get_web_login()
+
+	tz_answer["success"] = true
+	tz_answer["remote"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function set_pinstatus()
+    local tz_answer = {}
+	tz_answer["cmd"] = 135
+
+	local ret 
+	local type = tonumber(tz_req["type"])
+	local passwd = tonumber(tz_req["passwd"])
+	
+	tz_answer["success"] = true;
+	if(1 == type)
+	   then
+	      print(type)
+	      ret = sim.sim_pin_lock_enable(passwd)
+		    if(not ret)
+		       then
+			   tz_answer["success"] = false;
+			   tz_answer["enablePin"] = false
+			end
+	elseif(2 == type)
+	   then
+	      ret = sim.sim_pin_unlock(passwd)
+	        if(not ret)
+		      then
+			  tz_answer["success"] = false;
+			  tz_answer["unlockPin"] = false
+            end
+	end
+	result_json = cjson.encode(tz_answer)
+	print(result_json);
 end
 
 local switch = {
@@ -1625,6 +1673,7 @@ local switch = {
 	 [121] = set_ssidlist,
 	 [133] = get_routerinfo,
 	 [134] = get_simstatus,
+	 [135] = set_pinstatus,
 	 [145] = network_tool,
 	 [160] = set_lockceel,
 	 [162] = get_lockceel,
@@ -1632,6 +1681,7 @@ local switch = {
 	 [164] = set_networkSet,
 	 [165] = get_supprotband,
 	 [166] = set_supprotband,
+	 [167] = get_remoteLogin,
 	 [184] = config_update,
 	 [201] = get_wifi5,
 	 [202] = set_wifi5,

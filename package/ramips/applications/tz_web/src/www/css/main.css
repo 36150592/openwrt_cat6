@@ -1347,6 +1347,10 @@ ul.tabs a.current {
     float: right;
 }
 
+.bandLabel span{
+	padding-left: 8px;
+}
+
 .new_pin {
     display: none;
 }
