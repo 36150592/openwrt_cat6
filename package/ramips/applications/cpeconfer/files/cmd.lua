@@ -1669,6 +1669,43 @@ function wifi_set_connect_sta_number()
 
 end
 
+function wifi_set_wps_pin()
+	print("in wifi_set_wps_pin")
+	local ret = wifi.wifi_set_wps_pin(tonumber(arg[2]), tonumber(arg[3]))
+
+	print(ret)
+end
+
+function wifi_get_wps_pin()
+	print("in wifi_get_wps_pin")
+	local ret = wifi.wifi_get_wps_pin(tonumber(arg[2]))
+
+	print(ret)
+end
+
+function wifi_enable_wps_pbc()
+
+	local ret = wifi.wifi_enable_wps_pbc(tonumber(arg[2]))
+	print(ret)
+end
+
+function wifi_disable_wps_pbc()
+
+	local ret = wifi.wifi_disable_wps_pbc(tonumber(arg[2]))
+	print(ret)
+end
+
+function wifi_get_wps_pbc()
+	print("in wifi_get_wps_pbc")
+	local ret = wifi.wifi_get_wps_pbc_enable_status(tonumber(arg[2]))
+	if 1 == ret 
+	then
+		print("enable")
+	else
+		print("disable")
+	end
+	
+end
 
 function dhcp_get_reserve_ip()
 	print("in dhcp_get_reserve_ip")
@@ -1946,6 +1983,11 @@ local api_func = {
 	["wifi_get_connect_sta_list"]=wifi_get_connect_sta_list,
 	["wifi_get_mac_access_control"] = wifi_get_mac_access_control,
 	["wifi_set_mac_access_control"] = wifi_set_mac_access_control,
+	["wifi_get_wps_pin"] = wifi_get_wps_pin,
+	["wifi_set_wps_pin"] = wifi_set_wps_pin,
+	["wifi_get_wps_pbc"] = wifi_get_wps_pbc,
+	["wifi_enable_wps_pbc"] = wifi_enable_wps_pbc,
+	["wifi_disable_wps_pbc"] = wifi_disable_wps_pbc,
 
 	--dhcp
 	["dhcp_get_server_ip"]=dhcp_get_server_ip,

@@ -1,0 +1,51 @@
+#!/bin/sh
+#sztozed shenzhen fengyz
+#openwrt wps pbc  for mt7603e mt7612e
+
+. /lib/functions.sh
+inter_sections=""
+
+config_cb() {
+        local type="$1"
+        local section="$2"
+
+        case "$type" in
+                wifi-iface)
+                        append inter_sections "$section"
+                ;;
+        esac
+}
+config_load "${cfgfile:-wireless}"
+
+for section in $inter_sections
+do
+        config_get wps $section wps
+        config_get ifname $section ifname
+
+        if [ $ifname'' == "" ];then
+                continue;
+        fi
+
+
+        if [ $wps'' == 'pbc' ];then
+                echo $wps
+                echo $ifname
+                iwpriv $ifname set WscStop=1
+                iwpriv $ifname set WscConfMode=7
+                iwpriv $ifname set WscMode=2
+                iwpriv $ifname set WscGetConf=1
+        elif [ $wps'' == "pin" ];then
+                config_get pin $section pin
+                if [ $pin'' == "" ];then
+                        continue;
+                fi
+
+                iwpriv $ifname  set WscStop=1
+                iwpriv $ifname  set WscConfMode=7
+                iwpriv $ifname  set WscPinCode=$pin
+                iwpriv $ifname  set WscMode=1
+                iwpriv $ifname  set WscGetConf=1
+
+        fi
+
+done

@@ -5,6 +5,8 @@
 
 logger "$BUTTON pressed for $SEEN seconds"
 
+/sbin/wps_handler
+
 echo "wps key pressed " > /dev/console
 
 return 0
