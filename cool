@@ -10,6 +10,7 @@ export ECHO_STYLE_02="\033[42;34;1m"  # red background, yellow foregound bold
 export LANG="en_US.UTF-8"
 export LANGUAGE="en"
 export TOPDIR=`pwd`
+export echo="echo"
 
 #echo -e "${ECHO_STYLE_01}echo command terminal style example${ECHO_STYLE_00}"
 
