@@ -55,12 +55,13 @@ CPPFLAGS+= -I .
 CPPFLAGS+= -I ./include
 CPPFLAGS+= -I ../openssl-1.0.1e/include/
 CPPFLAGS+= -I ./zlib
-CPPFLAGS+= -L ../openssl-1.0.1e
-#CPPFLAGS+= -L ../openssl-lib/arm/openssl/lib
+CPPFLAGS+= -I${SSL_TREE}/include
+CPPFLAGS+= -L${SSL_TREE}/lib
 
 CFLAGS+= -O2 -g -Wall -Wno-unused-parameter
-LDFLAGS= -static
-LIBS= -lrt -lpthread -lcrypto -ldl -L../openssl-1.0.1e
+#LDFLAGS= -static
+LIBS= -lpthread -lcrypto -ldl
+#LIBS= -lrt -lpthread -lcrypto -ldl
  
 #TOOLCHAIN= arm-linux-
 #TOOLCHAIN= 
@@ -75,7 +76,7 @@ OBJS= $(SRCS:.c=.o)
 all: adb
  
 adb: $(OBJS)
-	$(LD) -o $@ $(LDFLAGS) $(OBJS) $(LIBS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(LIBS)
  
 clean:
 	rm -rf $(OBJS)
