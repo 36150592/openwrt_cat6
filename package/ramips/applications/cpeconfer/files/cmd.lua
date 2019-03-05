@@ -76,6 +76,41 @@ function led_set_phone()
 	end
 end
 
+function firewall_get_static_route()
+	print("firewall_get_static_route")
+	local list = firewall.firewall_get_static_route()
+
+	if nil == list
+	then
+		print("empty")
+		return
+	end
+
+	for k,v in pairs(list)
+	do
+		print("target_ip = ", v["target_ip"])
+		print("target_netmask = ", v["target_netmask"])
+		print("next_ip = ", v["next_ip"])
+		print("target_interface = ", v["target_interface"])
+	end
+
+
+end
+
+function firewall_set_static_route()
+	print("firewall_set_static_route")
+	local route_list = {
+		{["target_ip"]="192.168.2.0" ,["target_netmask"]="255.255.255.0",["next_ip"]="192.168.2.1", ["target_interface"]="br-lan"},
+		{["target_ip"]="192.168.3.0" ,["target_netmask"]="255.255.255.0",["next_ip"]="192.168.3.1", ["target_interface"]="br-lan1"},
+		{["target_ip"]="192.168.4.0" ,["target_netmask"]="255.255.255.0",["next_ip"]="192.168.4.1", ["target_interface"]="br-lan2"},
+	}
+	local ret = firewall.firewall_set_static_route(route_list)
+
+	print(ret)
+
+end
+
+
 function firewall_get_lan_network()
 	local list = firewall.firewall_get_lan_network()
 
@@ -487,6 +522,8 @@ function firewall_set_mac_filter()
 			print("set fail")
 		end
 end
+
+
 
 
 function device_get_info()
@@ -2085,6 +2122,8 @@ local api_func = {
 	["firewall_set_mutil_nat"] = firewall_set_mutil_nat,
 	["firewall_get_mutil_nat"] = firewall_get_mutil_nat,
 	["firewall_get_lan_network"] = firewall_get_lan_network,
+	["firewall_set_static_route"] = firewall_set_static_route,
+	["firewall_get_static_route"] = firewall_get_static_route,
 
 	--led
 	["led_set_normal"] = led_set_normal,

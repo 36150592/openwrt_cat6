@@ -91,6 +91,46 @@ turn_off_remote_ping(){
 	done
 }
 
+set_user_static_route(){
+        local rows=`cat /etc/config/tozed | grep TZ_STATIC_ROUTE | wc -l `
+        local ip
+        local netmask
+        local network
+        local table_name
+        local i=1
+        while [ $i -le $rows ]
+        do
+                item=`cat /etc/config/tozed | grep TZ_STATIC_ROUTE | sed -n ${i}p | sed  s/\'//g `
+                let i=$i+1
+                local ifname=`echo $item | awk '{print $3}'`
+                local target_ip=`echo $item | awk '{print $4}'`
+                local target_netmask=`echo $item | awk '{print $5}'`
+                local next_ip=`echo $item | awk '{print $6}'`  
+
+                #echo $ifname $target_ip $target_netmask $next_ip
+                if [ $ifname'' != '' ];then
+                        ip=`ifconfig $ifname | grep 'inet addr.*Mask'  | awk -F ':' '{print $2}' | awk '{print $1}'`
+                        netmask=`ifconfig $ifname | grep 'inet addr.*Mask'  | awk -F 'Mask:' '{print $2}'`
+                fi
+                if [ $ip'' == '' ];then
+                        ip route add ${target_ip}/${target_netmask} via $next_ip dev $ifname 
+                        continue
+                fi
+
+                network=`ipcalc.sh  $ip $netmask |grep NETWORK | awk -F '=' '{print $2}'`
+                table_name=`ip rule list  | grep $network | grep to | awk '{print $7}'`
+
+                echo $table_name
+                if [ $table_name'' == '' ];then
+                        ip route add ${target_ip}/${target_netmask} via $next_ip dev $ifname
+                else
+                        ip route add ${target_ip}/${target_netmask} table $table_name via $next_ip dev $ifname 
+                fi 
+
+        done 
+
+} 
+
 load_interface
 
 redirect_lan
@@ -102,4 +142,8 @@ redirect_lan
 
 [ $REMOTE_PING == "true" ] || turn_off_remote_ping
 
+set_user_static_route
+
 echo -n 
+
+

@@ -7,6 +7,9 @@ local FIREWALL_CONFIG_FILE="firewall"
 local NETWORK_CONFIG_FILE="network"
 local NETWORK_UCI_INTERFACE="interface"
 local FIREWALL_CUSTOM_CONFIG_FILE="/etc/firewall.user"
+local TOZED_CONFIG_FILE="tozed"
+local TOZED_UCI_SECTION="cfg"
+local TOZED_UCI_OPTION_STATIC_ROUTE="TZ_STATIC_ROUTE"
 
 local FIREWALL_MAC_FILTER_PREX="MAC-FILTER"
 local FIREWALL_URL_FILTER_PREX="URL-FILTER"
@@ -458,7 +461,7 @@ local function check_ip(ip)
 		debug("check ip fail")
 		return false
 	end
-
+	debug("check_ip true")
 	return true
 end
 
@@ -1664,6 +1667,116 @@ function firewall_module.firewall_get_mutil_nat(network)
 		end)
 
 		return flag
+end
+
+firewall_module.static_route = {
+		
+	["target_ip"] = nil,	 	-- target ip
+	["target_netmask"] = nil,  	-- target netmask
+	["next_ip"] = nil, 			-- next ip
+	["target_inferface"] = nil  -- target interface
+}
+
+function firewall_module.static_route:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+		
+	self["target_ip"] = obj["target_ip"] or nil
+	self["target_netmask"] = obj["target_netmask"] or nil 
+	self["next_ip"] = obj["next_ip"] or nil
+	self["target_inferface"] = obj["target_inferface"] or nil
+end
+
+
+local function check_net_interface(inter)
+	if "" == inter or nil == inter
+	then
+		return false
+	end
+
+	local cmd = string.format("ls /sys/class/net/ | grep '^%s$' | wc -l", inter)
+	local f = io.popen(cmd)
+
+	if nil == f
+	then
+		return false
+	end
+
+	local res = f:read()
+	debug("res = ", res)
+	if "1" == res
+	then
+		return true
+	end
+
+	return false
+
+end
+
+-- set the user static route
+-- input:
+--		route_list: the array of struct static_route
+-- return: true if success or false if fail
+function firewall_module.firewall_set_static_route(route_list)
+
+	local list = {}
+	local i = 1
+
+	x:delete(TOZED_CONFIG_FILE,TOZED_CONFIG_FILE,TOZED_UCI_OPTION_STATIC_ROUTE)
+	for k,temp in pairs(route_list)
+	do
+
+		debug(temp["target_ip"])
+		debug(temp["next_ip"])
+		debug(temp["target_netmask"])
+		debug(temp["target_interface"])
+
+		if check_ip(temp["target_ip"]) and check_ip(temp["next_ip"]) and check_ip(temp["target_netmask"]) and check_net_interface(temp["target_interface"])
+		then
+			list[i] = temp["target_interface"] .. " " .. temp["target_ip"] .. " " .. temp["target_netmask"] .. " " .. temp["next_ip"]
+			debug(list[i])
+			i = i + 1
+		end
+
+	end
+
+	x:set(TOZED_CONFIG_FILE, TOZED_UCI_SECTION,TOZED_UCI_OPTION_STATIC_ROUTE, list)
+
+	return x:commit(TOZED_CONFIG_FILE)
+
+end
+
+-- get the user static route
+-- input:none
+-- return: the array of struct static_route
+function firewall_module.firewall_get_static_route()
+
+	local list =  x:get(TOZED_CONFIG_FILE, TOZED_UCI_SECTION, TOZED_UCI_OPTION_STATIC_ROUTE)
+	local route_list = {}
+	local i = 1
+
+	for k,v in pairs(list)
+	do
+		v = string.gsub(v," ", "#")
+		local ar = split(v,"#")
+		local temp = firewall_module.static_route:new(nil, nil)
+		temp["target_interface"] = ar[1]
+		temp["target_ip"] = ar[2]
+		temp["target_netmask"] = ar[3]
+		temp["next_ip"] = ar[4]
+
+		route_list[i] = temp
+		i = i + 1
+	end
+
+
+	return route_list
+
+
 end
 
 return firewall_module
