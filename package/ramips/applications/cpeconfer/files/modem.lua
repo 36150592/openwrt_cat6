@@ -569,39 +569,36 @@ local function get_support_band()
 end
 
 local function get_lock_band()
-	
-	local cmd = string.format("cat %s | grep LOCK_BAND", MODEM_DYNAMIC_STATUS_PATH)
-	local f = io.popen(cmd)
-	local gw_lock_band, tds_lock_band, lte_lock_band
-	if nil ~= f
+
+	local gw_lock_band ,tds_lock_band, lte_lock_band
+	local gw_support_band, tds_support_band, lte_support_band = get_support_band()
+
+	gw_lock_band = x:get(TOZED_CONFIG_FILE,UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_GW_BAND_PREF")
+	tds_lock_band = x:get(TOZED_CONFIG_FILE,UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_TDS_BAND_PREF")
+	lte_lock_band = x:get(TOZED_CONFIG_FILE,UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_BAND_PREF")
+
+	if nil == gw_lock_band or "" == gw_lock_band
 	then
-		local res = f:read()
-
-		while nil ~= res
-		do
-			local ar 
-			if string.find(res,"GW_LOCK_BAND") ~= nil
-			then	
-				ar = util.split(res,":")
-				gw_lock_band = ar[2]
-			elseif string.find(res,"LTE_LOCK_BAND") ~= nil
-			then
-				ar = util.split(res,":")
-				lte_lock_band = ar[2]
-			elseif string.find(res,"TDS_LOCK_BAND") ~= nil
-			then
-				ar = util.split(res, ":")
-				tds_lock_band = ar[2]
-			end
-
-			res = f:read()
-		end
-		io.close(f)
-		return tonumber(gw_lock_band), tonumber(lte_lock_band), tonumber(tds_lock_band)
+		gw_lock_band = gw_support_band
+	else
+		gw_lock_band = "0x" .. gw_lock_band 
 	end
 
-	debug("get lock band error")
-	return nil, nil, nil
+	if nil == tds_lock_band or "" == tds_lock_band
+	then
+		tds_lock_band = tds_support_band
+	else
+		tds_lock_band = "0x" .. tds_lock_band
+	end
+
+	if nil == lte_lock_band or "" == lte_lock_band
+	then
+		lte_lock_band = lte_support_band
+	else
+		lte_lock_band = "0x" .. lte_lock_band
+	end
+
+	return tonumber(gw_lock_band), tonumber(lte_lock_band), tonumber(tds_lock_band)
 end
 
 local function band_hex_to_band_list(type,hex)
