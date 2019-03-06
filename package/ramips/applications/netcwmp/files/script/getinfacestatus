@@ -39,31 +39,43 @@ function utilexec(command)
         return data                    
 end
 
-
 --main--
 local arg_t = arg_parse(arg)
 if arg_t and arg_t["inf"] and arg_t["param"] then 
-    local ifa = utilexec("ubus call " .. string.format("network.interface.%s",arg_t["inf"]) .. " status")
-    if ifa then
-        ifa = string.gsub(ifa,",","")
+        json = require('json')
+        local ifastr = utilexec("ubus call " .. string.format("network.interface.%s",arg_t["inf"]) .. " status")
+         local ifa = json.decode(ifastr)
+	if ifa then
         local p = arg_t["param"]
         if "ipv4-address" == p then
-            local cmd =  "echo \"" .. ifa .. "\"|grep \"address\"|awk '{print $2}'|sed -n '3p'"                    
-            os.execute(cmd) 
-        elseif "l3_device" == p then                                                                     
-            local cmd =  "echo \"" .. ifa .. "\"|grep \"l3_device\"|awk '{print $2}'"                    
-            os.execute(cmd) 
+            if ifa[p] and ifa[p][1] then
+                local res = ifa[p][1]["address"] or ""
+                print(res)
+            end
         elseif "dns-server" == p then
-            local cmd =  "echo \"" .. ifa .. "\"|grep \"address\"|awk '{print $2}'|sed -n '3p'"                    
-            os.execute(cmd) 
+            local res = nil 
+            if ifa[p] and ifa[p][1] then
+                res = ifa[p][1]
+            end
+            if ifa[p] and ifa[p][2] and res then
+                res = res..","..ifa[p][2]
+            end
+            if res then
+                print(res)
+            end
         elseif "nexthop" == p then
-            local cmd =  "echo \"" .. ifa .. "\"|grep \"nexthop\"|awk '{print $2}'|sed -n '2p'"                    
-            os.execute(cmd) 
+            if ifa["route"] and ifa["route"][2] then
+                local res = ifa["route"][2][p] or ""
+                print(res)
+            elseif ifa["route"] and ifa["route"][1] then
+                local res = ifa["route"][1][p] or ""
+                print(res)
+            end
         elseif "mac" == p then
-            local cmd = string.format([[ifconfig %s | grep HWaddr | awk '{print $5}']],"eth0.2")
+            local cmd = string.format([[ifconfig %s | grep HWaddr | awk '{print $5}']],ifa["device"])
             os.execute(cmd)
         elseif "netmask" == p then
-            local cmd = string.format([[ifconfig %s | grep Mask | awk -F: '{print $4}']],"eth0.2")
+            local cmd = string.format([[ifconfig %s | grep Mask | awk -F: '{print $4}']],ifa["device"])
             os.execute(cmd)
         else
             if ifa[p] and "table" ~= type(ifa[p]) then

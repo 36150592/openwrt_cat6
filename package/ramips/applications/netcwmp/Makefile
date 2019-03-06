@@ -17,7 +17,7 @@ define Package/netcwmp
 	SECTION:=MTK Properties
 	CATEGORY:=MTK Properties
 	TITLE:=Netcwmp(Tr069) FQa MTK7628 device
-	DEPENDS:=+lua +luci-lib-json +libpthread
+	DEPENDS:=+lua +libpthread
 	SUBMENU:=Applications
 endef
 
@@ -46,6 +46,8 @@ define Package/netcwmp/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/script/getinfacestatus $(1)/usr/bin/getinfacestatus
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/script/getclientlist $(1)/usr/bin/getclientlist
+	$(INSTALL_DIR) $(1)/usr/lib/lua
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/script/json.lua $(1)/usr/lib/lua/json.lua
 	$(INSTALL_DIR) $(1)/etc/
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/cwmp.conf $(1)/etc/
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/device.xml $(1)/etc/
