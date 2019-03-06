@@ -22,25 +22,84 @@ local tz_req
 
 function login()
 
-	local tz_answer = {};
-	tz_answer["cmd"] = 100;
-
-	local file = io.open("../config.json", "r")
-	io.input(file)
-	local t =io.read("*a")
-	io.close(file)
-	local Jsondata = cjson.decode(t)
+	local tz_answer = {}
+	tz_answer["cmd"] = 100
+	local bolename = 0
+	local bolepassword = 0
+	local userSign	
+	local nSplitArray = {}  
 	
-	local Login = Jsondata["Login"]
-	
-	local username = tz_req["username"]
-	local password = tz_req["passwd"]
+	local username = "'"..tz_req["username"].."'"
+	local password = "'"..tz_req["passwd"].."'"
 	local sessionId = tz_req["sessionId"]
 	
-	for k,v in pairs(Login) do
-	  if(v["UserName"] == username) then
-	      if(v["PassWord"] == password) then
-		     if (uti.is_file_exist("/tmp/sessionsave") ~= true)
+	local file = io.open("/etc/config/tozed", "r")
+	io.input(file)
+	for l in file:lines() do
+	  nSplitArray = uti.split(l, ' ')
+	  if nSplitArray[2] == 'TZ_USERNAME'
+	    then
+		   if nSplitArray[3] == username
+		      then
+			     bolename = 1
+				 userSign = 'TZ_USERNAME'
+		   end
+	  end
+	  
+	  if  nSplitArray[2] == 'TZ_PASSWD' and userSign == 'TZ_USERNAME' 
+	    then
+		   if nSplitArray[3] == password
+		      then
+		        bolepassword = 1
+				break 
+		   end
+	  end
+	    
+	  if nSplitArray[2] == 'TZ_SUPER_USERNAME'
+	    then
+		   if nSplitArray[3] == username
+		      then
+			     bolename = 1
+				 userSign = 'TZ_SUPER_USERNAME'
+		   end
+	  end
+	  
+	  if nSplitArray[2] == 'TZ_SUPER_PASSWD' and userSign == 'TZ_SUPER_USERNAME' 
+	    then
+		   if nSplitArray[3] == password
+		      then
+		        bolepassword = 1
+				break 
+		   end
+	  end
+	  
+	   if nSplitArray[2] == 'TZ_TEST_USERNAME'
+	    then
+		   if nSplitArray[3] == username
+		      then
+			     bolename = 1
+				 userSign = 'TZ_TEST_USERNAME'
+		   end
+	  end
+	  
+	  if nSplitArray[2] == 'TZ_TEST_PASSWD' and userSign == 'TZ_TEST_USERNAME' 
+	    then
+		   if nSplitArray[3] == password
+		      then
+		        bolepassword = 1
+				break 
+		   end
+	  end
+
+	
+	end
+	
+	io.close(file)
+	
+
+	if bolename == 1 and bolepassword == 1 
+	  then
+	     if (uti.is_file_exist("/tmp/sessionsave") ~= true)
 				then
 					os.execute("cd /tmp && mkdir  sessionsave")
 			 end
@@ -52,23 +111,23 @@ function login()
 			 io.input(file1)
 			 file1:write("updateTime:"..logintime)
 			 io.close(file1)
+			 
+			 local file2 = io.open("../config.json", "r")
+			 io.input(file2)
+			 local t =io.read("*a")
+			 io.close(file2)
+			 local Jsondata = cjson.decode(t)
+			 local Login = Jsondata["Login"]
+			 
 		     tz_answer["success"] = true;
 			 tz_answer["sessionId"] = sessionId..logintime;
-			 tz_answer["auth"] = v["AUTH"];
-			 tz_answer["level"] = v["LEVEL"];
+			 tz_answer["auth"] = Login[userSign]["AUTH"];
+			 tz_answer["level"] = Login[userSign]["LEVEL"];
 			 result_json = cjson.encode(tz_answer);
 			 print(result_json);
 			 return 
-		  else
-		     tz_answer["success"] = false;
-			 result_json = cjson.encode(tz_answer);
-			 print(result_json);
-			 return
-		  end   
-	  
-	  end
-	 
-	end
+    end
+	
 	
 	tz_answer["success"] = false;
 	result_json = cjson.encode(tz_answer);

@@ -1,20 +1,14 @@
 {
   "Login":{
-		"Usr":{
-		    "UserName":"root",
-			"PassWord":"63a9f0ea7bb98050796b649e85481845",
+		"TZ_TEST_USERNAME":{
 			"AUTH":"0xF8F8E0",
 			"LEVEL":"1"
 		},
-        "Usr1":{
-		    "UserName":"admin",
-			"PassWord":"21232f297a57a5a743894a0e4a801fc3",
+        "TZ_SUPER_USERNAME":{
 			"AUTH":"0xF8F8E0",
 			"LEVEL":"2"
 		},
-		 "Usr2":{
-		    "UserName":"test",
-			"PassWord":"098f6bcd4621d373cade4e832627b4f6",
+		 "TZ_USERNAME":{
 			"AUTH":"0x00F8E0",
 			"LEVEL":"3"
 		}
