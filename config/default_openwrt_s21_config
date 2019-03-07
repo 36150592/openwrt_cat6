@@ -1991,7 +1991,7 @@ CONFIG_PACKAGE_jsonfilter=y
 CONFIG_PACKAGE_libc=y
 CONFIG_PACKAGE_libgcc=y
 CONFIG_PACKAGE_libpthread=y
-# CONFIG_PACKAGE_librt is not set
+CONFIG_PACKAGE_librt=y
 # CONFIG_PACKAGE_libstdcpp is not set
 CONFIG_PACKAGE_libthread-db=y
 CONFIG_PACKAGE_mtd=y
@@ -2931,13 +2931,12 @@ CONFIG_PACKAGE_libffi=y
 # CONFIG_PACKAGE_mii_mgr is not set
 CONFIG_PACKAGE_mini_httpd-1.19=y
 # CONFIG_PACKAGE_mpstat is not set
-# CONFIG_PACKAGE_netcwmp is not set
+CONFIG_PACKAGE_netcwmp=y
 # CONFIG_PACKAGE_nfc is not set
 # CONFIG_PACKAGE_nvram is not set
 # CONFIG_PACKAGE_pcmtest is not set
 # CONFIG_PACKAGE_reg is not set
 # CONFIG_PACKAGE_samba-server is not set
-CONFIG_PACKAGE_netcwmp=y
 CONFIG_PACKAGE_sendat=y
 # CONFIG_PACKAGE_smtplog is not set
 # CONFIG_PACKAGE_switch is not set

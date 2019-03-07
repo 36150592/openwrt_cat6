@@ -60,8 +60,8 @@ CPPFLAGS+= -L${SSL_TREE}/lib
 
 CFLAGS+= -O2 -g -Wall -Wno-unused-parameter
 #LDFLAGS= -static
-LIBS= -lpthread -lcrypto -ldl
-#LIBS= -lrt -lpthread -lcrypto -ldl
+#LIBS= -lpthread -lcrypto -ldl
+LIBS= -lrt -lpthread -lcrypto -ldl
  
 #TOOLCHAIN= arm-linux-
 #TOOLCHAIN= 

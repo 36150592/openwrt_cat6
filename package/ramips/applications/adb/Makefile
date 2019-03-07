@@ -20,7 +20,7 @@ include $(INCLUDE_DIR)/kernel.mk
 define Package/adb
   SECTION:=MTK Properties
   CATEGORY:=MTK Properties
-  DEPENDS:=+libpthread +libopenssl
+  DEPENDS:=+libpthread +libopenssl +librt
   TITLE:=Tozed adb
   SUBMENU:=Applications
 endef
