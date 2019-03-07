@@ -6,7 +6,6 @@ $(document).ready(function(){
     Page.render();
     Page.setStripeTable();
 
-
     function getInfo() {
         Page.postJSON({
             json: {
@@ -68,6 +67,7 @@ $(document).ready(function(){
             json: json,
             success: function(data) {
                  AlertUtil.alertMsg(PROMPT.saving.success);
+				 $("ul.tabs a").eq(0).click();
             },
             complete: function(){
                 $('#btnSave').attr("disabled",false);

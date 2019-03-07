@@ -1574,13 +1574,21 @@ wirelessconfightml.tab_menu.connectedList = "Connected List";
 wirelessconfightml.tab_menu.item2 = "Indoor Device Wireless Parameter List";
 wirelessconfightml.tab_menu.item3 = "Auxiliary Wi-Fi1 Settings";
 wirelessconfightml.tab_menu.item4 = "Auxiliary Wi-Fi2 Settings";
+wirelessconfightml.tab_menu.macControl = "Wi-Fi Access Control";
 wirelessconfightml.tab_menu.wps = "WPS Settings";
+wirelessconfightml.macControl.policyTh = "Access Control Type：";
+wirelessconfightml.macControl.unPolicy = "Disable";
+wirelessconfightml.macControl.allowPolicy = "Allow Access";
+wirelessconfightml.macControl.denyPolicy = "Deny Access";
+wirelessconfightml.macControl.macList = "Mac List：";
+wirelessconfightml.macControl.addMac = "Add Mac";
+wirelessconfightml.macControl.btnSave = "Save";
 
 wlan5ghtml.tab_menu.item1 =  "Main Wi-Fi Settings";
 wlan5ghtml.tab_menu.item2 =  "Auxiliary Wi-Fi1 Settings";
 wlan5ghtml.tab_menu.item3 =  "Auxiliary Wi-Fi2 Settings";
 wlan5ghtml.tab_menu.connectedList = "Connected List";
-
+wlan5ghtml.tab_menu.macControl = "Wi-Fi Access Control";
 
 wlan5ghtml.form1.cmt = 'example';
 wlan5ghtml.form1.wifiFunction = 'Wi-Fi Function:';

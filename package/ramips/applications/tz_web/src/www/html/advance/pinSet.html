@@ -76,6 +76,7 @@
                      json: json,
                      success: function(data) {
                          AlertUtil.alertMsg(PROMPT.saving.success);
+						 $("ul.tabs a").eq(3).click();
                      },
 					 fail: function(data) {
                          AlertUtil.alertMsg(PROMPT.saving.fail);

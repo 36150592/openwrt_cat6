@@ -48,7 +48,7 @@
         }
 
         function getCardState(flag){
-            var stateComment = '?';
+            var stateComment = '-';
             if(flag == 0){
                 stateComment = DOC.status.noSim;
             } else if(flag == 1) {
@@ -85,7 +85,7 @@
         }
 
         function getPinPukState(flag) {
-            var pinState="?",pukState="?";
+            var pinState="-",pukState="-";
             if(flag == 0){
                 pinState = DOC.status.noreqPin;
                 pukState = DOC.status.noreqPuk;
@@ -100,7 +100,7 @@
         }
 
         function getNetState(flag) {
-            var state = "?";
+            var state = "-";
             if(flag == -1){
                 state = "?";
             }else if(flag == 0){
@@ -114,7 +114,7 @@
         }
 
         function getRegState(flag) {
-            var csRegState ="?", psRegState ="?";
+            var csRegState ="-", psRegState ="-";
             switch(flag) {
                 case 0:
                     csRegState = DOC.registerStatus.item0;

@@ -1570,13 +1570,22 @@ wirelessconfightml.tab_menu.connectedList = "连接客户端列表";
 wirelessconfightml.tab_menu.item2 = "分机无线参数列表";
 wirelessconfightml.tab_menu.item3 = "辅Wi-Fi1设置";
 wirelessconfightml.tab_menu.item4 = "辅Wi-Fi2设置";
+wirelessconfightml.tab_menu.macControl = "Wi-Fi访问控制";
 wirelessconfightml.tab_menu.wps = "WPS配置";
+wirelessconfightml.macControl.policyTh = "访问控制类型：";
+wirelessconfightml.macControl.unPolicy = "未开启";
+wirelessconfightml.macControl.allowPolicy = "允许访问";
+wirelessconfightml.macControl.denyPolicy = "拒绝访问";
+wirelessconfightml.macControl.macList = "mac列表：";
+wirelessconfightml.macControl.addMac = "添加mac";
+wirelessconfightml.macControl.btnSave = "保存";
+
 
 wlan5ghtml.tab_menu.item1 =  "主Wi-Fi设置";
 wlan5ghtml.tab_menu.item2 =  "辅Wi-Fi1设置";
 wlan5ghtml.tab_menu.item3 =  "辅Wi-Fi2设置";
 wlan5ghtml.tab_menu.connectedList = "连接客户端列表";
-
+wlan5ghtml.tab_menu.macControl = "Wi-Fi访问控制";
 
 wlan5ghtml.form1.cmt = '示例';
 wlan5ghtml.form1.wifiFunction = 'Wi-Fi功能:';

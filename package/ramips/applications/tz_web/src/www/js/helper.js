@@ -597,14 +597,14 @@ Date.prototype.format = function(mask, utc) {
 		$(this).html(sb.toString());
 
 	    var $lis = $("ul.tabs a"), $body = $('#tabbody');
-	    var currentIndex = -1;
+	   // var currentIndex = -1;
 	    $lis.bind('click', function() {
 			var index = $lis.index(this);
-			if (index == currentIndex) {
-				return false;
-			}
+			//if (index == currentIndex) {
+				//return false;
+			//}
 			
-			currentIndex = index;
+			//currentIndex = index;
 			$lis.removeClass("current");
 			$(this).addClass("current");
 			

@@ -1696,6 +1696,72 @@ function set_pinstatus()
 	print(result_json);
 end
 
+
+function get_macAccess()
+    local tz_answer = {}
+	tz_answer["cmd"] = 123
+	
+	local data_array = {}
+	local array = wifi.wifi_get_dev()
+	if next(array) ~= nil
+	then
+	
+		local id
+		for k,v in pairs(array) do
+			if(v["band"] == "2.4G")
+				then
+					id = v['wifi_id']				  
+			end
+		end
+		
+		data_array["policy"], data_array["macs"] = wifi.wifi_get_mac_access_control(id)
+	
+	else
+	    data_array = ''
+	end
+	
+
+	tz_answer["success"] = true
+	tz_answer["maclist"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function set_macAccess()
+	local tz_answer = {}
+	tz_answer["cmd"] = 124
+	
+	local ret 
+	local array = wifi.wifi_get_dev()
+	
+	local id
+	for k,v in pairs(array) do
+	   if(v["band"] == "2.4G")
+	     then
+		   id = v['wifi_id']				  
+		end
+	end
+	
+	local policy = tonumber(tz_req["policy"])
+	local maclist = tz_req["maclist"]
+	
+	if(nil ~= policy and nil ~= maclist)
+	 then
+		ret = wifi.wifi_set_mac_access_control(id,policy,maclist)
+			if(not ret)
+				then
+				tz_answer["setMacAccess"] = false
+			end
+	end	
+	
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json);
+
+
+end
+
 local switch = {
      [0] = get_sysinfo,
 	 [1] = get_systime,
@@ -1730,6 +1796,8 @@ local switch = {
 	 [118] = get_wifi5Client,
 	 [120] = get_ssidlist,
 	 [121] = set_ssidlist,
+	 [123] = get_macAccess,
+	 [124] = set_macAccess,
 	 [133] = get_routerinfo,
 	 [134] = get_simstatus,
 	 [135] = set_pinstatus,
