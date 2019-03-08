@@ -3349,6 +3349,30 @@ void bm916_get_moduleinfo(MDI* p)
 			break;
 		}
 
+		memset(buffer_recv,0,RECV_BUFF_SIZE);
+		flag_cmd=util_send_cmd(global_dialtool.dev_handle,"AT+BMSWVER\r",&global_dialtool.pthread_moniter_flag);
+		sleep(1);
+		read(global_dialtool.dev_handle,buffer_recv,RECV_BUFF_SIZE);
+		log_info("%s_%d: >>>>>>>>>>>>real version: %s\n",__FUNCTION__,__LINE__, buffer_recv);
+
+		if(buffer_recv[0])
+		{
+			str_ptr=strstr(buffer_recv,"+BMSWVER:");
+			if(NULL!=str_ptr)
+			{
+				tmp_ptr=str_ptr+strlen("+BMSWVER: ");
+				str_sub_ptr=strstr(tmp_ptr,"\n");
+				if(NULL != str_sub_ptr)
+				{
+					length=str_sub_ptr-tmp_ptr;
+					strncpy(buffer,tmp_ptr,length);
+					buffer[length]='\0';
+					result_ptr=strip_head_tail_space(buffer);
+					strncpy(p->softver,result_ptr,strlen(result_ptr));
+				}
+			}
+		}
+
 		m_free(buffer_recv);
 		break;	
 	}		
