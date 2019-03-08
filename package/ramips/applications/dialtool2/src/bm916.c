@@ -3139,10 +3139,13 @@ void bm916_get_moduleinfo(MDI* p)
 	memset(buffer_recv,0,RECV_BUFF_SIZE);
 	util_send_cmd(global_dialtool.dev_handle,"at+cfun=0\r",&global_dialtool.pthread_moniter_flag);
 	sleep(1);
-	util_send_cmd(global_dialtool.dev_handle,"at+cfun=1\r",&global_dialtool.pthread_moniter_flag);
-	sleep(1);
 	read(global_dialtool.dev_handle,buffer_recv,RECV_BUFF_SIZE);
-	log_info(">>>>>>>>>>>>>>>>>>>>>>cfun: receive: %s\n",buffer_recv);
+	log_info("cfun==0: receive: %s\n",buffer_recv);
+	memset(buffer_recv,0,RECV_BUFF_SIZE);
+	util_send_cmd(global_dialtool.dev_handle,"at+cfun=1\r",&global_dialtool.pthread_moniter_flag);
+	sleep(4);
+	read(global_dialtool.dev_handle,buffer_recv,RECV_BUFF_SIZE);
+	log_info("cfun==1: receive: %s\n",buffer_recv);
 	while(!strstr(buffer_recv,"OK") && --retry)
 	{
 		log_info("restart cfun fail,now retry %d", retry);
@@ -3155,6 +3158,7 @@ void bm916_get_moduleinfo(MDI* p)
 		util_send_cmd(global_dialtool.dev_handle,"at+cfun=1\r",&global_dialtool.pthread_moniter_flag);
 		sleep(1);
 		read(global_dialtool.dev_handle,buffer_recv,RECV_BUFF_SIZE);
+		log_info("cfun retry: receive: %s\n",buffer_recv);
 	}
 
 	if(0 == retry)
