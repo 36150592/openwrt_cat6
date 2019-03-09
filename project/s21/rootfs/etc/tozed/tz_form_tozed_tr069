@@ -1,0 +1,60 @@
+#!/bin/sh
+
+FORM_CONFIG_STATION=/tmp/form_config/
+FACTORY_CONFIG_FILE=/etc/tozed_param
+TR069_CONFIG_LOAD_FILE=${FORM_CONFIG_STATION}/tr069
+
+mkdir -p ${FORM_CONFIG_STATION}
+
+#export param
+cat ${FACTORY_CONFIG_FILE} | grep TZTR069_ > ${TR069_CONFIG_LOAD_FILE}
+chmod 777 ${TR069_CONFIG_LOAD_FILE}
+. ${TR069_CONFIG_LOAD_FILE}
+
+if [ ${TZTR069_app_enable} != "y" ]; then
+	cfg -a tr069_app_enable="n"
+else
+	cfg -a tr069_app_enable="y"
+fi
+
+cfg -a tr069_SOAP_ENV="${TZTR069_SOAP_ENV}"
+cfg -a tr069_SOAP_ENC="${TZTR069_SOAP_ENC}"
+cfg -a tr069_ServerURL="${TZTR069_SERVER_URL}"
+
+if [ ${TZTR069_PeriodicInformEnable} != "y" ]; then
+	cfg -a tr069_PeriodicInformEnable="n"
+else
+	cfg -a tr069_PeriodicInformEnable="y"
+fi
+
+cfg -a tr069_PeriodicInformInterval="${TZTR069_PeriodicInformInterval}"
+
+if [ ${TZTR069_ACS_auth} != "y" ]; then
+	cfg -a tr069_ACS_auth="n"
+else
+	cfg -a tr069_ACS_auth="y"
+fi
+
+cfg -a tr069_ServerUsername="${TZTR069_ServerUsername}"
+cfg -a tr069_ServerPassword="${TZTR069_ServerPassword}"
+
+if [ ${TZTR069_CPE_auth} != "y" ]; then
+	cfg -a tr069_CPE_auth="n"
+else
+	cfg -a tr069_CPE_auth="y"
+fi
+
+cfg -a tr069_ConnectionRequestUname="${TZTR069_ConnectionRequestUname}"
+cfg -a tr069_ConnectionRequestPassword="${TZTR069_ConnectionRequestPassword}"
+
+
+
+cfg -a tr069_ModelName="${TZTR069_ModelName}"
+cfg -a tr069_ProductClass="${TZTR069_ProductClass}"
+cfg -a tr069_DeviceSummary="${TZTR069_DeviceSummar}"
+cfg -a tr069_Description="${TZTR069_Description}"
+cfg -a tr069_Manufacturer="${TZTR069_Manufacturer}"
+cfg -a TZ_TR069_DATA_MODEL="${TZTR069_DATA_MODEL}"
+
+cfg -c
+

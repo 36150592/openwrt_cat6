@@ -57,10 +57,14 @@ boot() {
 		/etc/tozed/tz_form_network
 	fi
 
-	#/etc/config/network
-
+	#/etc/config/dhcp
 	if [ -f /etc/.flag_factory_config ]; then
 		/etc/tozed/tz_form_dhcp
+	fi
+
+	#/etc/config/tozed tr069
+	if [ -f /etc/.flag_factory_config ]; then
+		/etc/tozed/tz_form_tozed_tr069
 	fi
 
 	uci_apply_defaults
