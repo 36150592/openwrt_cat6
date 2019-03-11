@@ -1,57 +1,52 @@
-#
-# zhengda@sztozed.net
-#
-# Tozed Property Software.
-#
-
 include $(TOPDIR)/rules.mk
+#Based on adb package from AUR https://aur.archlinux.org/packages/adb/ , reused Makefile
 
 PKG_NAME:=adb
-PKG_RELEASE:=1
+PKG_VERSION:=android.5.0.2_r1
+PKG_RELEASE:=2
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
-PKG_KCONFIG:=RALINK_MT7620 RALINK_MT7621 RALINK_MT7628
-PKG_CONFIG_DEPENDS:=$(foreach c, $(PKG_KCONFIG),$(if $(CONFIG_$c),CONFIG_$(c)))
-
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
-include $(INCLUDE_DIR)/kernel.mk
-include $(INCLUDE_DIR)/autotools.mk
+
+ifeq ($(CONFIG_BIG_ENDIAN),y)
+TARGET_CFLAGS+= -DHAVE_BIG_ENDIAN=1
+endif
+TARGET_CFLAGS+= -D_GNU_SOURCE
 
 define Package/adb
-  SECTION:=MTK Properties
-  CATEGORY:=MTK Properties
-  DEPENDS:=+libpthread +libopenssl +libncurses +librt
-  TITLE:=Tozed adb
-  SUBMENU:=Applications
+  SECTION:=utils
+  CATEGORY:=Utilities
+  TITLE:=Android Debug Bridge CLI tool
+  URL:=http://tools.android.com/
+  DEPENDS:=+zlib +libopenssl +libpthread
 endef
 
 define Package/adb/description
-  tozed adb
+ Android Debug Bridge (adb) is a versatile command line tool that lets you communicate with an emulator instance or connected Android-powered device.
 endef
+
+# Nothing just to be sure
+#define Build/Configure
+#endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	$(CP) ./src/* $(PKG_BUILD_DIR)/
 endef
 
-define Build/Configure
-	$(Build/Configure/Default)
+
+define Build/Compile
+	$(MAKE) -C $(PKG_BUILD_DIR)/ \
+		$(TARGET_CONFIGURE_OPTS) \
+		TARGET=Linux \
+		CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS)" \
+		LDFLAGS="$(TARGET_LDFLAGS)"
 endef
-
-
-TARGET_CFLAGS += \
-	$(foreach c, $(PKG_KCONFIG),$(if $(CONFIG_$c),-DCONFIG_$(c)=$(CONFIG_$c)))
-
-#MAKE_FLAGS += \
-	CFLAGS="$(TARGET_CFLAGS)"
 
 define Package/adb/install
-	$(INSTALL_DIR) $(1)/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/adb $(1)/bin
-
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/adb $(1)/usr/bin/
 endef
 
-
 $(eval $(call BuildPackage,adb))
-

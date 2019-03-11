@@ -16,43 +16,22 @@
 LOCAL_PATH := $(my-dir)
 include $(CLEAR_VARS)
 
-ifeq ($(TARGET_CPU_SMP),true)
-    targetSmpFlag := -DANDROID_SMP=1
-else
-    targetSmpFlag := -DANDROID_SMP=0
-endif
-hostSmpFlag := -DANDROID_SMP=0
-
 commonSources := \
-	array.c \
 	hashmap.c \
 	atomic.c.arm \
 	native_handle.c \
-	buffer.c \
-	socket_inaddr_any_server.c \
-	socket_local_client.c \
-	socket_local_server.c \
-	socket_loopback_client.c \
-	socket_loopback_server.c \
-	socket_network_client.c \
-	sockets.c \
 	config_utils.c \
 	cpu_info.c \
 	load_file.c \
-	list.c \
 	open_memstream.c \
 	strdup16to8.c \
 	strdup8to16.c \
 	record_stream.c \
 	process_name.c \
-	properties.c \
 	threads.c \
 	sched_policy.c \
 	iosched_policy.c \
-	str_parms.c
-
-commonHostSources := \
-        ashmem-host.c
+	str_parms.c \
 
 # some files must not be compiled when building against Mingw
 # they correspond to features not used by our host development tools
@@ -68,19 +47,21 @@ ifneq ($(strip $(USE_MINGW)),)
     WINDOWS_HOST_ONLY := 1
 endif
 
-ifeq ($(WINDOWS_HOST_ONLY),1)
+ifneq ($(WINDOWS_HOST_ONLY),1)
     commonSources += \
-        uio.c
-else
-    commonSources += \
-        abort_socket.c \
-        mspace.c \
-        selector.c \
-        tztime.c \
-        zygote.c
+        fs.c \
+        multiuser.c \
+        socket_inaddr_any_server.c \
+        socket_local_client.c \
+        socket_local_server.c \
+        socket_loopback_client.c \
+        socket_loopback_server.c \
+        socket_network_client.c \
+        sockets.c \
 
     commonHostSources += \
-        tzstrftime.c
+        ashmem-host.c
+
 endif
 
 
@@ -88,70 +69,105 @@ endif
 # ========================================================
 LOCAL_MODULE := libcutils
 LOCAL_SRC_FILES := $(commonSources) $(commonHostSources) dlmalloc_stubs.c
-LOCAL_LDLIBS := -lpthread
 LOCAL_STATIC_LIBRARIES := liblog
-ifneq ($(TARGET_BUILD_VARIANT),user)
-LOCAL_CFLAGS += $(hostSmpFlag) \
-                -DLIBC_STATIC \
-		-DDLMALLOC_DEBUG
-else
-LOCAL_CFLAGS += $(hostSmpFlag) \
-		-DLIBC_STATIC
+ifneq ($(HOST_OS),windows)
+LOCAL_CFLAGS += -Werror
 endif
+LOCAL_MULTILIB := both
+LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 include $(BUILD_HOST_STATIC_LIBRARY)
+
+
+# Tests for host
+# ========================================================
+include $(CLEAR_VARS)
+LOCAL_MODULE := tst_str_parms
+LOCAL_CFLAGS += -DTEST_STR_PARMS
+ifneq ($(HOST_OS),windows)
+LOCAL_CFLAGS += -Werror
+endif
+LOCAL_SRC_FILES := str_parms.c hashmap.c memory.c
+LOCAL_STATIC_LIBRARIES := liblog
+LOCAL_MODULE_TAGS := optional
+LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
+include $(BUILD_HOST_EXECUTABLE)
 
 
 # Shared and static library for target
 # ========================================================
+
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcutils
-LOCAL_SRC_FILES := $(commonSources) ashmem-dev.c mq.c android_reboot.c partition_utils.c uevent.c qtaguid.c klog.c pmem-dev.cpp
-ifneq ($(TARGET_BUILD_VARIANT),user)
-LOCAL_CFLAGS += -DDLMALLOC_DEBUG
-endif
-ifeq ($(TARGET_ARCH),arm)
-LOCAL_SRC_FILES += arch-arm/memset32.S
-ifeq ($(TARGET_BUILD_VARIANT),eng)
-ifneq ($(TARGET_PRODUCT),banyan_addon)
-LOCAL_CFLAGS += \
-		-fno-omit-frame-pointer \
-		-mapcs	
-endif
-endif
-else  # !arm
-ifeq ($(TARGET_ARCH),sh)
-LOCAL_SRC_FILES += memory.c atomic-android-sh.c
-else  # !sh
-ifeq ($(TARGET_ARCH_VARIANT),x86-atom)
-LOCAL_CFLAGS += -DHAVE_MEMSET16 -DHAVE_MEMSET32
-LOCAL_SRC_FILES += arch-x86/android_memset16.S arch-x86/android_memset32.S memory.c
-else # !x86-atom
-LOCAL_SRC_FILES += memory.c
-endif # !x86-atom
-endif # !sh
-endif # !arm
+LOCAL_SRC_FILES := $(commonSources) \
+        android_reboot.c \
+        ashmem-dev.c \
+        debugger.c \
+        klog.c \
+        memory.c \
+        partition_utils.c \
+        properties.c \
+        qtaguid.c \
+        trace.c \
+        uevent.c \
 
-LOCAL_C_INCLUDES := $(KERNEL_HEADERS)
+LOCAL_SRC_FILES_arm += \
+        arch-arm/memset32.S \
+
+# arch-arm/memset32.S does not compile with Clang.
+LOCAL_CLANG_ASFLAGS_arm += -no-integrated-as
+
+LOCAL_SRC_FILES_arm64 += \
+        arch-arm64/android_memset.S \
+
+ifndef ARCH_MIPS_REV6
+LOCAL_SRC_FILES_mips += \
+        arch-mips/android_memset.c \
+
+LOCAL_CFLAGS_mips += -DHAVE_MEMSET16 -DHAVE_MEMSET32
+endif
+
+# TODO: switch mips64 back to using arch-mips/android_memset.c
+LOCAL_SRC_FILES_mips64 += \
+#       arch-mips/android_memset.c \
+
+LOCAL_SRC_FILES_x86 += \
+        arch-x86/android_memset16.S \
+        arch-x86/android_memset32.S \
+
+LOCAL_SRC_FILES_x86_64 += \
+        arch-x86_64/android_memset16.S \
+        arch-x86_64/android_memset32.S \
+
+LOCAL_CFLAGS_arm += -DHAVE_MEMSET16 -DHAVE_MEMSET32
+LOCAL_CFLAGS_arm64 += -DHAVE_MEMSET16 -DHAVE_MEMSET32
+#LOCAL_CFLAGS_mips64 += -DHAVE_MEMSET16 -DHAVE_MEMSET32
+LOCAL_CFLAGS_x86 += -DHAVE_MEMSET16 -DHAVE_MEMSET32
+LOCAL_CFLAGS_x86_64 += -DHAVE_MEMSET16 -DHAVE_MEMSET32
+
+LOCAL_C_INCLUDES := $(libcutils_c_includes)
 LOCAL_STATIC_LIBRARIES := liblog
-LOCAL_CFLAGS += $(targetSmpFlag) \
-		-DLIBC_STATIC
+LOCAL_CFLAGS += -Werror -std=gnu90
+LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-
-# mtk04376: Force to ARM build for debug15 memory debugging
-LOCAL_ARM_MODE := arm
-
 LOCAL_MODULE := libcutils
-LOCAL_WHOLE_STATIC_LIBRARIES := libcutils
+# TODO: remove liblog as whole static library, once we don't have prebuilt that requires
+# liblog symbols present in libcutils.
+LOCAL_WHOLE_STATIC_LIBRARIES := libcutils liblog
 LOCAL_SHARED_LIBRARIES := liblog
-LOCAL_CFLAGS += $(targetSmpFlag)
+LOCAL_CFLAGS += -Werror
+LOCAL_C_INCLUDES := $(libcutils_c_includes)
+LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := tst_str_parms
-LOCAL_CFLAGS += -DTEST_STR_PARMS
+LOCAL_CFLAGS += -DTEST_STR_PARMS -Werror
 LOCAL_SRC_FILES := str_parms.c hashmap.c memory.c
 LOCAL_SHARED_LIBRARIES := liblog
 LOCAL_MODULE_TAGS := optional
+LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 include $(BUILD_EXECUTABLE)
+
+include $(call all-makefiles-under,$(LOCAL_PATH))
