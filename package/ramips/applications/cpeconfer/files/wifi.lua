@@ -2018,7 +2018,12 @@ function wifi_module.wifi_get_mac_access_control(wifi_id)
 		policy = 0
 	end
 
-	if nil  == str
+	if nil  == str or "" == str
+	then
+		return policy,nil
+	end
+
+	if string.match(str,"%x%x:%x%x:%x%x:%x%x:%x%x:%x%x") == nil
 	then
 		return policy,nil
 	end
