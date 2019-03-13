@@ -136,6 +136,7 @@ static void find_usb_device(const char *base,
     unsigned char local_ep_in, local_ep_out;
     DIR *busdir , *devdir ;
     struct dirent *de;
+  int is_ss = 0;
     int fd ;
 
     busdir = opendir(base);
@@ -195,6 +196,14 @@ static void find_usb_device(const char *base,
             vid = device->idVendor;
             pid = device->idProduct;
             DBGX("[ %s is V:%04x P:%04x ]\n", devname, vid, pid);
+	 D(" adbinfo bcdUSB 0x%x [ %s is V:%04x P:%04x ]\n", device->bcdUSB, devname, vid, pid);
+	if (device->bcdUSB == 0x0300)
+	{
+		D("super speed device found : V:%04x P:%04x\n", vid, pid);
+		is_ss = 1;
+	
+	}
+
 
                 // should have config descriptor next
             config = (struct usb_config_descriptor *)bufptr;
@@ -236,7 +245,15 @@ static void find_usb_device(const char *base,
                         DBGX("looking for bulk endpoints\n");
                             // looks like ADB...
                         ep1 = (struct usb_endpoint_descriptor *)bufptr;
-                        bufptr += USB_DT_ENDPOINT_SIZE;
+                        bufptr += USB_DT_ENDPOINT_SIZE ; 
+
+		if (is_ss)
+		{
+
+			bufptr += 6;
+			is_ss = 0;
+		}
+		
                         ep2 = (struct usb_endpoint_descriptor *)bufptr;
                         bufptr += USB_DT_ENDPOINT_SIZE;
 

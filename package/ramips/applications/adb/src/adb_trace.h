@@ -16,7 +16,7 @@
 
 #ifndef __ADB_TRACE_H
 #define __ADB_TRACE_H
-
+#include <syslog.h>
 #if !ADB_HOST
 #include <android/log.h>
 #endif
@@ -68,75 +68,18 @@ void    adb_trace_init(void);
 
 /* you must define TRACE_TAG before using this macro */
 #if ADB_HOST
-#  define  D(...)                                      \
-        do {                                           \
-            if (ADB_TRACING) {                         \
-                int save_errno = errno;                \
-                adb_mutex_lock(&D_lock);               \
-                fprintf(stderr, "%s::%s():",           \
-                        __FILE__, __FUNCTION__);       \
-                errno = save_errno;                    \
-                fprintf(stderr, __VA_ARGS__ );         \
-                fflush(stderr);                        \
-                adb_mutex_unlock(&D_lock);             \
-                errno = save_errno;                    \
-           }                                           \
-        } while (0)
-#  define  DR(...)                                     \
-        do {                                           \
-            if (ADB_TRACING) {                         \
-                int save_errno = errno;                \
-                adb_mutex_lock(&D_lock);               \
-                errno = save_errno;                    \
-                fprintf(stderr, __VA_ARGS__ );         \
-                fflush(stderr);                        \
-                adb_mutex_unlock(&D_lock);             \
-                errno = save_errno;                    \
-           }                                           \
-        } while (0)
-#  define  DD(...)                                     \
-        do {                                           \
-          int save_errno = errno;                      \
-          adb_mutex_lock(&D_lock);                     \
-          fprintf(stderr, "%s::%s():",                 \
-                  __FILE__, __FUNCTION__);             \
-          errno = save_errno;                          \
-          fprintf(stderr, __VA_ARGS__ );               \
-          fflush(stderr);                              \
-          adb_mutex_unlock(&D_lock);                   \
-          errno = save_errno;                          \
-        } while (0)
+#  define  D(...)                    	 syslog(LOG_INFO,__VA_ARGS__)
+#  define  DR(...)          	 syslog(LOG_INFO,__VA_ARGS__)
+#  define  DD(...)         	syslog(LOG_INFO,__VA_ARGS__)
 #else
-#  define  D(...)                                      \
-        do {                                           \
-            if (ADB_TRACING) {                         \
-                __android_log_print(                   \
-                    ANDROID_LOG_INFO,                  \
-                    __FUNCTION__,                      \
-                    __VA_ARGS__ );                     \
-            }                                          \
-        } while (0)
-#  define  DR(...)                                     \
-        do {                                           \
-            if (ADB_TRACING) {                         \
-                __android_log_print(                   \
-                    ANDROID_LOG_INFO,                  \
-                    __FUNCTION__,                      \
-                    __VA_ARGS__ );                     \
-            }                                          \
-        } while (0)
-#  define  DD(...)                                     \
-        do {                                           \
-          __android_log_print(                         \
-              ANDROID_LOG_INFO,                        \
-              __FUNCTION__,                            \
-              __VA_ARGS__ );                           \
-        } while (0)
+#  define  D(...)                   syslog(LOG_INFO,__VA_ARGS__)
+#  define  DR(...)               syslog(LOG_INFO,__VA_ARGS__)
+#  define  DD(...)               syslog(LOG_INFO,__VA_ARGS__)
 #endif /* ADB_HOST */
 #else
-#  define  D(...)          ((void)0)
-#  define  DR(...)         ((void)0)
-#  define  DD(...)         ((void)0)
+#  define  D(...)          syslog(LOG_INFO,__VA_ARGS__)
+#  define  DR(...)         syslog(LOG_INFO,__VA_ARGS__)
+#  define  DD(...)       syslog(LOG_INFO,__VA_ARGS__)
 #  define  ADB_TRACING     0
 #endif /* ADB_TRACE */
 
