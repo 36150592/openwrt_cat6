@@ -1,11 +1,10 @@
-
 /*===========================================================================
-
+FILE:
    QMIDevice.c
 
 DESCRIPTION:
    Functions related to the QMI interface device
-   
+
 FUNCTIONS:
    Generic functions
       IsDeviceValid
@@ -25,7 +24,6 @@ FUNCTIONS:
       ReadAsync
       UpSem
       ReadSync
-      WriteSyncCallback
       WriteSync
 
    Internal memory management functions
@@ -36,8 +34,9 @@ FUNCTIONS:
       PopFromReadMemList
       AddToNotifyList
       NotifyAndPopNotifyList
-      AddToURBList
-      PopFromURBList
+
+   Internal userspace wrapper functions
+      UserspaceunlockedIOCTL
 
    Userspace wrappers
       UserspaceOpen
@@ -57,7 +56,7 @@ FUNCTIONS:
       SetupQMIWDSCallback
       QMIDMSGetMEID
 
-Copyright (c) 2011,2015 The Linux Foundation. All rights reserved.
+Copyright (c) 2011, Code Aurora Forum. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -71,6 +70,34 @@ modification, are permitted provided that the following conditions are met:
       products derived from this software without specific prior written
       permission.
 
+Alternatively, provided that this notice is retained in full, this software
+may be relicensed by the recipient under the terms of the GNU General Public
+License version 2 ("GPL") and only version 2, in which case the provisions of
+the GPL apply INSTEAD OF those given above.  If the recipient relicenses the
+software under the GPL, then the identification text in the MODULE_LICENSE
+macro must be changed to reflect "GPLv2" instead of "Dual BSD/GPL".  Once a
+recipient changes the license terms to the GPL, subsequent recipients shall
+not relicense under alternate licensing terms, including the BSD or dual
+BSD/GPL terms.  In addition, the following license statement immediately
+below and between the words START and END shall also then apply when this
+software is relicensed under the GPL:
+
+START
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License version 2 and only version 2 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+END
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -88,35 +115,125 @@ POSSIBILITY OF SUCH DAMAGE.
 //---------------------------------------------------------------------------
 // Include Files
 //---------------------------------------------------------------------------
+#include <asm/unaligned.h>
 #include "QMIDevice.h"
-#include <linux/usb/cdc.h>
-#if (LINUX_VERSION_CODE > KERNEL_VERSION( 4,14,0 ))
+#include "Structs.h"
+#include <linux/module.h>
+#include <linux/proc_fs.h> // for the proc filesystem
+#include <linux/device.h>
+#include <linux/file.h>
+#include <linux/rtnetlink.h>
+#include <linux/netdevice.h>
+#include <net/sch_generic.h>
+#include <linux/if_arp.h>
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION( 4,11,0 ))
 #include <linux/sched/signal.h>
 #endif
-static unsigned int pkt_data_handle = 0;
 
+#if (LINUX_VERSION_CODE == KERNEL_VERSION( 2,6,35 ))
+#warning "Fix compilation error 'include/linux/compat.h:233: error: in /usr/src/linux-headers-2.6.35-22-generic/include/linux/compat.h, line 233, the variable name of second parameter,  replace *u32 to *u"
+#endif
+#include <linux/usbdevice_fs.h>
+#ifdef CONFIG_PROVE_RCU
+#define _SIG_LOCK_ 1
+#else
+#define _SIG_LOCK_ 0
+#endif
+#include <linux/sched.h>
+#include <linux/dnotify.h>
 //-----------------------------------------------------------------------------
 // Definitions
 //-----------------------------------------------------------------------------
 
 extern int debug;
+extern int is9x15;
 extern int interruptible;
-//add a timer to get qmi response to replace interrupt by qiao 2019/01/13
-static struct timer_list qmi_timer;
-static int  time_out_val = 100;
-// Prototype to GobiSuspend function
-int GobiSuspend( 
+extern int iTEEnable;
+extern void *gobi_skb_push(struct sk_buff *pSKB, unsigned int len);
+const bool clientmemdebug = 0;
+enum {
+ eNotifyListEmpty=-1,
+ eNotifyListNotFound=0,
+ eNotifyListFound=1,
+};
+
+#define SEND_ENCAPSULATED_COMMAND (0)
+#define GET_ENCAPSULATED_RESPONSE (1)
+#define USB_WRITE_TIMEOUT 500   // must be less than AM timeout
+#define USB_WRITE_RETRY (2)
+#define USB_READ_TIMEOUT (500)
+#define MAX_RETRY 5
+#define ENABLE_MAX_RETRY_LOCK_MSLEEP_TIME 10
+#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
+#if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,33 ))
+#define raw_spin_is_locked(x) (&(x)->raw_lock == 0)
+#endif
+#endif
+#if (LINUX_VERSION_CODE < KERNEL_VERSION( 4,15,0 ))
+#define gobi_setup_timer(timer, fn, data) setup_timer(timer, fn, data) 
+#else
+#define gobi_setup_timer(timer, fn, data) timer_setup(timer, fn, 0) 
+#endif
+
+/* initially all zero */
+int qcqmi_table[MAX_QCQMI];
+int qmux_table[MAX_QCQMI];
+
+//Store all work queues per device per interface
+sGobiPrivateWorkQueues GobiPrivateWorkQueues[MAX_QCQMI][MAX_QCQMI_PER_INTF];
+
+extern bool isModuleUnload(sGobiUSBNet *pDev);
+extern int iRAWIPEnable;
+extern int iQMUXEnable;
+static inline bool IsDeviceValid( sGobiUSBNet * pDev );
+static void gobiProcessReadURB(sGobiUSBNet *pGobiDev);
+static void ProcessReadWorkFunction(struct work_struct *w);
+int IsOtherTaskUsingFilp(struct file *pFilp);
+int IsOpenTaskIsCurrent(struct file *pFilp);
+int IsCurrentTaskExit(void);
+int ClientTransactionIDExist(sGobiUSBNet * pDev, u16 clientID,u16 u16TransactionID);
+
+int GenerateProcessName(const char *pPrefix,char *szProcessName,unsigned sizeofName,sGobiUSBNet *pGobiDev );
+int GetPrivateWorkQueuesInterfaceTableIndex(sGobiUSBNet *pGobiDev);
+int AddPrivateWorkQueues(sGobiUSBNet *pGobiDev);
+int GetPrivateWorkQueuesIndex(sGobiUSBNet *pGobiDev);
+int SetPrivateWorkQueuesWQByTableIndex(int i,int j,struct workqueue_struct *wq,int type);
+struct workqueue_struct *GetPrivateWorkQueuesWQByTableIndex(int i,int j,int type);
+int ClearPrivateWorkQueuesProcessByTableIndex(int i,int j);
+void GobiCancelReadCallBackWorkQueue(sGobiUSBNet *pGobiDev);
+bool TransceiveReleaseClientID(
+   sGobiUSBNet *    pDev,
+   u16                clientID);
+
+#define CLIENT_READMEM_SNAPSHOT(clientID, pdev)\
+   if( (debug & DEBUG_QMI) && clientmemdebug )\
+   {\
+      sClientMemList *pclnt;\
+      sReadMemList *plist;\
+      pclnt = FindClientMem((pdev), (clientID));\
+      plist = pclnt->mpList;\
+      if( (pdev) != NULL){\
+          while(plist != NULL)\
+          {\
+             DBG(  "clientID 0x%x, mDataSize = %u, mpData = 0x%p, mTransactionID = %u,  \
+                    mpNext = 0x%p\n", (clientID), plist->mDataSize, plist->mpData, \
+                    plist->mTransactionID, plist->mpNext  ) \
+             /* advance to next entry */\
+             plist = plist->mpNext;\
+          }\
+      }\
+   }
+
+#ifdef CONFIG_PM
+// Prototype to GobiNetSuspend function
+int GobiNetSuspend(
    struct usb_interface *     pIntf,
    pm_message_t               powerEvent );
+#endif /* CONFIG_PM */
 
-// UnlockedUserspacecIOCTL is a simple passthrough to UserspacecIOCTL
-long UnlockedUserspaceIOCTL(
-   struct file *     pFilp,
-   unsigned int      cmd,
-   unsigned long     arg )
-{
-   return UserspaceIOCTL( NULL, pFilp, cmd, arg );
-}
+int wakeup_inode_process(struct file *pFilp,struct task_struct * pTask);
+void gobi_try_wake_up_process(struct task_struct * pTask);
+int gobi_work_busy(struct delayed_work *dw);
 
 // IOCTL to generate a client ID for this service type
 #define IOCTL_QMI_GET_SERVICE_FILE 0x8BE0 + 1
@@ -127,34 +244,461 @@ long UnlockedUserspaceIOCTL(
 // IOCTL to get the MEID of the device
 #define IOCTL_QMI_GET_DEVICE_MEID 0x8BE0 + 3
 
+#define IOCTL_QMI_RELEASE_SERVICE_FILE_IOCTL  (0x8BE0 + 4)
+
+#define IOCTL_QMI_ADD_MAPPING 0x8BE0 + 5
+#define IOCTL_QMI_DEL_MAPPING 0x8BE0 + 6
+#define IOCTL_QMI_CLR_MAPPING 0x8BE0 + 7
+
+#define IOCTL_QMI_QOS_SIMULATE 0x8BE0 + 8
+#define IOCTL_QMI_GET_TX_Q_LEN 0x8BE0 + 9
+
+#define IOCTL_QMI_EDIT_MAPPING 0x8BE0 + 10
+#define IOCTL_QMI_READ_MAPPING 0x8BE0 + 11
+#define IOCTL_QMI_DUMP_MAPPING 0x8BE0 + 12
+#define IOCTL_QMI_GET_USBNET_STATS 0x8BE0 + 13
+#define IOCTL_QMI_SET_DEVICE_MTU 0x8BE0 + 14
+#define IOCTL_QMI_GET_QMAP_SUPPORT 0x8BE0 + 15
+#define IOCTL_QMI_SET_IP_ADDRESS   0x8BE0 + 16
+#define IOCTL_QMI_SET_IPV6_ADDRESS   0x8BE0 + 17
+#define IOCTL_QMI_GET_IPALIAS_MODE   0x8BE0 + 18
+#define IOCTL_QMI_GET_SVC_VERSION_INFO   0x8BE0 + 19
+
 // CDC GET_ENCAPSULATED_RESPONSE packet
-#define CDC_GET_ENCAPSULATED_RESPONSE 0x01A1ll
+#define CDC_GET_ENCAPSULATED_RESPONSE_LE 0x01A1ll
+#define CDC_GET_ENCAPSULATED_RESPONSE_BE 0xA101000000000000ll
+/* The following masks filter the common part of the encapsulated response
+ * packet value for Gobi and QMI devices, ie. ignore usb interface number
+ */
+#define CDC_RSP_MASK_BE 0xFFFFFFFF00FFFFFFll
+#define CDC_RSP_MASK_LE 0xFFFFFFE0FFFFFFFFll
+
+#define _IGNORE_DISCONNECT_SPIN_LOCK_CHECK_ 1
+
+const int i = 1;
+#define is_bigendian() ( (*(char*)&i) == 0 )
+#define CDC_GET_ENCAPSULATED_RESPONSE(pcdcrsp, pmask)\
+{\
+   *pcdcrsp  = is_bigendian() ? CDC_GET_ENCAPSULATED_RESPONSE_BE \
+                          : CDC_GET_ENCAPSULATED_RESPONSE_LE ; \
+   *pmask = is_bigendian() ? CDC_RSP_MASK_BE \
+                           : CDC_RSP_MASK_LE; \
+}
 
 // CDC CONNECTION_SPEED_CHANGE indication packet
-#define CDC_CONNECTION_SPEED_CHANGE 0x08000000002AA1ll
+#define CDC_CONNECTION_SPEED_CHANGE_LE 0x2AA1ll
+#define CDC_CONNECTION_SPEED_CHANGE_BE 0xA12A000000000000ll
+/* The following masks filter the common part of the connection speed change
+ * packet value for Gobi and QMI devices
+ */
+#define CDC_CONNSPD_MASK_BE 0xFFFFFFFFFFFF7FFFll
+#define CDC_CONNSPD_MASK_LE 0XFFF7FFFFFFFFFFFFll
+#define CDC_GET_CONNECTION_SPEED_CHANGE(pcdccscp, pmask)\
+{\
+   *pcdccscp  = is_bigendian() ? CDC_CONNECTION_SPEED_CHANGE_BE \
+                          : CDC_CONNECTION_SPEED_CHANGE_LE ; \
+   *pmask = is_bigendian() ? CDC_CONNSPD_MASK_BE \
+                           : CDC_CONNSPD_MASK_LE; \
+}
+
+#define SPIN_LOCK_DEBUG 0
+
+/*=========================================================================*/
+// QMAP netdev define
+/*=========================================================================*/
+#define ARPHRD_NONE     0xFFFE
+#ifndef netdev_tx_t
+#define netdev_tx_t int
+#endif
+
+#if (__GNUC__ > 7 && defined(_ASM_X86_ATOMIC_H))|| \
+    (__GNUC__ == 7 && defined(_ASM_X86_ATOMIC_H) && (__GNUC_MINOR__ > 0 || \
+                       (__GNUC_MINOR__ == 0 && \
+                        __GNUC_PATCHLEVEL__ > 0)))
+#define gobi_atomic_read(x) atomic_read((const atomic_t *)x)
+#else
+#define gobi_atomic_read(x) atomic_read((atomic_t *)x)
+#endif
+#define in_serving_hardirq() (hardirq_count() &  HARDIRQ_OFFSET)
+#if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,37 ))
+
+#define in_serving_softirq()	(softirq_count() & SOFTIRQ_OFFSET)
+#endif
+
+static int gobi_qmimux_open(struct net_device *dev)
+{
+   struct gobi_qmimux_priv *priv = netdev_priv(dev);
+   struct net_device *real_dev = priv->real_dev;
+   unsigned short oflags;
+   DBG("\n");
+   if (!(priv->real_dev->flags & (IFF_UP|IFF_RUNNING)))
+   {
+      printk("Adaptor Not Up\n");
+      oflags = dev->flags;
+      if (dev_change_flags(real_dev, oflags | IFF_UP | IFF_RUNNING) < 0) {
+          printk("IP-Config: Failed to open %s\n",
+          dev->name);
+      }
+      netif_carrier_on(real_dev);
+   }
+   
+   netif_carrier_on(real_dev);
+   netif_start_queue(real_dev);
+   netif_carrier_on(dev);
+   netif_start_queue(dev);
+   return 0;
+}
+
+static int gobi_qmimux_stop(struct net_device *dev)
+{
+   NETDBG("\n");
+   netif_carrier_off(dev);
+   return 0;
+}
+
+struct sk_buff *GobiNetDriverQmuxTxFixup(
+   struct sk_buff *pSKB,
+   gfp_t flags,
+   u8 mux_id)
+{
+
+   DBG( "\n" );
+   if (pSKB->len >= 4)
+   {
+
+      // Skip Ethernet header from message
+      NETDBG( "Before sending to device modified: Len:0x%x",pSKB->len);
+      NetHex (pSKB->data, pSKB->len);
+      return pSKB;
+   }
+   else
+   {
+      NETDBG( "Packet Dropped Length");
+   }
+
+   // Filter the packet out, release it
+   dev_kfree_skb_any(pSKB);
+   return NULL;
+}
+
+static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device *dev)
+{
+   struct gobi_qmimux_priv *priv = netdev_priv(dev);
+   unsigned int len = skb->len;
+   struct gobi_qmimux_hdr *hdr;
+
+   skb->dev = priv->real_dev;
+   if(dev->type == ARPHRD_ETHER)
+   {
+      NETDBG("Remove ETH Header\n");
+      NetHex (skb->data, skb->len);
+      skb_pull(skb,ETH_HLEN);
+      hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));
+      len = skb->len - sizeof(struct gobi_qmimux_hdr);
+   }
+   else
+   {
+      hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));
+   }
+   hdr->pad = 0;
+   hdr->mux_id = priv->mux_id;
+   hdr->pkt_len = cpu_to_be16(len);
+   skb->dev = priv->real_dev;
+   NETDBG("mux_id:0x%x\n",priv->mux_id);
+   if(iIsValidQmuxSKB(skb)==0)
+   {
+      NETDBG( "Invalid Packet\n" );
+      return NETDEV_TX_BUSY;
+   }
+   skb = GobiNetDriverQmuxTxFixup( skb, GFP_ATOMIC,priv->mux_id);
+   if (skb == NULL)
+   {
+      NETDBG( "unable to tx_fixup skb\n" );
+      return NETDEV_TX_BUSY;
+   }
+   dev->stats.tx_packets++;
+   dev->stats.tx_bytes += skb->len;
+   #if (LINUX_VERSION_CODE < KERNEL_VERSION( 4,7,0 ))
+   dev->trans_start = jiffies;
+   #else
+   netif_trans_update(dev);
+   #endif
+   return dev_queue_xmit(skb);
+}
+
+static const struct net_device_ops gobi_qmimux_netdev_ops = {
+   .ndo_open       = gobi_qmimux_open,
+   .ndo_stop       = gobi_qmimux_stop,
+   .ndo_start_xmit = gobi_qmimux_start_xmit,
+};
+
+/*=========================================================================*/
+
 
 /*=========================================================================*/
 // UserspaceQMIFops
 //    QMI device's userspace file operations
 /*=========================================================================*/
-struct file_operations UserspaceQMIFops = 
+static const struct file_operations UserspaceQMIFops =
 {
    .owner     = THIS_MODULE,
    .read      = UserspaceRead,
    .write     = UserspaceWrite,
-#if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,35 ))
-   .ioctl     = UserspaceIOCTL,
+#ifdef CONFIG_COMPAT
+   .compat_ioctl = UserspaceunlockedIOCTL,
+#endif
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,36 ))
+   .unlocked_ioctl = UserspaceunlockedIOCTL,
 #else
-   .unlocked_ioctl = UnlockedUserspaceIOCTL,
+   .ioctl     = UserspaceIOCTL,
 #endif
    .open      = UserspaceOpen,
    .flush     = UserspaceClose,
    .poll      = UserspacePoll,
+   .release   = UserspaceRelease,
+   .lock      = UserSpaceLock
 };
 
+void RemoveProcessFile(sGobiUSBNet * pDev);
+void RemoveCdev(sGobiUSBNet * pDev);
+void wakeup_target_process(struct task_struct * pTask);
+
+inline int wait_preempt(void)
+{
+   int count = 0;
+   while (preempt_count()>0)
+   {
+      msleep_interruptible(50);
+      if(count>10)
+      {
+         return 0;
+      }
+   }
+   return 1;
+}
+
+inline void wait_interrupt(void)
+{
+   int count = 0;
+   while(in_interrupt()||
+      in_softirq()|| //Soft IRQ
+      in_irq()|| //Hard IRQ
+      in_serving_softirq()||
+      in_serving_hardirq())
+   {
+
+      #if defined(cpu_relax)
+      cpu_relax();
+      #elif defined(rep_nop)
+      rep_nop();
+      #else
+      wait_ms(50);
+      #endif
+      if(count++>1000)
+      {
+         printk(KERN_ERR "timeout");
+         break;
+      }
+   }
+}
+
+int isPreempt(void)
+{
+   return in_atomic();
+}
+
+void GobiSyncRcu(void)
+{
+   if(isPreempt()!=0)
+   {
+      printk("preempt_enabled");
+   }
+   mb();
+}
 /*=========================================================================*/
 // Generic functions
 /*=========================================================================*/
+u8 QMIXactionIDGet( sGobiUSBNet *pDev)
+{
+   u8 transactionID;
+
+   if( 0 == (transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID)) )
+   {
+      transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID );
+   }
+   
+   return transactionID;
+}
+
+static struct usb_endpoint_descriptor *GetEndpoint(
+    struct usb_interface *pintf,
+    int type,
+    int dir )
+{
+   int i;
+   struct usb_host_interface *iface = pintf->cur_altsetting;
+   struct usb_endpoint_descriptor *pendp;
+
+   for( i = 0; i < iface->desc.bNumEndpoints; i++)
+   {
+      pendp = &iface->endpoint[i].desc;
+      if( ((pendp->bEndpointAddress & USB_ENDPOINT_DIR_MASK) == dir)
+          &&
+          (usb_endpoint_type(pendp) == type) )
+      {
+         return pendp;
+      }
+   }
+
+   return NULL;
+}
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION( 3,9,0 ))
+static inline struct inode *file_inode(const struct file *f)
+{
+   return f->f_path.dentry->d_inode;
+}
+#endif
+
+int gobi_filp_close(struct file *filp, fl_owner_t id)
+{
+   int retval = 0;
+   struct inode *inode = NULL;
+   if(filp==NULL)
+      return -EIO;
+   inode = file_inode(filp);
+   if(inode == NULL)
+      return -EIO;
+   if (is_bad_inode(inode))
+      return -EIO;
+   if (!file_count(filp)) 
+   {
+      printk(KERN_ERR "VFS: Close: file count is 0\n");
+      return 0;
+   }
+
+   if (filp->f_op->flush)
+      retval = filp->f_op->flush(filp, id);
+   fput(filp);
+   return retval;
+}
+
+int ForceFilpClose(struct file *pFilp)
+{
+   int iRet = -1;
+   if(pFilp==NULL)
+   {
+      printk("NULL Inode\n");
+      return 0;
+   }
+   if (file_count(pFilp)>0)
+   {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION( 3,9,0 ))
+      if(file_inode(pFilp)!=NULL)
+      {
+         sQMIFilpStorage * pFilpData = NULL;
+         pFilpData = (sQMIFilpStorage *)pFilp->private_data;
+         if(file_inode(pFilp)!=NULL)
+         {
+            DBG("ino:%lu\n",file_inode(pFilp)->i_ino);
+         }
+         else
+         {
+            DBG("ino:NULL\n");
+            return -EIO;
+         }
+         
+            
+         if(pFilpData ==NULL)
+         {
+            printk( KERN_INFO "bad file data\n" );
+            return -EBADF;
+         }
+         if(pFilpData->iIsClosing == 1)
+         {
+            printk( KERN_INFO "Closing\n" );
+            return -EBADF;
+         }  
+         iRet = gobi_filp_close(pFilp, NULL);
+      }
+      else
+      {
+         printk("NULL Inode\n");
+      }
+
+#else
+      iRet = gobi_filp_close(pFilp, NULL);
+#endif
+   }
+   GobiSyncRcu();
+   mb();
+   return iRet;
+}
+
+static inline int LocalClientMemLockSpinIsLock( sGobiUSBNet * pDev)
+{
+    if(pDev!=NULL)
+    {
+        return spin_is_locked(&pDev->mQMIDev.mClientMemLock);
+    }
+    return 0;
+}
+
+static inline unsigned long LocalClientMemLockSpinLockIRQSave( sGobiUSBNet * pDev, int line)
+{
+   #if SPIN_LOCK_DEBUG
+   printk("(%d)%s :%d\n",task_pid_nr(current),__FUNCTION__,line);
+   #endif
+   mb();
+
+   if(pDev!=NULL)
+   {
+      spin_lock_irq(&pDev->mQMIDev.mClientMemLock);
+      mb();
+      #if SPIN_LOCK_DEBUG
+      printk("(%d)%s :%d Locked\n",task_pid_nr(current),__FUNCTION__,line);
+      #endif
+      pDev->mQMIDev.pTask = current;
+      return 0;
+   }
+   mb();
+   return 0;
+}
+
+static inline int LocalClientMemUnLockSpinLockIRQRestore( sGobiUSBNet * pDev, unsigned long ulFlags, int line)
+{
+   mb();
+   if(pDev!=NULL)
+   {
+      if(LocalClientMemLockSpinIsLock(pDev)==0)
+      {
+         
+         #if SPIN_LOCK_DEBUG
+         printk(KERN_WARNING "(%d)%s :%d Not Locked\n",task_pid_nr(current),__FUNCTION__,line);         
+         #endif
+         return 0;
+      }
+      #if SPIN_LOCK_DEBUG
+      printk("(%d)%s %d :%d\n",task_pid_nr(current),__FUNCTION__,__LINE__,line);
+      #endif
+      pDev->mQMIDev.pTask = NULL;
+      spin_unlock_irq( &pDev->mQMIDev.mClientMemLock);
+   }
+   else
+   {
+      #if SPIN_LOCK_DEBUG
+      printk("(%d)%s %d :%d\n",task_pid_nr(current),__FUNCTION__,__LINE__,line);
+      #endif
+   }
+   mb();
+   return 0;
+}
+
+int gobi_down_interruptible(struct semaphore *sem, sGobiUSBNet *pDev)
+{   
+   return down_interruptible(sem);
+}
+
 
 /*===========================================================================
 METHOD:
@@ -169,7 +713,7 @@ PARAMETERS:
 RETURN VALUE:
    bool
 ===========================================================================*/
-bool IsDeviceValid( sGobiUSBNet * pDev )
+static inline bool IsDeviceValid( sGobiUSBNet * pDev )
 {
    if (pDev == NULL)
    {
@@ -180,9 +724,9 @@ bool IsDeviceValid( sGobiUSBNet * pDev )
    {
       return false;
    }
-   
+
    return true;
-} 
+}
 
 /*===========================================================================
 METHOD:
@@ -205,20 +749,28 @@ void PrintHex(
    char * pPrintBuf;
    u16 pos;
    int status;
-   
-   pPrintBuf = kmalloc( bufSize * 3 + 1, GFP_ATOMIC );
+
+   if (!(debug & DEBUG_QMI))
+   {
+       return;
+   }
+   if(bufSize==(u16)(-1))
+   {
+       DBG( "No Data\n" );
+   }
+   pPrintBuf = kmalloc( bufSize * 3 + 1, GOBI_GFP_ATOMIC );
    if (pPrintBuf == NULL)
    {
       DBG( "Unable to allocate buffer\n" );
       return;
    }
    memset( pPrintBuf, 0 , bufSize * 3 + 1 );
-   
+
    for (pos = 0; pos < bufSize; pos++)
    {
-      status = snprintf( (pPrintBuf + (pos * 3)), 
-                         4, 
-                         "%02X ", 
+      status = snprintf( (pPrintBuf + (pos * 3)),
+                         4,
+                         "%02X ",
                          *(u8 *)(pBuffer + pos) );
       if (status != 3)
       {
@@ -227,12 +779,12 @@ void PrintHex(
          return;
       }
    }
-   
+
    DBG( "   : %s\n", pPrintBuf );
 
    kfree( pPrintBuf );
    pPrintBuf = NULL;
-   return;   
+   return;
 }
 
 /*===========================================================================
@@ -253,19 +805,12 @@ void GobiSetDownReason(
    sGobiUSBNet *    pDev,
    u8                 reason )
 {
-   DBG( "GobiSetDownReason\n" );
-//   if(!pDev->mdm9x07)
- //  {
- 
-//   }
-  // usbnet_link_change(pDev->mpNetDev, 0, 0);
-  // set_bit( reason, &pDev->mDownReason );
-  // DBG("%s reason=%d, mDownReason=%x\n", __func__, reason, (unsigned)pDev->mDownReason);
-  // if(pDev->mDownReason == 0)
-  // {
-   netif_carrier_off( pDev->mpNetDev->net );
-   //}
    set_bit( reason, &pDev->mDownReason );
+   if(reason==NO_NDIS_CONNECTION)
+   {
+      pDev->iNetLinkStatus = eNetDeviceLink_Disconnected;
+   }
+   netif_carrier_off( pDev->mpNetDev->net );
 }
 
 /*===========================================================================
@@ -286,16 +831,19 @@ void GobiClearDownReason(
    sGobiUSBNet *    pDev,
    u8                 reason )
 {
-   DBG( "GobiClearDownReason\n" );
- //  if(!pDev->mdm9x07)
+   clear_bit( reason, &pDev->mDownReason );
+   if(reason==NO_NDIS_CONNECTION)
    {
-  	clear_bit( reason, &pDev->mDownReason );
+      pDev->iNetLinkStatus = eNetDeviceLink_Connected;
    }
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION( 3,11,0 ))
+    netif_carrier_on( pDev->mpNetDev->net );
+#else
    if (pDev->mDownReason == 0)
    {
-        // usbnet_link_change(pDev->mpNetDev, 1, 0);
-	 netif_carrier_on( pDev->mpNetDev->net );
+      netif_carrier_on( pDev->mpNetDev->net );
    }
+#endif
 }
 
 /*===========================================================================
@@ -331,13 +879,13 @@ DESCRIPTION:
    Resubmit interrupt URB, re-using same values
 
 PARAMETERS
-   pIntURB       [ I ] - Interrupt URB 
+   pIntURB       [ I ] - Interrupt URB
 
 RETURN VALUE:
    int - 0 for success
          negative errno for failure
 ===========================================================================*/
-int ResubmitIntURB( struct urb * pIntURB )
+int ResubmitIntURB(sGobiUSBNet * pDev, struct urb * pIntURB )
 {
    int status;
    int interval;
@@ -348,10 +896,31 @@ int ResubmitIntURB( struct urb * pIntURB )
    {
       return -EINVAL;
    }
- 
-   // Interval needs reset after every URB completion
-   interval = 9;
+   if( atomic_read(&pIntURB->reject))
+   {
+      DBG( "%s reject!\n" ,__FUNCTION__);
+      return -EINVAL;
+   }
 
+   // Interval needs reset after every URB completion
+   // QC suggestion, 4ms per poll:
+   //   bInterval 6 = 2^5 = 32 frames = 4 ms per poll
+   interval = (pIntURB->dev->speed == USB_SPEED_HIGH) ?
+                 6 : max((int)(pIntURB->ep->desc.bInterval), 3);
+   mb();
+
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device!\n" );
+      return -EINVAL;
+   }
+   if(IsDeviceDisconnect(pDev))
+   {
+      DBG( "Disconnected!\n" );
+      usb_unlink_urb(pIntURB);
+      return -EINVAL;
+   }
+   spin_lock_irq(&(pDev->urb_lock));
    // Reschedule interrupt URB
    usb_fill_int_urb( pIntURB,
                      pIntURB->dev,
@@ -361,7 +930,9 @@ int ResubmitIntURB( struct urb * pIntURB )
                      pIntURB->complete,
                      pIntURB->context,
                      interval );
-   status = usb_submit_urb( pIntURB, GFP_ATOMIC );
+   mb();
+   status = usb_submit_urb( pIntURB, GOBI_GFP_ATOMIC );
+   spin_unlock_irq(&(pDev->urb_lock));
    if (status != 0)
    {
       DBG( "Error re-submitting Int URB %d\n", status );
@@ -388,109 +959,141 @@ void ReadCallback( struct urb * pReadURB )
    int result;
    u16 clientID;
    sClientMemList * pClientMem;
-   void * pData;
-   void * pDataCopy;
+   void * pData = NULL;
+   void * pDataCopy = NULL;
    u16 dataSize;
    sGobiUSBNet * pDev;
-   unsigned long flags;
+   unsigned long flags = 0;
    u16 transactionID;
-//   int i;
-#ifdef CONFIG_DHCP
-   unsigned char *ptr;
-   unsigned short dataSize_t;
-   int status;
-   unsigned char connect_status[2];
-#endif
+   int iResult = 0;
 
    if (pReadURB == NULL)
    {
       DBG( "bad read URB\n" );
       return;
    }
-   
+
    pDev = pReadURB->context;
+   del_timer(&pDev->read_tmr);
+   
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device!\n" );
+      usb_unlink_urb(pReadURB);
       return;
-   }   
-
+   }
+   
+   if(IsDeviceDisconnect(pDev))
+   {
+      DBG( "%s Disconnected!\n" ,__FUNCTION__);
+      usb_unlink_urb(pReadURB);
+      return;
+   }
+   if( atomic_read(&pReadURB->reject))
+   {
+      DBG( "%s reject!\n" ,__FUNCTION__);
+      return;
+   }
    if (pReadURB->status != 0)
    {
       DBG( "Read status = %d\n", pReadURB->status );
-
-      // Resubmit the interrupt URB
-     // ResubmitIntURB( pDev->mQMIDev.mpIntURB );
-     mod_timer(&qmi_timer, jiffies +  msecs_to_jiffies(time_out_val));
-      return;
+      if ((pReadURB->status == -ECONNRESET) && (pReadURB->actual_length > 0))
+      {
+          pDev->readTimeoutCnt++;
+          // Read URB unlinked after receiving data, send data to client
+          DBG( "Read URB timeout/kill after recv data\n" );
+          printk(KERN_WARNING "Read URB timeout/kill, recv data len (%d), cnt (%d)\n",
+                  pReadURB->actual_length, pDev->readTimeoutCnt);
+          ResubmitIntURB(pDev, pDev->mQMIDev.mpIntURB );
+          return;
+      }
+      else
+      {
+          // Resubmit the interrupt URB
+          if (IsDeviceValid( pDev ) == false)
+          {
+             DBG( "Invalid device!\n" );
+             usb_unlink_urb(pReadURB);
+             return;
+          }
+          if(IsDeviceDisconnect(pDev))
+          {
+            DBG( "%s Disconnected!\n" ,__FUNCTION__);
+            usb_unlink_urb(pReadURB);
+            return;
+          }
+          ResubmitIntURB(pDev, pDev->mQMIDev.mpIntURB );
+          return;
+      }
    }
    DBG( "Read %d bytes\n", pReadURB->actual_length );
-   
+
    pData = pReadURB->transfer_buffer;
-   dataSize = pReadURB->actual_length;
+   if(pReadURB->actual_length>=0)
+   {
+      dataSize = pReadURB->actual_length;
+   }
+   else
+   {
+      if(IsDeviceDisconnect(pDev))
+      {
+         DBG( "%s Disconnected!\n" ,__FUNCTION__);
+         usb_unlink_urb(pReadURB);
+         return;
+      }
+      ResubmitIntURB(pDev, pDev->mQMIDev.mpIntURB );
+      return;
+   }
 
    PrintHex( pData, dataSize );
 
    result = ParseQMUX( &clientID,
                        pData,
-                       dataSize,
-                       pDev->big_endian);
- 
-   DBG( "ParseQMUX clientID %d\n", clientID );
+                       dataSize );
    if (result < 0)
    {
       DBG( "Read error parsing QMUX %d\n", result );
-
+      if (IsDeviceValid( pDev ) == false)
+      {
+         DBG( "Invalid device!\n" );
+         usb_unlink_urb(pReadURB);
+         return;
+      }
+      if(IsDeviceDisconnect(pDev))
+      {
+         DBG( "%s Disconnected!\n" ,__FUNCTION__);
+         usb_unlink_urb(pReadURB);
+         return;
+      }
       // Resubmit the interrupt URB
-      //ResubmitIntURB( pDev->mQMIDev.mpIntURB );
-       mod_timer(&qmi_timer,  jiffies +  msecs_to_jiffies(time_out_val));
+      ResubmitIntURB(pDev, pDev->mQMIDev.mpIntURB );
+
       return;
    }
-   
+
    // Grab transaction ID
 
    // Data large enough?
    if (dataSize < result + 3)
    {
       DBG( "Data buffer too small to parse\n" );
-
+      if (IsDeviceValid( pDev ) == false)
+      {
+         DBG( "Invalid device!\n" );
+         usb_unlink_urb(pReadURB);
+         return;
+      }
+      if(IsDeviceDisconnect(pDev))
+      {
+         DBG( "%s Disconnected!\n" ,__FUNCTION__);
+         usb_unlink_urb(pReadURB);
+         return;
+      }
       // Resubmit the interrupt URB
-      //ResubmitIntURB( pDev->mQMIDev.mpIntURB );
-       mod_timer(&qmi_timer, jiffies +  msecs_to_jiffies(time_out_val));
+      ResubmitIntURB(pDev, pDev->mQMIDev.mpIntURB );
+
       return;
    }
-  #ifdef CONFIG_DHCP
-   ptr = pData;
-   dataSize_t = dataSize;
-  if(clientID  ==  pDev->wds_client)
-  {
-	  ptr  +=  6;
-	  dataSize_t  -=  6;
-	  if(ptr[0] == 0x04)
-	  {
-		  DBG( "indication message\n" );
-		  ptr  +=  3;
-		  dataSize_t  -=  3;
-		  
-		  if(dataSize_t >=  2)
-		  {
-			  if((ptr[0] ==0x22) &&(ptr[1] ==0x00))
-			  {
-				  DBG( "packet message connect\n" );
-				  status = GetTLV(ptr, dataSize_t, 0x1, connect_status, 2);
-				  if(status > 0)
-				  {
-					  DBG("connect_status:%d", connect_status[0]);
-					 if(connect_status[0] == 0x02)
-					{
-						DBG( "receive  connect message\n" );
-					}
-				  }  	  
-			  }
-		  }
-	  }
-  }
-#endif
 
    // Transaction ID size is 1 for QMICTL, 2 for others
    if (clientID == QMICTL)
@@ -499,191 +1102,203 @@ void ReadCallback( struct urb * pReadURB )
    }
    else
    {
-      transactionID = le16_to_cpu(*(u16*)(pData + result + 1));
+      transactionID = le16_to_cpu( get_unaligned((u16*)(pData + result + 1)) );
    }
-   
+
    // Critical section
-   spin_lock_irqsave( &pDev->mQMIDev.mClientMemLock, flags );
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__ );
 
    // Find memory storage for this service and Client ID
    // Not using FindClientMem because it can't handle broadcasts
    pClientMem = pDev->mQMIDev.mpClientMemList;
    while (pClientMem != NULL)
    {
- 
-	if(pDev->big_endian)
-	{
-		 if ((pClientMem->mClientID == clientID )
-		 ||  ((pClientMem->mClientID | 0x00ff) == clientID)
-		 ||  ((pClientMem->mClientID>>0x08) == (clientID>>0x08) && ((clientID | 0x00ff)==0x00ff))) 
-		{
-		         // Make copy of pData
-		         pDataCopy = kmalloc( dataSize, GFP_ATOMIC );
-		         memcpy( pDataCopy, pData, dataSize );
+      if(IsDeviceDisconnect(pDev))
+      {
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         usb_unlink_urb(pReadURB);
+         return ;
+      }
+      if (pClientMem->mClientID == clientID
+      ||  (pClientMem->mClientID | 0xff00) == clientID)
+      {
+         // Make copy of pData
+         pDataCopy = kmalloc( dataSize, GOBI_GFP_ATOMIC );
+         if (pDataCopy == NULL)
+         {
+            DBG( "Error allocating client data memory\n" );
 
-		         if (AddToReadMemList( pDev,
-		                               pClientMem->mClientID,
-		                               transactionID,
-		                               pDataCopy,
-		                               dataSize,
-		                               &pDev->mQMIDev) == false)
-		         {
-		            DBG( "Error allocating pReadMemListEntry "
-		                 "read will be discarded\n" );
-		            kfree( pDataCopy );
-		            
-		            // End critical section
-		            spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
+            // End critical section
+            LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+            if (IsDeviceValid( pDev ) == false)
+            {
+               DBG( "Invalid device!\n" );
+               return;
+            }
+            if(IsDeviceDisconnect(pDev))
+            {
+               DBG( "%s Disconnected!\n" ,__FUNCTION__);
+               usb_unlink_urb(pReadURB);
+               return;
+            }
+            // Resubmit the interrupt URB
+            ResubmitIntURB(pDev, pDev->mQMIDev.mpIntURB );
 
-		            // Resubmit the interrupt URB
-		            ResubmitIntURB( pDev->mQMIDev.mpIntURB );
+            return;            
+         }
 
-		            return;
-		         }
+         memcpy( pDataCopy, pData, dataSize );
+         mb();
+         if (AddToReadMemList( pDev,
+                               pClientMem->mClientID,
+                               transactionID,
+                               pDataCopy,
+                               dataSize ) == false)
+         {
+            DBG( "Error allocating pReadMemListEntry "
+                 "read will be discarded\n" );
+            kfree( pDataCopy );
 
-		         // Success
-		         DBG( "Creating new readListEntry for client 0x%04X, TID %x\n",
-		              clientID,
-		              transactionID );
+            // End critical section
+            if (IsDeviceValid( pDev ) == false)
+            {
+               DBG( "Invalid device!\n" );
+               if(pDev)
+               {
+                  LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+               }
+               else
+               {
+                  LocalClientMemUnLockSpinLockIRQRestore(pDev,flags,__LINE__);
+               }
+               return;
+            }
+            LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+            if(!IsDeviceDisconnect(pDev))
+            {
+               // Resubmit the interrupt URB
+               ResubmitIntURB(pDev, pDev->mQMIDev.mpIntURB );
+            }
+            return;
+         }
 
-		         // Notify this client data exists
-		         NotifyAndPopNotifyList( pDev,
-		                                 pClientMem->mClientID,
-		                                 transactionID,
-		                                 &pDev->mQMIDev);
-
-		         // Possibly notify poll() that data exists
-		         wake_up_interruptible_sync( &pClientMem->mWaitQueue );
-				 
-			#ifdef CONFIG_DHCP
-		         if(connect_status[0] == 0x02)
-		         {
-				complete( &pDev->mAutoDhcp.mThreadDoWork );
-				connect_status[0] = 0;
-			 }
-			#endif
-			 // Not a broadcast
-			if ((clientID & 0xff) != 0xff)
-			 {
-				break;
-			 }
-		      }		 
-	}
-	else
-	{
-		if ((pClientMem->mClientID == clientID )
-		 ||  ((pClientMem->mClientID | 0xff00) == clientID)
-		 ||  ((pClientMem->mClientID & 0x00ff) == (clientID & 0x00ff) && ((clientID | 0xff00)==0xff00))) 
-		{
-		         // Make copy of pData
-		         pDataCopy = kmalloc( dataSize, GFP_ATOMIC );
-		         memcpy( pDataCopy, pData, dataSize );
-
-		         if (AddToReadMemList( pDev,
-		                               pClientMem->mClientID,
-		                               transactionID,
-		                               pDataCopy,
-		                               dataSize,
-		                               &pDev->mQMIDev) == false)
-		         {
-		            DBG( "Error allocating pReadMemListEntry "
-		                 "read will be discarded\n" );
-		            kfree( pDataCopy );
-		            
-		            // End critical section
-		            spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
-
-		            // Resubmit the interrupt URB
-		            ResubmitIntURB( pDev->mQMIDev.mpIntURB );
-
-		            return;
-		         }
-
-		         // Success
-		         DBG( "Creating new readListEntry for client 0x%04X, TID %x\n",
-		              clientID,
-		              transactionID );
-
-		         // Notify this client data exists
-		         NotifyAndPopNotifyList( pDev,
-		                                 pClientMem->mClientID,
-		                                 transactionID,
-		                                 &pDev->mQMIDev);
-
-		         // Possibly notify poll() that data exists
-		         wake_up_interruptible_sync( &pClientMem->mWaitQueue );
-				 
-			#ifdef CONFIG_DHCP
-		         if(connect_status[0] == 0x02)
-		         {
-				complete( &pDev->mAutoDhcp.mThreadDoWork );
-				connect_status[0] = 0;
-			 }
-			#endif
-			
-			 if ((clientID & 0xff00) != 0xff00)
-			 {
-				break;
-			 }
-		      }		
-
-	}		
-      
-      
+         // Success
+         CLIENT_READMEM_SNAPSHOT(clientID, pDev);
+         #if 0
+         DBG( "Creating new readListEntry for client 0x%04X, TID 0x%x\n",
+              clientID,
+              transactionID );
+         #endif
+         // Notify this client data exists
+         iResult = NotifyAndPopNotifyList( pDev,
+                             pClientMem->mClientID,
+                             transactionID );
+         if (iResult==eNotifyListFound) 
+          {
+                //DBG("%s:%d Found ClientID:0x%x , TID:0x%x\n",__FUNCTION__,__LINE__,pClientMem->mClientID,transactionID);
+          }
+          else if (iResult==eNotifyListEmpty) 
+          {
+                DBG("%s:%d Empty ClientID:0x%x , TID:0x%x\n",__FUNCTION__,__LINE__,pClientMem->mClientID,transactionID);
+          }
+          else 
+          {
+            DBG("%s:%d Not Found ClientID:0x%x , TID:0x%x\n",__FUNCTION__,__LINE__,pClientMem->mClientID,transactionID);
+            if (IsDeviceValid( pDev ) == false)
+            {
+               DBG( "Invalid device!\n" );
+               LocalClientMemUnLockSpinLockIRQRestore(pDev,flags,__LINE__);
+               return;
+            }
+            if(  (pDev->mbUnload >= eStatUnloading)||
+                  IsDeviceDisconnect(pDev) )
+            {
+               DBG( "Unload:%s\n", __FUNCTION__);
+               LocalClientMemUnLockSpinLockIRQRestore(pDev,flags,__LINE__);
+               usb_unlink_urb(pReadURB);
+               return ;
+            }
+         }
+         if (iResult==eNotifyListFound)
+         {
+            // Possibly notify poll() that data exists
+            wake_up_interruptible( &pClientMem->mWaitQueue );
+         }
+         else
+         {
+            void * pReadBuffer = NULL;
+            u16 readBufferSize;
+             // Pop the read data
+             if (PopFromReadMemList( pDev,
+                                     pClientMem->mClientID,
+                                     transactionID,
+                                     &pReadBuffer,
+                                     &readBufferSize ) == true)
+             {
+                // Success
+                DBG( "Remove Not Found Memory from read list\n" );
+                if(pReadBuffer)
+                kfree( pReadBuffer );
+                pReadBuffer=NULL;
+             }
+         }
+         // Not a broadcast
+         if (clientID >> 8 != 0xff)
+         {
+            break;
+         }
+      }
+      barrier();
       // Next element
       pClientMem = pClientMem->mpNext;
+      mb();
+   }
+   mb();
+   // End critical section
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device!\n" );
+      usb_unlink_urb(pReadURB);
+      return;
    }
    
-   // End critical section
-   spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
-
+   if(IsDeviceDisconnect(pDev))
+   {
+      DBG( "%s Disconnected!\n" ,__FUNCTION__);
+      usb_unlink_urb(pReadURB);
+      return;
+   }
    // Resubmit the interrupt URB
-   //ResubmitIntURB( pDev->mQMIDev.mpIntURB );
-   mod_timer(&qmi_timer,  jiffies +  msecs_to_jiffies(time_out_val));
-
+   ResubmitIntURB(pDev, pDev->mQMIDev.mpIntURB );
 }
-/*===========================================================================
-METHOD:
-   bm_get_qmi_response_timer_func (Public Method)
 
-DESCRIPTION:
-   the timer function to submit a qmi response get control message.
-
-PARAMETERS
-   pDev       
-   
-RETURN VALUE:
-   None
-===========================================================================*/
-void bm_get_qmi_response_timer_func(unsigned long data)
+#if (LINUX_VERSION_CODE < KERNEL_VERSION( 4,15,0 ))
+void read_tmr_cb( struct urb * pReadURB )
 {
-	int status=0;
-	
-	sGobiUSBNet * pDev = (sGobiUSBNet *)data;
-        
-	if(!pDev)
-	{
-		DBG( "pDev error..\n" );
-		return; 
-	}
-	
-	usb_fill_control_urb( pDev->mQMIDev.mpReadURB,
-				   pDev->mpNetDev->udev,
-				   usb_rcvctrlpipe( pDev->mpNetDev->udev, 0 ),
-				   (unsigned char *)pDev->mQMIDev.mpReadSetupPacket,
-				   pDev->mQMIDev.mpReadBuffer,
-				   DEFAULT_READ_URB_LENGTH,
-				   ReadCallback,
-				   pDev );
-	status = usb_submit_urb( pDev->mQMIDev.mpReadURB, GFP_ATOMIC );
-	if (status != 0)
-	{
-		DBG( "Error submitting Read URB %d\n", status );
-	}
-       mod_timer(&qmi_timer,  jiffies +  msecs_to_jiffies(time_out_val));
+   int result;
+#else
+void read_tmr_cb( struct timer_list *t)
+{
+   int result;
+   sGobiUSBNet *pDev = NULL;
+   struct urb *pReadURB = NULL;
+   pDev = from_timer(pDev, t, read_tmr);
+   if(pDev!=NULL)
+   pReadURB = pDev->mQMIDev.mpReadURB;
+#endif
 
-	
+  DBG( "%s called (%ld).\n", __func__, jiffies );
+
+  if ((pReadURB != NULL) && (pReadURB->status == -EINPROGRESS))
+  {
+     // Asynchronously unlink URB. On success, -EINPROGRESS will be returned, 
+     // URB status will be set to -ECONNRESET, and ReadCallback() executed
+     result = usb_unlink_urb( pReadURB );
+     DBG( "%s called usb_unlink_urb, result = %d\n", __func__, result);
+  }
 }
+
 /*===========================================================================
 METHOD:
    IntCallback (Public Method)
@@ -700,37 +1315,54 @@ RETURN VALUE:
 void IntCallback( struct urb * pIntURB )
 {
    int status;
-   
+   u64 CDCEncResp;
+   u64 CDCEncRespMask;
+
    sGobiUSBNet * pDev = (sGobiUSBNet *)pIntURB->context;
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device!\n" );
       return;
    }
-
+   if(IsDeviceDisconnect(pDev))
+   {
+      DBG( "Disconnected!\n" );
+      pIntURB->status = -EIO;
+      usb_unlink_urb(pIntURB);
+      return;
+   }
    // Verify this was a normal interrupt
    if (pIntURB->status != 0)
    {
-      DBG( "Int status = %d\n", pIntURB->status );
-      
+        DBG( "Int status = %d\n", pIntURB->status );
+
       // Ignore EOVERFLOW errors
       if (pIntURB->status != -EOVERFLOW)
       {
          // Read 'thread' dies here
+         usb_unlink_urb(pIntURB);
+         return;
+      }
+      if(pIntURB->status<0)
+      {
+         usb_unlink_urb(pIntURB);
          return;
       }
    }
    else
    {
-      // CDC GET_ENCAPSULATED_RESPONSE
-      // Endpoint number is the wIndex value, which is the 5th byte in the
-      // CDC GET_ENCAPSULTED_RESPONSE message
-      sURBSetupPacket* p_setup = (sURBSetupPacket*)pIntURB->transfer_buffer;
+      //TODO cast transfer_buffer to struct usb_cdc_notification
       
-      if(p_setup->mRequestType==0xa1 && p_setup->mRequestCode==0x01)
-  //    if ((pIntURB->actual_length ==8)
-  //    &&  
-   //   (*(u64*)pIntURB->transfer_buffer == cpu_to_le64(CDC_GET_ENCAPSULATED_RESPONSE+ (pDev->mpEndpoints->mIntfNum * 0x100000000ll))))
+      // CDC GET_ENCAPSULATED_RESPONSE
+      CDC_GET_ENCAPSULATED_RESPONSE(&CDCEncResp, &CDCEncRespMask)
+      #if 0
+      DBG( "IntCallback: Encapsulated Response = 0x%llx\n",
+          (*(u64*)pIntURB->transfer_buffer));
+      #endif
+      //AR7554RD returned interrupt buffer not matching expected mask
+      //thus, length check only
+      if (pIntURB->actual_length == 8)
+
       {
          // Time to read
          usb_fill_control_urb( pDev->mQMIDev.mpReadURB,
@@ -739,23 +1371,41 @@ void IntCallback( struct urb * pIntURB )
                                (unsigned char *)pDev->mQMIDev.mpReadSetupPacket,
                                pDev->mQMIDev.mpReadBuffer,
                                DEFAULT_READ_URB_LENGTH,
-                               ReadCallback,
+                               ReadCallbackInt,
                                pDev );
-         status = usb_submit_urb( pDev->mQMIDev.mpReadURB, GFP_ATOMIC );
+         gobi_setup_timer( &pDev->read_tmr, (void*)read_tmr_cb, (unsigned long)pDev->mQMIDev.mpReadURB );
+         mod_timer( &pDev->read_tmr, jiffies + msecs_to_jiffies(USB_READ_TIMEOUT) );
+         mb();
+         status = usb_submit_urb( pDev->mQMIDev.mpReadURB, GOBI_GFP_ATOMIC );
          if (status != 0)
          {
             DBG( "Error submitting Read URB %d\n", status );
+            if (IsDeviceValid( pDev ) == false)
+            {
+               DBG( "Invalid device!\n" );
+               return;
+            }
+            if(IsDeviceDisconnect(pDev))
+            {
+               DBG( "Disconnected!\n" );
+               return;
+            }
+            // Resubmit the interrupt urb
+            ResubmitIntURB( pDev,pIntURB );
+            return;
          }
 
          // Int URB will be resubmitted during ReadCallback
          return;
       }
       // CDC CONNECTION_SPEED_CHANGE
-      // Endpoint number is the wIndex value, which is the 5th byte in the
-      // CDC CONNECTION_SPEED message
       else if ((pIntURB->actual_length == 16)
-      &&       (*(u64*)pIntURB->transfer_buffer == cpu_to_le64(CDC_CONNECTION_SPEED_CHANGE + (pDev->mpEndpoints->mIntfNum * 0x100000000ll))))
+           &&  (CDC_GET_CONNECTION_SPEED_CHANGE(&CDCEncResp, &CDCEncRespMask))
+           &&  ((*(u64*)pIntURB->transfer_buffer & CDCEncRespMask) == CDCEncResp ) )
       {
+         DBG( "Connection Speed Change = 0x%llx\n",
+              (*(u64*)pIntURB->transfer_buffer));
+
          // if upstream or downstream is 0, stop traffic.  Otherwise resume it
          if ((*(u32*)(pIntURB->transfer_buffer + 8) == 0)
          ||  (*(u32*)(pIntURB->transfer_buffer + 12) == 0))
@@ -775,8 +1425,20 @@ void IntCallback( struct urb * pIntURB )
          PrintHex( pIntURB->transfer_buffer, pIntURB->actual_length );
       }
    }
-
-   ResubmitIntURB( pIntURB );
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device!\n" );
+      return;
+   }
+   if(IsDeviceDisconnect(pDev))
+   {
+      DBG( "Disconnected!\n" );
+      pIntURB->status = -EIO;
+      usb_unlink_urb(pIntURB);
+      return;
+   }
+   // Resubmit the interrupt urb
+   ResubmitIntURB(pDev,pIntURB);
 
    return;
 }
@@ -790,7 +1452,7 @@ DESCRIPTION:
 
    Note: In case of error, KillRead() should be run
          to remove urbs and clean up memory.
-   
+
 PARAMETERS:
    pDev     [ I ] - Device specific memory
 
@@ -800,22 +1462,24 @@ RETURN VALUE:
 ===========================================================================*/
 int StartRead( sGobiUSBNet * pDev )
 {
-//   int interval;
+   int interval;
+   struct usb_endpoint_descriptor *pendp;
+
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device!\n" );
       return -ENXIO;
    }
-   
+
    // Allocate URB buffers
-   pDev->mQMIDev.mpReadURB = usb_alloc_urb( 0, GFP_KERNEL );
+   pDev->mQMIDev.mpReadURB = usb_alloc_urb( 0, GOBI_GFP_KERNEL );
    if (pDev->mQMIDev.mpReadURB == NULL)
    {
       DBG( "Error allocating read urb\n" );
       return -ENOMEM;
    }
-   
-   pDev->mQMIDev.mpIntURB = usb_alloc_urb( 0, GFP_KERNEL );
+
+   pDev->mQMIDev.mpIntURB = usb_alloc_urb( 0, GOBI_GFP_KERNEL );
    if (pDev->mQMIDev.mpIntURB == NULL)
    {
       DBG( "Error allocating int urb\n" );
@@ -823,17 +1487,9 @@ int StartRead( sGobiUSBNet * pDev )
       pDev->mQMIDev.mpReadURB = NULL;
       return -ENOMEM;
    }
-   
-    pDev->mQMIDev.orq = kmalloc(sizeof(struct usb_ctrlrequest), GFP_KERNEL);
-	if (!pDev->mQMIDev.orq)
-	{
-      DBG( "Error allocating int pDev->mQMIDev.orq\n" );
-      usb_free_urb( pDev->mQMIDev.mpReadURB );
-      pDev->mQMIDev.mpReadURB = NULL;
-      return -ENOMEM;
-   }
+
    // Create data buffers
-   pDev->mQMIDev.mpReadBuffer = kmalloc( DEFAULT_READ_URB_LENGTH, GFP_KERNEL );
+   pDev->mQMIDev.mpReadBuffer = kmalloc( DEFAULT_READ_URB_LENGTH, GOBI_GFP_KERNEL );
    if (pDev->mQMIDev.mpReadBuffer == NULL)
    {
       DBG( "Error allocating read buffer\n" );
@@ -841,12 +1497,10 @@ int StartRead( sGobiUSBNet * pDev )
       pDev->mQMIDev.mpIntURB = NULL;
       usb_free_urb( pDev->mQMIDev.mpReadURB );
       pDev->mQMIDev.mpReadURB = NULL;
-	  kfree(pDev->mQMIDev.orq);
-	  pDev->mQMIDev.orq=NULL;
       return -ENOMEM;
    }
-   
-   pDev->mQMIDev.mpIntBuffer = kmalloc( DEFAULT_READ_URB_LENGTH, GFP_KERNEL );
+
+   pDev->mQMIDev.mpIntBuffer = kmalloc( DEFAULT_READ_URB_LENGTH, GOBI_GFP_KERNEL );
    if (pDev->mQMIDev.mpIntBuffer == NULL)
    {
       DBG( "Error allocating int buffer\n" );
@@ -856,13 +1510,11 @@ int StartRead( sGobiUSBNet * pDev )
       pDev->mQMIDev.mpIntURB = NULL;
       usb_free_urb( pDev->mQMIDev.mpReadURB );
       pDev->mQMIDev.mpReadURB = NULL;
-	  kfree(pDev->mQMIDev.orq);
-	  pDev->mQMIDev.orq=NULL;
       return -ENOMEM;
-   }      
-   
-   pDev->mQMIDev.mpReadSetupPacket = kmalloc( sizeof( sURBSetupPacket ), 
-                                              GFP_KERNEL );
+   }
+
+   pDev->mQMIDev.mpReadSetupPacket = kmalloc( sizeof( sURBSetupPacket ),
+                                              GOBI_GFP_KERNEL );
    if (pDev->mQMIDev.mpReadSetupPacket == NULL)
    {
       DBG( "Error allocating setup packet buffer\n" );
@@ -874,52 +1526,68 @@ int StartRead( sGobiUSBNet * pDev )
       pDev->mQMIDev.mpIntURB = NULL;
       usb_free_urb( pDev->mQMIDev.mpReadURB );
       pDev->mQMIDev.mpReadURB = NULL;
-	  kfree(pDev->mQMIDev.orq);
-	  pDev->mQMIDev.orq=NULL;
       return -ENOMEM;
    }
-   
+
    // CDC Get Encapsulated Response packet
-   pDev->mQMIDev.mpReadSetupPacket->mRequestType = 0xA1;
-   pDev->mQMIDev.mpReadSetupPacket->mRequestCode = USB_CDC_GET_ENCAPSULATED_RESPONSE;
+   pDev->mQMIDev.mpReadSetupPacket->mRequestType = 
+       USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+   pDev->mQMIDev.mpReadSetupPacket->mRequestCode = GET_ENCAPSULATED_RESPONSE;
    pDev->mQMIDev.mpReadSetupPacket->mValue = 0;
-   pDev->mQMIDev.mpReadSetupPacket->mIndex = cpu_to_le16(pDev->mpEndpoints->mIntfNum);
+   pDev->mQMIDev.mpReadSetupPacket->mIndex =
+      cpu_to_le16(pDev->mpIntf->cur_altsetting->desc.bInterfaceNumber); /* interface number */
    pDev->mQMIDev.mpReadSetupPacket->mLength = cpu_to_le16(DEFAULT_READ_URB_LENGTH);
 
- //  interval = 9;   
-   DBG( "StartRead submitted URD for read!\n" );
-  /*
-  static inline void usb_fill_int_urb(struct urb *urb, 
-  * struct usb_device *dev, 
-  * unsigned int pipe, 
-  * void *transfer_buffer, 
-  * int buffer_length, 
-  * usb_complete_t complete_fn, 
-  * void *context, 
-  * int interval)
-   **/ 
+   pendp = GetEndpoint(pDev->mpIntf, USB_ENDPOINT_XFER_INT, USB_DIR_IN);
+   if (pendp == NULL)
+   {
+      DBG( "Invalid interrupt endpoint!\n" );
+      kfree(pDev->mQMIDev.mpReadSetupPacket);
+      pDev->mQMIDev.mpReadSetupPacket = NULL;
+      kfree( pDev->mQMIDev.mpIntBuffer );
+      pDev->mQMIDev.mpIntBuffer = NULL;
+      kfree( pDev->mQMIDev.mpReadBuffer );
+      pDev->mQMIDev.mpReadBuffer = NULL;
+      usb_free_urb( pDev->mQMIDev.mpIntURB );
+      pDev->mQMIDev.mpIntURB = NULL;
+      usb_free_urb( pDev->mQMIDev.mpReadURB );
+      pDev->mQMIDev.mpReadURB = NULL;
+      return -ENXIO;
+   }
+
+   // Interval needs reset after every URB completion
+   interval = (pDev->mpNetDev->udev->speed == USB_SPEED_HIGH) ?
+                 6 : max((int)(pendp->bInterval), 3);
+
    // Schedule interrupt URB
-#if 0
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device!\n" );
+      return -ENXIO;
+   }
+   mb();
+   wait_interrupt();
+   spin_lock_irq(&(pDev->urb_lock));
    usb_fill_int_urb( pDev->mQMIDev.mpIntURB,
                      pDev->mpNetDev->udev,
+                     /* QMI interrupt endpoint for the following
+                      * interface configuration: DM, NMEA, MDM, NET
+                      */
                      usb_rcvintpipe( pDev->mpNetDev->udev,
-                                     pDev->mpEndpoints->mIntInEndp ),
+                                     pendp->bEndpointAddress),
                      pDev->mQMIDev.mpIntBuffer,
-                     usb_endpoint_maxp(&pDev->mpEndpoints->Intep_desc),
+                     le16_to_cpu(pendp->wMaxPacketSize),
                      IntCallback,
                      pDev,
-                     pDev->mpEndpoints->Intep_desc.bInterval );
-   return usb_submit_urb( pDev->mQMIDev.mpIntURB, GFP_KERNEL );
-#else
-   init_timer(&qmi_timer);
-   qmi_timer.function = bm_get_qmi_response_timer_func;
-   qmi_timer.expires = jiffies +  msecs_to_jiffies(1000);
-   qmi_timer.data = (unsigned long) pDev;
-   add_timer(&qmi_timer);
-   
-   return 0;
-#endif	
- 
+                     interval );
+   spin_unlock_irq(&(pDev->urb_lock));
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device!\n" );
+      return -ENXIO;
+   }
+   mb();
+   return usb_submit_urb( pDev->mQMIDev.mpIntURB, GOBI_GFP_ATOMIC );
 }
 
 /*===========================================================================
@@ -928,7 +1596,7 @@ METHOD:
 
 DESCRIPTION:
    Kill continuous read "thread"
-   
+
 PARAMETERS:
    pDev     [ I ] - Device specific memory
 
@@ -937,6 +1605,15 @@ RETURN VALUE:
 ===========================================================================*/
 void KillRead( sGobiUSBNet * pDev )
 {
+
+   if(pDev ==NULL)
+   {
+      DBG( "pDev NULL\n" );
+      return ;
+   }
+   mb();
+   local_irq_disable();
+   GobiCancelReadCallBackWorkQueue(pDev);
    // Stop reading
    if (pDev->mQMIDev.mpReadURB != NULL)
    {
@@ -950,6 +1627,8 @@ void KillRead( sGobiUSBNet * pDev )
       usb_kill_urb( pDev->mQMIDev.mpIntURB );
    }
 
+   local_irq_enable();
+
    // Release buffers
    kfree( pDev->mQMIDev.mpReadSetupPacket );
    pDev->mQMIDev.mpReadSetupPacket = NULL;
@@ -957,15 +1636,52 @@ void KillRead( sGobiUSBNet * pDev )
    pDev->mQMIDev.mpReadBuffer = NULL;
    kfree( pDev->mQMIDev.mpIntBuffer );
    pDev->mQMIDev.mpIntBuffer = NULL;
-   
-   kfree(pDev->mQMIDev.orq);
-   pDev->mQMIDev.orq=NULL;
-   
+
    // Release URB's
    usb_free_urb( pDev->mQMIDev.mpReadURB );
    pDev->mQMIDev.mpReadURB = NULL;
    usb_free_urb( pDev->mQMIDev.mpIntURB );
    pDev->mQMIDev.mpIntURB = NULL;
+}
+
+/*===========================================================================
+METHOD:
+   InitSemID (Public Method)
+
+DESCRIPTION:
+   Initialize Read Sync tasks semaphore
+
+PARAMETERS:
+   pDev     [ I ] - Device specific memory
+
+RETURN VALUE:
+   None
+===========================================================================*/
+
+void InitSemID(sGobiUSBNet * pDev)
+{
+   int i = 0;
+   if(pDev==NULL)
+   {
+      DBG("%s NULL\n",__FUNCTION__);
+      return ;
+   }
+   sema_init( &(pDev->ReadsyncSem), SEMI_INIT_DEFAULT_VALUE );
+   mb();
+   up(&(pDev->ReadsyncSem));
+
+   for(i=0;i<MAX_READ_SYNC_TASK_ID;i++)
+   {
+     pDev->iReasSyncTaskID[i]=-__LINE__;
+     sema_init( &(pDev->readSem[i]), SEMI_INIT_DEFAULT_VALUE );
+     mb();
+   }
+   up(&(pDev->ReadsyncSem));
+}
+int gobi_kthread_should_stop(void)
+{
+   //kthread_should_stop();
+   return 0;
 }
 
 /*=========================================================================*/
@@ -985,7 +1701,7 @@ PARAMETERS:
    clientID          [ I ] - Requester's client ID
    transactionID     [ I ] - Transaction ID or 0 for any
    pCallback         [ I ] - Callback to be executed when data is available
-   pData             [ I ] - Data buffer that willl be passed (unmodified) 
+   pData             [ I ] - Data buffer that willl be passed (unmodified)
                              to callback
 
 RETURN VALUE:
@@ -993,18 +1709,16 @@ RETURN VALUE:
          negative errno for failure
 ===========================================================================*/
 int ReadAsync(
-   sGobiUSBNet *      pDev,
+   sGobiUSBNet *    pDev,
    u16                clientID,
    u16                transactionID,
-   void               (*pCallback)(sGobiUSBNet*, u16, void *, sQMIDev *),
-   void *             pData,
-   sQMIDev *          QMIDev)
+   void               (*pCallback)(sGobiUSBNet*, u16, void *),
+   void *             pData ,
+   int                iSpinLock)
 {
-   sClientMemList * pClientMem;
-   sReadMemList ** ppReadMemList;
-   
-   unsigned long flags;
-
+   sClientMemList * pClientMem = NULL;
+   sReadMemList ** ppReadMemList = NULL;
+   unsigned long flags = 0;
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device!\n" );
@@ -1012,55 +1726,72 @@ int ReadAsync(
    }
 
    // Critical section
-   spin_lock_irqsave( &QMIDev->mClientMemLock, flags );
+   if(iSpinLock==1)
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
 
    // Find memory storage for this client ID
-   pClientMem = FindClientMem( pDev, clientID, QMIDev );
+   pClientMem = FindClientMem( pDev, clientID );
+   if(clientID ==0)
+   {
+      if(iSpinLock==1)
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      AddClientToMemoryList(pDev,clientID);
+      if(iSpinLock==1)
+      flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+      pClientMem = FindClientMem( pDev, clientID );
+   }
    if (pClientMem == NULL)
    {
       DBG( "Could not find matching client ID 0x%04X\n",
            clientID );
-           
+
       // End critical section
-      spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
+      if(iSpinLock==1)
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
       return -ENXIO;
    }
-   
+
    ppReadMemList = &(pClientMem->mpList);
-   
+
    // Does data already exist?
    while (*ppReadMemList != NULL)
    {
       // Is this element our data?
-      if (transactionID == 0 
+      if (transactionID == 0
       ||  transactionID == (*ppReadMemList)->mTransactionID)
       {
          // End critical section
-         spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
-
+         if(iSpinLock==1)
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         if((pCallback==UpSem) && (pData ==NULL))
+         {
+            DBG("%d clientID:0x%X,mpData:0x%p",__LINE__,clientID,pData);
+            return 0;
+         }
+         DBG("%d clientID:0x%X,mpData:0x%p",__LINE__,clientID,pData);
          // Run our own callback
-         pCallback( pDev, clientID, pData, QMIDev );
-         
+         pCallback( pDev, clientID, pData );
+
          return 0;
       }
-      
+
       // Next
       ppReadMemList = &(*ppReadMemList)->mpNext;
    }
-
+   mb();
    // Data not found, add ourself to list of waiters
    if (AddToNotifyList( pDev,
                         clientID,
-                        transactionID, 
-                        pCallback, 
-                        pData,
-                        QMIDev) == false)
+                        transactionID,
+                        pCallback,
+                        pData ) == false)
    {
       DBG( "Unable to register for notification\n" );
    }
 
    // End critical section
-   spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
+   if(iSpinLock==1)
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
 
    // Success
    return 0;
@@ -1081,15 +1812,19 @@ PARAMETERS:
 RETURN VALUE:
    None
 ===========================================================================*/
-void UpSem( 
+void UpSem(
    sGobiUSBNet * pDev,
    u16             clientID,
-   void *          pData,
-   sQMIDev * QMIDev)
+   void *          pData )
 {
-   DBG( "0x%04X\n", clientID );
-        
-   up( (struct semaphore *)pData );
+   //DBG( "0x%04X\n", clientID );
+   mb();
+   if(pData!=NULL)
+   {
+      struct semaphore *sem = (struct semaphore *)pData;
+      barrier();
+      up(sem);
+   }
    return;
 }
 
@@ -1103,7 +1838,7 @@ DESCRIPTION:
 
 PARAMETERS:
    pDev              [ I ] - Device specific memory
-   ppOutBuffer       [I/O] - On success, will be filled with a 
+   ppOutBuffer       [I/O] - On success, will be filled with a
                              pointer to read buffer
    clientID          [ I ] - Requester's client ID
    transactionID     [ I ] - Transaction ID or 0 for any
@@ -1117,145 +1852,318 @@ int ReadSync(
    void **            ppOutBuffer,
    u16                clientID,
    u16                transactionID,
-   sQMIDev *              QMIDev )
+   int                *iID,
+   struct semaphore   *pReadSem,
+   int                *iIsClosing)
 {
    int result;
    sClientMemList * pClientMem;
    sNotifyList ** ppNotifyList, * pDelNotifyListEntry;
-   struct semaphore readSem;
-   void * pData;
-   unsigned long flags;
+   void * pData = NULL;
    u16 dataSize;
+   struct semaphore *pLocalreadSem = NULL;
+   unsigned long flags;
+   //DBG("\n");
+   if(pReadSem==NULL)
+   if(*iID<0)
+   {
+      DBG( "Could not find matching SemID\n");
+      return -ENXIO;
+   }
 
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device!\n" );
       return -ENXIO;
    }
+   if (pDev->mbUnload >= eStatUnloading)
+   {
+      DBG( "unloaded\n" );
+      return -EFAULT;
+   }
+
+   if(IsDeviceDisconnect(pDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
    
+   if(pReadSem==NULL)
+   {
+      pLocalreadSem = &(pDev->readSem[*iID]);
+   }
+   else
+   {
+     pLocalreadSem = pReadSem;
+   }
+
    // Critical section
-   spin_lock_irqsave( &QMIDev->mClientMemLock, flags );
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
 
    // Find memory storage for this Client ID
-   pClientMem = FindClientMem( pDev, clientID, QMIDev );
+   pClientMem = FindClientMem( pDev, clientID );
    if (pClientMem == NULL)
    {
       DBG( "Could not find matching client ID 0x%04X\n",
            clientID );
-      
+
       // End critical section
-      spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
       return -ENXIO;
    }
-   
-   // Note: in cases where read is interrupted, 
+
+   // Note: in cases where read is interrupted,
    //    this will verify client is still valid
    while (PopFromReadMemList( pDev,
                               clientID,
                               transactionID,
                               &pData,
-                              &dataSize,
-                              QMIDev) == false)
+                              &dataSize ) == false)
    {
       // Data does not yet exist, wait
-      sema_init( &readSem, 0 );
-
+       
+      if(pDev->mbUnload >= eStatUnloading)
+      {
+         DBG("Unloading\n");
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         return -ENXIO;
+      }
       // Add ourself to list of waiters
-      if (AddToNotifyList( pDev, 
-                           clientID, 
-                           transactionID, 
-                           UpSem, 
-                           &readSem,
-                           QMIDev) == false)
+      if (AddToNotifyList( pDev,
+                           clientID,
+                           transactionID,
+                           UpSem,
+                           pLocalreadSem ) == false)
       {
          DBG( "unable to register for notification\n" );
-         spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
          return -EFAULT;
       }
 
       // End critical section while we block
-      spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
 
       // Wait for notification
-      result = down_interruptible( &readSem );
+      if (signal_pending(current))
+      {
+         return -ERESTARTSYS;
+      }
+      result = gobi_down_interruptible( pLocalreadSem,pDev);
+      DBG("result:%d , CID:0x%04x\n",result,clientID);
+      if (IsDeviceValid( pDev ) == false)
+      {
+         DBG( "Invalid device!\n" );
+         return -EFAULT;
+      }
+      if (pDev->mbUnload > eStatUnloading)
+      {
+         DBG( "unloaded\n" );
+          if(pReadSem==NULL)
+          pDev->iReasSyncTaskID[*iID] = -__LINE__;
+          else
+          *iID = -__LINE__;
+           return -EFAULT;
+      }
+      if(iIsClosing!=NULL)
+      {
+         if(*iIsClosing>0)
+         {
+           DBG( "filp is closing\n" );
+           if(pReadSem==NULL)
+           pDev->iReasSyncTaskID[*iID] = -__LINE__;
+           else
+           *iID = -__LINE__;
+           mb();
+           flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+           RemoveAndPopNotifyList(pDev,clientID,transactionID,eClearAndReleaseCID);
+           LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+           return -EFAULT;
+         }
+      }
+      if (result < 0)
+      {
+         if(pDev)
+         {
+            if(pReadSem==NULL)
+            pDev->iReasSyncTaskID[*iID] = -__LINE__;
+            else
+            *iID = -__LINE__;
+         }
+         if(result!=-EINTR)
+         {
+             flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+             RemoveAndPopNotifyList(pDev,clientID,transactionID,eClearCID);
+             LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         }
+         return result;//-EFAULT;EINTR resume error
+      }
+      if(*iID<-1)
+      {
+         DBG( "%s:%d Interrupted %d iID:%d\n",__FUNCTION__,__LINE__, result,*iID );
+         return -EFAULT;
+      }
+      if (signal_pending(current))
+      {
+         return -ERESTARTSYS;
+      }
       if (result != 0)
       {
          DBG( "Interrupted %d\n", result );
 
-         // readSem will fall out of scope, 
+         // readSem will fall out of scope,
          // remove from notify list so it's not referenced
-         spin_lock_irqsave( &QMIDev->mClientMemLock, flags );
+         if(pDev==NULL)
+         {
+            return -EFAULT;
+         }
+         if(pDev->iIsClosing)
+         {
+            DBG( "Closing device!\n" );
+            if(pDev)
+            {
+                if(pReadSem==NULL)
+                pDev->iReasSyncTaskID[*iID] = -__LINE__;
+                else
+                *iID = -__LINE__;
+            }
+            return -EFAULT;
+         }
+         if(pDev->mbUnload >= eStatUnloading)
+         {
+            DBG("Unloading");
+            if(pReadSem==NULL)
+            pDev->iReasSyncTaskID[*iID] = -__LINE__;
+            else
+            *iID = -__LINE__;
+            return -ENXIO;
+         }
+         flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+         if(pDev)
+         {
+            flags = pDev->mQMIDev.mFlag;
+         }
          ppNotifyList = &(pClientMem->mpReadNotifyList);
          pDelNotifyListEntry = NULL;
 
          // Find and delete matching entry
          while (*ppNotifyList != NULL)
          {
-            if ((*ppNotifyList)->mpData == &readSem)
+            if (IsDeviceValid( pDev ) == false)
+            {
+               DBG( "Invalid device!\n" );
+               /* SWI_START */
+               /* workaround to leave the system in cleaner state:
+                * must enable interrupts and enable pre-emption.
+                * TBD what the correct action should be when the device is gone. 
+                */
+               LocalClientMemUnLockSpinLockIRQRestore(pDev,flags,__LINE__);
+               //preempt_enable();
+                if(pReadSem==NULL)
+                pDev->iReasSyncTaskID[*iID] = -__LINE__;
+                else
+                *iID = -__LINE__;
+               /* SWI_STOP */
+               return -EFAULT;
+            }
+            if(*iID<0)
+            {
+               DBG( "Invalid device!\n" );
+               /* SWI_START */
+               /* must restore irq, pre-emption, locks before returning */
+               LocalClientMemUnLockSpinLockIRQRestore(pDev,flags,__LINE__);
+               if(pReadSem==NULL)
+               {
+                  if(pDev)
+                  pDev->iReasSyncTaskID[*iID] = -__LINE__;
+               }
+               else
+               *iID = -__LINE__;
+               /* SWI_STOP */
+               return -EFAULT;
+            }
+            if(pDev==NULL)
+            {
+               DBG( "Invalid device!\n" );
+               LocalClientMemUnLockSpinLockIRQRestore(pDev,flags,__LINE__);
+               return -EFAULT;
+            }
+            if (pDev->mbUnload > eStatUnloading)
+            {
+               DBG( "UNLOADING!\n" );
+               LocalClientMemUnLockSpinLockIRQRestore(pDev,flags,__LINE__);
+               if(pReadSem==NULL)
+               pDev->iReasSyncTaskID[*iID] = -__LINE__;
+               else
+               *iID = -__LINE__;
+               return -EFAULT;
+            }
+            if(ppNotifyList==NULL)
+            {
+                DBG( "UNLOADING!\n" );
+                LocalClientMemUnLockSpinLockIRQRestore(pDev,flags,__LINE__);
+                if(pReadSem==NULL)
+                pDev->iReasSyncTaskID[*iID] = -__LINE__;
+                else
+                *iID = -__LINE__;
+                return -EFAULT;
+            }
+            if ((*ppNotifyList)->mpData == 
+                  pLocalreadSem)
             {
                pDelNotifyListEntry = *ppNotifyList;
                *ppNotifyList = (*ppNotifyList)->mpNext;
                kfree( pDelNotifyListEntry );
+               mb();
                break;
             }
-
+            barrier();
             // Next
             ppNotifyList = &(*ppNotifyList)->mpNext;
+            mb();
          }
-
-         spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
+         mb();
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         if(pDev)
+        {
+            if(pReadSem==NULL)
+            pDev->iReasSyncTaskID[*iID] = -__LINE__;
+            else
+            *iID = -__LINE__;
+        }
          return -EINTR;
       }
-      
+
       // Verify device is still valid
       if (IsDeviceValid( pDev ) == false)
       {
          DBG( "Invalid device!\n" );
+         if(pDev)
+         {
+             if(pReadSem==NULL)
+             pDev->iReasSyncTaskID[*iID] = -__LINE__;
+             else
+             *iID = -__LINE__;
+         }
          return -ENXIO;
       }
-      
+
       // Restart critical section and continue loop
-      spin_lock_irqsave( &QMIDev->mClientMemLock, flags );
+      flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
    }
-   
+
    // End Critical section
-   spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
 
    // Success
    *ppOutBuffer = pData;
-
-   return dataSize;
-}
-
-/*===========================================================================
-METHOD:
-   WriteSyncCallback (Public Method)
-
-DESCRIPTION:
-   Write callback
-
-PARAMETERS
-   pWriteURB       [ I ] - URB this callback is run for
-
-RETURN VALUE:
-   None
-===========================================================================*/
-void WriteSyncCallback( struct urb * pWriteURB )
-{
-   if (pWriteURB == NULL)
+   if(pDev)
    {
-      DBG( "null urb\n" );
-      return;
+      if(pReadSem==NULL)
+      pDev->iReasSyncTaskID[*iID] = -__LINE__;
+      else
+      *iID = -__LINE__;
    }
-
-   DBG( "Write status/size %d/%d\n", 
-        pWriteURB->status, 
-        pWriteURB->actual_length );
-
-   // Notify that write has completed by up()-ing semeaphore
-   up( (struct semaphore * )pWriteURB->context );
-   
-   return;
+   return dataSize;
 }
 
 /*===========================================================================
@@ -1279,15 +2187,11 @@ int WriteSync(
    sGobiUSBNet *          pDev,
    char *                 pWriteBuffer,
    int                    writeBufferSize,
-   u16                    clientID,
-   sQMIDev *              QMIDev)
+   u16                    clientID )
 {
+   int i;
    int result;
-   struct semaphore writeSem;
-   struct urb * pWriteURB;
- //  sURBSetupPacket writeSetup;
-   struct usb_ctrlrequest	*writeSetup;
-   unsigned long flags;
+   int iLockRetry =0;
 
    if (IsDeviceValid( pDev ) == false)
    {
@@ -1295,207 +2199,235 @@ int WriteSync(
       return -ENXIO;
    }
 
-   pWriteURB = usb_alloc_urb( 0, GFP_KERNEL );
-   if (pWriteURB == NULL)
+   if (pDev->mbUnload >= eStatUnloading)
    {
-      DBG( "URB mem error\n" );
-      return -ENOMEM;
+      DBG( "Unloading device!\n" );
+      return -ENXIO;
    }
-   DBG( "FillQMUX clientID %d\n", clientID );   
-   writeSetup = pDev->mQMIDev.orq;
+
+   if(IsDeviceDisconnect(pDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
+
    // Fill writeBuffer with QMUX
-   result = FillQMUX( clientID, pWriteBuffer, writeBufferSize, pDev->big_endian);
+   result = FillQMUX( clientID, pWriteBuffer, writeBufferSize );
    if (result < 0)
    {
-      usb_free_urb( pWriteURB );
       return result;
    }
 
-   // CDC Send Encapsulated Request packet
-   writeSetup->bRequestType = 0x21;
-   writeSetup->bRequest = USB_CDC_SEND_ENCAPSULATED_COMMAND;
-   writeSetup->wValue = 0;
-   writeSetup->wIndex = cpu_to_le16(pDev->mpEndpoints->mIntfNum);
-   writeSetup->wLength = cpu_to_le16(writeBufferSize);
-/*
-static inline void usb_fill_control_urb(
-* struct urb *urb, 
-* struct usb_device *dev, 
-* unsigned int pipe, 
-* unsigned char *setup_packet, 
-* void *transfer_buffer, 
-* int buffer_length, 
-* usb_complete_t complete_fn, 
-* void *context) { 
-* urb->dev = dev; 
-* urb->pipe = pipe; 
-* urb->setup_packet = setup_packet; 
-* urb->transfer_buffer = transfer_buffer;
-* urb->transfer_buffer_length = buffer_length; 
-* urb->complete = complete_fn; 
-* urb->context = context;
-*  }
-* 	req->bRequestType = (USB_DIR_OUT | USB_TYPE_CLASS |
-			     USB_RECIP_INTERFACE);
-	req->bRequest = USB_CDC_SEND_ENCAPSULATED_COMMAND;
-	req->wValue = 0;
-	req->wIndex = desc->inum;
-	req->wLength = cpu_to_le16(count);
- * */
-   // Create URB   
-   usb_fill_control_urb( pWriteURB,
-                         pDev->mpNetDev->udev,
-                         usb_sndctrlpipe( pDev->mpNetDev->udev, 0 ),
-                         (unsigned char *)writeSetup,
-                         (void*)pWriteBuffer,
-                         writeBufferSize,
-                         WriteSyncCallback,
-                         &writeSem );
+   // Wake device
+   result = gobi_usb_autopm_get_interface( pDev->mpIntf );
+   if (result < 0)
+   {
+      DBG( "unable to resume interface: %d\n", result );
+
+      // Likely caused by device going from autosuspend -> full suspend
+      if (result == -EPERM)
+      {
+#ifdef CONFIG_PM
+#if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,33 ))
+         pDev->mpNetDev->udev->auto_pm = 0;
+#endif
+         GobiNetSuspend( pDev->mpIntf, PMSG_SUSPEND );
+#endif /* CONFIG_PM */
+      }
+      return result;
+   }
 
    DBG( "Actual Write:\n" );
    PrintHex( pWriteBuffer, writeBufferSize );
 
-   sema_init( &writeSem, 0 );
-   
-  // pWriteURB->complete = WriteSyncCallback;
- //  pWriteURB->context = &writeSem;
-   
-   // Wake device
-#ifdef CONFIG_PM	     
-   result = usb_autopm_get_interface( pDev->mpIntf );
-   if (result < 0)
+   // Write Control URB, protect with read semaphore to track in-flight USB control writes in case of disconnect
+   for(i=0;i<USB_WRITE_RETRY;i++)
    {
-      DBG( "unable to resume interface: %d\n", result );
       
-      // Likely caused by device going from autosuspend -> full suspend
-      if (result == -EPERM)
+      if(isModuleUnload(pDev))
       {
-#if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,33 ))
-         pDev->mpNetDev->udev->auto_pm = 0;
-#endif
-         GobiSuspend( pDev->mpIntf, PMSG_SUSPEND );
+         DBG( "unloaded\n" );
+         return -EFAULT;
+      }
+      if(IsDeviceDisconnect(pDev))
+      {
+         DBG( "Device Disconnected!\n" );
+         return -ENXIO;
+      }
+      pDev->iShutdown_read_sem= __LINE__;
+      if(signal_pending(current))
+      {
+         return -ERESTARTSYS;
       }
 
-      usb_free_urb( pWriteURB );
-
-      return result;
-   }
-#endif
-   // Critical section
-   spin_lock_irqsave( &QMIDev->mClientMemLock, flags );
-
-   if (AddToURBList( pDev, clientID, pWriteURB, QMIDev ) == false)
-   {
-      usb_free_urb( pWriteURB );
-
-      // End critical section
-      spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );   
-#ifdef CONFIG_PM	  
-      usb_autopm_put_interface( pDev->mpIntf );
-#endif
-      return -EINVAL;
-   }
-
-   result = usb_submit_urb( pWriteURB, GFP_KERNEL );
-   if (result < 0)
-   {
-      DBG( "submit URB error %d\n", result );
-      
-      // Get URB back so we can destroy it
-      if (PopFromURBList( pDev, clientID, QMIDev ) != pWriteURB)
+      iLockRetry = 0;
+      mb();
+      while(down_read_trylock(&(pDev->shutdown_rwsem))!=1)
       {
-         // This shouldn't happen
-         DBG( "Didn't get write URB back\n" );
+         wait_ms(5);
+         mb();
+         if(iLockRetry++>100)
+         {
+            DBG("down_read_trylock timeout");
+            return -EFAULT;
+         }
+         if(pDev==NULL)
+         {
+            DBG( "NULL\n" );
+            return -EFAULT;
+         }
+         if (pDev->mbUnload >= eStatUnloading)
+         {
+            DBG( "unloaded\n" );
+            return -EFAULT;
+         }
+         if(IsDeviceDisconnect(pDev))
+         {
+            DBG( "Device Disconnected!\n" );
+            return -ENXIO;
+         }
       }
+      mb();
+      result = Gobi_usb_control_msg(pDev->mpIntf, pDev->mpNetDev->udev, usb_sndctrlpipe( pDev->mpNetDev->udev, 0 ),
+             SEND_ENCAPSULATED_COMMAND,
+             USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+             0, pDev->mpIntf->cur_altsetting->desc.bInterfaceNumber,
+             (void*)pWriteBuffer, writeBufferSize,
+             USB_WRITE_TIMEOUT );
+       up_read(&pDev->shutdown_rwsem);
+       if(signal_pending(current))
+       {
+          return -ERESTARTSYS;
+       }
+       if(pDev==NULL)
+       {
+          return -EFAULT;
+       }
+       if (IsDeviceDisconnect(pDev) )
+       {
+         return -ENXIO;
+       }
+       pDev->iShutdown_read_sem=- __LINE__;
+       
+       if (pDev->mbUnload >= eStatUnloading)
+       {
+          DBG( "unloaded\n" );
+          return -EFAULT;
+       }
 
-      usb_free_urb( pWriteURB );
+       if (signal_pending(current))
+       {
+           return -ERESTARTSYS;
+       }
 
-      // End critical section
-      spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
-#ifdef CONFIG_PM	  
-     usb_autopm_put_interface( pDev->mpIntf );
- #endif
-      return result;
-   }
-   
-   // End critical section while we block
-   spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );   
-
-   // Wait for write to finish
-   if (interruptible != 0)
-   {
-      // Allow user interrupts
-      result = down_interruptible( &writeSem );
-   }
-   else
-   {
-      // Ignore user interrupts
-      result = 0;
-      down( &writeSem );
+       if (result < 0)
+       {
+          printk(KERN_WARNING "usb_control_msg failed (%d)", result);
+       }
+       // Control write transfer may occasionally timeout with certain HCIs, attempt a second time before reporting an error
+       if (result == -ETIMEDOUT)
+       {
+           pDev->writeTimeoutCnt++;
+           printk(KERN_WARNING "Write URB timeout, cnt(%d)\n", pDev->writeTimeoutCnt);
+       }
+       else if(result < 0 )
+       {
+          DBG( "%s no device!\n" ,__FUNCTION__);
+           return result;
+       }
+       else
+       {
+           break;
+       }
+       if (IsDeviceValid( pDev ) == false)
+       {
+          DBG( "%s Invalid device!\n" ,__FUNCTION__);
+          return -ENXIO;
+       }
+       if(IsDeviceDisconnect(pDev))
+       {
+          DBG( "Device Disconnected!\n" );
+          return -ENXIO;
+       }
+       if (pDev->mbUnload > eStatUnloading)
+       {
+         DBG( "unloaded\n" );
+         return -EFAULT;
+       }
    }
 
    // Write is done, release device
- 
-#ifdef CONFIG_PM	  
-   usb_autopm_put_interface( pDev->mpIntf );
-#endif
-   // Verify device is still valid
-   if (IsDeviceValid( pDev ) == false)
-   {
-      DBG( "Invalid device!\n" );
+   gobi_usb_autopm_put_interface( pDev->mpIntf );
 
-      usb_free_urb( pWriteURB );
-      return -ENXIO;
-   }
-
-   // Restart critical section
-   spin_lock_irqsave( &QMIDev->mClientMemLock, flags );
-
-   // Get URB back so we can destroy it
-   if (PopFromURBList( pDev, clientID, QMIDev ) != pWriteURB)
-   {
-      // This shouldn't happen
-      DBG( "Didn't get write URB back\n" );
-   
-      // End critical section
-      spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
-      usb_free_urb( pWriteURB );
-      return -EINVAL;
-   }
-
-   // End critical section
-   spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );   
-
-   if (result == 0)
-   {
-      // Write is finished
-      if (pWriteURB->status == 0)
-      {
-         // Return number of bytes that were supposed to have been written,
-         //   not size of QMI request
-         result = writeBufferSize;
-      }
-      else
-      {
-         DBG( "bad status = %d\n", pWriteURB->status );
-         
-         // Return error value
-         result = pWriteURB->status;
-      }
-   }
-   else
-   {
-      // We have been forcibly interrupted
-      DBG( "Interrupted %d !!!\n", result );
-      DBG( "Device may be in bad state and need reset !!!\n" );
-
-      // URB has not finished
-      usb_kill_urb( pWriteURB );
-   }
-
-   usb_free_urb( pWriteURB );
 
    return result;
+}
+
+/*=========================================================================*/
+// Internal memory management functions
+/*=========================================================================*/
+
+/*===========================================================================
+METHOD:
+   AddClientToMemoryList (Public Method)
+
+DESCRIPTION:
+   Add Client To Memory List
+
+PARAMETERS:
+   pDev           [ I ] - Device specific memory
+   clientID       [ I ] - Client ID
+
+RETURN VALUE:
+   int - Add Client ID to Memory List for success (positive)
+         Negative errno for error
+===========================================================================*/
+int AddClientToMemoryList(sGobiUSBNet *pDev,u16 clientID)
+{
+   unsigned long flags;
+   sClientMemList ** ppClientMem;
+   // Critical section
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+
+   // Verify client is not already allocated
+   if (FindClientMem( pDev, clientID ) != NULL)
+   {
+      DBG( "Client memory already exists CID:0x%x\n",clientID );
+      // End Critical section
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      return -ETOOMANYREFS;
+   }
+   //DBG( "Add Client memory CID:0x%x\n",clientID );
+   // Go to last entry in client mem list
+   ppClientMem = &pDev->mQMIDev.mpClientMemList;
+   while (*ppClientMem != NULL)
+   {
+      ppClientMem = &(*ppClientMem)->mpNext;
+   }
+
+   // Create locations for read to place data into
+   *ppClientMem = kmalloc( sizeof( sClientMemList ), GOBI_GFP_ATOMIC );
+   if (*ppClientMem == NULL)
+   {
+      DBG( "Error allocating read list\n" );
+
+      // End critical section
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      return -ENOMEM;
+   }
+
+   (*ppClientMem)->mClientID = clientID;
+   (*ppClientMem)->mpList = NULL;
+   (*ppClientMem)->mpReadNotifyList = NULL;
+   (*ppClientMem)->mpURBList = NULL;
+   (*ppClientMem)->mpNext = NULL;
+   mb();
+   // Initialize workqueue for poll()
+   init_waitqueue_head( &(*ppClientMem)->mWaitQueue );
+
+   // End Critical section
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+   return (int)clientID;
 }
 
 /*=========================================================================*/
@@ -1518,81 +2450,138 @@ RETURN VALUE:
    int - Client ID for success (positive)
          Negative errno for error
 ===========================================================================*/
-int GetClientID( 
-   sGobiUSBNet *      pDev,
-   u8                 serviceType,
-   sQMIDev *          QMIDev 
-   )
+int GetClientID(
+   sGobiUSBNet *    pDev,
+   u8                 serviceType ,
+   struct semaphore   *pReadSem)
 {
    u16 clientID;
-   sClientMemList ** ppClientMem;
    int result;
    void * pWriteBuffer;
    u16 writeBufferSize;
    void * pReadBuffer;
    u16 readBufferSize;
-   unsigned long flags;
    u8 transactionID;
-   
+   unsigned long flags;
+   struct semaphore readSem;
+
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device!\n" );
       return -ENXIO;
    }
-
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
    // Run QMI request to be asigned a Client ID
    if (serviceType != 0)
    {
       writeBufferSize = QMICTLGetClientIDReqSize();
-      pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
+      pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
       if (pWriteBuffer == NULL)
       {
          return -ENOMEM;
       }
 
-      transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID );
-      if (transactionID == 0)
+      /* transactionID cannot be 0 */
+      transactionID = QMIXactionIDGet(pDev);
+      if (transactionID != 0)
       {
-         transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID );
+         result = QMICTLGetClientIDReq( pWriteBuffer,
+                                        writeBufferSize,
+                                        transactionID,
+                                        serviceType );
+         if (result < 0)
+         {
+            kfree( pWriteBuffer );
+            return result;
+         }
       }
-      result = QMICTLGetClientIDReq( pWriteBuffer, 
-                                     writeBufferSize,
-                                     transactionID,
-                                     serviceType );
-      if (result < 0)
+      else
       {
          kfree( pWriteBuffer );
+         DBG( "Invalid transaction ID!\n" );
+         return -EINVAL;
+      }
+
+      result = ReadAsync( pDev, QMICTL, transactionID, UpSem, &readSem ,1);
+      if (result < 0)
+      {
+         DBG( "ReadAsync Error!\n" );
          return result;
       }
-      
       result = WriteSync( pDev,
                           pWriteBuffer,
                           writeBufferSize,
-                          QMICTL,
-                          &pDev->mQMIDev);
+                          QMICTL );
       kfree( pWriteBuffer );
-
       if (result < 0)
       {
+         // Timeout, remove the async read
+         DBG( "%s Timeout!\n" ,__FUNCTION__);
+         flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+         // Timeout, remove the async read
+         RemoveAndPopNotifyList(pDev,QMICTL,transactionID,eClearAndReleaseCID);
+         // End critical section
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
          return result;
       }
-
-      result = ReadSync( pDev,
-                         &pReadBuffer,
-                         QMICTL,
-                         transactionID,
-                         &pDev->mQMIDev);
-      if (result < 0)
+      wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+      mb();
+      // Enter critical section
+      flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+      barrier();
+      spin_lock_irq(&(pDev->notif_lock));
+      if (down_trylock( &readSem ) == 0)
       {
-         DBG( "bad read data %d\n", result );
-         return result;
-      }
-      readBufferSize = result;
-
-      result = QMICTLGetClientIDResp( pReadBuffer,
+         // Pop the read data
+         if (PopFromReadMemList( pDev,
+                                 QMICTL,
+                                 transactionID,
+                                 &pReadBuffer,
+                                 &readBufferSize ) == true)
+         {
+            // Success
+            DBG( "Success!\n" );
+            spin_unlock_irq(&(pDev->notif_lock));
+            // End critical section
+            LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+            result = QMICTLGetClientIDResp( pReadBuffer,
                                       readBufferSize,
-                                      &clientID);
-      kfree( pReadBuffer );
+                                      &clientID );
+            // We don't care about the result
+            DBG( "QMICTLGetClientIDResp Result:%d!,clientdID=%x\n" ,result,clientID);
+            if(pReadBuffer)
+            kfree( pReadBuffer );
+            pReadBuffer=NULL;
+         }
+         else
+         {
+            // Read mismatch/failure, unlock and continue
+            DBG( "Read mismatch/failure, unlock and continue!\n" );
+            spin_unlock_irq(&(pDev->notif_lock));
+            LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+            result = -1;
+         }
+      }
+      else
+      {
+             // Timeout, remove the async read
+             DBG( "Timeout, remove the async read!\n" );
+             //ReleaseNotifyList( pDev, QMICTL, transactionID );
+             // Timeout, remove the async read
+             RemoveAndPopNotifyList(pDev,QMICTL,transactionID,eClearAndReleaseCID);
+             // End critical section
+             spin_unlock_irq(&(pDev->notif_lock));
+             LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+             result = -1;
+      }
+     /* Upon return from QMICTLGetClientIDResp, clientID
+      * low address contains the Service Number (SN), and
+      * clientID high address contains Client Number (CN)
+      * For the ReadCallback to function correctly,we swap
+      * the SN and CN on a Big Endian architecture.
+      */
+      clientID = le16_to_cpu(clientID);
 
       if (result < 0)
       {
@@ -1604,51 +2593,7 @@ int GetClientID(
       // QMI CTL will always have client ID 0
       clientID = 0;
    }
-
-   // Critical section
-   spin_lock_irqsave( &QMIDev->mClientMemLock, flags );
-
-   // Verify client is not already allocated
-   if (FindClientMem( pDev, clientID, QMIDev ) != NULL)
-   {
-      DBG( "Client memory already exists\n" );
-
-      // End Critical section
-      spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
-      return -ETOOMANYREFS;
-   }
-
-   // Go to last entry in client mem list
-   ppClientMem = &QMIDev->mpClientMemList;
-   while (*ppClientMem != NULL)
-   {
-      ppClientMem = &(*ppClientMem)->mpNext;
-   }
-   
-   // Create locations for read to place data into
-   *ppClientMem = kmalloc( sizeof( sClientMemList ), GFP_ATOMIC );
-   if (*ppClientMem == NULL)
-   {
-      DBG( "Error allocating read list\n" );
-
-      // End critical section
-      spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
-      return -ENOMEM;
-   }
-      
-   (*ppClientMem)->mClientID = clientID;
-   (*ppClientMem)->mpList = NULL;
-   (*ppClientMem)->mpReadNotifyList = NULL;
-   (*ppClientMem)->mpURBList = NULL;
-   (*ppClientMem)->mpNext = NULL;
-
-   // Initialize workqueue for poll()
-   init_waitqueue_head( &(*ppClientMem)->mWaitQueue );
-
-   // End Critical section
-   spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
-   
-   return clientID;
+   return AddClientToMemoryList(pDev,clientID);
 }
 
 /*===========================================================================
@@ -1663,162 +2608,98 @@ PARAMETERS:
    clientID       [ I ] - Requester's client ID
 
 RETURN VALUE:
-   None
+   true - 0 success.
+   false - on error.
 ===========================================================================*/
-void ReleaseClientID(
+bool ReleaseClientID(
    sGobiUSBNet *    pDev,
-   u16                clientID,
-   sQMIDev *QMIDev)
+   u16                clientID)
 {
-   int result;
    sClientMemList ** ppDelClientMem;
    sClientMemList * pNextClientMem;
-   struct urb * pDelURB;
-   void * pDelData;
+   void * pDelData = NULL;
    u16 dataSize;
-   void * pWriteBuffer;
-   u16 writeBufferSize;
-   void * pReadBuffer;
-   u16 readBufferSize;
-   unsigned long flags;
-   u8 transactionID;
-
+   unsigned long flags = 0;
+   bool bReturn = true;
+   
    // Is device is still valid?
-   if (IsDeviceValid( pDev ) == false)
+   DBG("clientID:0x%x\n",clientID);
+   if (pDev->mbUnload > eStatUnloaded)
    {
-      DBG( "invalid device\n" );
-      return;
+      DBG( "unloaded\n" );
+      return false;
+   }
+   barrier();
+     
+   if(TransceiveReleaseClientID(pDev,clientID)==false)
+   {
+      pDev->mReleaseClientIDFail = 1;
    }
    
-   DBG( "releasing 0x%04X\n", clientID );
-
-   // Run QMI ReleaseClientID if this isn't QMICTL   
-   if (clientID != QMICTL)
-   {
-      // Note: all errors are non fatal, as we always want to delete 
-      //    client memory in latter part of function
-      
-      writeBufferSize = QMICTLReleaseClientIDReqSize();
-      pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-      if (pWriteBuffer == NULL)
-      {
-         DBG( "memory error\n" );
-      }
-      else
-      {
-         transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID );
-         if (transactionID == 0)
-         {
-            transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID );
-         }
-         result = QMICTLReleaseClientIDReq( pWriteBuffer, 
-                                            writeBufferSize,
-                                            transactionID,
-                                            clientID );
-         if (result < 0)
-         {
-            kfree( pWriteBuffer );
-            DBG( "error %d filling req buffer\n", result );
-         }
-         else
-         {
-            result = WriteSync( pDev,
-                                pWriteBuffer,
-                                writeBufferSize,
-                                QMICTL,
-                                &pDev->mQMIDev);
-            kfree( pWriteBuffer );
-
-            if (result < 0)
-            {
-               DBG( "bad write status %d\n", result );
-            }
-            else
-            {
-               result = ReadSync( pDev,
-                                  &pReadBuffer,
-                                  QMICTL,
-                                  transactionID,
-                                  &pDev->mQMIDev);
-               if (result < 0)
-               {
-                  DBG( "bad read status %d\n", result );
-               }
-               else
-               {
-                  readBufferSize = result;
-
-                  result = QMICTLReleaseClientIDResp( pReadBuffer,
-                                                      readBufferSize );
-                  kfree( pReadBuffer );
-
-                  if (result < 0)
-                  {
-                     DBG( "error %d parsing response\n", result );
-                  }
-               }
-            }
-         }
-      }
-   }
-
    // Cleaning up client memory
-   // MURALI - Add more cleanup
-   
+   DBG("Release clientID:0x%x memory\n",clientID);
    // Critical section
-   spin_lock_irqsave( &QMIDev->mClientMemLock, flags );
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
 
    // Can't use FindClientMem, I need to keep pointer of previous
-   ppDelClientMem = &QMIDev->mpClientMemList;
+   ppDelClientMem = &pDev->mQMIDev.mpClientMemList;
    while (*ppDelClientMem != NULL)
    {
+      mb();
       if ((*ppDelClientMem)->mClientID == clientID)
       {
+         barrier();
          pNextClientMem = (*ppDelClientMem)->mpNext;
 
          // Notify all clients
          while (NotifyAndPopNotifyList( pDev,
                                         clientID,
-                                        0,
-                                        QMIDev) == true );         
-
-         // Kill and free all URB's
-         pDelURB = PopFromURBList( pDev, clientID, QMIDev );
-         while (pDelURB != NULL)
-         {
-            usb_kill_urb( pDelURB );
-            usb_free_urb( pDelURB );
-            pDelURB = PopFromURBList( pDev, clientID, QMIDev );
-         }
-
+                                        0 ) == eNotifyListFound );
          // Free any unread data
-         while (PopFromReadMemList( pDev, 
+         while (PopFromReadMemList( pDev,
                                     clientID,
                                     0,
                                     &pDelData,
-                                    &dataSize, 
-                                    QMIDev ) == true )
+                                    &dataSize ) == true )
          {
             kfree( pDelData );
+            pDelData = NULL;
          }
-
-         // Delete client Mem
-         kfree( *ppDelClientMem );
-
+         //DBG("Delete client Mem\r\n");
+         if(*ppDelClientMem!=NULL)
+         {
+            // Delete client Mem
+            kfree( *ppDelClientMem );
+         }
+         else
+         {
+            bReturn = false;
+         }
+         *ppDelClientMem = NULL;
+         //DBG("Prepare Next Delete client Mem\r\n");
          // Overwrite the pointer that was to this client mem
+         barrier();
          *ppDelClientMem = pNextClientMem;
       }
       else
       {
          // I now point to (a pointer of ((the node I was at)'s mpNext))
-         ppDelClientMem = &(*ppDelClientMem)->mpNext;
+          if(*ppDelClientMem==NULL)
+          {
+              DBG("ppDelClientMem NULL %d\r\n",__LINE__);
+              break;
+          }
+          //DBG("mpClientMemList:%p,*ppDelClientMem:%p",&pDev->mQMIDev.mpClientMemList,*ppDelClientMem);
+          barrier();
+          pNextClientMem = (*ppDelClientMem)->mpNext;
+          barrier();
+          ppDelClientMem = &(*ppDelClientMem)->mpNext;
       }
    }
-   
+   mb();
    // End Critical section
-   spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags );
-
-   return;
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+   return bReturn;
 }
 
 /*===========================================================================
@@ -1838,42 +2719,44 @@ RETURN VALUE:
    sClientMemList - Pointer to requested sClientMemList for success
                     NULL for error
 ===========================================================================*/
-sClientMemList * FindClientMem( 
+sClientMemList * FindClientMem(
    sGobiUSBNet *      pDev,
-   u16              clientID,
-   sQMIDev *QMIDev)
+   u16              clientID )
 {
    sClientMemList * pClientMem;
-   
+
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device\n" );
       return NULL;
    }
-   
+   mb();
 #ifdef CONFIG_SMP
    // Verify Lock
-   if (spin_is_locked( &QMIDev->mClientMemLock ) == 0)
+   #if _IGNORE_DISCONNECT_SPIN_LOCK_CHECK_
+   if(!IsDeviceDisconnect(pDev))
+   #endif
+   if (LocalClientMemLockSpinIsLock( pDev ) == 0)
    {
       DBG( "unlocked\n" );
       BUG();
    }
 #endif
-   
-   pClientMem = QMIDev->mpClientMemList;
+
+   pClientMem = pDev->mQMIDev.mpClientMemList;
    while (pClientMem != NULL)
    {
       if (pClientMem->mClientID == clientID)
       {
          // Success
-         //DBG( "Found client mem %p\n", pClientMem );
+         //DBG("Found client's 0x%x memory\n", clientID);
          return pClientMem;
       }
-      
+
       pClientMem = pClientMem->mpNext;
    }
 
-   DBG( "Could not find client mem 0x%04X\n", clientID );
+   //DBG( "Could not find client mem 0x%04X\n", clientID );
    return NULL;
 }
 
@@ -1883,7 +2766,7 @@ METHOD:
 
 DESCRIPTION:
    Add Data to this client's ReadMem list
-   
+
    Caller MUST have lock on mClientMemLock
 
 PARAMETERS:
@@ -1896,20 +2779,22 @@ PARAMETERS:
 RETURN VALUE:
    bool
 ===========================================================================*/
-bool AddToReadMemList( 
+bool AddToReadMemList(
    sGobiUSBNet *      pDev,
    u16              clientID,
    u16              transactionID,
    void *           pData,
-   u16              dataSize,
-   sQMIDev *          QMIDev)
+   u16              dataSize )
 {
    sClientMemList * pClientMem;
    sReadMemList ** ppThisReadMemList;
 
 #ifdef CONFIG_SMP
    // Verify Lock
-   if (spin_is_locked( &QMIDev->mClientMemLock ) == 0)
+   #if _IGNORE_DISCONNECT_SPIN_LOCK_CHECK_
+   if(!IsDeviceDisconnect(pDev))
+   #endif
+   if (LocalClientMemLockSpinIsLock( pDev ) == 0)
    {
       DBG( "unlocked\n" );
       BUG();
@@ -1917,7 +2802,7 @@ bool AddToReadMemList(
 #endif
 
    // Get this client's memory location
-   pClientMem = FindClientMem( pDev, clientID, QMIDev );
+   pClientMem = FindClientMem( pDev, clientID );
    if (pClientMem == NULL)
    {
       DBG( "Could not find this client's memory 0x%04X\n",
@@ -1932,20 +2817,20 @@ bool AddToReadMemList(
    {
       ppThisReadMemList = &(*ppThisReadMemList)->mpNext;
    }
-   
-   *ppThisReadMemList = kmalloc( sizeof( sReadMemList ), GFP_ATOMIC );
+   mb();
+   *ppThisReadMemList = kmalloc( sizeof( sReadMemList ), GOBI_GFP_ATOMIC );
    if (*ppThisReadMemList == NULL)
    {
       DBG( "Mem error\n" );
 
       return false;
-   }   
-   
+   }
+
    (*ppThisReadMemList)->mpNext = NULL;
    (*ppThisReadMemList)->mpData = pData;
    (*ppThisReadMemList)->mDataSize = dataSize;
    (*ppThisReadMemList)->mTransactionID = transactionID;
-   
+   mb();
    return true;
 }
 
@@ -1954,37 +2839,39 @@ METHOD:
    PopFromReadMemList (Public Method)
 
 DESCRIPTION:
-   Remove data from this client's ReadMem list if it matches 
+   Remove data from this client's ReadMem list if it matches
    the specified transaction ID.
-   
+
    Caller MUST have lock on mClientMemLock
 
 PARAMETERS:
    pDev              [ I ] - Device specific memory
    clientID          [ I ] - Requester's client ID
    transactionID     [ I ] - Transaction ID or 0 for any
-   ppData            [I/O] - On success, will be filled with a 
+   ppData            [I/O] - On success, will be filled with a
                              pointer to read buffer
-   pDataSize         [I/O] - On succces, will be filled with the 
+   pDataSize         [I/O] - On succces, will be filled with the
                              read buffer's size
 
 RETURN VALUE:
    bool
 ===========================================================================*/
-bool PopFromReadMemList( 
+bool PopFromReadMemList(
    sGobiUSBNet *      pDev,
-   u16                  clientID,
-   u16                  transactionID,
-   void **              ppData,
-   u16 *                pDataSize,
-   sQMIDev *          QMIDev)
+   u16              clientID,
+   u16              transactionID,
+   void **          ppData,
+   u16 *            pDataSize )
 {
    sClientMemList * pClientMem;
    sReadMemList * pDelReadMemList, ** ppReadMemList;
-
+   //DBG("");
 #ifdef CONFIG_SMP
    // Verify Lock
-   if (spin_is_locked( &QMIDev->mClientMemLock ) == 0)
+   #if _IGNORE_DISCONNECT_SPIN_LOCK_CHECK_
+   if(!IsDeviceDisconnect(pDev))
+   #endif
+   if (LocalClientMemLockSpinIsLock( pDev ) == 0)
    {
       DBG( "unlocked\n" );
       BUG();
@@ -1992,7 +2879,7 @@ bool PopFromReadMemList(
 #endif
 
    // Get this client's memory location
-   pClientMem = FindClientMem( pDev, clientID, QMIDev );
+   pClientMem = FindClientMem( pDev, clientID );
    if (pClientMem == NULL)
    {
       DBG( "Could not find this client's memory 0x%04X\n",
@@ -2000,11 +2887,12 @@ bool PopFromReadMemList(
 
       return false;
    }
-   
+
    ppReadMemList = &(pClientMem->mpList);
    pDelReadMemList = NULL;
-   
+
    // Find first message that matches this transaction ID
+   CLIENT_READMEM_SNAPSHOT(clientID, pDev);
    while (*ppReadMemList != NULL)
    {
       // Do we care about transaction ID?
@@ -2012,34 +2900,47 @@ bool PopFromReadMemList(
       ||  transactionID == (*ppReadMemList)->mTransactionID )
       {
          pDelReadMemList = *ppReadMemList;
+         #if 0
+         DBG(  "*ppReadMemList = 0x%p pDelReadMemList = 0x%p\n",
+               *ppReadMemList, pDelReadMemList );
+         #endif
          break;
       }
-      
-      DBG( "skipping 0x%04X data TID = %x\n",
-           clientID, 
-           (*ppReadMemList)->mTransactionID );
-      
+
+      //DBG( "skipping 0x%04X data TID = 0x%x\n", clientID, (*ppReadMemList)->mTransactionID );
+
       // Next
       ppReadMemList = &(*ppReadMemList)->mpNext;
    }
-   
+   mb();
+   //DBG(  "*ppReadMemList = 0x%p pDelReadMemList = 0x%p\n",
+   //      *ppReadMemList, pDelReadMemList );
    if (pDelReadMemList != NULL)
    {
+       if(*ppReadMemList==NULL)
+       {
+           DBG("ppReadMemList NULL\n");
+           return false;
+       }
       *ppReadMemList = (*ppReadMemList)->mpNext;
-      
+
       // Copy to output
       *ppData = pDelReadMemList->mpData;
       *pDataSize = pDelReadMemList->mDataSize;
-      
+      #if 0
+      DBG(  "*ppData = 0x%p pDataSize = %u\n",
+            *ppData, *pDataSize );
+      #endif
       // Free memory
       kfree( pDelReadMemList );
-      
+      pDelReadMemList = NULL;
+      mb();
       return true;
    }
    else
    {
-      DBG( "No read memory to pop, Client 0x%04X, TID = %x\n", 
-           clientID, 
+      DBG( "No read memory to pop, Client 0x%04X, TID = 0x%x\n",
+           clientID,
            transactionID );
       return false;
    }
@@ -2051,7 +2952,7 @@ METHOD:
 
 DESCRIPTION:
    Add Notify entry to this client's notify List
-   
+
    Caller MUST have lock on mClientMemLock
 
 PARAMETERS:
@@ -2059,26 +2960,34 @@ PARAMETERS:
    clientID          [ I ] - Requester's client ID
    transactionID     [ I ] - Transaction ID or 0 for any
    pNotifyFunct      [ I ] - Callback function to be run when data is available
-   pData             [ I ] - Data buffer that willl be passed (unmodified) 
+   pData             [ I ] - Data buffer that willl be passed (unmodified)
                              to callback
 
 RETURN VALUE:
    bool
 ===========================================================================*/
-bool AddToNotifyList( 
+bool AddToNotifyList(
    sGobiUSBNet *      pDev,
-   u16                  clientID,
-   u16                  transactionID,
-   void                 (* pNotifyFunct)(sGobiUSBNet *, u16, void *, sQMIDev *),
-   void *               pData,
-   sQMIDev *QMIDev)
+   u16              clientID,
+   u16              transactionID,
+   void             (* pNotifyFunct)(sGobiUSBNet *, u16, void *),
+   void *           pData )
 {
    sClientMemList * pClientMem;
    sNotifyList ** ppThisNotifyList;
-
+   //DBG("ClientID:0x%x, TID:0x%x\n",clientID,transactionID);
+   mb();
+   if(pDev==NULL)
+   {
+      DBG("NULL");
+      return eNotifyListEmpty;
+   }
 #ifdef CONFIG_SMP
    // Verify Lock
-   if (spin_is_locked( &QMIDev->mClientMemLock ) == 0)
+   #if _IGNORE_DISCONNECT_SPIN_LOCK_CHECK_
+   if(!IsDeviceDisconnect(pDev))
+   #endif
+   if (LocalClientMemLockSpinIsLock( pDev ) == 0)
    {
       DBG( "unlocked\n" );
       BUG();
@@ -2086,7 +2995,7 @@ bool AddToNotifyList(
 #endif
 
    // Get this client's memory location
-   pClientMem = FindClientMem( pDev, clientID, QMIDev );
+   pClientMem = FindClientMem( pDev, clientID );
    if (pClientMem == NULL)
    {
       DBG( "Could not find this client's memory 0x%04X\n", clientID );
@@ -2099,19 +3008,19 @@ bool AddToNotifyList(
    {
       ppThisNotifyList = &(*ppThisNotifyList)->mpNext;
    }
-   
-   *ppThisNotifyList = kmalloc( sizeof( sNotifyList ), GFP_ATOMIC );
+   mb();
+   *ppThisNotifyList = kmalloc( sizeof( sNotifyList ), GOBI_GFP_ATOMIC );
    if (*ppThisNotifyList == NULL)
    {
       DBG( "Mem error\n" );
       return false;
-   }   
-   
+   }
+
    (*ppThisNotifyList)->mpNext = NULL;
    (*ppThisNotifyList)->mpNotifyFunct = pNotifyFunct;
    (*ppThisNotifyList)->mpData = pData;
    (*ppThisNotifyList)->mTransactionID = transactionID;
-   
+   mb();
    return true;
 }
 
@@ -2120,9 +3029,9 @@ METHOD:
    NotifyAndPopNotifyList (Public Method)
 
 DESCRIPTION:
-   Remove first Notify entry from this client's notify list 
+   Remove first Notify entry from this client's notify list
    and Run function
-   
+
    Caller MUST have lock on mClientMemLock
 
 PARAMETERS:
@@ -2133,18 +3042,25 @@ PARAMETERS:
 RETURN VALUE:
    bool
 ===========================================================================*/
-bool NotifyAndPopNotifyList( 
-   sGobiUSBNet *        pDev,
-   u16                  clientID,
-   u16                  transactionID,
-   sQMIDev *QMIDev)
+int NotifyAndPopNotifyList(
+   sGobiUSBNet *      pDev,
+   u16              clientID,
+   u16              transactionID )
 {
    sClientMemList * pClientMem;
-   sNotifyList * pDelNotifyList, ** ppNotifyList;
+   sNotifyList * pDelNotifyList = NULL, **ppNotifyList;
 
+   if(pDev==NULL)
+   {
+      DBG("NULL");
+      return eNotifyListEmpty;
+   }
 #ifdef CONFIG_SMP
    // Verify Lock
-   if (spin_is_locked( &QMIDev->mClientMemLock ) == 0)
+   #if _IGNORE_DISCONNECT_SPIN_LOCK_CHECK_
+   if(!IsDeviceDisconnect(pDev))
+   #endif
+   if (LocalClientMemLockSpinIsLock( pDev ) == 0)
    {
       DBG( "unlocked\n" );
       BUG();
@@ -2152,17 +3068,18 @@ bool NotifyAndPopNotifyList(
 #endif
 
    // Get this client's memory location
-   pClientMem = FindClientMem( pDev, clientID, QMIDev );
+   pClientMem = FindClientMem( pDev, clientID );
    if (pClientMem == NULL)
    {
       DBG( "Could not find this client's memory 0x%04X\n", clientID );
-      return false;
+      return eNotifyListEmpty;
    }
 
    ppNotifyList = &(pClientMem->mpReadNotifyList);
    pDelNotifyList = NULL;
 
    // Remove from list
+   CLIENT_READMEM_SNAPSHOT(clientID,pDev);
    while (*ppNotifyList != NULL)
    {
       // Do we care about transaction ID?
@@ -2170,173 +3087,729 @@ bool NotifyAndPopNotifyList(
       ||  (*ppNotifyList)->mTransactionID == 0
       ||  transactionID == (*ppNotifyList)->mTransactionID)
       {
-         pDelNotifyList = *ppNotifyList;
-         break;
+         if((clientID==0)&&(transactionID!=(*ppNotifyList)->mTransactionID))
+         {
+            
+         }
+         else
+         {
+            pDelNotifyList = *ppNotifyList;
+            mb();
+            break;
+         }
       }
-      
+
       DBG( "skipping data TID = %x\n", (*ppNotifyList)->mTransactionID );
-      
+
       // next
+      barrier();
       ppNotifyList = &(*ppNotifyList)->mpNext;
+      mb();
    }
-   
+   mb();
    if (pDelNotifyList != NULL)
    {
       // Remove element
       *ppNotifyList = (*ppNotifyList)->mpNext;
-      
+
       // Run notification function
       if (pDelNotifyList->mpNotifyFunct != NULL)
       {
-         // Unlock for callback
-         spin_unlock( &QMIDev->mClientMemLock );
-      
-         pDelNotifyList->mpNotifyFunct( pDev,
-                                        clientID,
-                                        pDelNotifyList->mpData,
-                                        QMIDev);
-         // Restore lock
-         spin_lock( &QMIDev->mClientMemLock );
+          // Unlock for callback
+          if(((clientID==QMICTL)&&(pDev->mbUnload>=eStatUnloading)) ||
+               IsDeviceDisconnect(pDev))
+          {
+
+          }
+          else
+          {
+                if((pDelNotifyList->mpNotifyFunct == UpSem) && (pDelNotifyList->mpData==NULL))
+                {
+                   
+                }
+                else
+                {
+                  barrier();
+                  pDelNotifyList->mpNotifyFunct( pDev,
+                                           clientID,
+                                           pDelNotifyList->mpData );
+                }
+          }
       }
-      
+
       // Delete memory
       kfree( pDelNotifyList );
-
-      return true;
+      //DBG( "notify for Client:0x%x, TID 0x%x\n",clientID, transactionID );
+      mb();
+      return eNotifyListFound;
    }
    else
    {
-      DBG( "no one to notify for TID %x\n", transactionID );
-      
-      return false;
+      DBG( "no one to notify for Client:0x%x, TID 0x%x\n",clientID, transactionID );
+      return eNotifyListNotFound;
    }
 }
 
-/*===========================================================================
-METHOD:
-   AddToURBList (Public Method)
-
-DESCRIPTION:
-   Add URB to this client's URB list
-   
-   Caller MUST have lock on mClientMemLock
-
-PARAMETERS:
-   pDev              [ I ] - Device specific memory
-   clientID          [ I ] - Requester's client ID
-   pURB              [ I ] - URB to be added
-
-RETURN VALUE:
-   bool
-===========================================================================*/
-bool AddToURBList( 
-   sGobiUSBNet *      pDev,
-   u16                  clientID,
-   struct urb *     pURB,
-   sQMIDev *          QMIDev)
+int map_mux_id_to_ipv4(
+        sGobiUSBNet *pDev,
+        unsigned long arg
+        )
 {
-   sClientMemList * pClientMem;
-   sURBList ** ppThisURBList;
+    int idx;
+    int status;
+    sQMuxIPTable table;
+    if (arg == 0)
+    {
+        DBG( "Bad IP Table IOCTL buffer\n" );
+        return -EINVAL;
+    }
+    status = copy_from_user( &table, (void*)arg, sizeof(table) );
+    if (status != 0)
+    {
+        DBG( "Unable to copy data from userspace %d\n", status );
+        return -EINVAL;
+    }
 
-#ifdef CONFIG_SMP
-   // Verify Lock
-   if (spin_is_locked( &QMIDev->mClientMemLock ) == 0)
-   {
-      DBG( "unlocked\n" );
-      BUG();
-   }
-#endif
+    idx = table.instance - MUX_ID_START;
 
-   // Get this client's memory location
-   pClientMem = FindClientMem( pDev, clientID, QMIDev );
-   if (pClientMem == NULL)
-   {
-      DBG( "Could not find this client's memory 0x%04X\n", clientID );
-      return false;
-   }
+    /* a little bit difference between sQMuxIPTable and arg, arg passed from user space is mux id 
+       and ip address, but instance of sQMuxIPTable is the index from 0 to MAX_MUX_NUMBER_SUPPORTED-1,
+       so the difference is the MUX_ID_START offset */
+    if (
+            ( idx >= MAX_MUX_NUMBER_SUPPORTED ) ||
+            ( idx < 0 )
+       )
+    {
+        DBG( "invalid indexing muxid to ipv4 table: %d\n", idx);
+        return -EINVAL;
+    }
 
-   // Go to last URBList entry
-   ppThisURBList = &pClientMem->mpURBList;
-   while (*ppThisURBList != NULL)
-   {
-      ppThisURBList = &(*ppThisURBList)->mpNext;
-   }
-   
-   *ppThisURBList = kmalloc( sizeof( sURBList ), GFP_ATOMIC );
-   if (*ppThisURBList == NULL)
-   {
-      DBG( "Mem error\n" );
-      return false;
-   }   
-   
-   (*ppThisURBList)->mpNext = NULL;
-   (*ppThisURBList)->mpURB = pURB;
-   
-   return true;
+    pDev->qMuxIPTable[idx].instance = idx;
+    if ( table.ipAddress == 0 )
+    {
+        pDev->qMuxIPTable[idx].ipAddress = 0;
+    }
+    else if ( table.ipAddress > 0 )
+    {
+        pDev->qMuxIPTable[idx].ipAddress= table.ipAddress;
+    }
+
+    DBG(" Set IP Address Mux ID : 0x%02x\n", table.instance);
+    PrintIPAddr( "Set IP Address : ", table.ipAddress);
+    return 0;
 }
 
+int iIsZeroIPv6Addr(ipv6_addr *pAddr)
+{
+   if(pAddr)
+   {
+      int i = 0;
+      for(i=0;i<IPV6_ADDR_LEN;i++)
+      {
+         if(pAddr->ipv6addr[i]!=0)
+            return 0;
+      }
+   }
+   return 1;
+}
+
+int map_mux_id_to_ipv6(
+   sGobiUSBNet *pDev,
+   unsigned long arg )
+{
+    int idx;
+    int status;
+    sQMuxIPTable table;
+    if (arg == 0)
+    {
+        DBG( "Bad IP Table IOCTL buffer\n" );
+        return -EINVAL;
+    }
+    status = copy_from_user( &table, (void*)arg, sizeof(table) );
+    if (status != 0)
+    {
+        DBG( "Unable to copy data from userspace %d\n", status );
+        return -EINVAL;
+    }
+
+    idx = table.instance - MUX_ID_START;
+
+    /* a little bit difference between sQMuxIPTable and arg, arg passed from user space is mux id 
+       and ip address, but instance of sQMuxIPTable is the index from 0 to MAX_MUX_NUMBER_SUPPORTED-1,
+       so the difference is the MUX_ID_START offset */
+    if (
+            ( idx >= MAX_MUX_NUMBER_SUPPORTED ) ||
+            ( idx < 0 )
+       )
+    {
+        DBG( "invalid indexing muxid to ipv6 table: %d\n", idx);
+        return -EINVAL;
+    }
+
+    pDev->qMuxIPTable[idx].instance = idx;
+    if ( iIsZeroIPv6Addr(&table.ipV6Address)==1 )
+    {
+        memset(&pDev->qMuxIPTable[idx].ipV6Address , 0,sizeof(ipv6_addr));
+    }
+    else 
+    {
+        memcpy(&pDev->qMuxIPTable[idx].ipV6Address,&table.ipV6Address,sizeof(ipv6_addr));
+    }
+
+    NETDBG(" Set IP Address Mux ID : 0x%02x\n", table.instance);
+    PrintIPV6Addr( &table.ipV6Address);
+    return 0;
+}
+
+/*=========================================================================*/
+// Internal userspace wrappers
+/*=========================================================================*/
+
 /*===========================================================================
 METHOD:
-   PopFromURBList (Public Method)
+   UserspaceunlockedIOCTL (Public Method)
 
 DESCRIPTION:
-   Remove URB from this client's URB list
-   
-   Caller MUST have lock on mClientMemLock
+   Internal wrapper for Userspace IOCTL interface
 
-PARAMETERS:
-   pDev           [ I ] - Device specific memory
-   clientID       [ I ] - Requester's client ID
+PARAMETERS
+   pFilp        [ I ] - userspace file descriptor
+   cmd          [ I ] - IOCTL command
+   arg          [ I ] - IOCTL argument
 
 RETURN VALUE:
-   struct urb - Pointer to requested client's URB
-                NULL for error
+   long - 0 for success
+          Negative errno for failure
 ===========================================================================*/
-struct urb * PopFromURBList( 
-   sGobiUSBNet *      pDev,
-   u16                  clientID,
-   sQMIDev *          QMIDev )
+long UserspaceunlockedIOCTL(
+   struct file *     pFilp,
+   unsigned int      cmd,
+   unsigned long     arg ) 
 {
-   sClientMemList * pClientMem;
-   sURBList * pDelURBList;
-   struct urb * pURB;
+   int j;
+   int result;
+   u32 devVIDPID;
 
-#ifdef CONFIG_SMP
-   // Verify Lock
-   if (spin_is_locked( &QMIDev->mClientMemLock ) == 0)
+   sQMIFilpStorage * pFilpData = (sQMIFilpStorage *)pFilp->private_data;
+   unsigned long i_ino = -1;
+   
+   if (pFilpData == NULL)
    {
-      DBG( "unlocked\n" );
-      BUG();
+      DBG( "Bad file data\n" );
+      return -EBADF;
    }
-#endif
-
-   // Get this client's memory location
-   pClientMem = FindClientMem( pDev, clientID, QMIDev );
-   if (pClientMem == NULL)
+   if(file_inode(pFilp) !=NULL)
    {
-      DBG( "Could not find this client's memory 0x%04X\n", clientID );
-      return NULL;
-   }
-
-   // Remove from list
-   if (pClientMem->mpURBList != NULL)
-   {
-      pDelURBList = pClientMem->mpURBList;
-      pClientMem->mpURBList = pClientMem->mpURBList->mpNext;
-      
-      // Copy to output
-      pURB = pDelURBList->mpURB;
-      
-      // Delete memory
-      kfree( pDelURBList );
-
-      return pURB;
+      i_ino = file_inode(pFilp)->i_ino;
    }
    else
    {
-      DBG( "No URB's to pop\n" );
-      
-      return NULL;
+      DBG("File Inode Null %d\n",__LINE__);
+      return -EIO;
+   }
+   DBG( "%d (%d)i_ino:%lu cmd:%X iCount:%d\n",__LINE__ ,pFilpData->iInfNum,i_ino,cmd,pFilpData->iCount);
+   if(cmd==USBDEVFS_RESET)
+   {
+      DBG( "RESET 0\n" );
+      DBG( "%d (%d)i_ino:%lu cmd:%X\n",__LINE__ ,pFilpData->iInfNum,i_ino,cmd);
+      return 0;
+   }
+   if (IsDeviceValid( pFilpData->mpDev ) == false)
+   {
+      DBG( "Invalid device! Updating f_ops\n" );
+      return -ENXIO;
+   }
+   if(IsDeviceDisconnect(pFilpData->mpDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
+   if(pFilpData->mpDev->mbUnload)
+   {
+      DBG( "Unload:%s\n", __FUNCTION__);
+      return -ENXIO;
+   }
+
+   if(pFilpData->mDeviceInvalid==1)
+   {
+      DBG( "Clsoing.." );
+      gobi_filp_close(pFilp,NULL);
+      return -ENXIO;
+   }
+   if(pFilpData->iIsClosing==1)
+   {
+       DBG( "Invalid device! Updating f_ops\n" );
+       return -ENXIO;
+
+   }
+   if(pFilpData->mpDev->iIsClosing==1)
+   {
+      DBG( "Device Clsoing.." );
+      return -ENXIO;
+   }
+   pFilpData->pIOCTLTask = current;
+   switch (cmd)
+   {
+      case IOCTL_QMI_GET_SERVICE_FILE:
+         DBG( "Setting up QMI for service %lu\n", arg );
+         if ((u8)arg == 0)
+         {
+            DBG( "Cannot use QMICTL from userspace\n" );
+            return -EINVAL;
+         }
+
+         // Connection is already setup
+         if (pFilpData->mClientID !=  0xffff)
+         {
+            DBG( "Close the current connection before opening a new one\n" );
+            return -EBADR;
+         }
+
+         pFilpData->iSemID = __LINE__;
+         result = GetClientID( pFilpData->mpDev, (u8)arg ,&(pFilpData->mReadSem));
+         pFilpData->iSemID = -__LINE__;
+         mb();
+         if(IsDeviceDisconnect(pFilpData->mpDev))
+         {
+            DBG( "Device Disconnected!\n" );
+            return -ENXIO;
+         }
+         if (result < 0)
+         {
+            pFilpData->mDeviceInvalid = 1;
+            return result;
+         }
+         if(pFilpData->iIsClosing ==1)
+         {
+            return -ENXIO;
+         }
+         pFilpData->mClientID = (u16)result;
+         pFilpData->iReadSyncResult = 0;
+         mb();
+         return 0;
+         break;
+
+
+      case IOCTL_QMI_GET_DEVICE_VIDPID:
+         if (arg == 0)
+         {
+            DBG( "Bad VIDPID buffer\n" );
+            return -EINVAL;
+         }
+
+         // Extra verification
+         if (pFilpData->mpDev->mpNetDev == 0)
+         {
+            DBG( "Bad mpNetDev\n" );
+            return -ENOMEM;
+         }
+         if (pFilpData->mpDev->mpNetDev->udev == 0)
+         {
+            DBG( "Bad udev\n" );
+            return -ENOMEM;
+         }
+
+         devVIDPID = ((le16_to_cpu( pFilpData->mpDev->mpNetDev->udev->descriptor.idVendor ) << 16)
+                     + le16_to_cpu( pFilpData->mpDev->mpNetDev->udev->descriptor.idProduct ) );
+
+         result = copy_to_user( (unsigned int *)arg, &devVIDPID, 4 );
+         if (result != 0)
+         {
+            DBG( "Copy to userspace failure %d\n", result );
+         }
+
+         return result;
+
+         break;
+
+      case IOCTL_QMI_GET_DEVICE_MEID:
+         if (arg == 0)
+         {
+            DBG( "Bad MEID buffer\n" );
+            return -EINVAL;
+         }
+         result = copy_to_user( (unsigned int *)arg, &pFilpData->mpDev->mMEID[0], MAX_DEVICE_MEID_SIZE);
+         if (result != 0)
+         {
+            DBG( "Copy to userspace failure %d\n", result );
+         }
+
+         return result;
+
+         break;
+
+      case IOCTL_QMI_GET_SVC_VERSION_INFO:
+         if (arg == 0)
+         {
+            DBG( "Bad Svc Info buffer\n" );
+            return -EINVAL;
+         }
+         result = copy_to_user( (unsigned int *)arg, &pFilpData->mpDev->svcVersion[0], MAX_SVC_VERSION_SIZE);
+         if (result != 0)
+         {
+            DBG( "Copy to userspace failure %d\n", result );
+         }
+
+         return result;
+
+      case IOCTL_QMI_ADD_MAPPING:
+         {
+             sGobiUSBNet * pDev = pFilpData->mpDev;
+             sMapping *pmap = (sMapping*) arg;
+
+             DBG( "add mapping\n" );
+             if (arg == 0)
+             {
+                DBG( "null pointer\n" );
+                return -EINVAL;
+             }
+             DBG( "dscp, qos_id: 0x%x, 0x%x\n", pmap->dscp, pmap->qosId );
+
+             if ((MAX_DSCP_ID < pmap->dscp) && (UNIQUE_DSCP_ID != pmap->dscp))
+             {
+                 DBG( "Invalid DSCP value\n" );
+                 return -EINVAL;
+             }
+
+             //check for existing map
+             for (j=0;j<MAX_MAP;j++)
+             {
+                 if (pDev->maps.table[j].dscp == pmap->dscp)
+                 {
+                     DBG("mapping already exists at slot #%d\n", j);
+                     return -EINVAL;
+                 }
+             }
+
+             //check if this is a request to redirect all IP traffic to default bearer
+             if (UNIQUE_DSCP_ID == pmap->dscp)
+             {
+                 DBG("set slot (%d) to indicate IP packet redirection is needed\n", MAX_MAP-1);
+                 pDev->maps.table[MAX_MAP-1].dscp = UNIQUE_DSCP_ID;
+                 pDev->maps.table[MAX_MAP-1].qosId = pmap->qosId;
+                 pDev->maps.count++; 
+                 return 0;
+             }
+
+             //find free slot to hold new mapping
+             for(j=0;j<MAX_MAP-1;j++)
+             {
+                 if (pDev->maps.table[j].dscp == 0xff)
+                 {
+                     pDev->maps.table[j].dscp = pmap->dscp;
+                     pDev->maps.table[j].qosId = pmap->qosId;
+                     pDev->maps.count++; 
+                     return 0;
+                 }
+             }
+
+             DBG("no free mapping slot\n");
+             return -ENOMEM;
+         }
+         break;
+
+      case IOCTL_QMI_EDIT_MAPPING:
+         {
+             sGobiUSBNet * pDev = pFilpData->mpDev;
+
+             sMapping *pmap = (sMapping*) arg;
+             DBG( "edit mapping\n" );
+             if (arg == 0)
+             {
+                DBG( "null pointer\n" );
+                return -EINVAL;
+             }
+             DBG( "dscp, qos_id: 0x%x, 0x%x\n", pmap->dscp, pmap->qosId );
+
+             if ((MAX_DSCP_ID < pmap->dscp) && (UNIQUE_DSCP_ID != pmap->dscp))
+             {
+                 DBG( "Invalid DSCP value\n" );
+                 return -EINVAL;
+             }
+
+             for(j=0;j<MAX_MAP;j++)
+             {
+                 if (pDev->maps.table[j].dscp == pmap->dscp)
+                 {
+                     pDev->maps.table[j].qosId = pmap->qosId;
+                     return 0;
+                 }
+             }
+
+             DBG("no matching tos for edit mapping\n");
+             return -ENOMEM;
+         }
+         break;
+
+      case IOCTL_QMI_READ_MAPPING:
+         {
+             sGobiUSBNet * pDev = pFilpData->mpDev;
+
+             sMapping *pmap = (sMapping*) arg;
+             DBG( "read mapping\n" );
+             if (arg == 0)
+             {
+                DBG( "null pointer\n" );
+                return -EINVAL;
+             }
+
+             if ((MAX_DSCP_ID < pmap->dscp) && (UNIQUE_DSCP_ID != pmap->dscp))
+             {
+                 DBG( "Invalid DSCP value\n" );
+                 return -EINVAL;
+             }
+
+             for(j=0;j<MAX_MAP;j++)
+             {
+                 if (pDev->maps.table[j].dscp == pmap->dscp)
+                 {
+                     pmap->qosId = pDev->maps.table[j].qosId;
+                     DBG( "dscp, qos_id: 0x%x, 0x%x\n", pmap->dscp, pmap->qosId );
+
+                     result = copy_to_user( (unsigned int *)arg, &pDev->maps.table[j], sizeof(sMapping));
+                     if (result != 0)
+                     {
+                         DBG( "Copy to userspace failure %d\n", result );
+                     }
+
+                     return result;
+                 }
+             }
+
+             DBG("no matching tos for read mapping\n");
+             return -ENOMEM;
+         }
+         break;
+
+      case IOCTL_QMI_DEL_MAPPING:
+         {
+             sGobiUSBNet * pDev = pFilpData->mpDev;
+             sMapping *pmap = (sMapping*) arg;
+             DBG( "Delete mapping\n" );
+             if (arg == 0)
+             {
+                 DBG( "null pointer\n" );
+                 return -EINVAL;
+             }
+             DBG( "DSCP 0x%x\n", pmap->dscp );
+
+             if ((MAX_DSCP_ID < pmap->dscp) && (UNIQUE_DSCP_ID != pmap->dscp))
+             {
+                 DBG( "Invalid DSCP value\n" );
+                 return -EINVAL;
+             }
+
+             for(j=0;j<MAX_MAP;j++)
+             {
+                 if (pDev->maps.table[j].dscp == pmap->dscp)
+                 {
+                     // delete mapping table entry
+                     memset(&pDev->maps.table[j], 0xff, sizeof(pDev->maps.table[0]));
+                     if (pDev->maps.count) pDev->maps.count--; 
+                     return 0;
+                 }
+             }
+
+             DBG("no matching mapping slot\n");
+             return -ENOMEM;
+         }
+         break;
+
+      case IOCTL_QMI_CLR_MAPPING:
+         {
+             sGobiUSBNet * pDev = pFilpData->mpDev;
+             DBG( "Clear mapping\n" );
+             memset(pDev->maps.table, 0xff, sizeof(pDev->maps.table));
+             pDev->maps.count = 0; 
+             return 0;
+         }
+         break;
+
+#ifdef QOS_SIMULATE
+      case IOCTL_QMI_QOS_SIMULATE:
+         {
+             int result;
+             u8 supported = (u8)-1;
+             DBG( "simulate indication\n" );
+             u8 qos_support_ind[] = {
+                 0x01,0x15,0x00,0x80,0x04,0xFF,0x04,0x00,0x00,
+                 0x27,0x00,0x09,0x00,0x01,0x01,0x00,0x01,0x10,0x02,0x00,0x01,0x80
+             };
+             u8 qos_flow_activate_ind[] = {
+                 0x01,0x15,0x00,0x80,0x04,0xFF,0x04,0x00,0x00,
+                 0x26,0x00,0x09,0x00,0x01,0x06,0x00,0xDD,0xCC,0xBB,0xAA,0x01,0x01
+             };
+             u8 qos_flow_suspend_ind[] = {
+                 0x01,0x15,0x00,0x80,0x04,0xFF,0x04,0x00,0x00,
+                 0x26,0x00,0x09,0x00,0x01,0x06,0x00,0xDD,0xCC,0xBB,0xAA,0x02,0x02
+             };
+             u8 qos_flow_gone_ind[] = {
+                 0x01,0x15,0x00,0x80,0x04,0xFF,0x04,0x00,0x00,
+                 0x26,0x00,0x09,0x00,0x01,0x06,0x00,0xDD,0xCC,0xBB,0xAA,0x03,0x03
+             };
+             result = QMIQOSEventResp( qos_support_ind,
+                     sizeof(qos_support_ind));
+             result = QMIQOSEventResp( qos_flow_activate_ind,
+                     sizeof(qos_flow_activate_ind));
+             result = QMIQOSEventResp( qos_flow_suspend_ind,
+                     sizeof(qos_flow_suspend_ind));
+             result = QMIQOSEventResp( qos_flow_gone_ind,
+                     sizeof(qos_flow_gone_ind));
+             return 0;
+         }
+         break;
+#endif
+
+      case IOCTL_QMI_GET_TX_Q_LEN:
+         {
+
+             sGobiUSBNet * pDev = pFilpData->mpDev;
+
+             if (arg == 0)
+             {
+                 DBG( "Bad Tx Queue buffer\n" );
+                 return -EINVAL;
+             }
+
+             // Extra verification
+             if (pFilpData->mpDev->mpNetDev == 0)
+             {
+                 DBG( "Bad mpNetDev\n" );
+                 return -ENOMEM;
+             }
+             if (pFilpData->mpDev->mpNetDev->udev == 0)
+             {
+                 DBG( "Bad udev\n" );
+                 return -ENOMEM;
+             }
+
+             result = copy_to_user( (unsigned int *)arg, &pDev->tx_qlen, sizeof(pDev->tx_qlen) );
+             if (result != 0)
+             {
+                 DBG( "Copy to userspace failure %d\n", result );
+             }
+
+             return result;
+         }
+
+         break;
+
+      case IOCTL_QMI_DUMP_MAPPING:
+         {
+             sGobiUSBNet * pDev = pFilpData->mpDev;
+
+             DBG( "dump mapping\n" );
+             if (arg == 0)
+             {
+                DBG( "null pointer\n" );
+                return -EINVAL;
+             }
+
+             result = copy_to_user( (unsigned int *)arg, &pDev->maps.table[0], sizeof(pDev->maps.table));
+             if (result != 0)
+             {
+                 DBG( "Copy to userspace failure %d\n", result );
+             }
+             return result;
+         }
+
+      case IOCTL_QMI_GET_USBNET_STATS:
+         {
+             sGobiUSBNet * pDev = pFilpData->mpDev;
+             struct net_device_stats * pStats = &(pDev->mpNetDev->net->stats);
+             sNetStats netStats;
+
+             if (arg == 0)
+             {
+                 DBG( "Bad usbnet statistic buffer\n" );
+                 return -EINVAL;
+             }
+
+             // Extra verification
+             if (pFilpData->mpDev->mpNetDev == 0)
+             {
+                 DBG( "Bad mpNetDev\n" );
+                 return -ENOMEM;
+             }
+
+             /* copy the value from struct net_device_stats to struct sNetStats */
+             netStats.rx_packets = pStats->rx_packets;
+             netStats.tx_packets = pStats->tx_packets;
+             netStats.rx_bytes = pStats->rx_bytes;
+             netStats.tx_bytes = pStats->tx_bytes;
+             netStats.rx_errors = pStats->rx_errors;
+             netStats.tx_errors = pStats->tx_errors;
+             netStats.rx_overflows = pStats->rx_fifo_errors;
+             netStats.tx_overflows = pStats->tx_fifo_errors;
+
+             result = copy_to_user( (unsigned int *)arg, &netStats, sizeof(sNetStats) );
+             if (result != 0)
+             {
+                 DBG( "Copy to userspace failure %d\n", result );
+             }
+
+             return result;
+         }
+
+         break;
+         case IOCTL_QMI_SET_DEVICE_MTU:
+         {
+             sGobiUSBNet *pDev = pFilpData->mpDev;
+             // struct usbnet * pNet = netdev_priv( pDev->mpNetDev->net );
+             int iArgp = (int)arg;
+             if (iArgp <= 0)
+             {
+                 DBG( "Bad MTU buffer\n" );
+                 return -EINVAL;
+             }
+             DBG( "new mtu :%d ,qcqmi:%d\n",iArgp,(int)pDev->mQMIDev.qcqmi );
+             pDev->mtu = iArgp;
+             usbnet_change_mtu(pDev->mpNetDev->net ,pDev->mtu);
+         }
+         return 0;
+         case IOCTL_QMI_GET_QMAP_SUPPORT:
+         {
+            sGobiUSBNet *pDev = pFilpData->mpDev;
+
+            if (arg == 0)
+            {
+               DBG( "Bad QMAP IOCTL buffer\n" );
+               return -EINVAL;
+            }
+            result = copy_to_user( (unsigned int *)arg, &pDev->nRmnet, sizeof(pDev->nRmnet));
+            if (result != 0)
+            {
+               DBG( "Copy to userspace failure %d\n", result );
+            }
+            DBG( "nRmnet:%d\n",(int)pDev->nRmnet);
+            return result;
+          }
+         case IOCTL_QMI_SET_IP_ADDRESS:
+            return map_mux_id_to_ipv4(pFilpData->mpDev, arg);
+         case IOCTL_QMI_SET_IPV6_ADDRESS:
+            return map_mux_id_to_ipv6(pFilpData->mpDev, arg);
+         case IOCTL_QMI_GET_IPALIAS_MODE:
+            {
+                sGobiUSBNet *pDev = pFilpData->mpDev;
+                result = -1;
+                if (arg == 0)
+                {
+                   DBG( "Bad GET IP ALIAS IOCTL buffer\n" );
+                   return -EINVAL;
+                }
+                if(pDev->iQMUXEnable)
+                {
+                    result = copy_to_user( (unsigned int *)arg, &pDev->iIPAlias, sizeof(pDev->iIPAlias));
+                    if (result != 0)
+                    {
+                       DBG( "Copy to userspace failure %d\n", result );
+                    }
+                    DBG( "iIPAlias:%d\n",(int)pDev->iIPAlias);
+                }
+                return result;
+            }
+      default:
+         return -EBADRQC;
    }
 }
 
@@ -2360,41 +3833,83 @@ RETURN VALUE:
    int - 0 for success
          Negative errno for failure
 ===========================================================================*/
-int UserspaceOpen( 
-   struct inode *         pInode, 
+int UserspaceOpen(
+   struct inode *         pInode,
    struct file *          pFilp )
 {
    sQMIFilpStorage * pFilpData;
-//   int i;
-   
+   sQMIDev * pQMIDev = NULL;
+   sGobiUSBNet * pDev = NULL;
+   static int count = 0;
+   //DBG( "\n" );
    // Optain device pointer from pInode
-   sQMIDev * pQMIDev = container_of( pInode->i_cdev,
+   if(signal_pending(current))
+   {
+      return -ERESTARTSYS;
+   }
+   pQMIDev = container_of( pInode->i_cdev,
                                      sQMIDev,
                                      mCdev );
-   sGobiUSBNet * pDev = container_of( pQMIDev,
+   pDev = container_of( pQMIDev,
                                     sGobiUSBNet,
-                                    mQMIDev );                                    
-
-   if (IsDeviceValid( pDev ) == false)
+                                    mQMIDev );
+   if(signal_pending(current))
    {
-      DBG( "Invalid device\n" );
+      return -ERESTARTSYS;
+   }
+   pFilp->private_data = NULL;
+
+   if (IsDeviceValid( pDev ) == false) 
+   {
+      printk( KERN_INFO "Invalid device\n" );
       return -ENXIO;
    }
-
-  
+   if(IsDeviceDisconnect(pDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
+   if(pDev->mbUnload)
+   {
+       printk( KERN_INFO "Unload:%s\n", __FUNCTION__);
+      return -ENXIO;
+   }
+   if(pDev->iIsClosing)
+   {
+     printk( KERN_INFO "Unload:%s\n", __FUNCTION__);
+      return -ENXIO;
+   }
    // Setup data in pFilp->private_data
-   pFilp->private_data = kmalloc( sizeof( sQMIFilpStorage ), GFP_KERNEL );
+   pFilp->private_data = kmalloc( sizeof( sQMIFilpStorage ), GOBI_GFP_KERNEL );
    if (pFilp->private_data == NULL)
    {
-      DBG( "Mem error\n" );
+      printk( KERN_INFO "Mem error\n" );
       return -ENOMEM;
    }
 
    pFilpData = (sQMIFilpStorage *)pFilp->private_data;
-   pFilpData->mClientID = (u16)-1;
+   pFilpData->mClientID =  0xffff;
+   pFilpData->mDeviceInvalid = 0;
    pFilpData->mpDev = pDev;
-   pFilpData->QMIDev = pQMIDev;
-   
+   pFilpData->iSemID = -1;
+   pFilpData->iIsClosing = 0;
+   pFilpData->iReadSyncResult = -1;
+   pFilpData->iInfNum = pDev->mpIntf->cur_altsetting->desc.bInterfaceNumber;
+   pFilpData->iCount = count++;
+   pFilpData->pOpenTask = current;
+   pFilpData->pReadTask = current;
+   pFilpData->pWriteTask = current;
+   pFilpData->pIOCTLTask = current;
+   sema_init(&pFilpData->mReadSem , SEMI_INIT_DEFAULT_VALUE );
+   mb();
+   if(file_inode(pFilp)!=NULL)
+   {
+      DBG( "%d CID:0x%x, (%d)i_ino:%lu icount:%d\n",__LINE__ ,pFilpData->mClientID,pFilpData->iInfNum,file_inode(pFilp)->i_ino,pFilpData->iCount);
+   }
+   else
+   {
+      DBG( "%d CID:0x%x, (%d)i_ino:NULL icount:%d\n",__LINE__ ,pFilpData->mClientID,pFilpData->iInfNum,pFilpData->iCount);  
+   }
    return 0;
 }
 
@@ -2415,111 +3930,27 @@ RETURN VALUE:
    int - 0 for success
          Negative errno for failure
 ===========================================================================*/
-int UserspaceIOCTL( 
-   struct inode *    pUnusedInode, 
+int UserspaceIOCTL(
+   struct inode *    pUnusedInode,
    struct file *     pFilp,
-   unsigned int      cmd, 
-   unsigned long     arg )
+   unsigned int      cmd,
+   unsigned long     arg ) 
 {
-   int result;
-   u32 devVIDPID;
+   int ret = 0;
+   unsigned long  i_ino = -1;
+   if(signal_pending(current))
+   {
+      return -ERESTARTSYS;
+   }
+   // call the internal wrapper function
    
-   sQMIFilpStorage * pFilpData = (sQMIFilpStorage *)pFilp->private_data;
-
-   if (pFilpData == NULL)
-   {
-      DBG( "Bad file data\n" );
-      return -EBADF;
-   }
-   
-   if (IsDeviceValid( pFilpData->mpDev ) == false)
-   {
-      DBG( "Invalid device! Updating f_ops\n" );
-      pFilp->f_op = pFilp->f_path.dentry->d_inode->i_fop;
-      return -ENXIO;
-   }
-
-   switch (cmd)
-   {
-      case IOCTL_QMI_GET_SERVICE_FILE:
-      
-         DBG( "Setting up QMI for service %lu\n", arg );
-         if ((u8)arg == 0)
-         {
-            DBG( "Cannot use QMICTL from userspace\n" );
-            return -EINVAL;
-         }
-
-         // Connection is already setup
-         if (pFilpData->mClientID != (u16)-1)
-         {
-            DBG( "Close the current connection before opening a new one\n" );
-            return -EBADR;
-         }
-         
-         result = GetClientID( pFilpData->mpDev, (u8)arg, pFilpData->QMIDev );
-         if (result < 0)
-         {
-            return result;
-         }
-         pFilpData->mClientID = result;
-
-         return 0;
-         break;
-
-
-      case IOCTL_QMI_GET_DEVICE_VIDPID:
-         if (arg == 0)
-         {
-            DBG( "Bad VIDPID buffer\n" );
-            return -EINVAL;
-         }
-         
-         // Extra verification
-         if (pFilpData->mpDev->mpNetDev == 0)
-         {
-            DBG( "Bad mpNetDev\n" );
-            return -ENOMEM;
-         }
-         if (pFilpData->mpDev->mpNetDev->udev == 0)
-         {
-            DBG( "Bad udev\n" );
-            return -ENOMEM;
-         }
-
-         devVIDPID = ((le16_to_cpu( pFilpData->mpDev->mpNetDev->udev->descriptor.idVendor ) << 16)
-                     + le16_to_cpu( pFilpData->mpDev->mpNetDev->udev->descriptor.idProduct ) );
-
-         result = copy_to_user( (unsigned int *)arg, &devVIDPID, 4 );
-         if (result != 0)
-         {
-            DBG( "Copy to userspace failure %d\n", result );
-         }
-
-         return result;
-                 
-         break;
-
-      case IOCTL_QMI_GET_DEVICE_MEID:
-         if (arg == 0)
-         {
-            DBG( "Bad MEID buffer\n" );
-            return -EINVAL;
-         }
-         
-         result = copy_to_user( (unsigned int *)arg, &pFilpData->mpDev->mMEID[0], 14 );
-         if (result != 0)
-         {
-            DBG( "Copy to userspace failure %d\n", result );
-         }
-
-         return result;
-                 
-         break;
-         
-      default:
-         return -EBADRQC;       
-   }
+   if(file_inode(pFilp)!=NULL)
+      i_ino = file_inode(pFilp)->i_ino;
+   DBG("%d i_ino:%lu",__LINE__,i_ino);
+   ret = (int)UserspaceunlockedIOCTL( pFilp, cmd, arg );
+   if(file_inode(pFilp)!=NULL)
+   DBG("%d i_ino:%lu ret:%d",__LINE__,i_ino,ret);
+   return ret;
 }
 
 /*===========================================================================
@@ -2542,77 +3973,298 @@ int UserspaceClose(
    struct file *       pFilp,
    fl_owner_t          unusedFileTable )
 {
-   sQMIFilpStorage * pFilpData = (sQMIFilpStorage *)pFilp->private_data;
-   struct task_struct * pEachTask;
-   struct fdtable * pFDT;
-   int count = 0;
-   int used = 0;
-   unsigned long flags;
-
-   if (pFilpData == NULL)
+   sQMIFilpStorage * pFilpData = NULL;
+   u16 u16ClientID = 0xFFFF;
+   unsigned long i_ino = -1;
+   int iInfNum, iCount;
+   struct task_struct *pOpenTask = NULL;
+   struct task_struct *pReadTask = NULL;
+   struct task_struct *pWriteTask = NULL;
+   struct task_struct *pIOCTLTask = NULL;
+   pid_t pid = -1;
+   int iTimeout = 0;
+   int iFile_count = 0;
+   long refcnt = 0;
+   mb();
+   if(pFilp ==NULL)
    {
-      DBG( "bad file data\n" );
+      printk( KERN_INFO "bad file data\n" );
       return -EBADF;
    }
-
-   // Fallthough.  If f_count == 1 no need to do more checks
-   if (atomic_long_read( &pFilp->f_count ) != 1)
+   refcnt = atomic_long_read(&pFilp->f_count);
+   if (refcnt > 1)
    {
-      rcu_read_lock();
-      for_each_process( pEachTask )
+      if(current->exit_signal!=SIGCHLD)
       {
-         if (pEachTask == NULL || pEachTask->files == NULL)
-         {
-            // Some tasks may not have files (e.g. Xsession)
-            continue;
-         }
-         spin_lock_irqsave( &pEachTask->files->file_lock, flags );
-         pFDT = files_fdtable( pEachTask->files );
-         for (count = 0; count < pFDT->max_fds; count++)
-         {
-            // Before this function was called, this file was removed
-            // from our task's file table so if we find it in a file
-            // table then it is being used by another task
-            if (pFDT->fd[count] == pFilp)
-            {
-               used++;
-               break;
-            }
-         }
-         spin_unlock_irqrestore( &pEachTask->files->file_lock, flags );
+          if((IsOtherTaskUsingFilp(pFilp) ==1)&&
+                (IsOpenTaskIsCurrent(pFilp)||
+                 IsCurrentTaskExit()))
+          {
+             DBG( "f_count %ld - ignoring close\n", refcnt);
+             return -EBUSY;
+          }
       }
-      rcu_read_unlock();
-      
-      if (used > 0)
-      {
-         DBG( "not closing, as this FD is open by %d other process\n", used );
-         return 0;
-      }
+      DBG("f_count %ld - close %d %d\n", refcnt,IsOtherTaskUsingFilp(pFilp),IsOpenTaskIsCurrent(pFilp));
    }
-
+   pFilpData = (sQMIFilpStorage *)pFilp->private_data;
+   if (pFilpData == NULL)
+   {
+      printk( KERN_INFO "bad file data private \n" );
+      return -EBADF;
+   }
    if (IsDeviceValid( pFilpData->mpDev ) == false)
    {
-      DBG( "Invalid device! Updating f_ops\n" );
-      pFilp->f_op = pFilp->f_path.dentry->d_inode->i_fop;
-       kfree( pFilpData );
-      return -ENXIO;
+      printk( KERN_INFO "%s Invalid device! Updating f_ops\n",__FUNCTION__ );
+   }
+   wait_interrupt();
+   if(pFilpData->iIsClosing==1)
+   {
+      u16ClientID = pFilpData->mClientID;
+      iInfNum = pFilpData->iInfNum;
+      iCount = pFilpData->iCount;
+      iFile_count = file_count(pFilp);
+      pOpenTask = pFilpData->pOpenTask;
+      pReadTask = pFilpData->pReadTask;
+      pWriteTask = pFilpData->pWriteTask;
+      pIOCTLTask = pFilpData->pIOCTLTask;
+      if(file_inode(pFilp)!=NULL)
+      {
+         i_ino = file_inode(pFilp)->i_ino;
+      }
+      else
+      {
+         DBG("File Inode Null %d\n",__LINE__);
+         return 0;
+      }
+      if(pFilpData->pOpenTask!=NULL)
+      {
+         pid = pFilpData->pOpenTask->pid;
+      }
+      DBG( "%d CID:0x%x, (%d)i_ino:%lu, icount:%d pid:%d, iFile_count:%d\n",__LINE__ ,u16ClientID,iInfNum,i_ino,iCount,pid,iFile_count);
+      if(pWriteTask!=pOpenTask)
+      {
+         wakeup_target_process(pWriteTask);
+         wait_interrupt();
+      }
+      if(pReadTask!=pOpenTask)
+      {
+         wakeup_target_process(pReadTask);
+         wait_interrupt();
+      }
+      if(pIOCTLTask!=pOpenTask)
+      {
+         wakeup_target_process(pIOCTLTask);
+         wait_interrupt();
+      }
+      if(pOpenTask!=current)
+      {
+         wakeup_target_process(pOpenTask);
+         wait_interrupt();
+         do
+         {
+            wait_ms(100);
+            mb();
+            if(pFilp==NULL)
+            {
+               return 0;
+            }
+            if(pFilp->private_data ==NULL)
+            {
+               return 0;
+            }
+            if(iTimeout++>5)
+            {
+               DBG( "%d CID:0x%x, (%d)i_ino:%lu, icount:%d pid:%d timeout\n",__LINE__ ,u16ClientID,iInfNum,i_ino,iCount,pid);
+               break;
+            }
+            if(iFile_count!=file_count(pFilp))
+            {
+               DBG( "%d CID:0x%x, (%d)i_ino:%lu, icount:%d pid:%d count:%d/%d\n",__LINE__ ,u16ClientID,iInfNum,i_ino,iCount,pid,iFile_count,(int)file_count(pFilp));
+               break;
+            
+            }
+            else if(file_count(pFilp)==0)
+            {
+               DBG( "%d CID:0x%x, (%d)i_ino:%lu, icount:%d pid:%d count==0\n",__LINE__ ,u16ClientID,iInfNum,i_ino,iCount,pid);
+               break;
+            }
+            
+         }while(pFilpData!=NULL);
+         DBG( "%d CID:0x%x, (%d)i_ino:%lu, icount:%d pid:%d return\n",__LINE__ ,u16ClientID,iInfNum,i_ino,iCount,pid);
+      }
    }
    
-   DBG( "0x%04X\n", pFilpData->mClientID );
+   pFilpData->iIsClosing = 1;
+   pFilpData->mDeviceInvalid = 1;
+   mb();
+   u16ClientID = pFilpData->mClientID;
+   iInfNum = pFilpData->iInfNum;
+   iCount = pFilpData->iCount;
+   pOpenTask = pFilpData->pOpenTask;
+   pReadTask = pFilpData->pReadTask;
+   pWriteTask = pFilpData->pWriteTask;
+   pIOCTLTask = pFilpData->pIOCTLTask;
+   if(file_inode(pFilp)!=NULL)
+   {
+      i_ino = file_inode(pFilp)->i_ino;
+   }
+   else
+   {
+      DBG("File Inode Null %d\n",__LINE__);
+      return 0;
+   }
+   GobiSyncRcu();
+
+   DBG( "%d CID:0x%x, (%d)i_ino:%lu, icount:%d\n",__LINE__ ,u16ClientID,iInfNum,i_ino,iCount);
+   if( ((pFilpData->iSemID > 0) && (pFilpData->mClientID != 0xffff) ) ||
+       ((pFilpData->pOpenTask != pFilpData->pIOCTLTask )&&(pFilpData->iSemID > 0)) )
+   {
+      int iRetry = 0;
+      int iReturn = 0;
+      int iLockCount = 0;
+      if(pFilpData->mpDev->mbUnload)
+      {
+         iReturn = -EAGAIN;
+      }
+      
+      while(pFilpData->iSemID > 0)
+      {
+          GobiSyncRcu();
+          if((signal_pending(current))||(signal_pending(pOpenTask)))
+          {
+            DBG( "%d wait next\n",__LINE__ );
+            break;
+          }
+          if(LocalClientMemLockSpinIsLock(pFilpData->mpDev)!=0)
+          {
+             if(pFilpData->mpDev->mQMIDev.pTask!=NULL)
+             {
+                wakeup_target_process(pFilpData->mpDev->mQMIDev.pTask);
+                wait_interrupt();
+             }
+             if(iLockCount++ > 10)
+             {
+                DBG("locked!");
+                return -EAGAIN;
+             }
+             else
+             {
+                gobi_flush_work();
+                wait_ms(100);
+                continue;
+             }
+          }
+          iLockCount = 0;
+          mb();
+          if((pFilpData==NULL) || (pFilp==NULL))
+          {
+            iReturn = 0;
+            break;
+          }
+          barrier();
+          if(!down_trylock(&(pFilpData->mReadSem)))
+          {
+              DBG("NOT locked : %d",pFilpData->iSemID);
+              barrier();
+              up(&(pFilpData->mReadSem));
+              pFilpData->iSemID = -1;
+              mb();
+              break;
+          }
+          barrier();
+          up(&(pFilpData->mReadSem));
+          if((signal_pending(current))||(signal_pending(pOpenTask)))
+          {
+            DBG( "%d wait next\n",__LINE__ );
+            break;
+          }
+          if(pWriteTask!=NULL)
+          {
+              wakeup_target_process(pWriteTask);
+          }
+          if(pReadTask!=NULL)
+          {
+             wakeup_target_process(pReadTask);
+          }
+          wakeup_inode_process(pFilp,pOpenTask);
+          if((pFilpData==NULL) || (pFilp==NULL))
+          {
+             iReturn = 0;
+             DBG( "%d NULL\n",__LINE__ );
+             break;
+          }
+          if(iRetry++>10)
+          {
+              iReturn = -EAGAIN;
+              printk("Timeout!");
+              return iReturn;
+          }
+          wait_ms(500);
+      };
+      GobiSyncRcu();
+   } 
+
+   if(pFilpData->mpDev->mbUnload)
+   {
+      if(pOpenTask==current)
+      {
+         wait_interrupt();
+         kfree( pFilp->private_data );
+         pFilp->private_data = NULL;
+         GobiSyncRcu();
+         mb();
+      }
+      return 0;
+   }
+
+   if (pFilpData->mpDev->mbUnload > eStatUnloading)
+   {
+      if(pOpenTask==current)
+      {
+         wait_interrupt();
+         kfree( pFilp->private_data );
+         pFilp->private_data = NULL;
+         GobiSyncRcu();
+         mb();
+      }
+      return 0;
+   }
    
-   // Disable pFilpData so they can't keep sending read or write 
+   DBG( "CID 0x%04X\n", u16ClientID );
+
+   if (pFilpData->mClientID !=  0xffff) 
+   {
+     pFilpData->iSemID = __LINE__;
+     if ( (pFilpData->iReadSyncResult>=0) && 
+         (pFilpData->mpDev->mbUnload < eStatUnloading) &&
+         !IsDeviceDisconnect(pFilpData->mpDev))
+     {
+          DBG( "Release CID 0x%04X\n", u16ClientID );
+          ReleaseClientID( pFilpData->mpDev,
+                      pFilpData->mClientID);
+     }
+     else
+     {
+         unsigned long flags;
+         flags = LocalClientMemLockSpinLockIRQSave( pFilpData->mpDev , __LINE__);
+         RemoveAndPopNotifyList(pFilpData->mpDev,
+                      pFilpData->mClientID,0,eClearAndReleaseCID);
+         LocalClientMemUnLockSpinLockIRQRestore ( pFilpData->mpDev ,flags,__LINE__);
+         
+     }
+     pFilpData->iSemID = -__LINE__;
+     mb();
+     pFilpData->mClientID =  0xffff;
+   }
+   wait_interrupt();
+   kfree( pFilp->private_data );
+
+   // Disable pFilpData so they can't keep sending read or write
    //    should this function hang
    // Note: memory pointer is still saved in pFilpData to be deleted later
    pFilp->private_data = NULL;
-
-   if (pFilpData->mClientID != (u16)-1)
-   {
-      ReleaseClientID( pFilpData->mpDev,
-                       pFilpData->mClientID,
-                       pFilpData->QMIDev);
-   }
-      
-   kfree( pFilpData );
+   GobiSyncRcu();
+   mb();
    return 0;
 }
 
@@ -2633,48 +4285,146 @@ RETURN VALUE:
    ssize_t - Number of bytes read for success
              Negative errno for failure
 ===========================================================================*/
-ssize_t UserspaceRead( 
+ssize_t UserspaceRead(
    struct file *          pFilp,
-   char __user *          pBuf, 
+   char __user *          pBuf,
    size_t                 size,
    loff_t *               pUnusedFpos )
 {
-   int result;
+   int result = -1;
    void * pReadData = NULL;
-   void * pSmallReadData;
-   sQMIFilpStorage * pFilpData = (sQMIFilpStorage *)pFilp->private_data;
-
+   void * pSmallReadData = NULL;
+   sQMIFilpStorage * pFilpData = NULL;
+   int iCount = -1;
+   //DBG("\n");
+   if(pFilp==NULL)
+   {
+       return -EBADF;
+   }
+   pFilpData = (sQMIFilpStorage *)pFilp->private_data;
    if (pFilpData == NULL)
    {
       DBG( "Bad file data\n" );
       return -EBADF;
    }
 
+   if(signal_pending(current))
+   {
+      return -ERESTARTSYS;
+   }
+
    if (IsDeviceValid( pFilpData->mpDev ) == false)
    {
       DBG( "Invalid device! Updating f_ops\n" );
-      pFilp->f_op = pFilp->f_path.dentry->d_inode->i_fop;
+      return -ENXIO;
+   }
+   if(IsDeviceDisconnect(pFilpData->mpDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
+   if(pFilpData->mpDev->mbUnload)
+   {
+      DBG( "Unload:%s\n", __FUNCTION__);
+      return -ENXIO;
+   }
+
+   if(pFilpData->mDeviceInvalid)
+   {
+      DBG( "mDeviceInvalid\n");
       return -ENXIO;
    }
    
-   if (pFilpData->mClientID == (u16)-1)
+   if (pFilpData->mClientID ==  0xffff)
    {
       DBG( "Client ID must be set before reading 0x%04X\n",
            pFilpData->mClientID );
       return -EBADR;
    }
+   if(pFilpData->iIsClosing==1)
+   {
+      DBG( "filep Clsoing.." );
+      return -ENXIO;
+   }
    
+   if(pFilpData->mpDev->iIsClosing==1)
+   {
+      DBG( "Device Clsoing.." );
+      return -ENXIO;
+   }
+   iCount = pFilpData->iCount;
+   pFilpData->pReadTask = current;
+
+   pFilpData->iSemID = __LINE__;
    // Perform synchronous read
    result = ReadSync( pFilpData->mpDev,
                       &pReadData,
                       pFilpData->mClientID,
                       0,
-                      pFilpData->QMIDev);
+                      &(pFilpData->iSemID),&(pFilpData->mReadSem),&(pFilpData->iIsClosing));
+   if(pFilp==NULL)
+   {
+      DBG("%s pFilp NULL\n",__FUNCTION__);
+      return -ENXIO;
+   }
+   if(pFilpData==NULL)
+   {
+      return -ENXIO;
+   }
+   pFilpData->iSemID = -__LINE__;
+   mb();
+   GobiSyncRcu();
+   if(result<0)
+   {
+      if(file_inode(pFilp)!=NULL)
+      {
+      DBG("Read Error!CID:0x%04x, (%d)i_ino:%lu iCount:%d\n",pFilpData->mClientID,pFilpData->iInfNum, file_inode(pFilp)->i_ino,iCount);
+      }
+      else
+      {
+         DBG("Read Error!CID:0x%04x, (%d)i_ino:NULL iCount:%d\n",pFilpData->mClientID,pFilpData->iInfNum,iCount);
+         DBG("File Inode Null %d\n",__LINE__);
+         return -ENXIO;
+      }
+   }
+   else
+   {
+      PrintHex(pReadData,result);
+   }
+   if(pFilp==NULL)
+   {
+      DBG("%s pFilp NULL\n",__FUNCTION__);
+      return -ENXIO;
+   }
+   if(pFilpData->mpDev==NULL)
+   {
+      DBG("%s pFilp NULL\n",__FUNCTION__);
+      return -ENXIO;
+   }
+   if(IsDeviceDisconnect(pFilpData->mpDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
+   if((pFilpData->mpDev->mbUnload)||(pFilpData->iIsClosing))
+   {
+      return -ENXIO;
+   }
    if (result <= 0)
    {
+      #ifdef CONFIG_PM
+      if(bIsSuspend(pFilpData->mpDev))
+      {
+         DBG("SUSPEND\n");
+      }
+      #endif
+      if(result == -EINTR)
+      {
+         DBG("RETRY\n");
+      }
       return result;
    }
-   
+
    // Discard QMUX header
    result -= QMUXHeaderSize();
    pSmallReadData = pReadData + QMUXHeaderSize();
@@ -2682,19 +4432,23 @@ ssize_t UserspaceRead(
    if (result > size)
    {
       DBG( "Read data is too large for amount user has requested\n" );
+      if(pReadData)
       kfree( pReadData );
       return -EOVERFLOW;
    }
+
+   DBG(  "pBuf = 0x%p pSmallReadData = 0x%p, result = %d",
+         pBuf, pSmallReadData, result );
 
    if (copy_to_user( pBuf, pSmallReadData, result ) != 0)
    {
       DBG( "Error copying read data to user\n" );
       result = -EFAULT;
    }
-   
+   pSmallReadData = NULL;
    // Reader is responsible for freeing read buffer
    kfree( pReadData );
-   
+
    return result;
 }
 
@@ -2716,8 +4470,8 @@ RETURN VALUE:
              Negative errno for failure
 ===========================================================================*/
 ssize_t UserspaceWrite(
-   struct file *        pFilp, 
-   const char __user *  pBuf, 
+   struct file *        pFilp,
+   const char __user *  pBuf,
    size_t               size,
    loff_t *             pUnusedFpos )
 {
@@ -2730,23 +4484,54 @@ ssize_t UserspaceWrite(
       DBG( "Bad file data\n" );
       return -EBADF;
    }
-
+   if(signal_pending(current))
+   {
+      return -ERESTARTSYS;
+   }
+   pFilpData->pWriteTask = current;
+   
    if (IsDeviceValid( pFilpData->mpDev ) == false)
    {
       DBG( "Invalid device! Updating f_ops\n" );
-      pFilp->f_op = pFilp->f_path.dentry->d_inode->i_fop;
+      return -ENXIO;
+   }
+   if(IsDeviceDisconnect(pFilpData->mpDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
+   if(pFilpData->mpDev->mbUnload)
+   {
+      DBG( "Unload:%s\n", __FUNCTION__);
       return -ENXIO;
    }
 
-   if (pFilpData->mClientID == (u16)-1)
+   if(pFilpData->mDeviceInvalid)
+   {
+      DBG( "mDeviceInvalid\n");
+      gobi_filp_close(pFilp,NULL);
+      return -ENXIO;
+   }
+
+   if (pFilpData->mClientID ==  0xffff)
    {
       DBG( "Client ID must be set before writing 0x%04X\n",
            pFilpData->mClientID );
       return -EBADR;
    }
-   
+   if(pFilpData->iIsClosing==1)
+   {
+      DBG( "Filep Clsoing.." );
+      return -ENXIO;
+   }
+   if(pFilpData->mpDev->iIsClosing==1)
+   {
+      DBG( "Device Clsoing.." );
+      return -ENXIO;
+   }
+
    // Copy data from user to kernel space
-   pWriteBuffer = kmalloc( size + QMUXHeaderSize(), GFP_KERNEL );
+   pWriteBuffer = kmalloc( size + QMUXHeaderSize(), GOBI_GFP_KERNEL );
    if (pWriteBuffer == NULL)
    {
       return -ENOMEM;
@@ -2760,13 +4545,17 @@ ssize_t UserspaceWrite(
    }
 
    status = WriteSync( pFilpData->mpDev,
-                       pWriteBuffer, 
+                       pWriteBuffer,
                        size + QMUXHeaderSize(),
-                       pFilpData->mClientID,
-                       pFilpData->QMIDev);
+                       pFilpData->mClientID );
 
    kfree( pWriteBuffer );
-   
+   if(pFilpData!=NULL)
+   if(IsDeviceDisconnect(pFilpData->mpDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
    // On success, return requested size, not full QMI reqest size
    if (status == size + QMUXHeaderSize())
    {
@@ -2774,6 +4563,12 @@ ssize_t UserspaceWrite(
    }
    else
    {
+      pFilpData->mDeviceInvalid = 1;
+      if(status<0)
+      {
+         pFilpData->iIsClosing=1;
+         return -ENXIO;
+      }
       return status;
    }
 }
@@ -2791,7 +4586,7 @@ PARAMETERS
                               is ready
 
 RETURN VALUE:
-   unsigned int - bitmask of what operations can be done imediatly
+   unsigned int - bitmask of what operations can be done immediately
 ===========================================================================*/
 unsigned int UserspacePoll(
    struct file *                  pFilp,
@@ -2802,7 +4597,7 @@ unsigned int UserspacePoll(
    unsigned long flags;
 
    // Always ready to write
-   unsigned long status = POLLOUT | POLLWRNORM;
+   unsigned int status = POLLOUT | POLLWRNORM;
 
    if (pFilpData == NULL)
    {
@@ -2813,39 +4608,53 @@ unsigned int UserspacePoll(
    if (IsDeviceValid( pFilpData->mpDev ) == false)
    {
       DBG( "Invalid device! Updating f_ops\n" );
-      pFilp->f_op = pFilp->f_path.dentry->d_inode->i_fop;
       return POLLERR;
    }
 
-  if(pFilpData->mpDev->mbderegisterQMI)
-  {
-	  DBG( "deregister device\n" );
-	   return POLLERR;
-  }
-
-   if (pFilpData->mClientID == (u16)-1)
+   if (pFilpData->mClientID ==  0xffff)
    {
       DBG( "Client ID must be set before polling 0x%04X\n",
            pFilpData->mClientID );
       return POLLERR;
    }
-
+   if(IsDeviceDisconnect(pFilpData->mpDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
    // Critical section
-   spin_lock_irqsave( &pFilpData->QMIDev->mClientMemLock, flags );
+   flags = LocalClientMemLockSpinLockIRQSave( pFilpData->mpDev , __LINE__);
 
    // Get this client's memory location
    pClientMem = FindClientMem( pFilpData->mpDev, 
-                               pFilpData->mClientID, pFilpData->QMIDev );
+                              pFilpData->mClientID );
    if (pClientMem == NULL)
    {
       DBG( "Could not find this client's memory 0x%04X\n",
            pFilpData->mClientID );
 
-      spin_unlock_irqrestore( &pFilpData->QMIDev->mClientMemLock, 
-                              flags );
+      LocalClientMemUnLockSpinLockIRQRestore ( pFilpData->mpDev ,flags,__LINE__);
       return POLLERR;
    }
-   
+   if (ClientTransactionIDExist(pFilpData->mpDev,
+                           pClientMem->mClientID,
+                           0)==0)
+   {
+      if (AddToNotifyList( pFilpData->mpDev,
+                           pClientMem->mClientID,
+                           0,
+                           NULL,
+                           NULL ) == false)
+      {
+         LocalClientMemUnLockSpinLockIRQRestore ( pFilpData->mpDev ,flags,__LINE__);
+         return POLLERR;
+      }
+   }
+   else
+   {
+       DBG("SKIP AddToNotifyList\n");
+   }
+
    poll_wait( pFilp, &pClientMem->mWaitQueue, pPollTable );
 
    if (pClientMem->mpList != NULL)
@@ -2854,15 +4663,410 @@ unsigned int UserspacePoll(
    }
 
    // End critical section
-   spin_unlock_irqrestore( &pFilpData->QMIDev->mClientMemLock, flags );
+   LocalClientMemUnLockSpinLockIRQRestore ( pFilpData->mpDev ,flags,__LINE__);
 
    // Always ready to write 
    return (status | POLLOUT | POLLWRNORM);
 }
 
+void gobi_try_wake_up_process(struct task_struct *pTask)
+{
+   int count = 0;
+   if(pTask==NULL)
+      return ;
+   if(pTask==current)
+      return ;
+   if(wait_preempt()==0)
+      return ;
+   #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
+   while(raw_spin_is_locked(&pTask->pi_lock))
+   #endif
+   {
+      if(count++>10)
+      {
+         DBG( "task Locked %d\n",__LINE__ );
+         return ;
+      }
+      msleep_interruptible(100);
+      mb();
+      if(pTask==NULL)
+            return;
+      if(signal_pending(pTask))
+      return ;
+   }
+   DBG( "%d pid:%d\n",__LINE__,pTask->pid );
+   wake_up_process(pTask);
+}
+
+int wakeup_inode_process(struct file *pFilp,struct task_struct * pTask)
+{
+   struct task_struct *pEachTask=NULL;
+   #if _SIG_LOCK_
+   struct sighand_struct *sighand;
+   #endif
+   unsigned long i_no =-1;
+   int iFound =0;
+   struct list_head *list;
+   mb();
+   if(pFilp==NULL)
+      return 0;
+   if(file_inode(pFilp)!=NULL)
+   {
+      i_no = file_inode(pFilp)->i_ino;
+   }
+   else
+   {
+      DBG("File Inode Null %d\n",__LINE__);
+      return 0;
+   }
+   DBG( "%d i_ino:%lu\n",__LINE__ ,i_no);
+   if(signal_pending(pTask))
+   {
+      DBG("signal_pending %d\n",__LINE__);
+      return 0;
+   }
+   if(pTask)
+   {
+         #if _SIG_LOCK_
+         if(lockdep_tasklist_lock_is_held())
+         {
+            DBG( "lockdep_tasklist_lock_is_held %d\n",__LINE__ );
+         }
+         sighand = rcu_dereference_check(pTask->sighand,
+         lockdep_tasklist_lock_is_held());
+         if(sighand)
+         spin_lock_irq(&sighand->siglock);
+         else
+         {
+            DBG( "spin_lock %d\n",__LINE__ );
+            return 0;
+         }
+         #endif
+         if(pTask->state==TASK_STOPPED)
+         {
+            if (unlikely(pTask->signal->notify_count < 0))
+            {
+               int count = 0;
+               if(pTask!=current)
+               {
+                  gobi_try_wake_up_process(pTask);
+               }
+               list_for_each(list, &pTask->children)
+               {
+                  struct task_struct *task;
+                  task = list_entry(list, struct task_struct, sibling);
+                  if((task!=NULL)&&(task!=current))
+                  {
+                     gobi_try_wake_up_process(task);
+                  }
+               }
+               count++;
+               do{
+                  wait_ms(100);
+                  mb();
+                  if(count++>10)
+                     break;
+               }while(file_count(pFilp)>0);
+            }
+         }
+         else
+         {
+            DBG( "not wakeup %d\n",__LINE__ );
+         }
+         #if _SIG_LOCK_
+         if(sighand)
+         spin_unlock_irq(&sighand->siglock);
+         #endif
+         return 0;
+      
+   }
+   
+   if(pEachTask!=NULL)
+   {
+      int count =0;
+      if(pEachTask!=current)
+      gobi_try_wake_up_process(pEachTask);
+      do{
+         wait_ms(100);
+         mb();
+         if(count++>10)
+            break;
+      }while(file_count(pFilp)>0);
+   }
+
+   if(iFound==1)
+   {
+      DBG( "%d i_ino:%lu\n",__LINE__ ,i_no);
+      return 0;
+   }
+   barrier();
+   for_each_process( pEachTask )
+   {
+      int count = 0;
+      struct fdtable * pFDT;
+      if (pEachTask == NULL || pEachTask->files == NULL)
+      {
+         // Some tasks may not have files (e.g. Xsession)
+            continue;
+      }
+      pFDT = files_fdtable( pEachTask->files );
+      for (count = 0; count < pFDT->max_fds; count++)
+      {
+         if (pFDT->fd[count] == pFilp)
+         {
+            iFound = 1;
+            #if _SIG_LOCK_
+            if(lockdep_tasklist_lock_is_held())
+            {
+              DBG( "lockdep_tasklist_lock_is_held %d\n",__LINE__ );
+            }
+            sighand = rcu_dereference_check(pEachTask->sighand,
+            lockdep_tasklist_lock_is_held());
+            if(sighand)
+            spin_lock_irq(&sighand->siglock);
+            else
+            {
+              return 0;
+            }
+            #endif
+            if(pEachTask->state==TASK_STOPPED)//(pEachTask->state != TASK_STOPPED)
+            {
+              if (unlikely(pEachTask->signal->notify_count < 0))
+              {
+                 int count =0;
+                 if(pEachTask!=current)
+                 gobi_try_wake_up_process(pEachTask);
+                 list_for_each(list, &pEachTask->children)
+                 {
+                    struct task_struct *task;
+                    task = list_entry(list, struct task_struct, sibling);
+                    if((task!=NULL)&&(task!=current))
+                    {
+                       gobi_try_wake_up_process(task);
+                    }
+                 }
+                 do{
+                    wait_ms(100);
+                    mb();
+                    if(count++>10)
+                       break;
+                 }while(file_count(pFilp)>0);
+                 mb();
+              }
+            }
+            else
+            {
+              DBG( "not wakeup %d\n",__LINE__ );
+            }
+            #if _SIG_LOCK_
+            if(sighand)
+            spin_unlock_irq(&sighand->siglock);
+            #endif           
+            count = pFDT->max_fds;
+         }
+      }
+   }
+   return 0;
+}
+
+/*===========================================================================
+METHOD:
+   UserSpaceLock (Public Method)
+
+DESCRIPTION:
+   Used to determine if read/write operations are possible without blocking
+
+PARAMETERS
+   pFilp      [ I ] - The file to apply the lock to
+   cmd        [ I ] - type of locking operation (F_SETLK, F_GETLK, etc.)
+   fl         [I/O] - The lock to be applied
+
+RETURN VALUE:
+   unsigned int - bitmask of what operations can be done immediately
+===========================================================================*/
+int UserSpaceLock(struct file *filp, int cmd, struct file_lock *fl)
+{
+   if((filp!=NULL) && (fl!=NULL))
+   {
+      #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 3,9,0 ))
+      if(file_inode(filp)!=NULL)
+      {
+         return posix_lock_file(filp, fl, NULL);
+      }
+      #else
+      return posix_lock_file(filp, fl, NULL);
+      #endif
+   }
+   return -ENOLCK;
+}
+
+/*===========================================================================
+METHOD:
+   UserspaceRelease (Public Method)
+
+DESCRIPTION:
+   Used to determine if read/write operations are possible without blocking
+
+PARAMETERS
+   pInode              [I/O] - userspace file descriptor
+   pFilp               [I/O] - userspace file descriptor
+   
+RETURN VALUE:
+   unsigned int - bitmask of what operations can be done immediately
+===========================================================================*/
+int UserspaceRelease(struct inode *pInode, struct file *pFilp)
+{
+   sQMIFilpStorage * pFilpData = NULL;
+   mb();
+   if(pFilp==NULL)
+   {
+      return 0;
+   }
+
+   pFilpData = (sQMIFilpStorage *)pFilp->private_data;
+   if(pFilpData!=NULL)
+   {
+     if(pFilp->private_data)
+     {
+       kfree(pFilp->private_data);
+       pFilp->private_data = NULL;
+     }
+   }
+   mb();
+   return 0;
+}
 /*=========================================================================*/
 // Initializer and destructor
 /*=========================================================================*/
+int QMICTLSyncProc(sGobiUSBNet *pDev)
+{
+   void *pWriteBuffer;
+   void *pReadBuffer;
+   int result;
+   u16 writeBufferSize;
+   u8 transactionID;
+   struct semaphore readSem;
+   unsigned long flags;
+   u16 readBufferSize;
+
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device\n" );
+      return -EFAULT;
+   }
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+   writeBufferSize= QMICTLSyncReqSize();
+   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
+   if (pWriteBuffer == NULL)
+   {
+      return -ENOMEM;
+   }
+
+   transactionID = QMIXactionIDGet(pDev);
+
+   /* send a QMI_CTL_SYNC_REQ (0x0027) */
+   result = QMICTLSyncReq( pWriteBuffer,
+                           writeBufferSize,
+                           transactionID );
+   if (result < 0)
+   {
+      kfree( pWriteBuffer );
+      return result;
+   }
+
+   result = ReadAsync( pDev, QMICTL, transactionID, UpSem, &readSem ,1);
+   if(result == 0)
+   {
+      result = WriteSync( pDev,
+                    pWriteBuffer,
+                    writeBufferSize,
+                    QMICTL );
+      kfree( pWriteBuffer );
+   }
+   wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+   mb();
+   // Enter critical section
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   spin_lock_irq(&(pDev->notif_lock));
+   barrier();
+   if (down_trylock( &readSem ) == 0)
+   {      
+      // Pop the read data
+      if (PopFromReadMemList( pDev,
+                              QMICTL,
+                              transactionID,
+                              &pReadBuffer,
+                              &readBufferSize ) == true)
+      {
+         spin_unlock_irq(&(pDev->notif_lock));
+         // End critical section
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         result = QMICTLSyncResp(pReadBuffer,
+                                               readBufferSize);
+         // We don't care about the result
+         if(pReadBuffer)
+         kfree( pReadBuffer );
+      }
+      else
+      {
+         // Read mismatch/failure, unlock and continue
+         RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+         spin_unlock_irq(&(pDev->notif_lock));
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      }
+   }
+   else
+   {
+      // Timeout, remove the async read
+      RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+      spin_unlock_irq(&(pDev->notif_lock));
+      // End critical section
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      result = -1;
+   }
+
+   if (result < 0) /* need to re-sync */
+   {
+      DBG( "sync response error code %d\n", result );
+      /* start timer and wait for the response */
+      /* process response */
+      return result;
+   }
+
+   // Success
+   return 0;
+}
+
+static int 
+qmi_show(struct seq_file *m, void *v)
+{
+    sGobiUSBNet * pDev = (sGobiUSBNet*) m->private;
+    seq_printf(m, "readTimeoutCnt %d\n", pDev->readTimeoutCnt);
+    seq_printf(m, "writeTimeoutCnt %d\n", pDev->writeTimeoutCnt);
+    return 0;
+}
+
+static int
+qmi_open(struct inode *inode, struct file *file)
+{
+    char *data;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION( 3,10,0 ))
+    data=PDE_DATA(inode);
+#else
+    data=PDE(inode)->data;
+#endif
+
+    return single_open(file, qmi_show, data);
+}
+
+static const struct file_operations proc_fops = {
+    .owner      = THIS_MODULE,
+    .open       = qmi_open,
+    .read       = seq_read,
+    .llseek     = seq_lseek,
+    .release    = single_release,
+};
 
 /*===========================================================================
 METHOD:
@@ -2873,21 +5077,19 @@ DESCRIPTION:
 
 PARAMETERS:
    pDev     [ I ] - Device specific memory
+   is9x15   [ I ]
 
 RETURN VALUE:
    int - 0 for success
          Negative errno for failure
 ===========================================================================*/
-int RegisterQMIDevice( sGobiUSBNet * pDev )
+int RegisterQMIDevice( sGobiUSBNet * pDev, int is9x15 )
 {
+   char qcqmi_dev_name[10];
+   int i;
    int result;
-   int GobiQMIIndex = 0;
    dev_t devno;
-   char * pDevName;
-//   int i;
-  // static int Major;
-//   static int Minor;
-
+   pDev->mQMIDev.proc_file = NULL;
    if (pDev->mQMIDev.mbCdevIsInitialized == true)
    {
       // Should never happen, but always better to check
@@ -2896,37 +5098,46 @@ int RegisterQMIDevice( sGobiUSBNet * pDev )
    }
 
    pDev->mbQMIValid = true;
+   pDev->mbUnload = eStatRegister;
+   pDev->mReleaseClientIDFail=0;
+   pDev->readTimeoutCnt = 0;
+   pDev->writeTimeoutCnt = 0;
+   pDev->mtu = 0;
+   pDev->iShutdown_write_sem = -1;
+   pDev->iShutdown_read_sem = -1;
+   init_rwsem(&pDev->shutdown_rwsem);
+   InitSemID(pDev);
 
-   
-   // Send SetControlLineState request (USB_CDC)
-   //   Required for Autoconnect
-   
-   if( pDev->mdm9x07)
+   i=0;
+   do
    {
-	   result = usb_control_msg( pDev->mpNetDev->udev,
-	                             usb_sndctrlpipe( pDev->mpNetDev->udev, 0 ),
-	                             0x22,
-	                             0x21,
-	                             1, // DTR present
-	                             pDev->mpEndpoints->mIntfNum,
-	                             NULL,
-	                             0,
-	                             1000 );
-	   if (result < 0)
-	   {
-	      DBG( "Bad SetControlLineState status %d\n", result );
-	      return result;
-	   }
-   }
-   // Set up for QMICTL
-   //    (does not send QMI message, just sets up memory)
-   result = GetClientID( pDev, QMICTL, &pDev->mQMIDev );
-   if (result != 0)
-   {
-      pDev->mbQMIValid = false;
-      DBG( "GetClientID: QMICTL returned %d\n", result );
-      return result;
-   }
+      // Set up for QMICTL
+      //    (does not send QMI message, just sets up memory)
+      if(gobi_kthread_should_stop())
+      {
+         return -1;
+      }
+      
+      result = GetClientID( pDev, QMICTL ,NULL);
+
+      if(gobi_kthread_should_stop())
+      {
+         return -1;
+      }
+      
+      if(pDev->mbUnload != eStatRegister)
+      {
+         return result;
+      }
+      if (result != 0)
+      {
+         if(i++>MAX_RETRY)
+         {
+            pDev->mbQMIValid = false;
+            return result;
+         }
+      }
+   }while(result!=0);
    atomic_set( &pDev->mQMIDev.mQMICTLTransactionID, 1 );
 
    // Start Async reading
@@ -2937,36 +5148,271 @@ int RegisterQMIDevice( sGobiUSBNet * pDev )
       return result;
    }
 
+   // Send SetControlLineState request (USB_CDC)
+   //   Required for Autoconnect and 9x30 to wake up
+   result = Gobi_usb_control_msg(pDev->mpIntf, pDev->mpNetDev->udev,
+                             usb_sndctrlpipe( pDev->mpNetDev->udev, 0 ),
+                             SET_CONTROL_LINE_STATE_REQUEST,
+                             SET_CONTROL_LINE_STATE_REQUEST_TYPE,
+                             CONTROL_DTR,
+                             /* USB interface number to receive control message */
+                             pDev->mpIntf->cur_altsetting->desc.bInterfaceNumber,
+                             NULL,
+                             0,
+                             100 );
+   if (result < 0)
+   {
+      DBG( "Bad SetControlLineState status %d\n", result );
+      return result;
+   }
+
+
    // Device is not ready for QMI connections right away
    //   Wait up to 30 seconds before failing
-
- // if(!pDev->mdm9x40)
-  {
-     if (QMIReady( pDev, 50000 ) == false)
-     {
-        DBG( "Device unresponsive to QMI\n" );
-        return -ETIMEDOUT;
+   result = QMIReady( pDev, 30000 );
+   if(result==-1)
+   {
+      pDev->mbUnload = eStatUnloading;
+      return -EFAULT;
+   }
+   else if (result == false)
+   {
+      DBG( "Device unresponsive to QMI\n" );
+      return -ETIMEDOUT;
+   }
+   if(pDev->mbUnload != eStatRegister)
+   {
+      return -EFAULT;
+   }
+   // Initiate QMI CTL Sync Procedure
+   DBG( "Sending QMI CTL Sync Request\n" );
+   i=0;
+   do
+   {
+      result = QMICTLSyncProc(pDev);
+      if(isModuleUnload(pDev))
+      {
+         return -EFAULT;;
       }
-  }
-
-   ConfigureQMAP(pDev);
-
-   pDev->mQMIDev.MuxId = 0x81;
-   // Setup WDS callback
-   result = SetupQMIWDSCallback( pDev, &pDev->mQMIDev );
-   if (result != 0)
+      if (result != 0)
+      {
+         if(i++>MAX_RETRY)
+         {
+            DBG( "QMI CTL Sync Procedure Error\n" );
+            return result;
+         }
+      }
+      else
+      {
+         DBG( "QMI CTL Sync Procedure Successful\n" );
+      }
+   }while(result!=0);
+   if(iTEEnable<eSKIP_TE_FLOW_CONTROL_TLV)
    {
-      return result;
+      iTEEnable = eSKIP_TE_FLOW_CONTROL_TLV;
+   }
+   // Setup Data Format
+   if (is9x15)
+   {
+      i=0;
+      if (pDev->iQMUXEnable!=0)
+      {
+         pDev->iDataMode = eDataMode_RAWIP;
+      }
+      else if(iRAWIPEnable==0)
+      {
+         pDev->iDataMode = eDataMode_Ethernet;
+      }
+      else
+      {
+         pDev->iDataMode = eDataMode_RAWIP;
+      }
+      
+      do
+      {
+         if(iTEEnable!=eSKIP_TE_FLOW_CONTROL_TLV)//TE_FLOW_CONTROL
+         {
+            result = QMIWDASetDataFormat (pDev, iTEEnable,pDev->iQMUXEnable);
+         }
+         else
+         {
+            result = QMIWDASetDataFormat (pDev, eSKIP_TE_FLOW_CONTROL_TLV,pDev->iQMUXEnable);
+         }
+         if(isModuleUnload(pDev))
+         {
+            return -EFAULT;;
+         }
+         if(i++>MAX_RETRY)
+         {
+            if(pDev->iDataMode==eDataMode_Ethernet)
+            {
+               pDev->iDataMode=eDataMode_RAWIP;
+               i = 0;
+            }
+            else
+            {
+               break;
+            }
+         }
+      }while(result!=0);
+       if(result != 0)
+       {
+          if(iTEEnable==eTE_FLOW_CONTROL_TLV_1)//TE_FLOW_CONTROL
+          {
+             result = QMIWDASetDataFormat (pDev, eTE_FLOW_CONTROL_TLV_0,pDev->iQMUXEnable);
+             if(result != 0)
+             {
+                printk(KERN_INFO "Set Data Format Fail\n");
+             }
+             else
+             {
+                 printk(KERN_INFO "TE Flow Control disabled\n");
+             }
+          }
+          else if(iTEEnable==eTE_FLOW_CONTROL_TLV_0)//TE_FLOW_CONTROL
+          {
+             result = QMIWDASetDataFormat (pDev, eSKIP_TE_FLOW_CONTROL_TLV,pDev->iQMUXEnable);
+             if(result != 0)
+             {
+                printk(KERN_INFO "Set Data Format Fail No TE flow control\n");
+             }
+          }
+       }
+       else
+       {
+          if(iTEEnable!=eSKIP_TE_FLOW_CONTROL_TLV)
+          {
+             if(iTEEnable==eTE_FLOW_CONTROL_TLV_1)//TE_FLOW_CONTROL
+             {
+                printk(KERN_INFO "TE Flow Control Enabled\n");
+             }
+             else
+             {
+                printk(KERN_INFO "TE Flow Control disabled\n");
+             }
+          }
+       }
+   }
+   else
+   {
+       pDev->iDataMode = eDataMode_Ethernet;
+       result = QMICTLSetDataFormat (pDev);
+       if(result!=0)
+       {
+         pDev->iDataMode = eDataMode_RAWIP;
+         result = QMICTLSetDataFormat (pDev);
+       }
    }
 
- 
+   if (result != 0)
+   {
+       return result;
+   }
+
+
+   if (is9x15)
+   {
+       // Set FCC Authentication
+       i=0;
+       do
+       {
+           // Setup WDS mux id callback
+		  result = WDSBindMuxID( pDev );
+		  if(isModuleUnload(pDev))
+		  {
+             printk(KERN_INFO "WDSBindMuxID failed\n");
+			 return -EFAULT;
+		  }
+		  if (result != 0)
+		  {
+			 if(i++>MAX_RETRY)
+			 {
+			 return result;
+			 }
+		  }
+       }while(result!=0);
+   }   
+   i=0;
+   do
+   {
+      // Setup WDS callback
+      result = SetupQMIWDSCallback( pDev );
+      if(isModuleUnload(pDev))
+      {
+         return -EFAULT;
+      }
+      if (result != 0)
+      {
+         if(i++>MAX_RETRY)
+         {
+         return result;
+         }
+      }
+   }while(result!=0);
+
+   if (is9x15)
+   {
+       // Set FCC Authentication
+       i=0;
+       do
+       {
+          result = QMIDMSSWISetFCCAuth( pDev );
+          if(pDev->mbUnload != eStatRegister)
+          {
+             return -EFAULT;;
+          }
+          if (result != 0)
+          {
+            if(i++>MAX_RETRY)
+            {
+               return result;
+            }
+          }
+       }while(result!=0);
+   }
    // Fill MEID for device
-   result = QMIDMSGetMEID( pDev, &pDev->mQMIDev );
-   if (result != 0)
+   i=0;
+   do
    {
-      return result;
-   }
+      result = QMIDMSGetMEID( pDev );
+      if(pDev->mbUnload != eStatRegister)
+      {
+          return -EFAULT;;
+      }
+      if (result != 0)
+      {
+         if(i++>MAX_RETRY)
+         {
+            return result;
+         }
+      }
+   }while(result!=0);
 
+   // Fill Get Version info
+   memset(&pDev->svcVersion[0], 0, sizeof(pDev->svcVersion));
+   i=0;   
+   do
+   {
+      result = QMICTLGetVersionInfo(pDev);
+      if(isModuleUnload(pDev))
+      {
+         return -EFAULT;;
+      }
+      if (result != 0)
+      {
+         if(i++ > MAX_RETRY)
+         {
+            DBG( "QMI CTL Service Versions Procedure Error\n" );
+            
+            // Don't treat it fatal for driver loading, move on
+            break;
+         }
+      }
+      else
+      {
+         DBG( "QMI CTL Service Versions Procedure Successful\n" );
+      }
+   }while(result!=0);
 
    // allocate and fill devno with numbers
    result = alloc_chrdev_region( &devno, 0, 1, "qcqmi" );
@@ -2974,7 +5420,24 @@ int RegisterQMIDevice( sGobiUSBNet * pDev )
    {
       return result;
    }
-   time_out_val = 30*1000; //
+   for(i=0;i<MAX_QCQMI;i++)
+   {
+       if (qcqmi_table[i] == 0)
+           break;
+   }
+   
+   if (i == MAX_QCQMI)
+   {
+       printk(KERN_WARNING "no free entry available at qcqmi_table array\n");
+       return -ENOMEM;
+   }
+   qcqmi_table[i] = 1;
+   pDev->mQMIDev.qcqmi = i;
+
+   // Always print this output
+   printk( KERN_INFO "creating qcqmi%d\n",
+           pDev->mQMIDev.qcqmi );
+
    // Create cdev
    cdev_init( &pDev->mQMIDev.mCdev, &UserspaceQMIFops );
    pDev->mQMIDev.mCdev.owner = THIS_MODULE;
@@ -2988,47 +5451,354 @@ int RegisterQMIDevice( sGobiUSBNet * pDev )
       return result;
    }
 
- 
-   // Match interface number (usb#)
-   pDevName = strstr( pDev->mpNetDev->net->name, "wwan" );
-   if (pDevName == NULL)
-   {
-      DBG( "Bad net name: %s\n", pDev->mpNetDev->net->name );
-      return -ENXIO;
-   }
-   pDevName += strlen( "wwan" );
-   GobiQMIIndex = simple_strtoul( pDevName, NULL, 10 );
-   if (GobiQMIIndex < 0)
-   {
-      DBG( "Bad minor number\n" );
-      return -ENXIO;
-   }
-
-   // Always print this output
-   printk( KERN_INFO "creating qcqmi%d\n",
-           GobiQMIIndex );
-
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,27 ))
    // kernel 2.6.27 added a new fourth parameter to device_create
    //    void * drvdata : the data to be added to the device for callbacks
-   device_create( pDev->mQMIDev.mpDevClass,
-                  &pDev->mpIntf->dev, 
+   pDev->dev = device_create( pDev->mQMIDev.mpDevClass,
+                  &pDev->mpIntf->dev,
                   devno,
                   NULL,
-                  "qcqmi%d", 
-                  GobiQMIIndex );
+                  "qcqmi%d",
+                  pDev->mQMIDev.qcqmi );
 #else
-   device_create( pDev->mQMIDev.mpDevClass,
-                  &pDev->mpIntf->dev, 
+   pDev->dev = device_create( pDev->mQMIDev.mpDevClass,
+                  &pDev->mpIntf->dev,
                   devno,
-                  "qcqmi%d", 
-                  GobiQMIIndex );
+                  "qcqmi%d",
+                  pDev->mQMIDev.qcqmi );
 #endif
-   
+
    pDev->mQMIDev.mDevNum = devno;
 
-   // Success
+   memset(pDev->maps.table, 0xff, sizeof(pDev->maps.table));
+   pDev->maps.count = 0; 
+
+   sprintf(qcqmi_dev_name, "qcqmi%d", (int)pDev->mQMIDev.qcqmi);
+   pDev->mQMIDev.proc_file = proc_create_data(qcqmi_dev_name, 0, NULL, &proc_fops, pDev);
+
+   if (!pDev->mQMIDev.proc_file) {
+       return -ENOMEM;
+   }
+
+  // Success
    return 0;
+}
+
+/*===========================================================================
+METHOD:
+   wakeup_target_process (Public Method)
+
+DESCRIPTION:
+   Close File Inode
+
+PARAMETERS:
+   pTask     [ I ] - task struct
+
+RETURN VALUE:
+   None
+===========================================================================*/
+void wakeup_target_process(struct task_struct * pTask)
+{
+   if(pTask!=NULL)
+   {
+      struct list_head *list = NULL;
+      int count=0;
+      #if _SIG_LOCK_
+      struct sighand_struct *sighand = NULL;
+      #endif
+      if(wait_preempt()==0)
+      return ;
+      if(signal_pending(pTask))
+         return ;
+      if(pTask==current)
+         return ;
+      if(pTask->state!=TASK_STOPPED)
+         return ;
+      #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
+      while(raw_spin_is_locked(&pTask->pi_lock))
+      #endif
+      {
+         if(count++>10)
+         {
+            DBG( "task Locked %d, pid:%d\n",__LINE__ ,pTask->pid);
+            return ;
+         }
+         msleep_interruptible(100);
+         mb();
+         if(pTask==NULL)
+            return;
+         if(signal_pending(pTask))
+         return ;
+      }
+      if(signal_pending(pTask))
+         return ;
+      #if _SIG_LOCK_         
+      if(lockdep_tasklist_lock_is_held())
+      {
+      DBG( "lockdep_tasklist_lock_is_held %d, pid:%d\n",__LINE__ ,pTask->pid);
+      }
+      sighand = rcu_dereference_check(pTask->sighand,
+      lockdep_tasklist_lock_is_held());
+      if(sighand)
+      spin_lock_irq(&sighand->siglock);
+      else
+      {
+      DBG( "spin_lock %d, pid:%d\n",__LINE__ ,pTask->pid);
+      return ;
+      }
+      #endif
+      if(pTask->state==TASK_STOPPED)
+      {
+         if (unlikely(pTask->signal->notify_count < 0))
+         {
+             if(pTask!=current)
+             {
+                 gobi_try_wake_up_process(pTask);
+             }
+             list_for_each(list, &pTask->children)
+             {
+                 struct task_struct *task;
+                 task = list_entry(list, struct task_struct, sibling);
+                 if(task!=NULL)
+                 if(task!=current)
+                 {
+                    DBG( "%d pid:%d\n",__LINE__,task->pid );
+                    gobi_try_wake_up_process(task);
+                 }
+             }
+             wait_ms(500);
+         }
+      }
+      #if _SIG_LOCK_
+      if(sighand)
+      spin_unlock_irq(&sighand->siglock);
+      #endif
+      return ;
+   }
+}
+
+/*===========================================================================
+METHOD:
+   CloseFileInode (Public Method)
+
+DESCRIPTION:
+   Close File Inode
+
+PARAMETERS:
+   pDev     [ I ] - Device specific memory
+
+RETURN VALUE:
+   None
+===========================================================================*/
+int CloseFileInode(sGobiUSBNet * pDev,int iCount)
+{
+   struct inode * pOpenInode=NULL;
+   struct task_struct * pEachTask = NULL;
+   struct fdtable * pFDT;
+   struct file * pFilp;
+   unsigned long i_no =-1;
+   int count = 0;
+   //DBG("\n");
+   if(pDev==NULL)
+   {
+      return 0;
+   }
+   GobiSyncRcu();
+   if(!list_empty_careful(&pDev->mQMIDev.mCdev.list))
+   if(!list_empty(&pDev->mQMIDev.mCdev.list))
+    {
+       list_for_each_entry(pOpenInode,&pDev->mQMIDev.mCdev.list,i_devices)
+       {
+          // Get the inode
+          if (pOpenInode != NULL && (IS_ERR( pOpenInode ) == false))
+          {
+             i_no = pOpenInode->i_ino;
+             DBG("OpenedInode:%lu\n",i_no);
+             // Look for this inode in each task
+             for_each_process( pEachTask )
+             {
+                int max_fds = 0;
+                if (pEachTask == NULL )
+                {
+                   // Some tasks may not have files (e.g. Xsession)
+                   continue;
+                }
+                if(pEachTask->files == NULL)
+                {
+                   // Some tasks may not have files (e.g. Xsession)
+                   continue;
+                }
+                if(signal_pending(pEachTask))
+                {
+                  DBG("Task exiting OpenedInode:%lu\n",i_no);
+                  return 1;
+                }
+                // For each file this task has open, check if it's referencing
+                // our inode.
+                pFDT = files_fdtable( pEachTask->files );
+                max_fds = pFDT->max_fds;
+                if(pFDT)
+                {
+                    int iFound = 0;
+                    for (count = 0; count < max_fds; count++)
+                    {
+                       if(pFDT==NULL)
+                       {
+                          break;
+                       }
+                       if(signal_pending(pEachTask))
+                       {
+                           break;
+                       }
+                       pFilp = pFDT->fd[count];
+                       
+                       #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 3,19,0 ))
+                       if (pFilp != NULL &&  pFilp->f_path.dentry != NULL)
+                       #else
+                       if (pFilp != NULL &&  pFilp->f_dentry != NULL)
+                       #endif
+                       {
+                          #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 3,19,0 ))
+                          if (pFilp->f_path.dentry->d_inode == pOpenInode)
+                          #else
+                          if (pFilp->f_dentry->d_inode == pOpenInode)
+                          #endif
+                          {
+                             sQMIFilpStorage * pFilpData = NULL;
+                             int reffrom = 0;
+                             if(file_inode(pFilp)!=NULL)
+                             {
+                                i_no = file_inode(pFilp)->i_ino;
+                             }
+                             else
+                             {
+                                DBG("File Inode Null %d\n",__LINE__);
+                                break;
+                             }
+                             printk( KERN_INFO "forcing close of opened file handle i_ino:%lu\n", i_no);
+
+                             reffrom = gobi_atomic_read( &pDev->mQMIDev.mCdev.kobj.kref.refcount );
+                             if (reffrom<2)
+                             {
+                                DBG("opened file handle i_ino:%lu\n", i_no);
+                                break;
+                             }
+                             pFilpData = (sQMIFilpStorage *)pFilp->private_data;
+                             if(pFilpData!=NULL)
+                             {
+                                 struct task_struct *pOpenTask = pFilpData->pOpenTask;
+                                 struct task_struct *pReadTask = pFilpData->pReadTask;
+                                 struct task_struct *pIOCTLTask = pFilpData->pIOCTLTask;
+                                 struct task_struct *pWriteTask = pFilpData->pWriteTask;
+                                 reffrom = 0;
+                                 if((!signal_pending(pEachTask))&&
+                                    (pFilpData->iSemID >0))
+                                 {
+                                    if(!down_trylock(&(pFilpData->mReadSem)))
+                                    {
+                                         DBG("NOT locked : %d",pFilpData->iSemID);
+                                    }
+                                    barrier();
+                                    up(&(pFilpData->mReadSem));
+                                 }
+                                 if(pReadTask!=pOpenTask)
+                                 {
+                                    DBG("pReadTask:%d\n", pReadTask->pid);
+                                    wakeup_target_process(pReadTask);
+                                    pFilpData->pReadTask = pFilpData->pOpenTask;
+                                    reffrom++;
+                                    mb();
+                                 }
+                                 if(pIOCTLTask!=pOpenTask)
+                                 {
+                                    DBG("pIOCTLTask:%d\n", pIOCTLTask->pid);
+                                    wakeup_target_process(pIOCTLTask);
+                                    pFilpData->pIOCTLTask = pFilpData->pOpenTask;
+                                    reffrom++;
+                                    mb();
+                                 }
+                                 if(pWriteTask!=pOpenTask)
+                                 {
+                                    reffrom++;
+                                    DBG("pWriteTask:%d\n", pWriteTask->pid);
+                                    wakeup_target_process(pWriteTask);
+                                    pFilpData->pWriteTask = pFilpData->pOpenTask;
+                                    mb();
+                                 }
+                                 if(reffrom==0)
+                                 if( (pOpenTask==pReadTask)&&
+                                     (pOpenTask==pIOCTLTask)&&
+                                     (pOpenTask==pWriteTask))
+                                 {
+                                    wakeup_target_process(pOpenTask);
+                                 }
+                                 if(reffrom>0)
+                                 {
+                                    return 1;
+                                 }
+                             }
+                             else
+                             {
+                                 DBG("NULL private_data\n");
+                             }
+                             if(!signal_pending(pEachTask))
+                             {
+                                reffrom++;
+                                wakeup_target_process(pEachTask);
+                             }
+                             if((!signal_pending(pEachTask))&&
+                                (iCount>5))
+                             {
+                                DBG("ForceFilpClose:%d\n",pEachTask->pid);
+                                ForceFilpClose(pFilp);
+                             }
+                             if(reffrom>0)
+                             {
+                                 return 1;
+                             }
+                          }//if (pFilp->f_dentry->d_inode == pOpenInode)
+                       }
+                                             
+                    }//for (count = 0; count < max_fds; count++)
+                    if(iFound==0)
+                    {
+                       if(!signal_pending(pEachTask))
+                       {
+                          wakeup_target_process(pEachTask);
+                       }
+                       else 
+                       {
+                          return 1;
+                       }
+                       iFound = 0;
+                    }
+                }//if(pFDT)
+             }//for_each_process
+          }//// Get the inode
+       }//list_for_each_entry
+      }//list_empty
+   gobi_flush_work();
+   mb();
+   return 0;
+}
+
+/*===========================================================================
+METHOD:
+   gobi_flush_work (Public Method)
+
+DESCRIPTION:
+   sync memory
+
+PARAMETERS:
+   None
+
+RETURN VALUE:
+   None
+===========================================================================*/
+void gobi_flush_work(void)
+{
+    GobiSyncRcu();
+    return ;
 }
 
 /*===========================================================================
@@ -3037,7 +5807,7 @@ METHOD:
 
 DESCRIPTION:
    QMI Device cleanup function
-   
+
    NOTE: When this function is run the device is no longer valid
 
 PARAMETERS:
@@ -3046,147 +5816,272 @@ PARAMETERS:
 RETURN VALUE:
    None
 ===========================================================================*/
+void UnLocalClientMemLockSpinLock(sGobiUSBNet * pDev )
+{
+   int count =0;
+   mb();
+    while(LocalClientMemLockSpinIsLock( pDev ) != 0)
+    {
+      mb();
+      if(count>10)
+      {
+         break;
+      }
+      count++;
+      wait_ms(50);
+    };
+}
 void DeregisterQMIDevice( sGobiUSBNet * pDev )
 {
-   struct inode * pOpenInode;
-   struct list_head * pInodeList;
-   struct task_struct * pEachTask;
-   struct fdtable * pFDT;
-   struct file * pFilp;
-   unsigned long flags;
-   int count = 0;
-   int tries;
-   int result;
-//   int i;
-
+   int tries = 0;
+   int result = -1;
+   int i = 0;
+   int iIntfNum = 0;
+   unsigned long flags = 0;
+   if(isPreempt()!=0)
+   {
+      printk("preempt_disable");
+      preempt_disable();
+   }
+   pDev->mbUnload = eStatUnloading;
+   qmux_table[pDev->iDeviceMuxID]=0;
    // Should never happen, but check anyway
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "wrong device\n" );
+      pDev->iNetLinkStatus = eNetDeviceLink_Disconnected;
+      RemoveProcessFile(pDev);
+      RemoveCdev(pDev);
+      KillRead( pDev );
+      GobiDestoryWorkQueue(pDev);
+      flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+      // Timeout, remove the async read
+      RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+      // End critical section
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      // Send SetControlLineState request (USB_CDC)
+      result = Gobi_usb_control_msg(pDev->mpIntf, pDev->mpNetDev->udev,
+                             usb_sndctrlpipe( pDev->mpNetDev->udev, 0 ),
+                             SET_CONTROL_LINE_STATE_REQUEST,
+                             SET_CONTROL_LINE_STATE_REQUEST_TYPE,
+                             0, // DTR not present
+                             /* USB interface number to receive control message */
+                             pDev->mpIntf->cur_altsetting->desc.bInterfaceNumber,
+                             NULL,
+                             0,
+                             100 );
+      pDev->mbUnload = eStatUnloaded;
+      gobi_flush_work();
       return;
    }
-   pDev->mbderegisterQMI = true;
-   del_timer(&qmi_timer);
-
-   spin_lock_irqsave( &pDev->mQMIDev.mClientMemLock, flags );
-   while (pDev->mQMIDev.mpClientMemList != NULL)
+   pDev->iNetLinkStatus = eNetDeviceLink_Disconnected;
+   RemoveProcessFile(pDev);
+   pDev->mQMIDev.mCdev.ops = NULL;
+   mb();
+   tries = 0;
+   iIntfNum = pDev->mpIntf->cur_altsetting->desc.bInterfaceNumber;
+   pDev->mQMIDev.mCdev.ops = NULL;
+   UnLocalClientMemLockSpinLock(pDev);
+   
+   while(LocalClientMemLockSpinIsLock(pDev)!=0)
    {
-	u16 mClientID = pDev->mQMIDev.mpClientMemList->mClientID;
-	if (waitqueue_active(&pDev->mQMIDev.mpClientMemList->mWaitQueue)) {
-	   DBG("WaitQueue 0x%04X\n", mClientID);
-	   wake_up_interruptible_sync( &pDev->mQMIDev.mpClientMemList->mWaitQueue );
-	   spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );		
-	   msleep(10);
-	   spin_lock_irqsave( &pDev->mQMIDev.mClientMemLock, flags );
-	   continue;
-	}
-
-	DBG( "release 0x%04X\n", pDev->mQMIDev.mpClientMemList->mClientID );
- 
-	spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
-	ReleaseClientID( pDev, mClientID,&pDev->mQMIDev );
-	// NOTE: pDev->mQMIDev.mpClientMemList will 
-	//		 be updated in ReleaseClientID()
-	spin_lock_irqsave( &pDev->mQMIDev.mClientMemLock, flags );
+      gobi_flush_work();
+      if((tries%10)==0)
+      {
+         printk("Spinlocked\n");
+      }
+      if(200> tries++)
+      {
+         break;
+      }
    }
-    spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
 
+   /* clear the qmux ip table */
+   for ( i = 0; i < MAX_MUX_NUMBER_SUPPORTED; i++)
+   {
+      pDev->qMuxIPTable[i].instance = 0;
+      pDev->qMuxIPTable[i].ipAddress = 0;
+      if(pDev->WDSClientID[i]!=(u16)-1)
+		ReleaseClientID( pDev, pDev->WDSClientID[i] );
+   }
    // Stop all reads
    KillRead( pDev );
+   wait_interrupt();
+   GobiDestoryWorkQueue(pDev);   
+
+
+   gobi_flush_work();
+   wait_interrupt();
+   // Release all clients
+   while (pDev->mQMIDev.mpClientMemList != NULL)
+   {
+      DBG( "release 0x%04X\n", pDev->mQMIDev.mpClientMemList->mClientID );
+      if(pDev->mQMIDev.mpClientMemList->mClientID==QMICTL)
+      {
+          unsigned long flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+          // Timeout, remove the async read
+          RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+          // End critical section
+          LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+          break;
+      }
+      else
+      {
+
+      if (ReleaseClientID(pDev,
+                       pDev->mQMIDev.mpClientMemList->mClientID) == false)
+          break;
+      // NOTE: pDev->mQMIDev.mpClientMemList will
+      //       be updated in ReleaseClientID()
+      }
+      gobi_flush_work();
+      wait_interrupt();
+   }
+   tries = 0;
+   do
+   {
+      int ref = 0;
+      mb();
+      ref = gobi_atomic_read( &pDev->mQMIDev.mCdev.kobj.kref.refcount );
+      DBG("%s:%d(%d) tries:%d ref:%d\n",__FUNCTION__,__LINE__,iIntfNum,tries,ref);     
+      if (ref > 1)
+      {       
+         int iLoop = 0;
+         mb();
+         wait_interrupt();
+         ref = gobi_atomic_read( &pDev->mQMIDev.mCdev.kobj.kref.refcount );
+         if(wait_preempt()==1)
+         if(ref>1)
+         {
+            
+            while(CloseFileInode(pDev,tries)==1)
+            {
+               if(iLoop++>10)
+               {
+                  break;
+               }
+               if(preempt_count()>0)
+               {
+                  wait_ms(100);
+               }
+               else
+               {
+                  msleep_interruptible(100);
+               }
+            }
+            gobi_flush_work();
+            mb();
+         }
+
+         if(iLoop==0)
+         {
+            if(preempt_count()>0)
+            {
+               wait_ms(400);
+            }
+            else
+            {
+               msleep_interruptible(400);
+            }
+         }
+         
+         
+      }
+      else
+      {
+         break;
+      }
+      wait_ms(100);
+   }while(20> tries++);
+   gobi_flush_work();
+
 
    pDev->mbQMIValid = false;
 
    if (pDev->mQMIDev.mbCdevIsInitialized == false)
    {
+      pDev->mbUnload = eStatUnloaded;
       return;
    }
 
    // Find each open file handle, and manually close it
-   
+
    // Generally there will only be only one inode, but more are possible
-   list_for_each( pInodeList, &pDev->mQMIDev.mCdev.list )
+   mb();
+   if(pDev->iShutdown_write_sem>0)
    {
-      // Get the inode
-      pOpenInode = container_of( pInodeList, struct inode, i_devices );
-      if (pOpenInode != NULL && (IS_ERR( pOpenInode ) == false))
+      down_write_trylock(&(pDev->shutdown_rwsem));
+      up_write(&pDev->shutdown_rwsem);
+   }
+   mb();
+   if(pDev->iShutdown_read_sem>0)
+   {
+      down_read_trylock(&(pDev->shutdown_rwsem));
+      up_read(&pDev->shutdown_rwsem);
+   }
+   i =0;
+   while(!down_trylock( &(pDev->ReadsyncSem) ))
+   {
+      i++;
+      if(i>MAX_RETRY_LOCK_NUMBER)
       {
-         // Look for this inode in each task
-
-         rcu_read_lock();
-         for_each_process( pEachTask )
-         {
-         
-            task_lock(pEachTask);
-            if (pEachTask == NULL || pEachTask->files == NULL)
-            {
-               // Some tasks may not have files (e.g. Xsession)
-		task_unlock(pEachTask);
-               continue;
-            }
-            // For each file this task has open, check if it's referencing
-            // our inode.
-            spin_lock_irqsave( &pEachTask->files->file_lock, flags );
-	    task_unlock(pEachTask);
-            pFDT = files_fdtable( pEachTask->files );
-            for (count = 0; count < pFDT->max_fds; count++)
-            {
-               pFilp = pFDT->fd[count];
-               if (pFilp != NULL &&  pFilp->f_path.dentry != NULL)
-               {
-                  if (pFilp->f_path.dentry->d_inode == pOpenInode)
-                  {
-                     // Close this file handle
-                     rcu_assign_pointer( pFDT->fd[count], NULL );                     
-                     spin_unlock_irqrestore( &pEachTask->files->file_lock, flags );
-                     
-                     DBG( "forcing close of open file handle\n" );
-                     filp_close( pFilp, pEachTask->files );
-
-                     spin_lock_irqsave( &pEachTask->files->file_lock, flags );
-                  }
-               }
-            }
-            spin_unlock_irqrestore( &pEachTask->files->file_lock, flags );
-         }
-         rcu_read_unlock();
+         break;
+      }
+      set_current_state(TASK_INTERRUPTIBLE);
+      wait_ms(MAX_RETRY_LOCK_MSLEEP_TIME);
+      if(signal_pending(current))
+      {
+        break;
+      }
+      if(pDev==NULL)
+      {
+         return ;
       }
    }
-
+   up(&(pDev->ReadsyncSem));
+   set_current_state(TASK_RUNNING);
    // Send SetControlLineState request (USB_CDC)
-   result = usb_control_msg( pDev->mpNetDev->udev,
+   result = Gobi_usb_control_msg(pDev->mpIntf, pDev->mpNetDev->udev,
                              usb_sndctrlpipe( pDev->mpNetDev->udev, 0 ),
-                             0x22,
-                             0x21,
+                             SET_CONTROL_LINE_STATE_REQUEST,
+                             SET_CONTROL_LINE_STATE_REQUEST_TYPE,
                              0, // DTR not present
-                             pDev->mpEndpoints->mIntfNum,
+                             /* USB interface number to receive control message */
+                             pDev->mpIntf->cur_altsetting->desc.bInterfaceNumber,
                              NULL,
                              0,
                              100 );
    if (result < 0)
    {
-      DBG( "Bad SetControlLineState status %d\n", result );
+      DBG( "SetControlLineState:%d\n", result );
    }
+
    // Remove device (so no more calls can be made by users)
    if (IS_ERR( pDev->mQMIDev.mpDevClass ) == false)
    {
-      device_destroy( pDev->mQMIDev.mpDevClass, 
-                      pDev->mQMIDev.mDevNum );   
+      device_destroy( pDev->mQMIDev.mpDevClass,
+                      pDev->mQMIDev.mDevNum );
    }
+
+   qcqmi_table[pDev->mQMIDev.qcqmi] = 0;
 
    // Hold onto cdev memory location until everyone is through using it.
    // Timeout after 30 seconds (10 ms interval).  Timeout should never happen,
    // but exists to prevent an infinate loop just in case.
-   for (tries = 0; tries < 30 * 100; tries++)
+
+   for (tries = 0; tries < 60; tries++)
    {
-#if (LINUX_VERSION_CODE > KERNEL_VERSION( 4,14,0 ))
-    int ref = atomic_read( &pDev->mQMIDev.mCdev.kobj.kref.refcount.refs );
-#else    
-    int ref = atomic_read( &pDev->mQMIDev.mCdev.kobj.kref.refcount );
-#endif
+      int ref = gobi_atomic_read( &pDev->mQMIDev.mCdev.kobj.kref.refcount );
       if (ref > 1)
       {
-         DBG( "cdev in use by %d tasks\n", ref - 1 ); 
-         msleep( 10 );
+         wait_ms(500);
+         ref = gobi_atomic_read( &pDev->mQMIDev.mCdev.kobj.kref.refcount );
+         if(ref>1)
+         {
+            printk( KERN_WARNING "cdev in use by %d tasks\n", ref - 1 );
+            CloseFileInode(pDev,tries);
+            wait_ms(500);
+         }
       }
       else
       {
@@ -3197,7 +6092,7 @@ void DeregisterQMIDevice( sGobiUSBNet * pDev )
    cdev_del( &pDev->mQMIDev.mCdev );
 
    unregister_chrdev_region( pDev->mQMIDev.mDevNum, 1 );
-
+   pDev->mbUnload = eStatUnloaded;
    return;
 }
 
@@ -3210,7 +6105,7 @@ METHOD:
    QMIReady (Public Method)
 
 DESCRIPTION:
-   Send QMI CTL GET VERSION INFO REQ
+   Send QMI CTL GET VERSION INFO REQ and SET DATA FORMAT REQ
    Wait for response or timeout
 
 PARAMETERS:
@@ -3218,9 +6113,9 @@ PARAMETERS:
    timeout  [ I ] - Milliseconds to wait for response
 
 RETURN VALUE:
-   bool
+   int
 ===========================================================================*/
-bool QMIReady(
+int QMIReady(
    sGobiUSBNet *    pDev,
    u16                timeout )
 {
@@ -3231,9 +6126,9 @@ bool QMIReady(
    u16 readBufferSize;
    struct semaphore readSem;
    u16 curTime;
+   u8 transactionID;
    unsigned long flags;
-   u8 transactionID=0;
-   
+
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device\n" );
@@ -3241,7 +6136,7 @@ bool QMIReady(
    }
 
    writeBufferSize = QMICTLReadyReqSize();
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
+   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
    if (pWriteBuffer == NULL)
    {
       return false;
@@ -3251,30 +6146,39 @@ bool QMIReady(
    //    so it's been added and removed from the kernel several times.
    //    We're just going to ignore it and poll the semaphore.
 
-   // Send a write every 100 ms and see if we get a response
-   for (curTime = 0; curTime < timeout; curTime += 500)
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+   // Send a write every 1000 ms and see if we get a response
+   for (curTime = 0; curTime < timeout; curTime += 1000)
    {
-      // Start read
-      sema_init( &readSem, 0 );
-   
-     // transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID );
-      if (transactionID == 0)
+      if(gobi_kthread_should_stop())
       {
-         transactionID = atomic_add_return( 1, &pDev->mQMIDev.mQMICTLTransactionID );
+         return -1;
       }
-      result = ReadAsync( pDev, QMICTL, transactionID, UpSem, &readSem, &pDev->mQMIDev);
+      
+      // Start read
+      transactionID =QMIXactionIDGet(pDev);
+      
+      result = ReadAsync( pDev, QMICTL, transactionID, UpSem, &readSem ,1);
       if (result != 0)
       {
+         kfree( pWriteBuffer );
+         flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+         RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
          return false;
       }
 
       // Fill buffer
-      result = QMICTLReadyReq( pWriteBuffer, 
+      result = QMICTLReadyReq( pWriteBuffer,
                                writeBufferSize,
                                transactionID );
       if (result < 0)
       {
          kfree( pWriteBuffer );
+         flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+         RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
          return false;
       }
 
@@ -3282,62 +6186,118 @@ bool QMIReady(
       WriteSync( pDev,
                  pWriteBuffer,
                  writeBufferSize,
-                 QMICTL,
-                 &pDev->mQMIDev);
+                 QMICTL );
+      if(gobi_kthread_should_stop())
+      {
+         set_current_state(TASK_RUNNING);
+         flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+         RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         return -1;
+      }
 
-      msleep( 500 );
+      if(curTime < timeout)
+      {
+         int iScaleCount = 0;
+         for(iScaleCount=0;iScaleCount<100;iScaleCount++)
+         {
+            if( gobi_kthread_should_stop() )
+            {
+               if(pWriteBuffer)
+               kfree(pWriteBuffer);
+               KillRead( pDev );
+               flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+               RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+               LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+               return -1;
+            }
+            msleep( 10 );//wait_ms(10);//msleep( 10 );
+            if(gobi_kthread_should_stop())
+            {
+               if(pWriteBuffer)
+               kfree(pWriteBuffer);
+               KillRead( pDev );
+               flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+               RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+               LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+               return -1;
+            }
+            if(isModuleUnload(pDev))
+            {
+               if(pWriteBuffer)
+               kfree(pWriteBuffer);
+               KillRead( pDev );
+               flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+               RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+               LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+               return -1;
+            }
+         }
+         
+      }
+      mb();
+      // Enter critical section
+      flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+      barrier();
+      spin_lock_irq(&(pDev->notif_lock));
       if (down_trylock( &readSem ) == 0)
       {
-         // Enter critical section
-         spin_lock_irqsave( &pDev->mQMIDev.mClientMemLock, flags );
-
          // Pop the read data
          if (PopFromReadMemList( pDev,
                                  QMICTL,
                                  transactionID,
                                  &pReadBuffer,
-                                 &readBufferSize,
-                                 &pDev->mQMIDev) == true)
+                                 &readBufferSize ) == true)
          {
             // Success
-
+            spin_unlock_irq(&(pDev->notif_lock));
             // End critical section
-            spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
-         
-            // We don't care about the result
-            kfree( pReadBuffer );
+            LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
 
+            // We don't care about the result
+            if(pReadBuffer)
+            kfree( pReadBuffer );
             break;
          }
          else
          {
+            RemoveAndPopNotifyList(pDev,QMICTL,transactionID,eClearCID);
+            spin_unlock_irq(&(pDev->notif_lock));
             // Read mismatch/failure, unlock and continue
-            spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
+            LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
          }
       }
       else
       {
-         // Enter critical section
-         spin_lock_irqsave( &pDev->mQMIDev.mClientMemLock, flags );
-         
-         // Timeout, remove the async read
-         NotifyAndPopNotifyList( pDev, QMICTL, transactionID, &pDev->mQMIDev );
-         
-         // End critical section
-         spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
+         if( (pDev->mbUnload < eStatUnloading) ||
+            IsDeviceDisconnect(pDev))
+         {
+             // Enter critical section
+             // Timeout, remove the async read
+             RemoveAndPopNotifyList(pDev,QMICTL,transactionID,eClearCID);
+             // End critical section
+         }
+         spin_unlock_irq(&(pDev->notif_lock));
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
       }
    }
-
    kfree( pWriteBuffer );
-
-   // Did we time out?   
+   // Did we time out?
    if (curTime >= timeout)
    {
       return false;
    }
-   
    DBG( "QMI Ready after %u milliseconds\n", curTime );
+   if(SetPowerSaveMode(pDev,0)<0)
+   {
+      DBG("Set Power Save Mode error\n");
+   }
 
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   // Timeout, remove the async read
+   RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+   // End critical section
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
    // Success
    return true;
 }
@@ -3361,20 +6321,12 @@ RETURN VALUE:
 void QMIWDSCallback(
    sGobiUSBNet *    pDev,
    u16                clientID,
-   void *             pData,
-   sQMIDev *QMIDev)
+   void *             pData )
 {
    bool bRet;
    int result;
-   void * pReadBuffer;
+   void * pReadBuffer=NULL;
    u16 readBufferSize;
-
-#if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,31 ))
-   struct net_device_stats * pStats = &(pDev->mpNetDev->stats);
-#else
-   struct net_device_stats * pStats = &(pDev->mpNetDev->net->stats);
-#endif
-
    u32 TXOk = (u32)-1;
    u32 RXOk = (u32)-1;
    u32 TXErr = (u32)-1;
@@ -3383,37 +6335,32 @@ void QMIWDSCallback(
    u32 RXOfl = (u32)-1;
    u64 TXBytesOk = (u64)-1;
    u64 RXBytesOk = (u64)-1;
-   bool bLinkState;
    bool bReconfigure;
-   unsigned long flags;
-   
+
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device\n" );
       return;
    }
 
-   // Critical section
-   spin_lock_irqsave( &QMIDev->mClientMemLock, flags );
-   
    bRet = PopFromReadMemList( pDev,
                               clientID,
                               0,
                               &pReadBuffer,
-                              &readBufferSize,
-                              QMIDev);
-   
-   // End critical section
-   spin_unlock_irqrestore( &QMIDev->mClientMemLock, flags ); 
-   
+                              &readBufferSize );
+
+
    if (bRet == false)
    {
       DBG( "WDS callback failed to get data\n" );
+      if(pReadBuffer)
+         kfree( pReadBuffer );
+      pReadBuffer = NULL;
       return;
    }
-   
+
    // Default values
-   bLinkState = ! GobiTestDownReason( pDev, NO_NDIS_CONNECTION );
+   pDev->bLinkState = ! GobiTestDownReason( pDev, NO_NDIS_CONNECTION );
    bReconfigure = false;
 
    result = QMIWDSEventResp( pReadBuffer,
@@ -3426,7 +6373,7 @@ void QMIWDSCallback(
                              &RXOfl,
                              &TXBytesOk,
                              &RXBytesOk,
-                             &bLinkState,
+                             (u8*)&pDev->bLinkState,
                              &bReconfigure );
    if (result < 0)
    {
@@ -3434,104 +6381,37 @@ void QMIWDSCallback(
    }
    else
    {
-
-      // Fill in new values, ignore max values
-      if (le32_to_cpu(TXOfl) != (u32)-1)
-      {
-         pStats->tx_fifo_errors = le32_to_cpu(TXOfl);
-      }
-      
-      if (le32_to_cpu(RXOfl) != (u32)-1)
-      {
-         pStats->rx_fifo_errors = le32_to_cpu(RXOfl);
-      }
-
-      if (le32_to_cpu(TXErr) != (u32)-1)
-      {
-         pStats->tx_errors = le32_to_cpu(TXErr);
-      }
-      
-      if (le32_to_cpu(RXErr) != (u32)-1)
-      {
-         pStats->rx_errors = le32_to_cpu(RXErr);
-      }
-
-      if (le32_to_cpu(TXOk) != (u32)-1)
-      {
-         pStats->tx_packets = le32_to_cpu(TXOk) + pStats->tx_errors;
-      }
-      
-      if (le32_to_cpu(RXOk) != (u32)-1)
-      {
-         pStats->rx_packets = le32_to_cpu(RXOk) + pStats->rx_errors;
-      }
-
-      if (le64_to_cpu(TXBytesOk) != (u64)-1)
-      {
-         pStats->tx_bytes = le64_to_cpu(TXBytesOk);
-      }
-      
-      if (le64_to_cpu(RXBytesOk) != (u64)-1)
-      {
-         pStats->rx_bytes = le64_to_cpu(RXBytesOk);
-      }
-
       if (bReconfigure == true)
       {
          DBG( "Net device link reset\n" );
          GobiSetDownReason( pDev, NO_NDIS_CONNECTION );
          GobiClearDownReason( pDev, NO_NDIS_CONNECTION );
       }
-      else 
+      else
       {
-         if (bLinkState == true)
+         if (pDev->bLinkState == true)
          {
-	           if(1)
-	           {
-			if (GobiTestDownReason( pDev, NO_NDIS_CONNECTION ))
-		       {   
-				DBG( "Net device link is connected\n" );
-				 GobiClearDownReason( pDev, NO_NDIS_CONNECTION );
-			 }
-
-		   }
-		  else
-		   {
-			  DBG( "Net device link is connected\n" );
-	            	  GobiClearDownReason( pDev, NO_NDIS_CONNECTION );
-		    }
+            DBG( "Net device link is connected\n" );
+            GobiClearDownReason( pDev, NO_NDIS_CONNECTION );
          }
          else
          {
-  
-		if(1)
-		{
-			if (!GobiTestDownReason( pDev, NO_NDIS_CONNECTION ))
-			{	
-				DBG( "Net device link is disconnected\n" );
-				GobiSetDownReason( pDev, NO_NDIS_CONNECTION );
-			}
-		   
-		}
-		else
-		{
-			 DBG( "Net device link is disconnected\n" );
-			GobiSetDownReason( pDev, NO_NDIS_CONNECTION );
-		   
-		 }
+            DBG( "Net device link is disconnected\n" );
+            GobiSetDownReason( pDev, NO_NDIS_CONNECTION );
          }
       }
    }
-
+   if(pReadBuffer)
    kfree( pReadBuffer );
+   pReadBuffer = NULL;
 
    // Setup next read
    result = ReadAsync( pDev,
                        clientID,
                        0,
                        QMIWDSCallback,
-                       pData,
-                       QMIDev);
+                       pData ,0);
+
    if (result != 0)
    {
       DBG( "unable to setup next async read\n" );
@@ -3540,163 +6420,65 @@ void QMIWDSCallback(
    return;
 }
 
-
-#ifdef CONFIG_DHCP
-int wdsdhcp(sGobiUSBNet *pDev, sQMIDev *QMIDev, int id)
+void QMIQOSCallback(
+   sGobiUSBNet *    pDev,
+   u16                clientID,
+   void *             pData )
 {
-
+   bool bRet;
    int result;
-   void * pWriteBuffer;
-   u16 writeBufferSize;
- //  void * pReadBuffer;
-   //u16 readBufferSize;
-   
-   // Get IP Address Settings:
-   writeBufferSize = QMIWDSGetRuntimeSettingsReqSize();
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-   if (pWriteBuffer == NULL)
-   {
-       DBG("Mem alloc failed\n");
-       return -ENOMEM;
-   }
-
-   result = QMIWDSGetRuntimeSettingsReq( pWriteBuffer,
-                        writeBufferSize,
-                        GetTransactionID(QMIDev));
-   if (result < 0)
-   {
-       DBG("Preparing Request Runttime settings failed\n");
-       kfree( pWriteBuffer );
-       return result;
-   }
-
-   result = WriteSync( pDev,
-                        pWriteBuffer,
-                        writeBufferSize,
-                        id,
-                        QMIDev);
-   kfree( pWriteBuffer );
-   if (result < 0)
-   {
-       DBG("Request runtime settings  Failed\n");
-       return result;
-   }
-
-   return 0;
-
-}
-
-#endif
-
-int set_ip_family_and_bind_mux_id_ep_id_fn_9x07(sGobiUSBNet *pDev, sQMIDev *QMIDev, int id) 
-{
-
-   int result;
-   void * pWriteBuffer;
-   u16 writeBufferSize;
    void * pReadBuffer;
-   //u16 readBufferSize;
-   
-   // set ip family pref as IPV4
-   /*
-   writeBufferSize = sizeof( sQMUX ) + 11;
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-   if (pWriteBuffer == NULL)
+   u16 readBufferSize;
+
+   if (IsDeviceValid( pDev ) == false)
    {
-       DBG("Mem alloc failed for set ip famuly pref\n");
-       return -ENOMEM;
+      QDBG( "Invalid device\n" );
+      return;
    }
 
-   result = QMIWDSSetIPFamilyPrefReq( pWriteBuffer,
-         writeBufferSize,
-         GetTransactionID(QMIDev));
-   if (result < 0)
+   bRet = PopFromReadMemList( pDev,
+                              clientID,
+                              0,
+                              &pReadBuffer,
+                              &readBufferSize );
+
+
+   if (bRet == false)
    {
-       DBG("Request setup failed for ip family pref\n");
-       kfree( pWriteBuffer );
-       return result;
+      QDBG( "QOS callback failed to get data\n" );
+      return;
    }
 
-   result = WriteSync( pDev,
-         pWriteBuffer,
-         writeBufferSize,
-         id,
-         QMIDev);
-   kfree( pWriteBuffer );
-   if (result < 0)
-   {
-       DBG("set ip family pref Failed\n");
-       return result;
-   }
+   result = QMIQOSEventResp(pDev, pReadBuffer, readBufferSize);
 
-   result = ReadSync( pDev,
-                      &pReadBuffer,
-                      id,
-                      QMIDev->mQMITransactionID,
-                      QMIDev);
    if (result < 0)
    {
-      printk("ReadSync failed for set ip family pref\n");
-      return result;
+      QDBG( "bad QOS packet\n" );
    }
+   if(pReadBuffer)
    kfree( pReadBuffer );
-*/
-   // negotiate MUX ID as 0x81
 
-   writeBufferSize = sizeof( sQMUX ) + 29;
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-   if (pWriteBuffer == NULL)
+   // Setup next read
+   result = ReadAsync( pDev,
+                       clientID,
+                       0,
+                       QMIQOSCallback,
+                       pData ,0);
+
+   if (result != 0)
    {
-       DBG("Mem alloc failed for bind mux port\n");
-       return -ENOMEM;
+      QDBG( "unable to setup next async read\n" );
    }
 
-   result = QMIWDSBindMuxPortReq( pWriteBuffer,
-         writeBufferSize,
-         GetTransactionID(QMIDev), pDev, QMIDev);
-   if (result < 0)
-   {
-       DBG("Request setup failed for bind mux port\n");
-       kfree( pWriteBuffer );
-       return result;
-   }
-
-   result = WriteSync( pDev,
-         pWriteBuffer,
-         writeBufferSize,
-         id,
-         QMIDev);
-   
-   kfree( pWriteBuffer );
-   if (result < 0)
-   {
-       DBG("Bind mux port Failed\n");
-       return result;
-   }
-
-   result = ReadSync( pDev,
-                      &pReadBuffer,
-                      id,
-                      QMIDev->mQMITransactionID,
-                      QMIDev);
-   if (result < 0)
-   {
-      printk("ReadSync failed for bind mux port\n");
-      return result;
-   }
-   
-   kfree( pReadBuffer );
-   
-   return 0;
+   return;
 }
-
 
 /*===========================================================================
 METHOD:
-   SetupQMIWDSCallback (Public Method)
+   WDSBindMuxID (Public Method)
 
 DESCRIPTION:
-   Request client and fire off reqests and start async read for 
+   Request client and fire off reqests and start async read for
    QMI WDS callback
 
 PARAMETERS:
@@ -3706,9 +6488,135 @@ RETURN VALUE:
    int - 0 for success
          Negative errno for failure
 ===========================================================================*/
-int SetupQMIWDSCallback( sGobiUSBNet * pDev, sQMIDev *QMIDev )
+int WDSBindMuxID( sGobiUSBNet * pDev )
 {
-   int result;
+   int result,i;
+   void *pWriteBuffer;
+   u16 writeBufferSize;
+   void *pReadBuffer;
+   u16 readBufferSize;
+   unsigned long flags;
+   struct semaphore readSem;
+   u16 uTID=2;
+   DBG("\n");
+
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device\n" );
+      return -EFAULT;
+   }
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+
+   for ( i = 0; i < MAX_MUX_NUMBER_SUPPORTED; i++)
+   {
+	   result = GetClientID( pDev, QMIWDS,NULL );
+	   if (result < 0)
+	   {
+		  return result;
+	   }
+	   pDev->WDSClientID[i] = result;
+   }
+
+   for ( i = 0; i < MAX_MUX_NUMBER_SUPPORTED; i++)
+   {   
+	   // QMI WDA Set Data Format Request
+	   writeBufferSize = sizeof( sQMUX ) + 29;
+	   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
+	   if (pWriteBuffer == NULL)
+	   {
+		   DBG("Mem alloc failed for bind mux port\n");
+		   return -ENOMEM;
+	   }
+	   uTID = QMIXactionIDGet(pDev);
+	   result = QMIWDSBindMuxPortReq( pWriteBuffer,
+			 writeBufferSize,
+			 uTID, pDev, MUX_ID_START+i);
+	   if (result < 0)
+	   {
+		   DBG("Request setup failed for bind mux port,i=%d\n",i);
+		   kfree( pWriteBuffer );
+		   return result;
+	   }
+
+	   result = ReadAsync( pDev, pDev->WDSClientID[i], uTID, UpSem, &readSem ,1);
+	   if(result == 0)
+	   {
+		  result = WriteSync( pDev,
+							  pWriteBuffer,
+							  writeBufferSize,
+							  pDev->WDSClientID[i] );
+		  kfree( pWriteBuffer );
+	   }
+	   if (result < 0)
+	   {
+		  DBG( "WriteSync Fail,,i=%d\n",i );
+		  return 0;
+	   }
+	   wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+	   mb();
+	   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+	   spin_lock_irq(&(pDev->notif_lock));
+	   barrier();
+	   if (down_trylock( &readSem ) == 0)
+	   {
+		   // Enter critical section
+			 // Pop the read data
+			 if (PopFromReadMemList( pDev,
+									 pDev->WDSClientID[i],
+									 uTID,
+									 &pReadBuffer,
+									 &readBufferSize ) == true)
+			 {
+				PrintHex( pReadBuffer, readBufferSize );
+				result = 0;
+				// We don't care about the result
+				if(pReadBuffer)
+				kfree( pReadBuffer );
+			 }
+			 else
+			 {
+				// Read mismatch/failure, unlock and continue
+				RemoveAndPopNotifyList(pDev,pDev->WDSClientID[i],uTID,eClearCID);
+			 }
+	   }
+	   else
+	   {
+		  DBG( "Timeout  %i...\n",i );
+		  result = -1;
+		  // Timeout, remove the async read
+		  barrier();
+		  RemoveAndPopNotifyList(pDev,pDev->WDSClientID[i],uTID,eClearCID);
+	   }
+	   spin_unlock_irq(&(pDev->notif_lock));
+	   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+	   if (result < 0)
+	   {
+		  DBG( "WDS bind mux id failed,i=%d\n",i );
+	   }
+   }
+   return result;
+}
+
+
+/*===========================================================================
+METHOD:
+   SetupQMIWDSCallback (Public Method)
+
+DESCRIPTION:
+   Request client and fire off reqests and start async read for
+   QMI WDS callback
+
+PARAMETERS:
+   pDev     [ I ] - Device specific memory
+
+RETURN VALUE:
+   int - 0 for success
+         Negative errno for failure
+===========================================================================*/
+int SetupQMIWDSCallback( sGobiUSBNet * pDev )
+{
+   int result,i;
    void * pWriteBuffer;
    u16 writeBufferSize;
    u16 WDSClientID;
@@ -3718,222 +6626,90 @@ int SetupQMIWDSCallback( sGobiUSBNet * pDev, sQMIDev *QMIDev )
       DBG( "Invalid device\n" );
       return -EFAULT;
    }
-   
-   result = GetClientID( pDev, QMIWDS, QMIDev );
-   if (result < 0)
-   {
-      return result;
-   }
-   WDSClientID = result;
 
-   if(pDev->mdm9x07)
-   {
-	  	set_ip_family_and_bind_mux_id_ep_id_fn_9x07(pDev, QMIDev, WDSClientID);
-   }
+   for ( i = 0; i < MAX_MUX_NUMBER_SUPPORTED; i++)
+   {  
+	   WDSClientID = pDev->WDSClientID[i];
 
-#ifdef CONFIG_DHCP
-   pDev->wds_client = WDSClientID;
-#endif
+	   // QMI WDS Set Event Report
+	   writeBufferSize = QMIWDSSetEventReportReqSize();
+	   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
+	   if (pWriteBuffer == NULL)
+	   {
+		  return -ENOMEM;
+	   }
 
-   // QMI WDS Set Event Report
-   writeBufferSize = QMIWDSSetEventReportReqSize();
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-   if (pWriteBuffer == NULL)
-   {
-      return -ENOMEM;
-   }
+	   result = QMIWDSSetEventReportReq( pWriteBuffer,
+										 writeBufferSize,
+										 1 );
+	   if (result < 0)
+	   {
+		  kfree( pWriteBuffer );
+		  return result;
+	   }
 
-   result = QMIWDSSetEventReportReq( pWriteBuffer, 
-                                     writeBufferSize,
-                                     GetTransactionID(QMIDev));
-   if (result < 0)
-   {
-      kfree( pWriteBuffer );
-      return result;
-   }
+	   result = WriteSync( pDev,
+						   pWriteBuffer,
+						   writeBufferSize,
+						   WDSClientID );
+	   kfree( pWriteBuffer );
 
-   result = WriteSync( pDev,
-                       pWriteBuffer,
-                       writeBufferSize,
-                       WDSClientID,
-                       QMIDev);
-   kfree( pWriteBuffer );
+	   if (result < 0)
+	   {
+		  return result;
+	   }
 
-   if (result < 0)
-   {
-      return result;
-   }
+	   // QMI WDS Get PKG SRVC Status
+	   writeBufferSize = QMIWDSGetPKGSRVCStatusReqSize();
+	   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
+	   if (pWriteBuffer == NULL)
+	   {
+		  return -ENOMEM;
+	   }
 
-   // QMI WDS Get PKG SRVC Status
-   writeBufferSize = QMIWDSGetPKGSRVCStatusReqSize();
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-   if (pWriteBuffer == NULL)
-   {
-      return -ENOMEM;
-   }
+	   result = QMIWDSGetPKGSRVCStatusReq( pWriteBuffer,
+										   writeBufferSize,
+										   2 );
+	   if (result < 0)
+	   {
+		  kfree( pWriteBuffer );
+		  return result;
+	   }
 
-   result = QMIWDSGetPKGSRVCStatusReq( pWriteBuffer, 
-                                       writeBufferSize,
-                                       GetTransactionID(QMIDev) );
-   if (result < 0)
-   {
-      kfree( pWriteBuffer );
-      return result;
-   }
-   
-   result = WriteSync( pDev,
-                       pWriteBuffer,
-                       writeBufferSize,
-                       WDSClientID,
-                       QMIDev);
-   kfree( pWriteBuffer );
+	   result = WriteSync( pDev,
+						   pWriteBuffer,
+						   writeBufferSize,
+						   WDSClientID );
+	   kfree( pWriteBuffer );
 
-   if (result < 0)
-   {
-      return result;
-   }
+	   if (result < 0)
+	   {
+		  return result;
+	   }
 
-   // Setup asnyc read callback
-   result = ReadAsync( pDev,
-                       WDSClientID,
-                       0,
-                       QMIWDSCallback,
-                       NULL,
-                       QMIDev);
-   if (result != 0)
-   {
-      DBG( "unable to setup async read\n" );
-      return result;
-   }
-   
- 
- 
-   // Send SetControlLineState request (USB_CDC)
-   //   Required for Autoconnect
-   result = usb_control_msg( pDev->mpNetDev->udev,
-                             usb_sndctrlpipe( pDev->mpNetDev->udev, 0 ),
-                             0x22,
-                             0x21,
-                             1, // DTR present
-                             pDev->mpEndpoints->mIntfNum,
-                             NULL,
-                             0,
-                             100 );
-   if (result < 0)
-   {
-      DBG( "Bad SetControlLineState status %d\n", result );
-      return result;
-   }
-
+	   // Setup asnyc read callback
+	   result = ReadAsync( pDev,
+						   WDSClientID,
+						   0,
+						   QMIWDSCallback,
+						   NULL ,1);
+	   if (result != 0)
+	   {
+		  DBG( "unable to setup async read\n" );
+		  return result;
+	   }
+	}
    return 0;
 }
-int ConfigureQMAP(sGobiUSBNet *pDev)
-{
-   u16 WDAClientID;
-   u16 result;
-
-   if (IsDeviceValid( pDev ) == false)
-   {
-      DBG( "Invalid device\n" );
-      return -EFAULT;
-   }
-
-   result = GetClientID( pDev, QMIWDA, &pDev->mQMIDev);
-   if (result < 0)
-   {
-      return result;
-   }
-   WDAClientID = result;
-
-   /* Set QMAP */
-   result = QMIWDASetQMAP( pDev , WDAClientID, &pDev->mQMIDev);
-   if (result != 0)
-   {
-      return result;
-   }
-   
-//   if(pDev->mdm9x07)
-  // {
-         /* Set QMAP Aggregation size*/
-  //	 result = QMIWDASetQMAPSettings( pDev , WDAClientID, &pDev->mQMIDev);
-   //	if (result != 0)
-   //	{
-    //  		return result;
-  //	}
- //  }
-   return 0;
-}
-
-int QMIWDASetQMAPSettings( sGobiUSBNet * pDev , u16 WDAClientID, sQMIDev *QMIDev)
-{
-   int result;
-   void * pWriteBuffer;
-   u16 writeBufferSize;
-   void * pReadBuffer;
-   u16 readBufferSize;
-
-   if (IsDeviceValid( pDev ) == false)
-   {
-      DBG( "Invalid device\n" );
-      return -EFAULT;
-   }
-
-   // QMI DMS Get Serial numbers Req
-   writeBufferSize = QMIWDASetDataFormatReqSettingsSize();
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-   if (pWriteBuffer == NULL)
-   {
-      return -ENOMEM;
-   }
-   DBG("QMIWDASetDataFormatReq\n");
-   result = QMIWDASetDataFormatReqSettings( pWriteBuffer,
-                              writeBufferSize,
-                              GetTransactionID(QMIDev) );
-   if (result < 0)
-   {
-      kfree( pWriteBuffer );
-      return result;
-   }
-
-   result = WriteSync( pDev,
-                       pWriteBuffer,
-                       writeBufferSize,
-                       WDAClientID,
-                       QMIDev);
-   kfree( pWriteBuffer );
-
-   if (result < 0)
-   {
-      return result;
-   }
-
-   // QMI WDA QMAP Resp
-   result = ReadSync( pDev,
-                      &pReadBuffer,
-                      WDAClientID,
-                      QMIDev->mQMITransactionID,
-                      QMIDev);
-   if (result < 0)
-   {
-      return result;
-   }
-   readBufferSize = result;
-   PrintHex( pReadBuffer, readBufferSize );
-   kfree( pReadBuffer );
-
-   // Success
-   return 0;
-}
-
 
 /*===========================================================================
 METHOD:
-   QMIWDASetQMAP (Public Method)
+   QMIDMSSWISetFCCAuth (Public Method)
 
 DESCRIPTION:
-   Register WDA client
-   set QMAP req and parse response
-   Release WDA client
+   Register DMS client
+   send FCC Authentication req and parse response
+   Release DMS client
 
 PARAMETERS:
    pDev     [ I ] - Device specific memory
@@ -3941,105 +6717,112 @@ PARAMETERS:
 RETURN VALUE:
    None
 ===========================================================================*/
-int QMIWDASetQMAP( sGobiUSBNet * pDev , u16 WDAClientID, sQMIDev *QMIDev)
+int QMIDMSSWISetFCCAuth( sGobiUSBNet * pDev )
 {
    int result;
    void * pWriteBuffer;
    u16 writeBufferSize;
    void * pReadBuffer;
    u16 readBufferSize;
-   unsigned int      ULAggregationMaxDatagram;
-   unsigned int    ULAggregationMaxSize;
+   u16 DMSClientID;
+   struct semaphore readSem;
+   unsigned long flags;
+   DBG("\n");
+
    if (IsDeviceValid( pDev ) == false)
    {
       DBG( "Invalid device\n" );
       return -EFAULT;
    }
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+
+   result = GetClientID( pDev, QMIDMS ,NULL);
+   if (result < 0)
+   {
+      return result;
+   }
+   DMSClientID = result;
 
    // QMI DMS Get Serial numbers Req
-   /*
-   if(pDev->mdm9x07)
+   writeBufferSize = QMIDMSSWISetFCCAuthReqSize();
+   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
+   if (pWriteBuffer == NULL)
    {
-	   writeBufferSize = QMIWDASetDataFormatReqSize_9x07();
-	   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-	   if (pWriteBuffer == NULL)
-	   {
-	      return -ENOMEM;
-	   }
-	   DBG("QMIWDASetDataFormatReq\n");
-	   result = QMIWDASetDataFormatReq_9x07( pWriteBuffer,
-	                              writeBufferSize,
-	                              GetTransactionID(QMIDev), pDev );
-	   if (result < 0)
-	   {
-	      kfree( pWriteBuffer );
-	      return result;
-	   }
+      return -ENOMEM;
    }
-   else*/
-   {
-	   writeBufferSize = QMIWDASetDataFormatReqSize();
-	   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-	   if (pWriteBuffer == NULL)
-	   {
-	      return -ENOMEM;
-	   }
-	   DBG("QMIWDASetDataFormatReq\n");
-	   result = QMIWDASetDataFormatReq( pWriteBuffer,
-	                              writeBufferSize,
-	                              GetTransactionID(QMIDev), pDev );
-	   if (result < 0)
-	   {
-	      kfree( pWriteBuffer );
-	      return result;
-	   }
 
-   }
-   result = WriteSync( pDev,
-                       pWriteBuffer,
-                       writeBufferSize,
-                       WDAClientID,
-                       QMIDev);
-   kfree( pWriteBuffer );
-
+   result = QMIDMSSWISetFCCAuthReq( pWriteBuffer,
+                                    writeBufferSize,
+                                    1 );
    if (result < 0)
    {
+      kfree( pWriteBuffer );
       return result;
    }
 
-   // QMI WDA QMAP Resp
-   result = ReadSync( pDev,
-                      &pReadBuffer,
-                      WDAClientID,
-                      QMIDev->mQMITransactionID,
-                      QMIDev);
+   result = ReadAsync( pDev, DMSClientID, 1, UpSem, &readSem ,1);
+   if(result == 0)
+   {
+      result = WriteSync( pDev,
+                    pWriteBuffer,
+                    writeBufferSize,
+                    DMSClientID );
+      kfree( pWriteBuffer );
+   }
+   wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+   mb();
+   // Enter critical section
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   spin_lock_irq(&(pDev->notif_lock));
+   barrier();
+   if (down_trylock( &readSem ) == 0)
+   {
+      // Pop the read data
+      if (PopFromReadMemList( pDev,
+                              DMSClientID,
+                              1,
+                              &pReadBuffer,
+                              &readBufferSize ) == true)
+      {
+         spin_unlock_irq(&(pDev->notif_lock));
+         // End critical section
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         result = 0;
+         // We don't care about the result
+         if(pReadBuffer)
+         kfree( pReadBuffer );
+      }
+      else
+      {
+         // Read mismatch/failure, unlock and continue
+         DBG( "Read mismatch/failure, unlock and continue\n" );
+         RemoveAndPopNotifyList(pDev,DMSClientID,1,eClearCID);
+         spin_unlock_irq(&(pDev->notif_lock));
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      }
+   }
+   else
+   {
+      DBG( "Timeout\n" );
+      // Timeout, remove the async read
+      RemoveAndPopNotifyList(pDev,DMSClientID,1,eClearCID);
+      spin_unlock_irq(&(pDev->notif_lock));
+      // End critical section
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      result = -1;
+   }
+
    if (result < 0)
    {
-      return result;
+      // Non fatal error, device did not return FCC Auth response
+      DBG( "Bad FCC Auth resp\n" );
    }
-   readBufferSize = result;
-   PrintHex( pReadBuffer, readBufferSize );
-
-   result = QMIWDASetDataFormatResp( pReadBuffer,
-                             readBufferSize,
-                             &ULAggregationMaxDatagram,
-                             &ULAggregationMaxSize);
-
-   if (result < 0)
-   {
-   printk("Error in Resp: Aggr Max Datagrams 0x%x Aggr Max Datagram Size 0x%x\n", pDev->ULAggregationMaxDatagram, pDev->ULAggregationMaxSize);
-      return result;
-   }
-
-   kfree( pReadBuffer );
-   pDev->ULAggregationMaxDatagram = le32_to_cpu(ULAggregationMaxDatagram);
-   pDev->ULAggregationMaxSize = le32_to_cpu(ULAggregationMaxSize);
-   printk("Aggr Max Datagrams 0x%x Aggr Max Datagram Size 0x%x\n", pDev->ULAggregationMaxDatagram, pDev->ULAggregationMaxSize);
+   ReleaseClientID( pDev, DMSClientID );
 
    // Success
    return 0;
 }
-
 
 /*===========================================================================
 METHOD:
@@ -4056,7 +6839,7 @@ PARAMETERS:
 RETURN VALUE:
    None
 ===========================================================================*/
-int QMIDMSGetMEID( sGobiUSBNet * pDev, sQMIDev *QMIDev )
+int QMIDMSGetMEID( sGobiUSBNet * pDev )
 {
    int result;
    void * pWriteBuffer;
@@ -4064,6 +6847,8 @@ int QMIDMSGetMEID( sGobiUSBNet * pDev, sQMIDev *QMIDev )
    void * pReadBuffer;
    u16 readBufferSize;
    u16 DMSClientID;
+   unsigned long flags;
+   struct semaphore readSem;
 
    if (IsDeviceValid( pDev ) == false)
    {
@@ -4071,7 +6856,9 @@ int QMIDMSGetMEID( sGobiUSBNet * pDev, sQMIDev *QMIDev )
       return -EFAULT;
    }
 
-   result = GetClientID( pDev, QMIDMS, &pDev->mQMIDev );
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+   result = GetClientID( pDev, QMIDMS ,NULL);
    if (result < 0)
    {
       return result;
@@ -4080,403 +6867,2980 @@ int QMIDMSGetMEID( sGobiUSBNet * pDev, sQMIDev *QMIDev )
 
    // QMI DMS Get Serial numbers Req
    writeBufferSize = QMIDMSGetMEIDReqSize();
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
+   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
    if (pWriteBuffer == NULL)
    {
       return -ENOMEM;
    }
 
-   result = QMIDMSGetMEIDReq( pWriteBuffer, 
+   result = QMIDMSGetMEIDReq( pWriteBuffer,
                               writeBufferSize,
-                              GetTransactionID(QMIDev) );
+                              1 );
    if (result < 0)
    {
       kfree( pWriteBuffer );
       return result;
    }
 
-   result = WriteSync( pDev,
-                       pWriteBuffer,
-                       writeBufferSize,
-                       DMSClientID,
-                       &pDev->mQMIDev);
-   kfree( pWriteBuffer );
-
-   if (result < 0)
+   result = ReadAsync( pDev, DMSClientID, 1, UpSem, &readSem ,1);
+   if(result == 0)
    {
-      return result;
+      result = WriteSync( pDev,
+                    pWriteBuffer,
+                    writeBufferSize,
+                    DMSClientID );
+      kfree( pWriteBuffer );
    }
-
-   // QMI DMS Get Serial numbers Resp
-   result = ReadSync( pDev,
-                      &pReadBuffer,
-                      DMSClientID,
-                      QMIDev->mQMITransactionID,
-                      &pDev->mQMIDev);
-   if (result < 0)
+   wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+   mb();
+   // Enter critical section
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   spin_lock_irq(&(pDev->notif_lock));
+   barrier();
+   if (down_trylock( &readSem ) == 0)
    {
-      return result;
-   }
-   readBufferSize = result;
-
-   result = QMIDMSGetMEIDResp( pReadBuffer,
+      // Pop the read data
+      if (PopFromReadMemList( pDev,
+                              DMSClientID,
+                              1,
+                              &pReadBuffer,
+                              &readBufferSize ) == true)
+      {
+         spin_unlock_irq(&(pDev->notif_lock));
+         // End critical section
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         result = QMIDMSGetMEIDResp( pReadBuffer,
                                readBufferSize,
                                &pDev->mMEID[0],
                                14 );
-   kfree( pReadBuffer );
+         // We don't care about the result
+         if(pReadBuffer)
+         kfree( pReadBuffer );
+      }
+      else
+      {
+         RemoveAndPopNotifyList(pDev,DMSClientID,1,eClearAndReleaseCID);
+         spin_unlock_irq(&(pDev->notif_lock));
+         // Read mismatch/failure, unlock and continue
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      }
+   }
+   else
+   {
+      // Timeout, remove the async read
+      RemoveAndPopNotifyList(pDev,DMSClientID,1,eClearAndReleaseCID);
+      spin_unlock_irq(&(pDev->notif_lock));
+      // End critical section
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      result = -1;
+      if (result < 0)
+      {
+         DBG( "bad get MEID resp\n" );
+         // Non fatal error, device did not return any MEID
+         //    Fill with 0's
+         memset( &pDev->mMEID[0], '0', 14 );
+      }
+   }
 
    if (result < 0)
    {
       DBG( "bad get MEID resp\n" );
-      
+
       // Non fatal error, device did not return any MEID
       //    Fill with 0's
       memset( &pDev->mMEID[0], '0', 14 );
    }
 
-   ReleaseClientID( pDev, DMSClientID, &pDev->mQMIDev);
+   ReleaseClientID( pDev, DMSClientID );
+
+   // always return Success as MEID is only available on CDMA devices only
+   return 0;
+}
+
+/*===========================================================================
+METHOD:
+   QMICTLSetDataFormat (Public Method)
+
+DESCRIPTION:
+   send Data format request and parse response
+
+PARAMETERS:
+   pDev     [ I ] - Device specific memory
+
+RETURN VALUE:
+   None
+===========================================================================*/
+int QMICTLSetDataFormat( sGobiUSBNet * pDev )
+{
+   u8 transactionID;
+   struct semaphore readSem;
+   int result;
+   void * pWriteBuffer;
+   u16 writeBufferSize;
+   void * pReadBuffer;
+   u16 readBufferSize;
+   unsigned long flags;
+
+   //DBG("\n");
+
+   // Send SET DATA FORMAT REQ
+   writeBufferSize = QMICTLSetDataFormatReqSize();
+
+   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
+   if (pWriteBuffer == NULL)
+   {
+      return -ENOMEM;
+   }
+
+   // Start read
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+
+   transactionID = QMIXactionIDGet(pDev);
+
+   // Fill buffer
+   result = QMICTLSetDataFormatReq( pWriteBuffer,
+                            writeBufferSize,
+                            transactionID ,
+                            pDev->iDataMode);
+
+   if (result < 0)
+   {
+      kfree( pWriteBuffer );
+      return result;
+   }
+
+   DBG("Sending QMI Set Data Format Request, TransactionID: 0x%x\n", transactionID );
+
+   WriteSync( pDev,
+              pWriteBuffer,
+              writeBufferSize,
+              QMICTL );
+
+   //msleep( 100 );
+   wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+   mb();
+   // Enter critical section
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   spin_lock_irq(&(pDev->notif_lock));
+   barrier();
+   if (down_trylock( &readSem ) == 0)
+   {
+      // Pop the read data
+      if (PopFromReadMemList( pDev,
+                              QMICTL,
+                              transactionID,
+                              &pReadBuffer,
+                              &readBufferSize ) == true)
+      {
+         // Success
+         PrintHex(pReadBuffer, readBufferSize);
+         spin_unlock_irq(&(pDev->notif_lock));
+         // End critical section
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         // We care about the result: call Response  function
+         result = QMICTLSetDataFormatResp( pReadBuffer, readBufferSize,pDev->iDataMode);
+         if(pReadBuffer)
+         kfree( pReadBuffer );
+
+         if (result != 0)
+         {
+            DBG( "Device cannot set requested data format\n" );
+            if(pWriteBuffer)
+            kfree( pWriteBuffer );
+            return result;
+         }
+      }
+      else
+      {
+         spin_unlock_irq(&(pDev->notif_lock));
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      }
+   }
+   else
+   {
+      // Timeout, remove the async read
+      RemoveAndPopNotifyList(pDev,QMICTL,transactionID,eForceClearAndReleaseCID);
+      // End critical section
+      
+   }
+   spin_unlock_irq(&(pDev->notif_lock));
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+   kfree( pWriteBuffer );
+
+   return 0;
+}
+
+
+/*===========================================================================
+METHOD:
+   QMIWDASetQMAP (Public Method)
+
+DESCRIPTION:
+   Send set QMAP Data format request and parse response
+
+PARAMETERS:
+   pDev            [ I ] - Device specific memory
+   WDAClientID     [ I ] - WDA Client ID
+RETURN VALUE:
+   int - 0 for success
+            Negative errno for failure
+===========================================================================*/
+int QMIWDASetQMAP( sGobiUSBNet * pDev , u16 WDAClientID)
+{
+   int result;
+   void *pWriteBuffer;
+   u16 writeBufferSize;
+   void *pReadBuffer;
+   u16 readBufferSize;
+   unsigned long flags;
+   struct semaphore readSem;
+   u16 uTID=2;
+   DBG("\n");
+
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device\n" );
+      return -EFAULT;
+   }
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+
+   // QMI WDA Set Data Format Request
+   writeBufferSize = QMIWDASetDataFormatReqSettingsSize();
+   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
+   if (pWriteBuffer == NULL)
+   {
+      return -ENOMEM;
+   }
+
+   result = QMIWDASetDataFormatReqSettingsReq( pWriteBuffer,
+                                    writeBufferSize,
+                                    uTID);
+   if (result < 0)
+   {
+      kfree( pWriteBuffer );
+      return result;
+   }
+
+   result = ReadAsync( pDev, WDAClientID, uTID, UpSem, &readSem ,1);
+   if(result == 0)
+   {
+      result = WriteSync( pDev,
+                          pWriteBuffer,
+                          writeBufferSize,
+                          WDAClientID );
+      kfree( pWriteBuffer );
+   }
+   if (result < 0)
+   {
+      DBG( "WriteSync Fail\n" );
+      return result;
+   }
+   wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+   mb();
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   spin_lock_irq(&(pDev->notif_lock));
+   barrier();
+   if (down_trylock( &readSem ) == 0)
+   {
+       // Enter critical section
+         // Pop the read data
+         if (PopFromReadMemList( pDev,
+                                 WDAClientID,
+                                 uTID,
+                                 &pReadBuffer,
+                                 &readBufferSize ) == true)
+         {
+            PrintHex( pReadBuffer, readBufferSize );
+            result = 0;
+            // We don't care about the result
+            if(pReadBuffer)
+            kfree( pReadBuffer );
+         }
+         else
+         {
+            // Read mismatch/failure, unlock and continue
+            RemoveAndPopNotifyList(pDev,WDAClientID,uTID,eClearAndReleaseCID);
+         }
+   }
+   else
+   {
+      DBG( "Timeout\n" );
+      result = -1;
+      // Timeout, remove the async read
+      barrier();
+      RemoveAndPopNotifyList(pDev,WDAClientID,uTID,eClearAndReleaseCID);
+   }
+   spin_unlock_irq(&(pDev->notif_lock));
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+   if (result < 0)
+   {
+      DBG( "Data Format Cannot be set\n" );
+   }
+   return result;
+}
+/*===========================================================================
+METHOD:
+   QMICTLGetVersionInfo (Public Method)
+
+DESCRIPTION:
+   send get version info request and parse response
+
+PARAMETERS:
+   pDev     [ I ] - Device specific memory
+
+RETURN VALUE:
+   None
+===========================================================================*/
+int QMICTLGetVersionInfo( sGobiUSBNet * pDev )
+{
+   u8 transactionID;
+   struct semaphore readSem;
+   int result;
+   void * pWriteBuffer;
+   u16 writeBufferSize;
+   void * pReadBuffer;
+   u16 readBufferSize;
+   unsigned long flags;
+
+   DBG("\n");
+
+   // Send CTL GET VERSION INFO REQ
+   writeBufferSize = QMICTLGetVersionInfoReqSize();
+
+   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
+   if (pWriteBuffer == NULL)
+   {
+      return -ENOMEM;
+   }
+
+   // Start read
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+
+   transactionID = QMIXactionIDGet(pDev);
+
+   // Fill buffer
+   result = QMICTLGetVersionInfoReq( pWriteBuffer,
+                            writeBufferSize,
+                            transactionID);
+
+   if (result < 0)
+   {
+      kfree( pWriteBuffer );
+      return result;
+   }
+
+   DBG("Sending QMI CTL Get Version Info Request, TransactionID: 0x%x\n", transactionID );
+
+   result = ReadAsync( pDev, QMICTL, transactionID, UpSem, &readSem ,1);
+   
+   if (result == 0) {
+       WriteSync( pDev,
+              pWriteBuffer,
+              writeBufferSize,
+              QMICTL );
+   }
+
+   kfree( pWriteBuffer );
+   wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+   mb();
+   // Enter critical section
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   spin_lock_irq(&(pDev->notif_lock));
+   barrier();
+   if (down_trylock( &readSem ) == 0)
+   {
+      // Pop the read data
+      if (PopFromReadMemList( pDev,
+                              QMICTL,
+                              transactionID,
+                              &pReadBuffer,
+                              &readBufferSize ) == true)
+      {
+         // Success
+         PrintHex(pReadBuffer, readBufferSize);
+         spin_unlock_irq(&(pDev->notif_lock));
+
+         // End critical section
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+
+         // We care about the result: call Response  function
+         result = QMICTLGetVersionInfoResp(
+                      pReadBuffer,
+                      readBufferSize,
+                      &pDev->svcVersion[0], 
+                      sizeof(pDev->svcVersion));        
+
+         if(pReadBuffer)
+             kfree( pReadBuffer );
+
+         if (result != 0)
+         {
+            DBG( "Could not parse version info correctly in QMI response %d\n",result );
+            return result;
+         }
+      }
+      else
+      {
+         // Read mismatch/failure, unlock and continue
+         RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+         spin_unlock_irq(&(pDev->notif_lock));
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         result = -1;
+      }
+   }
+   else
+   {
+      // Timeout, remove the async read
+      RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+      spin_unlock_irq(&(pDev->notif_lock));
+      // End critical section
+      LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+      result = -1;
+   }
+
+   if (result < 0)
+   {
+      DBG( "QMI CTL Get Version Info error code %d\n", result );
+      return result;
+   }
 
    // Success
    return 0;
 }
+/*===========================================================================
+METHOD:
+   QMIWDASetDataFormat (Public Method)
 
-int WDSConnect(sGobiUSBNet *pDev, sQMIDev *QMIDev, int id) {
+DESCRIPTION:
+   Register WDA client
+   send Data format request and parse response
+   Release WDA client
 
+PARAMETERS:
+   pDev            [ I ] - Device specific memory
+   te_flow_control [ I ] - TE Flow Control Flag
+   iqmuxenable     [ I ] - QMUX Control Flag
+RETURN VALUE:
+   int - 0 for success
+            Negative errno for failure
+===========================================================================*/
+int QMIWDASetDataFormat( sGobiUSBNet * pDev, int te_flow_control , int iqmuxenable)
+{
    int result;
    void * pWriteBuffer;
    u16 writeBufferSize;
    void * pReadBuffer;
    u16 readBufferSize;
-   
-   // set ip family pref as IPV4
-   writeBufferSize = sizeof( sQMUX ) + 11;
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
+   u16 WDAClientID;
+   unsigned long flags;
+   struct semaphore readSem;
+   u16 uTID=1;
+   //DBG("\n");
+
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device\n" );
+      return -EFAULT;
+   }
+   barrier();
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+   result = GetClientID( pDev, QMIWDA ,NULL);
+   if (result < 0)
+   {
+      return result;
+   }
+   WDAClientID = result;
+
+   // QMI WDA Set Data Format Request
+   writeBufferSize = QMIWDASetDataFormatReqSize(te_flow_control,iqmuxenable);
+   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
    if (pWriteBuffer == NULL)
    {
-       DBG("Mem alloc failed for set ip famuly pref\n");
-       return -ENOMEM;
+      ReleaseClientID( pDev, WDAClientID );
+      return -ENOMEM;
    }
 
-   result = QMIWDSSetIPFamilyPrefReq( pWriteBuffer,
-         writeBufferSize,
-         GetTransactionID(QMIDev));
+   result = QMIWDASetDataFormatReq( pWriteBuffer,
+                                    writeBufferSize,
+                                    uTID,
+                                    te_flow_control,
+                                    pDev->iDataMode,
+                                    pDev->mpIntf->cur_altsetting->desc.bInterfaceNumber,
+                                    iqmuxenable);
    if (result < 0)
    {
-       DBG("Request setup failed for ip family pref\n");
-       kfree( pWriteBuffer );
-       return result;
-   }
-
-   result = WriteSync( pDev,
-         pWriteBuffer,
-         writeBufferSize,
-         id,
-         QMIDev);
-   kfree( pWriteBuffer );
-   if (result < 0)
-   {
-       DBG("set ip family pref Failed\n");
-       return result;
-   }
-
-   result = ReadSync( pDev,
-                      &pReadBuffer,
-                      id,
-                      QMIDev->mQMITransactionID,
-                      QMIDev);
-   if (result < 0)
-   {
-      printk("ReadSync failed for set ip family pref\n");
+      kfree( pWriteBuffer );
+      ReleaseClientID( pDev, WDAClientID );
       return result;
    }
 
-
-   // negotiate MUX ID as 0x81
-
-   writeBufferSize = sizeof( sQMUX ) + 29;
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-   if (pWriteBuffer == NULL)
+   result = ReadAsync( pDev, WDAClientID, uTID, UpSem, &readSem ,1);
+   if(result == 0)
    {
-       DBG("Mem alloc failed for bind mux port\n");
-       return -ENOMEM;
+      result = WriteSync( pDev,
+                          pWriteBuffer,
+                          writeBufferSize,
+                          WDAClientID );
+      kfree( pWriteBuffer );
    }
-
-   result = QMIWDSBindMuxPortReq( pWriteBuffer,
-         writeBufferSize,
-         GetTransactionID(QMIDev), pDev, QMIDev);
    if (result < 0)
    {
-       DBG("Request setup failed for bind mux port\n");
-       kfree( pWriteBuffer );
-       return result;
-   }
-
-   result = WriteSync( pDev,
-         pWriteBuffer,
-         writeBufferSize,
-         id,
-         QMIDev);
-   kfree( pWriteBuffer );
-   if (result < 0)
-   {
-       DBG("Bind mux port Failed\n");
-       return result;
-   }
-
-   result = ReadSync( pDev,
-                      &pReadBuffer,
-                      id,
-                      QMIDev->mQMITransactionID,
-                      QMIDev);
-   if (result < 0)
-   {
-      printk("ReadSync failed for bind mux port\n");
+      DBG( "WriteSync Fail\n" );
+      ReleaseClientID( pDev, WDAClientID );
       return result;
    }
-   
-
-   // start the network
-   writeBufferSize = QMIWDSStartNetworkReqSize();
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-   if (pWriteBuffer == NULL)
+   wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+   mb();
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   spin_lock_irq(&(pDev->notif_lock));
+   barrier();
+   if (down_trylock( &readSem ) == 0)
    {
-       DBG("Mem alloc failed\n");
-       return -ENOMEM;
+       // Enter critical section
+         // Pop the read data
+         if (PopFromReadMemList( pDev,
+                                 WDAClientID,
+                                 uTID,
+                                 &pReadBuffer,
+                                 &readBufferSize ) == true)
+         {
+            u32 *pULDatagram = NULL;
+            u32 *pULDatagramSize = NULL;
+            if(iqmuxenable)
+            {
+               pULDatagram = &pDev->ULDatagram;
+               pULDatagramSize = &pDev->ULDatagramSize;
+            }
+            result = QMIWDASetDataFormatResp(pReadBuffer,
+                                                  readBufferSize,
+                                                  pDev->iDataMode,
+                                                  pULDatagram,
+                                                  pULDatagramSize);
+            // We don't care about the result
+            if(pReadBuffer)
+            kfree( pReadBuffer );
+         }
+         else
+         {
+            // Read mismatch/failure, unlock and continue
+            RemoveAndPopNotifyList(pDev,WDAClientID,uTID,eClearAndReleaseCID);
+         }
    }
-
-   result = QMIWDSStartNetworkReq( pWriteBuffer,
-         writeBufferSize,
-         GetTransactionID(QMIDev));
+   else
+   {
+      DBG( "Timeout\n" );
+      result = -1;
+      // Timeout, remove the async read
+      barrier();
+      RemoveAndPopNotifyList(pDev,WDAClientID,uTID,eClearAndReleaseCID);
+   }
+   spin_unlock_irq(&(pDev->notif_lock));
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
    if (result < 0)
    {
-       DBG("Request setup failed\n");
-       kfree( pWriteBuffer );
-       return result;
+      DBG( "Data Format Cannot be set\n" );
    }
-
-   result = WriteSync( pDev,
-         pWriteBuffer,
-         writeBufferSize,
-         id,
-         QMIDev);
-   kfree( pWriteBuffer );
-   if (result < 0)
+   if(iqmuxenable!=0)
    {
-       DBG("Connect Failed\n");
-       return result;
+      /* Set QMAP Aggregation size*/
+      result = QMIWDASetQMAP( pDev , WDAClientID);
    }
+   ReleaseClientID( pDev, WDAClientID );
 
-   result = ReadSync( pDev,
-                      &pReadBuffer,
-                      id,
-                      QMIDev->mQMITransactionID,
-                      QMIDev);
-   if (result < 0)
-   {
-      printk("ReadSync failed\n");
-      return result;
-   }
-   readBufferSize = result;
-   result = QMIWDSStartNetworkResp( pReadBuffer,
-                               readBufferSize,
-                               &pkt_data_handle,
-                               4);
-   if (result < 0)
-   {
-      DBG("QMIWDSStartNetworkResp failed\n");
-   }
-
-   kfree( pReadBuffer );
-   pkt_data_handle = le32_to_cpu(pkt_data_handle);
-   // Get IP Address Settings:
-   writeBufferSize = QMIWDSGetRuntimeSettingsReqSize();
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-   if (pWriteBuffer == NULL)
-   {
-       DBG("Mem alloc failed\n");
-       return -ENOMEM;
-   }
-
-   result = QMIWDSGetRuntimeSettingsReq( pWriteBuffer,
-                        writeBufferSize,
-                        GetTransactionID(QMIDev));
-   if (result < 0)
-   {
-       DBG("Preparing Request Runttime settings failed\n");
-       kfree( pWriteBuffer );
-       return result;
-   }
-
-   result = WriteSync( pDev,
-                        pWriteBuffer,
-                        writeBufferSize,
-                        id,
-                        QMIDev);
-   kfree( pWriteBuffer );
-   if (result < 0)
-   {
-       DBG("Request runtime settings  Failed\n");
-       return result;
-   }
-
-   result = ReadSync( pDev,
-                      &pReadBuffer,
-                      id,
-                      QMIDev->mQMITransactionID,
-                      QMIDev);
-   if (result < 0)
-   {
-      printk("ReadSync failed\n");
-      return result;
-   }
-   readBufferSize = result;
-   result = QMIWDSGetRuntimeSettingsResp( pDev, pReadBuffer,
-                               readBufferSize,
-                               QMIDev);
-   if (result < 0)
-   {
-      DBG("QMIWDSGetRuntimeSettingsResp failed\n");
-   }
-
-   kfree( pReadBuffer );
-   
-   return 0;
-
+   // Success
+   return result;
 }
 
-int WDSStopNetwork(sGobiUSBNet *pDev, int id, sQMIDev *QMIDev) 
-{
-	 int result;
-	 void * pWriteBuffer;
-	 u16 writeBufferSize;
-	 void * pReadBuffer;
-	// u16 readBufferSize;
+#define gobi_mdelay_interruptible(n) (\
+   (__builtin_constant_p(n) && (n)<=MAX_UDELAY_MS) ? udelay((n)*1000) : \
+   ({unsigned long __ms=(n); \
+   while (__ms--){ \
+      udelay(1000); \
+      if(signal_pending(current)){\
+         break;\
+      } \
+   };\
+   }))
 
-	if(pkt_data_handle == 0)
-	{
-		return -1;
-	}
-
-	// stop the network
-	  writeBufferSize = QMIWDSStopNetworkReqSize();
-	  pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
-	  if (pWriteBuffer == NULL)
-	  {
-		  DBG("Mem alloc failed\n");
-		  return -ENOMEM;
-	  }
-	
-	  result = QMIWDSStopNetworkReq( pWriteBuffer,
-			writeBufferSize,
-			GetTransactionID(QMIDev),pkt_data_handle);
-	  if (result < 0)
-	  {
-		  DBG("Request setup failed\n");
-		  kfree( pWriteBuffer );
-		  return result;
-	  }
-	
-	  result = WriteSync( pDev,
-			pWriteBuffer,
-			writeBufferSize,
-			id,
-			QMIDev);
-	  kfree( pWriteBuffer );
-	  if (result < 0)
-	  {
-		  DBG("Stop Connect Failed\n");
-		  return result;
-	  }
-	
-	  result = ReadSync( pDev,
-						 &pReadBuffer,
-						 id,
-						 QMIDev->mQMITransactionID,
-						 QMIDev);
-	  if (result < 0)
-	  {
-		 printk("Stop Connect failed\n");
-		 return result;
-	  }
-	  
-	  kfree( pReadBuffer );
-	  
-	  pkt_data_handle = 0;
-	  return 0;
+void wait_ms(unsigned int ms) {
+   if(in_atomic())
+   {
+      DBG("preempt_ensabled\n");
+      return ;
+   }
+   if (!in_interrupt()) 
+   {
+       schedule_timeout_interruptible(1 + ms * HZ / 1000);
+   }
+   else
+   {
+      barrier();
+      gobi_mdelay_interruptible(ms);
+   }
 }
 
-
-void WDSDisConnect(int id, sGobiUSBNet *pDev, sQMIDev *QMIDev)
+void wait_control_msg_semaphore_timeout(struct semaphore *pSem, unsigned int timeout)
 {
-   WDSStopNetwork( pDev, id, QMIDev );
-   //ReleaseClientID( pDev, id, QMIDev );
+    unsigned int totaltime = 0;
+    if(pSem==NULL)
+    {
+        return;
+    }
+    do
+    {
+        wait_ms(QMI_CONTROL_MSG_DELAY_MS/2);
+        if (down_trylock( pSem ) == 0)
+        {
+            up(pSem);
+            return;
+        }
+        if(signal_pending(current))
+        {
+            return ;
+        }
+        totaltime +=QMI_CONTROL_MSG_DELAY_MS/2;
+    }while(totaltime<timeout);
+    DBG("wait timeout\n");
+    return ;
 }
 
-int WDSGetConnectStatus(int id,sGobiUSBNet *pDev, sQMIDev *QMIDev) 
-{
+/*===========================================================================
+METHOD:
+   RemoveAndPopNotifyList (Public Method)
 
+DESCRIPTION:
+   Remove first Notify entry from this client's notify list
+   and Run function
+
+   Caller MUST have lock on mClientMemLock
+
+PARAMETERS:
+   pDev              [ I ] - Device specific memory
+   clientID          [ I ] - Requester's client ID
+   transactionID     [ I ] - Transaction ID or 0 for any
+
+RETURN VALUE:
+   bool
+===========================================================================*/
+int RemoveAndPopNotifyList(
+   sGobiUSBNet *      pDev,
+   u16              clientID,
+   u16              transactionID ,
+   int              iClearClientID)
+{
+   sClientMemList * pClientMem;
+   sNotifyList * pDelNotifyList, ** ppNotifyList;
+   sClientMemList ** ppDelClientMem;
+   sClientMemList * pNextClientMem;
+   mb();
+   if(pDev==NULL)
+   {
+      DBG("NULL");
+      return eNotifyListEmpty;
+   }
+#ifdef CONFIG_SMP
+   // Verify Lock
+   #if _IGNORE_DISCONNECT_SPIN_LOCK_CHECK_
+   if(!IsDeviceDisconnect(pDev))
+   #endif
+   if (LocalClientMemLockSpinIsLock( pDev ) == 0)
+   {
+      DBG( "unlocked\n" );
+      BUG();
+   }
+#endif
+   do
+   {
+      // Get this client's memory location
+      pClientMem = FindClientMem( pDev, clientID );
+      if (pClientMem == NULL)
+      {
+         DBG( "Could not find this client's memory 0x%04X\n", clientID );
+         return eNotifyListEmpty;
+      }
+
+      ppNotifyList = &(pClientMem->mpReadNotifyList);
+      pDelNotifyList = NULL;
+      // Remove from list
+      CLIENT_READMEM_SNAPSHOT(clientID,pDev);
+      while (*ppNotifyList != NULL)
+      {
+         // Do we care about transaction ID?
+         if (transactionID == 0
+         ||  (*ppNotifyList)->mTransactionID == 0
+         ||  transactionID == (*ppNotifyList)->mTransactionID)
+         {
+            pDelNotifyList = *ppNotifyList;
+            mb();
+            DBG( "Remove Notify TID = %x\n", (*ppNotifyList)->mTransactionID );
+            break;
+         }
+
+         DBG( "skipping data TID = %x\n", (*ppNotifyList)->mTransactionID );
+
+         // next
+         ppNotifyList = &(*ppNotifyList)->mpNext;
+      }
+      mb();
+      if (pDelNotifyList != NULL)
+      {
+         // Remove element
+         *ppNotifyList = (*ppNotifyList)->mpNext;
+         pDelNotifyList->mpNext = NULL;
+         pDelNotifyList->mpNotifyFunct = NULL;
+         pDelNotifyList->mpData = NULL;
+         pDelNotifyList->mTransactionID = 0;
+         // Delete memory
+         kfree( pDelNotifyList );
+         pDelNotifyList = NULL;
+         mb();
+      }
+      else
+      {
+         void *pFreeData = NULL;
+         u16 FreeDataSize;
+         //Remove From memory List
+         while(PopFromReadMemList( pDev,
+             clientID,
+             transactionID,
+             &pFreeData,
+             &FreeDataSize ) == true )
+         {
+             DBG( "Remove Mem ClientID: 0x%x, data TID = 0x%x\n", clientID,transactionID);
+             kfree( pFreeData );
+             pFreeData = NULL;
+         }
+         DBG( "no one to notify for TID 0x%x\n", transactionID );
+         mb();
+         break;//return eNotifyListEmpty;
+      }
+   }while(ppNotifyList!=NULL);
+
+
+   ppDelClientMem = &pDev->mQMIDev.mpClientMemList;
+   while (*ppDelClientMem != NULL)
+   {
+      if ((*ppDelClientMem)->mClientID == clientID)
+      {
+         pNextClientMem = (*ppDelClientMem)->mpNext;
+         kfree( *ppDelClientMem );
+         *ppDelClientMem = NULL;
+
+         // Overwrite the pointer that was to this client mem
+         *ppDelClientMem = pNextClientMem;
+      }
+      else
+      {
+         // I now point to (a pointer of ((the node I was at)'s mpNext))
+          if(*ppDelClientMem==NULL)
+          {
+              DBG("ppDelClientMem NULL %d\r\n",__LINE__);
+              break;
+          }
+         ppDelClientMem = &(*ppDelClientMem)->mpNext;
+      }
+      mb();
+   }
+   mb();
+   return eNotifyListEmpty;
+}
+
+/*===========================================================================
+METHOD:
+   SetPowerSaveMode (Public Method)
+
+DESCRIPTION:
+   Set mode in power save mode
+
+PARAMETERS:
+   pDev     [ I ] - Device specific memory
+   mode     [ I ] - power save mode, 0:wakeup ; 1:suspend
+
+RETURN VALUE:
+   int - 0 for success
+         Negative errno for failure
+===========================================================================*/
+int SetPowerSaveMode(sGobiUSBNet *pDev,u8 mode)
+{
    int result;
    void * pWriteBuffer;
    u16 writeBufferSize;
    void * pReadBuffer;
    u16 readBufferSize;
+   u8 transactionID;
+   unsigned long flags;
+   struct semaphore readSem;
+
+   if (IsDeviceValid( pDev ) == false)
+   {
+      printk(KERN_ERR "Invalid device!\n" );
+      return -ENXIO;
+   }
    
-  // Get IP Address Settings:
-   writeBufferSize = QMIWDSGetPktSrvcStatusReqSize();
-   pWriteBuffer = kmalloc( writeBufferSize, GFP_KERNEL );
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+   writeBufferSize = QMICTLSetPowerSaveModeReqSize();
+   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
    if (pWriteBuffer == NULL)
    {
-       DBG("Mem alloc failed\n");
-       return -ENOMEM;
+      return -ENOMEM;
    }
 
-   result = QMIWDSGetPktSrvcStatusReq( pWriteBuffer,
-                        writeBufferSize,
-                        GetTransactionID(QMIDev));
+   transactionID = QMIXactionIDGet(pDev);
+   result = ReadAsync( pDev, QMICTL, transactionID, UpSem, &readSem ,1);
+
+    result = QMICTLSetPowerSaveModeReq(pWriteBuffer,
+                                     writeBufferSize,
+                                     transactionID,
+                                     mode );
    if (result < 0)
    {
-       DBG("Preparing Request Runttime settings failed\n");
        kfree( pWriteBuffer );
        return result;
    }
-
-   result = WriteSync( pDev,
-                        pWriteBuffer,
-                        writeBufferSize,
-                        id,
-                        QMIDev);
+   result = WriteSyncNoResume( pDev,
+          pWriteBuffer,
+          writeBufferSize,
+          QMICTL );
    kfree( pWriteBuffer );
+
    if (result < 0)
    {
-       DBG("Request runtime settings  Failed\n");
-       return result;
+        DBG( "bad write data %d\n", result );
+        return result;
    }
-
-   result = ReadSync( pDev,
-                      &pReadBuffer,
-                      id,
-                      QMIDev->mQMITransactionID,
-                      QMIDev);
-   if (result < 0)
+   wait_control_msg_semaphore_timeout(&readSem, QMI_CONTROL_MAX_MSG_DELAY_MS);
+   mb();
+   // Enter critical section
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   spin_lock_irq(&(pDev->notif_lock));
+   barrier();
+   if (down_trylock( &readSem ) == 0)
    {
-      printk("ReadSync failed\n");
-      return result;
+      // Pop the read data
+      if (PopFromReadMemList( pDev,
+                              QMICTL,
+                              transactionID,
+                              &pReadBuffer,
+                              &readBufferSize ) == true)
+      {
+         // Success
+         spin_unlock_irq(&(pDev->notif_lock));
+         // End critical section
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         result = QMICTLSetPowerSaveModeResp(pReadBuffer,
+                                               readBufferSize);
+    
+         // We don't care about the result
+         if(pReadBuffer)
+         kfree( pReadBuffer );
+         return result;
+      }
+      else
+      {
+         // Read mismatch/failure, unlock and continue
+         RemoveAndPopNotifyList(pDev,QMICTL,0,eClearAndReleaseCID);
+      }
    }
-   readBufferSize = result;
-   result = QMIWDSGetPktSrvcStatusResp( pReadBuffer,
-                               readBufferSize);
-   if (result < 0)
+   else
    {
-      DBG("QMIWDSGetRuntimeSettingsResp failed\n");
+      // Timeout, remove the async read
+      RemoveAndPopNotifyList(pDev,QMICTL,0,eClearAndReleaseCID);
+      // End critical section
+      result = -1;
    }
-
-   kfree( pReadBuffer );
-
+   spin_unlock_irq(&(pDev->notif_lock));
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
    return result;
 
 }
 
+/*==========================================================================
+METHOD:
+   WriteSyncNoResume (Public Method)
+
+DESCRIPTION:
+   Start synchronous write without resume device
+
+PARAMETERS:
+   pDev                 [ I ] - Device specific memory
+   pWriteBuffer         [ I ] - Data to be written
+   writeBufferSize      [ I ] - Size of data to be written
+   clientID             [ I ] - Client ID of requester
+
+RETURN VALUE:
+   int - write size (includes QMUX)
+         negative errno for failure
+============================================================================*/
+int WriteSyncNoResume(
+   sGobiUSBNet *          pDev,
+   char *                 pWriteBuffer,
+   int                    writeBufferSize,
+   u16                    clientID )
+{
+   int i;
+   int result;
+   int iLockRetry =0;
+   //DBG("\n");
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device!\n" );
+      return -ENXIO;
+   }
+   if(IsDeviceDisconnect(pDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
+   if (pDev->mbUnload >= eStatUnloading)
+   {
+      DBG( "Unloading device!\n" );
+      return -ENXIO;
+   }
+   // Fill writeBuffer with QMUX
+   result = FillQMUX( clientID, pWriteBuffer, writeBufferSize );
+   if (result < 0)
+   {
+      return result;
+   }
+
+   // Wake device
+   #ifdef CONFIG_PM
+   UsbAutopmGetInterface( pDev->mpIntf );
+   #else
+   gobi_usb_autopm_get_interface( pDev->mpIntf );
+   #endif
+
+   DBG( "Actual Write:\n" );
+   PrintHex( pWriteBuffer, writeBufferSize );
+
+   // Write Control URB, protect with read semaphore to track in-flight USB control writes in case of disconnect
+   for(i=0;i<USB_WRITE_RETRY;i++)
+   {
+      
+      if(isModuleUnload(pDev))
+      {
+         DBG( "unloaded\n" );
+         return -EFAULT;
+      }
+      pDev->iShutdown_read_sem= __LINE__;
+      if(signal_pending(current))
+      {
+         return -ERESTARTSYS;
+      }
+
+      iLockRetry = 0;
+      mb();
+      while(down_read_trylock(&(pDev->shutdown_rwsem))!=1)
+      {
+         wait_ms(5);
+         mb();
+         if(iLockRetry++>100)
+         {
+            DBG("down_read_trylock timeout");
+            return -EFAULT;
+         }
+         if(pDev==NULL)
+         {
+            DBG( "NULL\n" );
+            return -EFAULT;
+         }
+         if (pDev->mbUnload >= eStatUnloading)
+         {
+            DBG( "unloaded\n" );
+            return -EFAULT;
+         }
+      }
+      mb();
+      result = Gobi_usb_control_msg(pDev->mpIntf, pDev->mpNetDev->udev, usb_sndctrlpipe( pDev->mpNetDev->udev, 0 ),
+             SEND_ENCAPSULATED_COMMAND,
+             USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+             0, pDev->mpIntf->cur_altsetting->desc.bInterfaceNumber,
+             (void*)pWriteBuffer, writeBufferSize,
+             USB_WRITE_TIMEOUT );
+       up_read(&pDev->shutdown_rwsem);
+       if(signal_pending(current))
+       {
+          return -ERESTARTSYS;
+       }
+       if (IsDeviceDisconnect(pDev) )
+       {
+         return -ENXIO;
+       }
+       if(pDev==NULL)
+       {
+          return -EFAULT;
+       }
+       
+       pDev->iShutdown_read_sem=- __LINE__;
+       
+       if (pDev->mbUnload >= eStatUnloading)
+       {
+          DBG( "unloaded\n" );
+          return -EFAULT;
+       }
+
+       if (signal_pending(current))
+       {
+           return -ERESTARTSYS;
+       }
+
+       if (result < 0)
+       {
+          printk(KERN_WARNING "usb_control_msg failed (%d)", result);
+       }
+       // Control write transfer may occasionally timeout with certain HCIs, attempt a second time before reporting an error
+       if (result == -ETIMEDOUT)
+       {
+           pDev->writeTimeoutCnt++;
+           printk(KERN_WARNING "Write URB timeout, cnt(%d)\n", pDev->writeTimeoutCnt);
+       }
+       else if(result < 0 )
+       {
+          DBG( "%s no device!\n" ,__FUNCTION__);
+           return result;
+       }
+       else
+       {
+           break;
+       }
+       if (IsDeviceValid( pDev ) == false)
+       {
+          DBG( "%s Invalid device!\n" ,__FUNCTION__);
+          return -ENXIO;
+       }
+       if (pDev->mbUnload > eStatUnloading)
+       {
+         DBG( "unloaded\n" );
+         return -EFAULT;
+       }
+   }
+
+   // Write is done, release device
+   gobi_usb_autopm_put_interface( pDev->mpIntf );
+   return result;
+}
+
+int ReleaseNotifyList(sGobiUSBNet *pDev,u16 clientID,u8 transactionID)
+{
+   unsigned long flags;
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   // Timeout, remove the async read
+   NotifyAndPopNotifyList( pDev, clientID, transactionID );
+   // End critical section
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+   return 0;
+}
+
+#ifdef CONFIG_PM
+/*===========================================================================
+METHOD:
+   ConfigPowerSaveSettings (Public Method)
+
+DESCRIPTION:
+   Set modem power save mode config
+
+PARAMETERS:
+   pDev      [ I ] - Device specific memory
+   service   [ I ] - QMI service number
+   indication[ I ] - QMI indication number
+
+RETURN VALUE:
+   int - 0 for success
+         Negative errno for failure
+===========================================================================*/
+int ConfigPowerSaveSettings(sGobiUSBNet *pDev, u8 service, u8 indication)
+{
+   int result;
+   void * pWriteBuffer;
+   u16 writeBufferSize;
+   void * pReadBuffer;
+   u16 readBufferSize;
+   u8 transactionID;
+   unsigned long flags;
+   struct semaphore readSem;
+   
+   if (IsDeviceValid(pDev) == false)
+   {
+      DBG( "Invalid device!\n" );
+      return -ENXIO;
+   }
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   mb();
+
+   writeBufferSize = QMICTLConfigPowerSaveSettingsReqSize();
+   pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
+   if (pWriteBuffer == NULL)
+   {
+      return -ENOMEM;
+   }
+    
+    transactionID = QMIXactionIDGet(pDev);
+    result = ReadAsync( pDev, QMICTL, transactionID, UpSem, &readSem ,1);
+    result = QMICTLConfigPowerSaveSettingsReq(pWriteBuffer,
+                                              writeBufferSize,
+                                              transactionID,
+                                              service,
+                                              indication);
+    if (result < 0)
+    {
+        kfree( pWriteBuffer );
+        return result;
+    }
+
+    result = WriteSyncNoResume( pDev,
+                      pWriteBuffer,
+                      writeBufferSize,
+                      QMICTL );
+    kfree( pWriteBuffer );
+
+   if (result < 0)
+   {
+       DBG( "bad write data %d\n", result );
+       return result;
+   }
+   wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+   mb();
+   // Enter critical section
+   flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+   spin_lock_irq(&(pDev->notif_lock));
+   barrier();
+   if (down_trylock( &readSem ) == 0)
+   {
+      // Pop the read data
+      if (PopFromReadMemList( pDev,
+                              QMICTL,
+                              transactionID,
+                              &pReadBuffer,
+                              &readBufferSize ) == true)
+      {
+         // Success
+         spin_unlock_irq(&(pDev->notif_lock));
+         // End critical section
+         LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+         result = QMICTLConfigPowerSaveSettingsResp(pReadBuffer,
+                                               readBufferSize);
+    
+         // We don't care about the result
+         if(pReadBuffer)
+         kfree( pReadBuffer );
+         return result;
+      }
+      else
+      {
+         // Read mismatch/failure, unlock and continue
+         RemoveAndPopNotifyList(pDev,QMICTL,0,eClearAndReleaseCID);
+      }
+    }
+   else
+   {
+      // Timeout, remove the async read
+      RemoveAndPopNotifyList(pDev,QMICTL,0,eClearAndReleaseCID);
+      // End critical section
+      result = -1;
+   }
+   spin_unlock_irq(&(pDev->notif_lock));
+   LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+   return result;
+}
+#endif
+
+void RemoveProcessFile(sGobiUSBNet *pDev)
+{
+   char qcqmi_dev_name[10]={0};
+   if(pDev->mQMIDev.proc_file != NULL)
+   {
+      sprintf(qcqmi_dev_name, "qcqmi%d", (int)pDev->mQMIDev.qcqmi);
+      remove_proc_entry(qcqmi_dev_name, NULL);
+      pDev->mQMIDev.proc_file = NULL;
+      DBG("remove:%s",qcqmi_dev_name);
+   }
+   return;
+}
+
+void RemoveCdev(sGobiUSBNet * pDev)
+{
+   if(pDev->mQMIDev.mbCdevIsInitialized==true)
+   {
+      pDev->mQMIDev.mbCdevIsInitialized=false;
+      if (IS_ERR( pDev->mQMIDev.mpDevClass ) == false)
+      {
+         device_destroy( pDev->mQMIDev.mpDevClass,
+                         pDev->mQMIDev.mDevNum );
+         cdev_del( &pDev->mQMIDev.mCdev );
+         unregister_chrdev_region( pDev->mQMIDev.mDevNum, 1 );
+      }
+   }
+}
+
+/*===========================================================================
+WriteSyncNoRetry
+   WriteSync (Public Method)
+
+DESCRIPTION:
+   Start synchronous write no retry
+
+PARAMETERS:
+   pDev                 [ I ] - Device specific memory
+   pWriteBuffer         [ I ] - Data to be written
+   writeBufferSize      [ I ] - Size of data to be written
+   clientID             [ I ] - Client ID of requester
+
+RETURN VALUE:
+   int - write size (includes QMUX)
+         negative errno for failure
+===========================================================================*/
+int WriteSyncNoRetry(
+   sGobiUSBNet *          pDev,
+   char *                 pWriteBuffer,
+   int                    writeBufferSize,
+   u16                    clientID )
+{
+   int result = -1;
+   int iLockRetry =0;
+
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "Invalid device!\n" );
+      return -ENXIO;
+   }
+   if(IsDeviceDisconnect(pDev))
+   {
+      DBG( "Device Disconnected!\n" );
+      return -ENXIO;
+   }
+   if (pDev->mbUnload >= eStatUnloading)
+   {
+      DBG( "Unloading device!\n" );
+      return -ENXIO;
+   }
+   // Fill writeBuffer with QMUX
+   result = FillQMUX( clientID, pWriteBuffer, writeBufferSize );
+   if (result < 0)
+   {
+      return result;
+   }
+
+   // Wake device
+   result = gobi_usb_autopm_get_interface( pDev->mpIntf );
+   if (result < 0)
+   {
+      DBG( "unable to resume interface: %d\n", result );
+
+      // Likely caused by device going from autosuspend -> full suspend
+      if (result == -EPERM)
+      {
+#ifdef CONFIG_PM
+#if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,33 ))
+         pDev->mpNetDev->udev->auto_pm = 0;
+#endif
+         GobiNetSuspend( pDev->mpIntf, PMSG_SUSPEND );
+#endif /* CONFIG_PM */
+      }
+      return result;
+   }
+
+   DBG( "Actual Write:\n" );
+   PrintHex( pWriteBuffer, writeBufferSize );
+
+  
+  if(isModuleUnload(pDev))
+  {
+     DBG( "unloaded\n" );
+     return -EFAULT;
+  }
+  pDev->iShutdown_read_sem= __LINE__;
+
+  iLockRetry = 0;
+  mb();
+  while(down_read_trylock(&(pDev->shutdown_rwsem))!=1)
+  {
+     wait_ms(5);
+     mb();
+     if(iLockRetry++>100)
+     {
+        DBG("down_read_trylock timeout");
+        return -EFAULT;
+     }
+     if(pDev==NULL)
+     {
+        DBG( "NULL\n" );
+        return -EFAULT;
+     }
+     if (pDev->mbUnload >= eStatUnloading)
+     {
+        DBG( "unloaded\n" );
+        return -EFAULT;
+     }
+  }
+  mb();
+  result = Gobi_usb_control_msg(pDev->mpIntf, pDev->mpNetDev->udev, usb_sndctrlpipe( pDev->mpNetDev->udev, 0 ),
+         SEND_ENCAPSULATED_COMMAND,
+         USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+         0, pDev->mpIntf->cur_altsetting->desc.bInterfaceNumber,
+         (void*)pWriteBuffer, writeBufferSize,
+         50 );//50ms timeout
+   up_read(&pDev->shutdown_rwsem);
+   if(signal_pending(current))
+   {
+      return -ERESTARTSYS;
+   }
+   if (IsDeviceDisconnect(pDev) )
+   {
+      return -ENXIO;
+   }
+   if(pDev==NULL)
+   {
+      return -EFAULT;
+   }
+   
+   pDev->iShutdown_read_sem=- __LINE__;
+   
+   if (pDev->mbUnload >= eStatUnloading)
+   {
+      DBG( "unloaded\n" );
+      return -EFAULT;
+   }
+   if (result < 0)
+   {
+      printk(KERN_WARNING "usb_control_msg failed (%d)", result);
+   }
+   // Control write transfer may occasionally timeout with certain HCIs, attempt a second time before reporting an error
+   if (result == -ETIMEDOUT)
+   {
+       pDev->writeTimeoutCnt++;
+       printk(KERN_WARNING "Write URB timeout, cnt(%d)\n", pDev->writeTimeoutCnt);
+   }
+   else if(result < 0 )
+   {
+      DBG( "%s no device!\n" ,__FUNCTION__);
+      gobi_usb_autopm_put_interface( pDev->mpIntf );
+       return result;
+   }
+   
+   if (IsDeviceValid( pDev ) == false)
+   {
+      DBG( "%s Invalid device!\n" ,__FUNCTION__);
+      return -ENXIO;
+   }
+   if (pDev->mbUnload > eStatUnloading)
+   {
+     DBG( "unloaded\n" );
+     return -EFAULT;
+   }
+
+   // Write is done, release device
+   gobi_usb_autopm_put_interface( pDev->mpIntf );
 
 
+   return result;
+}
 
+int Gobi_usb_control_msg(struct usb_interface *intf,struct usb_device *dev, unsigned int pipe, __u8 request,
+                     __u8 requesttype, __u16 value, __u16 index, void *data,
+                      __u16 size, int timeout)
+{
+   if(dev==NULL)
+   return -ENODEV;
+   mb();
+   if(intf==NULL)
+      return -ENODEV;
+   #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,33 ))
+   if(intf->resetting_device)
+   {
+      return -ENXIO;
+   }
+   #endif
+   if (dev->parent->state == USB_STATE_NOTATTACHED )
+   {
+      return -ENXIO;
+   }
+   if (dev->state == USB_STATE_NOTATTACHED )
+   {
+      return -ENXIO;
+   }
+   return usb_control_msg(dev,pipe,request,requesttype,value,index,data,size,timeout);
+      
+}
+
+bool IsDeviceDisconnect(sGobiUSBNet *pDev)
+{
+   if(!pDev)
+      return true;
+   mb();
+   #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,33 ))
+   if(pDev->mpIntf==NULL)
+   {
+      return true;
+   }
+   if(pDev->mpIntf->resetting_device)
+   {
+      pDev->iUSBState = USB_STATE_NOTATTACHED;
+      mb();
+      return true;
+   }
+   #endif
+   if(pDev->iUSBState == USB_STATE_NOTATTACHED)
+      return true;
+   if(!interface_to_usbdev(pDev->mpIntf))
+      return true;
+   if (interface_to_usbdev(pDev->mpIntf)->state == USB_STATE_NOTATTACHED )
+   {
+      pDev->iUSBState = USB_STATE_NOTATTACHED;
+      mb();
+      return true;
+   }
+   if(pDev->mpIntf->condition == USB_INTERFACE_UNBINDING)
+   {
+      pDev->iUSBState = USB_STATE_NOTATTACHED;
+      mb();
+      return true;
+   }
+   if(pDev->mpIntf->condition == USB_INTERFACE_UNBOUND)
+   {
+      pDev->iUSBState = USB_STATE_NOTATTACHED;
+      mb();
+      return true;
+   }
+   return false;
+}
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,33 ))
+void gobi_usb_autopm_enable(struct usb_interface *intf)
+{
+   if(IsInterfacefDisconnected(intf))
+   {
+      return ;
+   }
+   usb_autopm_enable( intf );
+}
+#endif
+void gobi_usb_autopm_put_interface(struct usb_interface *intf)
+{
+   if(IsInterfacefDisconnected(intf))
+   {
+      return ;
+   }
+   usb_autopm_put_interface(intf);
+}
+
+int gobi_usb_autopm_get_interface_async(struct usb_interface *intf)
+{
+   if(IsInterfacefDisconnected(intf))
+   {
+      return -ENXIO;
+   }
+   return usb_autopm_get_interface_async(intf);
+}
+
+void gobi_usb_autopm_get_interface_no_resume(struct usb_interface *intf)
+{
+   if(IsInterfacefDisconnected(intf))
+   {
+      return ;
+   }
+   #if (LINUX_VERSION_CODE < KERNEL_VERSION( 3,0,0 ))
+   usb_autopm_get_interface_async(intf);
+   return ;
+   #else
+   usb_autopm_get_interface_no_resume(intf);
+   #endif
+}
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,29 ))
+void usb_autopm_put_interface_async(struct usb_interface *intf)
+{
+   struct usb_device   *udev = interface_to_usbdev(intf);
+   int         status = 0;
+
+   if (intf->condition == USB_INTERFACE_UNBOUND) {
+      status = -ENODEV;
+   } else {
+      udev->last_busy = jiffies;
+      --intf->pm_usage_cnt;
+      if (udev->autosuspend_disabled || udev->autosuspend_delay < 0)
+         status = -EPERM;
+      else if (intf->pm_usage_cnt <= 0 &&
+            !timer_pending(&udev->autosuspend.timer)) {
+         queue_delayed_work(ksuspend_usb_wq, &udev->autosuspend,
+               round_jiffies_up_relative(
+                  udev->autosuspend_delay));
+      }
+   }
+}
+#endif
+void gobi_usb_autopm_put_interface_async(struct usb_interface *intf)
+{
+   if(IsInterfacefDisconnected(intf))
+   {
+      return ;
+   }
+   
+   usb_autopm_put_interface_async(intf);
+}
+
+struct net_device* gobi_qmimux_register_device(struct net_device *real_dev,int iNumber, u8 mux_id)
+{
+   struct net_device *new_dev;
+   struct gobi_qmimux_priv *priv;
+   int err;
+   char szName[64]={0};
+   DBG("Create 0x%x\n",mux_id);
+   snprintf(szName,63,"bmwan%d",mux_id-MUX_ID_START);
+   #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 3,18,0 ))
+   new_dev = alloc_netdev(sizeof(struct gobi_qmimux_priv),
+                szName, NET_NAME_UNKNOWN, ether_setup);
+   #else
+   new_dev = alloc_netdev(sizeof(struct gobi_qmimux_priv),
+                          szName, ether_setup);
+   #endif
+   new_dev->netdev_ops = &gobi_qmimux_netdev_ops;
+   new_dev->flags           = IFF_NOARP | IFF_MULTICAST;
+   random_ether_addr(new_dev->dev_addr);
+   if (!new_dev)
+      return NULL;
+   priv = netdev_priv(new_dev);
+   priv->mux_id = mux_id;
+   priv->real_dev = real_dev;
+   new_dev->irq = real_dev->irq;
+
+   err = register_netdevice(new_dev);
+   if (err < 0)
+      goto out_free_newdev;
+   dev_hold(real_dev);
+   return new_dev;
+
+out_free_newdev:
+   free_netdev(new_dev);
+   return NULL;
+}
+
+void gobi_qmimux_unregister_device(struct net_device *dev)
+{
+   struct gobi_qmimux_priv *priv = netdev_priv(dev);
+   struct net_device *real_dev = priv->real_dev;
+   netif_carrier_off(dev);
+   netif_stop_queue(dev);
+   netif_dormant_off(dev);
+   dev_close(dev);
+   netif_device_detach(dev);
+   unregister_netdevice(dev);
+   /* Get rid of the reference to real_dev */
+   dev_put(real_dev);   
+}
+
+int iIsValidQmuxSKB(struct sk_buff *skb)
+{
+   if(!skb)
+      return 0;
+   if(skb->len >= QMUX_HEADER_LENGTH)
+   {
+      return iNumberOfQmuxPacket(skb,0);
+   }
+   return 0;
+}
+
+int PrintQmuxPacket(struct sk_buff *skb)
+{
+   unsigned int offset=0;
+   return 0;
+   NETDBG("SKB->len:%d\n",skb->len);
+   if(skb->len >= QMUX_HEADER_LENGTH)
+   {
+      u32 length = skb->data[2];
+      length = (length<<8) + skb->data[3];
+      //To Fix Incomming packet larger than expected.
+      if(length==(skb->len-QMUX_HEADER_LENGTH))
+      {
+         if(iIsValidQMAPHeaderInSKBData(skb,0)==1)
+         {
+            return 1;
+         }
+         else if((skb->data[0]<0x80)
+         &&(skb->data[1]==0))
+         {
+            return 1;
+         }
+         else
+         {
+            PrintHex (skb->data, skb->len);
+         }
+         return 0;
+      }
+      else if(length<(skb->len-QMUX_HEADER_LENGTH))//
+      {
+         int iNumberOfPacket=1;
+         offset += length + QMUX_HEADER_LENGTH;
+         do
+         {
+            length = skb->data[offset+2];
+            length = (length<<8) + skb->data[offset+3];
+            if((skb->data[offset]!=0)&&(skb->data[offset+1]!=0)&&
+               (skb->data[offset+2]!=0)&&(skb->data[offset+3]!=0))
+            {
+               NETDBG("offset:%d, %02X%02X%02X%02X:length:%d\n",
+                  offset,
+               skb->data[offset],skb->data[offset+1],skb->data[offset+2],skb->data[offset+3]
+               ,length);
+            }
+            if(length==0)
+            {
+               if((skb->data[offset]<0x80)
+               &&(skb->data[offset+1]&0x8F))
+               {
+                  iNumberOfPacket++;
+               }
+               else if((skb->data[offset]<0x80)
+                  &&(skb->data[offset+1]==0))
+               {
+                  iNumberOfPacket++;
+               }
+               else
+               {
+                  return iNumberOfPacket;
+               }
+               if((length+offset)==(skb->len-QMUX_HEADER_LENGTH))
+               {
+                  return iNumberOfPacket;
+               }
+            }
+            offset += length +QMUX_HEADER_LENGTH;
+         }while(offset < skb->len);
+         NETDBG("\niNumberOfPacket:%d\n",iNumberOfPacket);
+         return iNumberOfPacket;
+      }
+      else
+      {
+         NETDBG("Length Not matched.\n");
+      }
+   }
+   return 0;
+}
+
+int iIsQmuxZeroPacket(struct sk_buff *skb)
+{
+   if(skb==NULL)
+      return 0;
+   if(skb->len >= QMUX_HEADER_LENGTH)
+   {
+      u32 length = skb->data[2];
+      length = (length<<8) + skb->data[3];
+      if(length==0)
+      {
+         if((skb->data[0]==0)
+         &&(skb->data[1]==0))
+         {
+            return 1;
+         }
+      }
+   }
+   return 0;
+}
+
+int iIsQmuxPacketComplete(struct sk_buff *skb)
+{
+   if(skb==NULL)
+      return 0;
+   if(skb->len >= QMUX_HEADER_LENGTH)
+   {
+      u32 length = skb->data[2];
+      length = (length<<8) + skb->data[3];
+      if(length==(skb->len-QMUX_HEADER_LENGTH))
+      {
+         if(iIsValidQMAPHeaderInSKBData(skb,0)==1)
+         {
+            return 1;
+         }
+      }
+      else if(length<=(skb->len-QMUX_HEADER_LENGTH))//
+      {
+         if(iIsValidQMAPHeaderInSKBData(skb,0)==1)
+         {
+            return 1;
+         }
+      }
+      else
+      {
+         DBG("Length Not matched.\n");
+         if(iIsValidQMAPHeaderInSKBData(skb,0)==1)
+         {
+            return 0;
+         }
+      }
+   }
+   return 0;
+}
+
+int iNumberOfQmuxPacket(struct sk_buff *skb,int iDisplay)
+{
+   unsigned int offset=0;
+   if(!skb)
+      return 0;
+   if(iDisplay==1)
+   {
+      DBG("Packet Len: 0x%x\n",skb->len);
+      PrintHex(skb->data,skb->len);
+   }
+   if(skb->len >= QMUX_HEADER_LENGTH)
+   {
+      //To Fix Incomming packet larger than expected.
+      u32 length = skb->data[2];
+      length = (length<<8) + skb->data[3];
+      if(length==(skb->len-QMUX_HEADER_LENGTH))
+      {
+         if(iIsValidQMAPHeaderInSKBData(skb,0)==1)
+         {
+            return 1;
+         }
+         else
+         {
+            PrintHex (skb->data, skb->len);
+         }
+         NETDBG("Single Packet:");
+         NetHex(skb->data,4);
+         return 0;
+      }
+      else if(length<(skb->len-QMUX_HEADER_LENGTH))//
+      {
+         int iNumberOfPacket=1;         
+         if(iIsValidQMAPHeaderInSKBData(skb,0)==1)
+         {
+            iNumberOfPacket=1;
+            NETDBG("%d. Packet: %02X%02X %02X%02X .. \n",iNumberOfPacket ,
+               skb->data[offset],
+               skb->data[offset+1],
+               skb->data[offset+2],
+               skb->data[offset+3]);
+         }
+         else
+         {
+            NETDBG("%s:%d Invalid QMAP Packet\n",__FUNCTION__,__LINE__);
+               NETDBG("%d. Packet: %02X%02X %02X%02X .. \n",0,
+               skb->data[offset],
+               skb->data[offset+1],
+               skb->data[offset+2],
+               skb->data[offset+3]);
+            return 0;
+         }
+         offset += length + QMUX_HEADER_LENGTH;
+         do
+         {
+            NETDBG("%d. Packet: %02X%02X %02X%02X .. \n",iNumberOfPacket+1,
+               skb->data[offset],
+               skb->data[offset+1],
+               skb->data[offset+2],
+               skb->data[offset+3]);
+            length = skb->data[offset+2];
+            length = (length<<8) + skb->data[offset+3];
+            NETDBG("iNumberOfPacket:%d, offset:%d/%d len:0x%x\n",
+               iNumberOfPacket,offset
+                  ,skb->len
+                  ,length)
+            if(length>skb->len-offset-QMUX_HEADER_LENGTH)
+            {
+               NETDBG("iNumberOfPacket:%d, offset:%d/%d delta:0x%x\n",
+                  iNumberOfPacket,offset
+                  ,skb->len
+                  ,length-(skb->len-offset-QMUX_HEADER_LENGTH));
+               return iNumberOfPacket;
+            }
+            offset += length +QMUX_HEADER_LENGTH;
+            iNumberOfPacket++;
+         }while(offset < skb->len);
+         return iNumberOfPacket;
+      }
+      else
+      {
+         NETDBG("Length Not matched.\n");
+         NETDBG("Incomplete QMAP Packet %s:%d\n",__FUNCTION__,__LINE__);
+         if(iIsValidQMAPHeaderInSKBData(skb,0)==1)
+         {
+            NETDBG("%d. Packet: %02X%02X %02X%02X .. \n",0,
+               skb->data[offset],
+               skb->data[offset+1],
+               skb->data[offset+2],
+               skb->data[offset+3]);
+            return 0;
+         }
+         NETDBG("Unknown Packet: %02X%02X %02X%02X .. \n",
+               skb->data[offset],
+               skb->data[offset+1],
+               skb->data[offset+2],
+               skb->data[offset+3]);
+         return -1;
+      }
+   }
+   return -1;
+}
+
+/***********************************
+         0 - Request, i.e., sender is sending a 
+             QMAP control command to the receiver.
+         1 - Ack, i.e., receiver is acknowledging that 
+             it received a QMAP control command and that 
+            it successfully processed the command.
+         2 - Unsupported command, i.e., receiver does 
+             not support this QMAP control command.
+         3 - Invalid command, i.e., receiver encountered 
+             an error while processing the QMAP control command, 
+             probably because QMAP control command is malformed.
+      **************************************/
+int iGetQmuxIDFromSKB(struct sk_buff *skb)
+{
+   if(iIsValidQmuxSKB(skb))
+   {
+      return (int)skb->data[1];
+   }
+   return -1;
+}
+
+u32 u32GetSKBQMAPPacketLength(struct sk_buff *skb,int iOffset)
+{
+   if(skb==NULL)      
+      return 0;
+   if(skb->len < QMUX_HEADER_LENGTH)   
+   {      
+      return 0;   
+   }
+   else if(iOffset>skb->len)
+   {
+      return 0;
+   }
+   else   
+   {      
+      u32 length = skb->data[iOffset+2];
+      length = (length<<8) + skb->data[iOffset+3];
+      return length;   
+   }   
+   return 0;
+}
+
+int iIsValidQMAPHeaderInSKBData(struct sk_buff *pSKB, int iOffset)
+{
+   if(iOffset<0)
+      return 0;
+   if(!pSKB)
+      return 0;
+   if(pSKB->len<QMUX_HEADER_LENGTH)
+   {
+      return 0;
+   }
+   if(pSKB->len<iOffset +QMUX_HEADER_LENGTH)
+   {
+      return 0;
+   }
+   if((pSKB->data[iOffset+1]&0x8F)||
+      (pSKB->data[iOffset+1]==0x00))
+   {
+      //Downlink padding bytes Less or equal 64 Bytes
+      if(pSKB->data[iOffset] > QMAP_MAX_PADDING_BYTES)
+      {
+         return 0;
+      }
+      else
+      {
+         return 1;
+      }
+   }
+   return 0;
+}
+
+int iIsCMDQMAPHeaderInSKBData(struct sk_buff *pSKB, int iOffset)
+{
+   u32 length = 0;
+   if(iOffset<0)
+      return 0;
+   if(!pSKB)
+      return 0;
+   if(pSKB->len<QMUX_HEADER_LENGTH)
+   {
+      return 0;
+   }
+   length = u32GetSKBQMAPPacketLength(pSKB,iOffset);
+   if(pSKB->len < length)
+   {
+      return 0;
+   }
+   if(pSKB->data[iOffset]==0x80)
+   {
+      return 1;
+   }
+   return 0;
+}
+
+
+int iIsZeroQMAPHeaderInSKBData(struct sk_buff *pSKB, int iOffset)
+{
+   if(iOffset<0)
+      return 0;
+   if(!pSKB)
+      return 0;
+   if(pSKB->len<QMUX_HEADER_LENGTH)
+   {
+      return 0;
+   }
+   if(pSKB->len!=iOffset +QMUX_HEADER_LENGTH)
+   {
+      return 0;
+   }
+   if((pSKB->data[iOffset]==0x00)
+         &&(pSKB->data[iOffset+1]==0x00)
+         &&(pSKB->data[iOffset+2]==0x00)
+         &&(pSKB->data[iOffset+3]==0x00))
+   {
+      return 1;
+   }
+   return 0;
+}
+
+/*===========================================================================
+METHOD:
+   NetHex (Public Method)
+
+DESCRIPTION:
+   Print Hex data, for QMAP debug purposes
+
+PARAMETERS:
+   pBuffer       [ I ] - Data buffer
+   bufSize       [ I ] - Size of data buffer
+
+RETURN VALUE:
+   None
+===========================================================================*/
+void NetHex(
+   void *      pBuffer,
+   u16         bufSize )
+{
+   char * pPrintBuf;
+   u16 pos;
+   int status;
+   if(!(debug & DEBUG_NETMASK))
+      return ;
+   if(bufSize==(u16)(-1))
+   {
+       DBG( "No Data\n" );
+   }
+   pPrintBuf = kmalloc( bufSize * 3 + 1, GFP_ATOMIC );
+   if (pPrintBuf == NULL)
+   {
+      DBG( "Unable to allocate buffer\n" );
+      return;
+   }
+   memset( pPrintBuf, 0 , bufSize * 3 + 1 );
+   for (pos = 0; pos < bufSize; pos++)
+   {
+      status = snprintf( (pPrintBuf + (pos * 3)),
+                         4,
+                         "%02X ",
+                         *(u8 *)(pBuffer + pos) );
+      if (status != 3)
+      {
+         DBG( "snprintf error %d\n", status );
+         kfree( pPrintBuf );
+         return;
+      }
+   }
+   printk( "   : %s\n", pPrintBuf );
+   kfree( pPrintBuf );
+   pPrintBuf = NULL;
+   return;
+}
+
+/*===========================================================================
+METHOD:
+   ErrHex (Public Method)
+
+DESCRIPTION:
+   Print Hex data, for QMAP debug purposes
+
+PARAMETERS:
+   pBuffer       [ I ] - Data buffer
+   bufSize       [ I ] - Size of data buffer
+
+RETURN VALUE:
+   None
+===========================================================================*/
+void ErrHex(
+   void *      pBuffer,
+   u16         bufSize )
+{
+   char * pPrintBuf;
+   u16 pos;
+   int status;
+   if(bufSize==(u16)(-1))
+   {
+       DBG( "No Data\n" );
+   }
+   pPrintBuf = kmalloc( bufSize * 3 + 1, GFP_ATOMIC );
+   if (pPrintBuf == NULL)
+   {
+      DBG( "Unable to allocate buffer\n" );
+      return;
+   }
+   memset( pPrintBuf, 0 , bufSize * 3 + 1 );
+   for (pos = 0; pos < bufSize; pos++)
+   {
+      status = snprintf( (pPrintBuf + (pos * 3)),
+                         4,
+                         "%02X ",
+                         *(u8 *)(pBuffer + pos) );
+      if (status != 3)
+      {
+         DBG( "snprintf error %d\n", status );
+         kfree( pPrintBuf );
+         return;
+      }
+   }
+   printk( "   : %s\n", pPrintBuf );
+   kfree( pPrintBuf );
+   pPrintBuf = NULL;
+   return;
+}
+
+/*===========================================================================
+GobiInitWorkQueue
+   GobiInitWorkQueue (Private Method)
+
+DESCRIPTION:
+   Init and Create workqueue in device specifc memory.
+
+PARAMETERS:
+   pGobiDev                 [ I ] - Pointer to Device specific memory
+RETURN VALUE:
+   int - 0 for success
+         Negative errno for error
+===========================================================================*/
+int GobiInitWorkQueue(sGobiUSBNet *pGobiDev)
+{
+   char szProcessName[MAX_WQ_PROC_NAME_SIZE]={0};
+   int tableindex = -1;
+   int interfaceindex = 0;
+   if(pGobiDev==NULL)
+      return -1;
+   interfaceindex = GetPrivateWorkQueuesInterfaceTableIndex(pGobiDev);
+    
+   tableindex = AddPrivateWorkQueues(pGobiDev);
+   if((tableindex<0) || (tableindex>=MAX_QCQMI))
+   {
+      return -1;
+   }
+   
+   memset(&szProcessName,0,sizeof(szProcessName));
+   if(GenerateProcessName("gobiprobe",&szProcessName[0],MAX_WQ_PROC_NAME_SIZE-1,pGobiDev)!=0)
+   {
+      return -1;
+   }
+   pGobiDev->wqprobe = GetPrivateWorkQueuesWQByTableIndex(tableindex,interfaceindex,eWQ_PROBE);
+   if(pGobiDev->wqprobe==NULL)
+   {
+      pGobiDev->wqprobe = create_workqueue(szProcessName);
+      if (!pGobiDev->wqprobe)
+      {
+        printk("Create Work Queue Probe Failed\n");
+        return -1;
+      }
+      SetPrivateWorkQueuesWQByTableIndex(tableindex,interfaceindex,pGobiDev->wqprobe,eWQ_PROBE);
+   }
+   memset(&szProcessName,0,sizeof(szProcessName));
+   if(GenerateProcessName("gobireadcb",&szProcessName[0],MAX_WQ_PROC_NAME_SIZE-1,pGobiDev)!=0)
+   {
+      return -1;
+   }
+   pGobiDev->wqProcessReadCallback = GetPrivateWorkQueuesWQByTableIndex(tableindex,interfaceindex,eWQ_URBCB);
+   if(pGobiDev->wqProcessReadCallback==NULL)
+   {
+      pGobiDev->wqProcessReadCallback = create_workqueue(szProcessName);
+      if (!pGobiDev->wqProcessReadCallback)
+      {
+        printk("Create Work Queue Probe Failed\n");
+        return -1;
+      }
+      SetPrivateWorkQueuesWQByTableIndex(tableindex,interfaceindex,pGobiDev->wqProcessReadCallback,eWQ_URBCB);
+   }
+   return 0;
+}
+
+/*===========================================================================
+GobiDestoryWorkQueue
+   GobiDestoryWorkQueue (Private Method)
+
+DESCRIPTION:
+   Destory workqueues in device specific memory. 
+
+PARAMETERS:
+   pGobiDev                 [ I ] - Pointer to Device specific memory
+RETURN VALUE:
+   NULL
+===========================================================================*/
+void GobiDestoryWorkQueue(sGobiUSBNet *pGobiDev)
+{
+   struct usb_device *dev = NULL;
+   int interfaceindex = 0;
+   int tableindex = 0;
+   unsigned int flag = 0;
+   int ret = -1;
+   if(pGobiDev==NULL)
+      return ;
+   dev = interface_to_usbdev(pGobiDev->mUsb_Interface);
+   
+   interfaceindex = GetPrivateWorkQueuesInterfaceTableIndex(pGobiDev);
+   tableindex = GetPrivateWorkQueuesIndex(pGobiDev);
+   if(pGobiDev->wqProcessReadCallback!=NULL)
+   {
+      flag = gobi_work_busy(&pGobiDev->dwProcessReadCallback);
+      if(flag)
+      {
+         #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,36 ))
+         if(flag & WORK_BUSY_RUNNING)
+         {
+            DBG("flush_delayed_work ReadCallback %d\n",interfaceindex);
+            flush_delayed_work(&pGobiDev->dwProcessReadCallback);
+         }
+         #endif
+         if(cancel_delayed_work (&pGobiDev->dwProcessReadCallback))
+         {
+            DBG("flush_workqueue ReadCallback %d\n",interfaceindex);
+            flush_workqueue(pGobiDev->wqProcessReadCallback);
+         }
+         
+         pGobiDev->wqProcessReadCallback = NULL;
+         SetPrivateWorkQueuesWQByTableIndex(tableindex,interfaceindex,NULL,eWQ_URBCB);
+      }
+      else
+      {
+         DBG("flush_work ReadCallback\n %d\n",interfaceindex);
+         flush_work(&pGobiDev->dwProcessReadCallback.work);
+         SetPrivateWorkQueuesWQByTableIndex(tableindex,interfaceindex,NULL,eWQ_URBCB);
+         pGobiDev->wqProcessReadCallback = NULL;
+      }
+   }
+   
+   if(pGobiDev->wqprobe!=NULL)
+   {
+      DBG("%s _lock_device_for_reset  %d\n",__FUNCTION__,interfaceindex);
+      ret = usb_lock_device_for_reset(dev, NULL);
+      if(ret==0)
+      {
+         //Prevent Deadlock GobiUSBLockReset
+         usb_unlock_device(dev);
+         DBG("%s usb_unlock_device  %d\n",__FUNCTION__,interfaceindex);
+         flag = gobi_work_busy(&pGobiDev->dwprobe);
+         if(flag)
+         {
+            #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,36 ))
+            if(flag & WORK_BUSY_RUNNING)
+            {
+               DBG("flush_delayed_work probe %d\n",interfaceindex);
+               flush_delayed_work(&pGobiDev->dwprobe);
+            }
+            #endif
+            DBG("cancel_delayed_work probe %d\n",interfaceindex);
+            if(cancel_delayed_work(&pGobiDev->dwprobe))
+            {
+               DBG("flush_workqueue probe %d\n",interfaceindex);
+               flush_workqueue(pGobiDev->wqprobe);
+               DBG("destroy_workqueue probe\n");
+            }
+            SetPrivateWorkQueuesWQByTableIndex(tableindex,interfaceindex,NULL,eWQ_PROBE);
+            pGobiDev->wqprobe = NULL;
+         }
+         else
+         {
+            DBG("flush_work probe %d\n",interfaceindex);
+            flush_work(&pGobiDev->dwprobe.work);
+            pGobiDev->wqprobe = NULL;
+            SetPrivateWorkQueuesWQByTableIndex(tableindex,interfaceindex,NULL,eWQ_PROBE);
+         }  
+      }
+   }
+      
+   ClearPrivateWorkQueuesProcessByTableIndex(tableindex,
+                  tableindex);
+   
+}
+
+/*===========================================================================
+iRemoveQMAPPaddingBytes
+
+   RemoveQMAPPaddingBytes (Private Method)
+
+DESCRIPTION:
+   Remove QMAP header and padding in SKB buffer. 
+
+PARAMETERS:
+   skb                 [ I ] - Pointer to sk_buff pointer
+RETURN VALUE:
+   int - 0 for success
+         Negative errno for error
+===========================================================================*/
+int iRemoveQMAPPaddingBytes(struct sk_buff *skb)
+{
+   u8 padding_lenth = 0;
+   if(skb==NULL)
+   return -1;
+   padding_lenth = (u8)skb->data[0];
+
+   if(padding_lenth>0)
+   {
+      NETDBG("padding_lenth:%d\n",padding_lenth);
+      if((padding_lenth<=QMAP_MAX_PADDING_BYTES)&&
+          skb->len >= padding_lenth)
+      {
+         skb_trim(skb,skb->len - padding_lenth);
+      }
+      else
+      {
+         return -1;
+      }
+   }
+   if(skb->len>=QMUX_HEADER_LENGTH)
+   {
+      skb_pull(skb,QMUX_HEADER_LENGTH);
+   }
+   else
+   {
+      return -1;
+   }
+   return 0;
+}
+
+int IsOtherTaskUsingFilp(struct file *pFilp)
+{
+   sQMIFilpStorage * pFilpData = NULL;
+   long refcnt = 0;
+   if(pFilp ==NULL)
+   {
+      return 0;
+   }
+
+   refcnt = atomic_long_read(&pFilp->f_count);
+   if (refcnt == 1)
+   {
+      return 0;
+   }   
+   pFilpData = (sQMIFilpStorage *)pFilp->private_data;
+   if (pFilpData == NULL)
+   {
+      return 0;
+   }
+   if(IsDeviceDisconnect(pFilpData->mpDev))
+   {
+      return 0;
+   }
+   if((pFilpData->pOpenTask!=pFilpData->pReadTask)||
+      (pFilpData->pOpenTask!=pFilpData->pWriteTask)||
+      (pFilpData->pOpenTask!=pFilpData->pIOCTLTask))
+   {
+      return 1;
+   }
+   return 0;
+}
+
+int IsOpenTaskIsCurrent(struct file *pFilp)
+{
+   sQMIFilpStorage * pFilpData = NULL;
+   if(pFilp ==NULL)
+   {
+      return 0;
+   }
+   pFilpData = (sQMIFilpStorage *)pFilp->private_data;
+   if (pFilpData == NULL)
+   {
+      return 0;
+   }
+   if(IsDeviceDisconnect(pFilpData->mpDev))
+   {
+      return 0;
+   }
+   #if 0
+   printk(KERN_INFO "c/o/r/w/i %d/%d/%d/%d/%d\n",
+   task_pid_nr(current),
+   task_pid_nr(pFilpData->pOpenTask),
+   task_pid_nr(pFilpData->pReadTask),
+   task_pid_nr(pFilpData->pWriteTask),
+   task_pid_nr(pFilpData->pIOCTLTask));
+   #endif
+   if(pFilpData->pOpenTask==current)
+   {
+      return 1;
+   }
+
+   return 0;
+}
+
+int IsCurrentTaskExit(void)
+{
+    if(current->flags & PF_EXITING)
+        return 1;
+    return 0;
+}
+
+/*===========================================================================
+gobi_work_busy
+
+   gobi_work_busy (Private Method)
+
+DESCRIPTION:
+   Check delayed work is busy. 
+
+PARAMETERS:
+   dw                 [ I ] - Pointer to delayed_work pointer
+RETURN VALUE:
+   int - 0 not busy
+===========================================================================*/
+int gobi_work_busy(struct delayed_work *dw)
+{
+#if (LINUX_VERSION_CODE < KERNEL_VERSION( 2,6,36 ))
+   if(work_pending(&dw->work))
+      return 1;
+   return 0;
+#else
+   return work_busy(&dw->work);
+#endif
+}
+
+/*===========================================================================
+ClientTransactionIDExist
+   ClientTransactionIDExist (Private Method)
+
+DESCRIPTION:
+   Check Client Transcation ID already in notify list
+
+PARAMETERS:
+   pGobiDev                 [ I ] - Pointer to Device specific memory.
+   clientID                 [ I ] - Client ID.
+   u16TransactionID         [ I ] - Transaction ID.
+RETURN VALUE:
+    int - 1 Found Transcation ID in client.
+          0 Not found Transcation ID in client.
+===========================================================================*/
+int ClientTransactionIDExist(sGobiUSBNet *pDev, u16 clientID,u16 u16TransactionID)
+{
+   sClientMemList * pClientMem;
+   sNotifyList ** ppThisNotifyList;
+   if(pDev==NULL)
+   {
+      DBG("NULL");
+      return 0;
+   }
+
+#ifdef CONFIG_SMP
+   // Verify Lock
+   #if _IGNORE_DISCONNECT_SPIN_LOCK_CHECK_
+   if(!IsDeviceDisconnect(pDev))
+   #endif
+   if (LocalClientMemLockSpinIsLock( pDev ) == 0)
+   {
+      DBG( "unlocked\n" );
+      BUG();
+   }
+#endif
+
+   // Get this client's memory location
+   pClientMem = FindClientMem( pDev, clientID );
+   if (pClientMem == NULL)
+   {
+      DBG( "Could not find this client's memory 0x%04X\n", clientID );
+      return 0;
+   }
+
+   // Go to last URBList entry
+   ppThisNotifyList = &pClientMem->mpReadNotifyList;
+   while (*ppThisNotifyList != NULL)
+   {
+      if((*ppThisNotifyList)->mTransactionID==u16TransactionID)
+      {
+         return 1;
+      }
+      ppThisNotifyList = &(*ppThisNotifyList)->mpNext;
+   }
+   return 0;
+}
+
+/*===========================================================================
+ReadCallbackInt
+
+   ReadCallbackInt (Private Method)
+
+DESCRIPTION:
+   Queue URB to be process. 
+
+PARAMETERS:
+   pReadURB                 [ I ] - Pointer to urb pointer
+RETURN VALUE:
+   none
+===========================================================================*/
+void ReadCallbackInt( struct urb * pReadURB )
+{
+   sGobiUSBNet * pDev;
+   if (pReadURB == NULL)
+   {
+      DBG( "bad read URB\n" );
+      return;
+   }
+   pDev = pReadURB->context;
+   pDev->pReadURB = pReadURB;
+   gobiProcessReadURB(pDev);
+   return ;
+}
+
+/*===========================================================================
+ProcessReadWorkFunction
+
+   ProcessReadWorkFunction (Private Method)
+
+DESCRIPTION:
+   Process ReadCallback. 
+
+PARAMETERS:
+   w                 [ I ] - Pointer to work_struct pointer
+RETURN VALUE:
+   none
+===========================================================================*/
+static void ProcessReadWorkFunction(struct work_struct *w)
+{
+   struct delayed_work *dwork;
+   sGobiUSBNet *pGobiDev = NULL;
+   dwork = to_delayed_work(w);
+   pGobiDev = container_of(dwork, sGobiUSBNet, dwProcessReadCallback);
+   if(pGobiDev!=NULL)
+   {
+      DBG("ResubmitIntURB\n");
+      ReadCallback(pGobiDev->pReadURB);
+   }
+   else
+   {
+      DBG("pGobiDev NULL\n");
+   }
+}
+
+/*===========================================================================
+gobiProcessReadURB
+
+   gobiProcessReadURB (Private Method)
+
+DESCRIPTION:
+   Add delayed work to wqProcessReadCallback.
+
+PARAMETERS:
+   pGobiDev                 [ I ] - Pointer to sGobiUSBNet pointer
+RETURN VALUE:
+   none
+===========================================================================*/
+static void gobiProcessReadURB(sGobiUSBNet *pGobiDev)
+{
+   INIT_DELAYED_WORK(&pGobiDev->dwProcessReadCallback,
+            ProcessReadWorkFunction);
+   queue_delayed_work(pGobiDev->wqProcessReadCallback, &pGobiDev->dwProcessReadCallback, 0);
+}
+/*===========================================================================
+GenerateProcessName
+
+   GenerateProcessName (Private Method)
+
+DESCRIPTION:
+   Generate workqueue name with prefix.
+
+PARAMETERS:
+   pPrefix                 [ I ] - work queue name prefix
+   szProcessName           [ O ] - strore generated process name 
+   sizeofName              [ I ] - size of process name
+   pGobiDev                [ I ] - Pointer to sGobiUSBNet pointer
+RETURN VALUE:
+   int - 0 Suceesss.
+       - -1 Error.
+===========================================================================*/
+int GenerateProcessName(const char *pPrefix,char *szProcessName,unsigned sizeofName,sGobiUSBNet *pGobiDev )
+{
+    struct usb_device *dev = NULL;
+    if(pGobiDev==NULL)
+    {
+        return -1;
+    }
+    dev = interface_to_usbdev(pGobiDev->mUsb_Interface);
+    snprintf(szProcessName,sizeofName,"%s-%d-%d-%s:%d.%d",
+      pPrefix,
+      (int)pGobiDev->mQMIDev.qcqmi,   
+      dev->bus->busnum, dev->devpath,    
+      dev->actconfig->desc.bConfigurationValue,   
+      pGobiDev->mUsb_Interface->cur_altsetting->desc.bInterfaceNumber);
+    return 0;
+}
+
+/*===========================================================================
+GetPrivateWorkQueuesInterfaceTableIndex
+
+   GetPrivateWorkQueuesInterfaceTableIndex (Private Method)
+
+DESCRIPTION:
+   Get table interface(GobiPrivateWorkQueues) index by USB interface number.
+
+PARAMETERS:
+   pGobiDev                [ I ] - Pointer to sGobiUSBNet pointer
+RETURN VALUE:
+    int - 0 interface 8(default).
+        - 1 interface 10.
+===========================================================================*/
+int GetPrivateWorkQueuesInterfaceTableIndex(sGobiUSBNet *pGobiDev)
+{
+   if(pGobiDev->mUsb_Interface->cur_altsetting->desc.bInterfaceNumber==10)
+      return 1;
+   return 0;
+}
+
+/*===========================================================================
+AddPrivateWorkQueues
+
+   AddPrivateWorkQueues (Private Method)
+
+DESCRIPTION:
+   Add pGObiDev USB interface device to GobiPrivateWorkQueues.
+
+PARAMETERS:
+   pGobiDev                [ I ] - Pointer to sGobiUSBNet pointer
+RETURN VALUE:
+    int - 0 - MAX_QCQMI-1 GobiPrivateWorkQueues workqueue index.
+===========================================================================*/
+int AddPrivateWorkQueues(sGobiUSBNet *pGobiDev)
+{
+   int i=0,j=0;
+   char szProcessName[MAX_WQ_PROC_NAME_SIZE];
+   memset(&szProcessName,0,sizeof(szProcessName));
+   if(pGobiDev->mUsb_Interface->cur_altsetting->desc.bInterfaceNumber==10)
+   {
+      j = 1;
+   }
+   if(GenerateProcessName("gobi",&szProcessName[0],MAX_WQ_PROC_NAME_SIZE-1,pGobiDev)!=0)
+   {
+      return -1;
+   }
+   i = GetPrivateWorkQueuesIndex(pGobiDev);
+   if(i<MAX_QCQMI)
+   {
+      DBG("%s REUSE %d:%d :%s",__FUNCTION__,i,j,szProcessName);
+      return i;
+   }
+   for(i=0;i<MAX_QCQMI;i++)
+   {
+      if(strlen(GobiPrivateWorkQueues[i][j].szProcessName)==0)
+      {
+         strncpy(GobiPrivateWorkQueues[i][j].szProcessName,szProcessName,strlen(szProcessName));
+         DBG("%s ADD %d:%d :%s",__FUNCTION__,i,j,szProcessName);
+         return i;
+      }
+   }
+   return -1;
+}
+
+/*===========================================================================
+GetPrivateWorkQueuesIndex
+
+   GetPrivateWorkQueuesIndex (Private Method)
+
+DESCRIPTION:
+   Get pGObiDev index in GobiPrivateWorkQueues.
+
+PARAMETERS:
+   pGobiDev                [ I ] - Pointer to sGobiUSBNet pointer
+RETURN VALUE:
+    int - 0 - MAX_QCQMI-1 GobiPrivateWorkQueues workqueue index.
+===========================================================================*/
+int GetPrivateWorkQueuesIndex(sGobiUSBNet *pGobiDev)
+{
+   int i=0,j=0;
+   char szProcessName[MAX_WQ_PROC_NAME_SIZE];
+   memset(&szProcessName,0,sizeof(szProcessName));
+   j = GetPrivateWorkQueuesInterfaceTableIndex(pGobiDev);
+   if(GenerateProcessName("gobi",&szProcessName[0],MAX_WQ_PROC_NAME_SIZE-1,pGobiDev)!=0)
+   {
+      return -1;
+   }
+   for(i=0;i<MAX_QCQMI;i++)
+   {
+      if( 
+             (strlen(GobiPrivateWorkQueues[i][j].szProcessName)>0) && 
+             (strlen(GobiPrivateWorkQueues[i][j].szProcessName)==strlen(szProcessName)) &&
+             (strncmp(GobiPrivateWorkQueues[i][j].szProcessName,szProcessName,strlen(szProcessName))==0)
+             )
+      {
+         DBG("%s FOUND :%s\n",__FUNCTION__,szProcessName);
+         return i;
+      }
+   }
+   return i;
+}
+
+/*===========================================================================
+iClearWorkQueuesByTableIndex
+
+   iClearWorkQueuesByTableIndex (Private Method)
+
+DESCRIPTION:
+   Clear index in GobiPrivateWorkQueues device workqueues.
+
+PARAMETERS:
+   index                [ I ] - index of GobiPrivateWorkQueues device to be cleared
+RETURN VALUE:
+    none
+===========================================================================*/
+int iClearWorkQueuesByTableIndex(int index)
+{
+   int i=0,j=0;
+   i = index;
+   if((i>=0)&&(i<MAX_QCQMI))
+   {
+      for(j=0;j<MAX_QCQMI_PER_INTF;j++)
+      {
+         if(strlen(GobiPrivateWorkQueues[i][j].szProcessName)>0)
+         {
+            DBG("%s clear %d:%d :%s",__FUNCTION__,
+            i,j,
+            GobiPrivateWorkQueues[i][j].szProcessName);
+         }
+         memset(&GobiPrivateWorkQueues[i][j].szProcessName,0,sizeof(GobiPrivateWorkQueues[i][j].szProcessName));
+         if(GobiPrivateWorkQueues[i][j].wqprobe!=NULL)
+         {
+            DBG("%s wqprobe %d:%d :%s",
+               __FUNCTION__,i,j,
+            GobiPrivateWorkQueues[i][j].szProcessName);
+            SetPrivateWorkQueuesWQByTableIndex(i,j,NULL,eWQ_PROBE);
+         }
+         GobiPrivateWorkQueues[i][j].wqprobe=NULL;
+         if(GobiPrivateWorkQueues[i][j].wqProcessReadCallback!=NULL)
+         {
+            DBG("%s wqProcessReadCallback %d:%d :%s",
+               __FUNCTION__,i,j,
+            GobiPrivateWorkQueues[i][j].szProcessName);
+            SetPrivateWorkQueuesWQByTableIndex(i,j,NULL,eWQ_URBCB);
+         }
+         GobiPrivateWorkQueues[i][j].wqProcessReadCallback=NULL;
+      }
+   }
+   return 0;
+}
+
+/*===========================================================================
+GetPrivateWorkQueuesWQByTableIndex
+
+   GetPrivateWorkQueuesWQByTableIndex (Private Method)
+
+DESCRIPTION:
+   Get GobiPrivateWorkQueues workqueue with specific device index(i), 
+   interface index(j), and work queue type.
+
+PARAMETERS:
+   i                 [ I ] - index of GobiPrivateWorkQueues device.
+   j                 [ I ] - index of GobiPrivateWorkQueues interface.
+   type              [ I ] - work queue type.
+RETURN VALUE:
+    struct workqueue_struct pointer:
+         - NULL fail.
+===========================================================================*/
+struct workqueue_struct *GetPrivateWorkQueuesWQByTableIndex(int i,int j,int type)
+{
+   if ((j<0) ||(j>=MAX_QCQMI_PER_INTF))
+      return NULL;
+   if((i<0)||(i>=MAX_QCQMI))
+      return NULL;
+   
+   switch(type)
+   {
+      case eWQ_PROBE:
+         if(GobiPrivateWorkQueues[i][j].wqprobe!=NULL)
+         {
+            return GobiPrivateWorkQueues[i][j].wqprobe;
+         }
+         break;
+      case eWQ_URBCB:
+         if(GobiPrivateWorkQueues[i][j].wqProcessReadCallback!=NULL)
+         {
+            return GobiPrivateWorkQueues[i][j].wqProcessReadCallback;
+         }
+         break;
+      default:
+         break;
+   }
+
+   return NULL;
+}
+
+/*===========================================================================
+SetPrivateWorkQueuesWQByTableIndex
+
+   SetPrivateWorkQueuesWQByTableIndex (Private Method)
+
+DESCRIPTION:
+   Set GobiPrivateWorkQueues workqueue with specific device index(i), 
+   interface index(j), and work queue type.
+
+PARAMETERS:
+   i                 [ I ] - index of GobiPrivateWorkQueues device.
+   j                 [ I ] - index of GobiPrivateWorkQueues interface.
+   wq                [ I ] - work queue pointer to be stored in GobiPrivateWorkQueues
+   type              [ I ] - work queue type.
+RETURN VALUE:
+    int - 0 success.
+    Negative errno for error
+===========================================================================*/
+int SetPrivateWorkQueuesWQByTableIndex(int i,int j,struct workqueue_struct *wq, int type)
+{
+   if ((j<0) ||(j>=MAX_QCQMI_PER_INTF))
+      return -1;
+   if((i<0)||(i>=MAX_QCQMI))
+      return -1;
+   
+   switch(type)
+   {
+      case eWQ_PROBE:
+         if(GobiPrivateWorkQueues[i][j].wqprobe!=NULL)
+         {
+            DBG( "%s wqprobe %d:%d :%s",
+               __FUNCTION__,i,j,
+            GobiPrivateWorkQueues[i][j].szProcessName);
+            flush_workqueue(GobiPrivateWorkQueues[i][j].wqprobe);
+            DBG( "%s wq wqprobe %d:%d :%s",
+               __FUNCTION__,i,j,
+            GobiPrivateWorkQueues[i][j].szProcessName);
+            destroy_workqueue(GobiPrivateWorkQueues[i][j].wqprobe);
+         }
+         GobiPrivateWorkQueues[i][j].wqprobe=wq;
+         break;
+      case eWQ_URBCB:
+         if(GobiPrivateWorkQueues[i][j].wqProcessReadCallback!=NULL)
+         {
+            DBG("%s wqProcessReadCallback %d:%d :%s",
+               __FUNCTION__,i,j,
+            GobiPrivateWorkQueues[i][j].szProcessName);
+            flush_workqueue(GobiPrivateWorkQueues[i][j].wqProcessReadCallback);
+            DBG( "%s wqProcessReadCallback destroy_workqueue %d:%d :%s",
+               __FUNCTION__,i,j,
+            GobiPrivateWorkQueues[i][j].szProcessName);
+            destroy_workqueue(GobiPrivateWorkQueues[i][j].wqProcessReadCallback);
+         }
+         GobiPrivateWorkQueues[i][j].wqProcessReadCallback=wq;
+         break;
+      default:
+         break;
+   }
+
+   return 0;
+}
+
+/*===========================================================================
+ClearPrivateWorkQueuesProcessByTableIndex
+
+   ClearPrivateWorkQueuesProcessByTableIndex (Private Method)
+
+DESCRIPTION:
+   Clear GobiPrivateWorkQueues ProcessName with specific device index(i) and
+   interface index(j).
+
+PARAMETERS:
+   i                 [ I ] - index of GobiPrivateWorkQueues device.
+   j                 [ I ] - index of GobiPrivateWorkQueues interface.
+RETURN VALUE:
+    int - 0 success.
+    Negative errno for error
+===========================================================================*/
+int ClearPrivateWorkQueuesProcessByTableIndex(int i,int j)
+{
+    DBG("%s %d:%d ",
+               __FUNCTION__,i,j)
+   if ((j<0) ||(j>=MAX_QCQMI_PER_INTF))
+      return -1;
+   if((i<0)||(i>=MAX_QCQMI))
+      return -1;
+   if( (GobiPrivateWorkQueues[i][j].wqProcessReadCallback==NULL) &&
+       (GobiPrivateWorkQueues[i][j].wqprobe==NULL) )
+   {
+      memset(&GobiPrivateWorkQueues[i][j].szProcessName,0,
+         sizeof(GobiPrivateWorkQueues[i][j].szProcessName));
+   }
+   return 0;
+}
+
+/*===========================================================================
+GobiCancelReadCallBackWorkQueue
+
+   GobiCancelReadCallBackWorkQueue (Private Method)
+
+DESCRIPTION:
+   Cancel device ReadCallBack work queue.
+
+PARAMETERS:
+   pGobiDev          [ I ] - pointer to sGobiUSBNet.
+RETURN VALUE:
+    none
+===========================================================================*/
+void GobiCancelReadCallBackWorkQueue(sGobiUSBNet *pGobiDev)
+{
+   if(pGobiDev->wqProcessReadCallback!=NULL)
+   {
+      unsigned int flag = gobi_work_busy(&pGobiDev->dwProcessReadCallback);
+      if(flag)
+      {
+         #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,36 ))
+         if(flag & WORK_BUSY_RUNNING)
+         {
+            DBG("flush_delayed_work ReadCallback %d\n",
+                pGobiDev->mpIntf->cur_altsetting->desc.bInterfaceNumber);
+            flush_delayed_work(&pGobiDev->dwProcessReadCallback);
+         }
+         #endif
+         if(cancel_delayed_work (&pGobiDev->dwProcessReadCallback))
+         {
+            DBG("flush_workqueue ReadCallback %d\n",
+                pGobiDev->mpIntf->cur_altsetting->desc.bInterfaceNumber);
+            flush_workqueue(pGobiDev->wqProcessReadCallback);
+         }
+      }
+      else
+      {
+         DBG("flush_work ReadCallback\n %d\n",
+            pGobiDev->mpIntf->cur_altsetting->desc.bInterfaceNumber);
+         flush_work(&pGobiDev->dwProcessReadCallback.work);
+      }
+   }
+}
+
+
+/*===========================================================================
+METHOD:
+   TransceiveReleaseClientID (Private Method)
+
+DESCRIPTION:
+   Send/Receive Release QMI client control message.
+
+PARAMETERS:
+   pDev           [ I ] - Device specific memory
+   clientID       [ I ] - Requester's client ID
+
+RETURN VALUE:
+   true - 0 success.
+   false - on error.
+===========================================================================*/
+bool TransceiveReleaseClientID(
+   sGobiUSBNet *    pDev,
+   u16                clientID)
+{
+   void * pWriteBuffer;
+   u16 writeBufferSize;
+   void * pReadBuffer = NULL;
+   u16 readBufferSize;
+   u8 transactionID;
+   int result;
+   unsigned long flags = 0;
+   struct semaphore readSem;
+   bool bRet = true;
+   // Is device is still valid?
+   DBG("clientID:0x%x\n",clientID);
+   if (pDev->mbUnload > eStatUnloaded)
+   {
+      DBG( "unloaded\n" );
+      return false;
+   }
+   // Run QMI ReleaseClientID if this isn't QMICTL
+   if(IsDeviceDisconnect(pDev)==true)
+      return false;
+   barrier();
+   sema_init( &readSem, SEMI_INIT_DEFAULT_VALUE );
+   if ((clientID != QMICTL) && (pDev->mReleaseClientIDFail==0))
+   {
+      // Note: all errors are non fatal, as we always want to delete
+      //    client memory in latter part of function
+
+      writeBufferSize = QMICTLReleaseClientIDReqSize();
+      pWriteBuffer = kmalloc( writeBufferSize, GOBI_GFP_KERNEL );
+      if (pWriteBuffer == NULL)
+      {
+         DBG( "memory error\n" );
+         return false;
+      }
+      else
+      {
+         transactionID = QMIXactionIDGet(pDev);
+         result = QMICTLReleaseClientIDReq( pWriteBuffer,
+                                            writeBufferSize,
+                                            transactionID,
+                                            clientID );
+         if (result < 0)
+         {
+            kfree( pWriteBuffer );
+            DBG( "error %d filling req buffer\n", result );
+         }
+         else
+         {            
+            mb();
+            result = ReadAsync( pDev, QMICTL, transactionID, UpSem, &readSem ,1);
+            if(result == 0)
+            {
+               result = WriteSyncNoRetry( pDev,
+                             pWriteBuffer,
+                             writeBufferSize,
+                             QMICTL );
+               kfree( pWriteBuffer );
+               if(result<0)
+               {
+                  DBG( " WriteSyncNoRetry error %d\n", result );
+                  pDev->mReleaseClientIDFail = 1;
+                  bRet = false;
+                  flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+                  RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+                  LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+               }
+               else
+               {
+                  wait_control_msg_semaphore_timeout(&readSem,QMI_CONTROL_MAX_MSG_DELAY_MS);
+                  mb();
+                  // Enter critical section
+                  flags = LocalClientMemLockSpinLockIRQSave( pDev , __LINE__);
+                  barrier();
+                  spin_lock_irq(&(pDev->notif_lock));
+                  if (down_trylock( &readSem ) == 0)
+                  {                  
+                     // Pop the read data
+                     if (PopFromReadMemList( pDev,
+                                             QMICTL,
+                                             transactionID,
+                                             &pReadBuffer,
+                                             &readBufferSize ) == true)
+                     {
+                        // End critical section
+                        result = QMICTLReleaseClientIDResp(pReadBuffer,
+                                                              readBufferSize);
+                        if (result < 0)
+                        {
+                           DBG( "error %d parsing response\n", result );
+                           RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+                        }
+                        // We don't care about the result
+                        if(pReadBuffer)
+                        kfree( pReadBuffer );
+                     }
+                     else
+                     {
+                        // Read mismatch/failure, unlock and continue
+                        RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+                     }
+                  }
+                  else
+                  {
+                     DBG( "Lock Timeout\n" );
+                     // Timeout, remove the async read
+                     RemoveAndPopNotifyList(pDev,QMICTL,0,eClearCID);
+                     // End critical section
+                  }
+                  spin_unlock_irq(&(pDev->notif_lock));
+                  LocalClientMemUnLockSpinLockIRQRestore ( pDev ,flags,__LINE__);
+               }
+            }
+         } 
+      }
+   }
+   return bRet;
+}
 

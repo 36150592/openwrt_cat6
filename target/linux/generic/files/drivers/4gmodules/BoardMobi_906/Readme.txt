@@ -1,4 +1,4 @@
-GobiNet network driver 2016-10-14
+Gobi3000 network driver 2011-07-29-1026
 
 This readme covers important information concerning 
 the Gobi Net driver.
@@ -6,22 +6,15 @@ the Gobi Net driver.
 Table of Contents
 
 1. What's new in this release
-2. Build and Installation.
-3. Known issues
-4. Known platform issues
+2. Known issues
+3. Known platform issues
 
 
 -------------------------------------------------------------------------------
 
 1. WHAT'S NEW
 
-This Release (GobiNet network driver 2016-10-14)
-a. Added QMAP MUXing support.
-
-Prior Release (GobiNet network driver 2016-10-04)
-a. Added QMAP aggregation support.
-
-Prior Release (Gobi3000 network driver 2011-07-29-1026)
+This Release (Gobi3000 network driver 2011-07-29-1026)
 a. Signal the device to leave low power mode on enumeration
 b. Add "txQueueLength" parameter, which will set the Tx Queue Length
 c. Send SetControlLineState message during driver/device removal
@@ -53,66 +46,13 @@ a. Initial release
 
 -------------------------------------------------------------------------------
 
-2. Build and Installation
-
-Build
------
-
-1. Run Make from the extracted folder, it should build GobiNet.ko
-
-Installation
-------------
-1. GobiNet.ko is dependent on usbnet.ko and mii.ko kernel modules
-   > insmod mii.ko (found in /lib/modules/<kernel-version>/kernel/drivers/net)
-   > insmod usbnet.ko (found in /lib/modules/<kernel-version>/kernel/drivers/net/usb)
-   > insmod GobiNet.ko
-
-Test
-----
-
-Since App support is not yet supported we have tested the MUX support with loopback calls with file attributes.
-
-MUX feature:
-------------
-
-The header file Structs.h has a defination called MAX_MUX_DEVICES, this defines number od MUX adapters support.
-Currently it is defined to be 1. For each MUX adapter a new file attribure is created.
-/sys/testgobi/gobi0
-/sys/testgobi/gobi1
-/sys/testgobi/gobi2
-...
-...
-...
-
-TO make a call with MUX adapter 1:
->echo 1 > /sys/testgobi/gobi0, this will initiate a data call.
- The IP address gets printed in dmesg, please assing the IP address statically for the usb0 interface.
- ifconfig usb0 <ipaddress> up
-
-TO make a call with MUX adapter 2:
->echo 1 > /sys/testgobi/gobi1, this will initiate a data call.
- The IP address gets printed in dmesg, please assing the IP address statically for the usb0:0 interface.
- ifconfig usb0:0 <ipaddress> up
-
-TO make a call with MUX adapter 3:
->echo 1 > /sys/testgobi/gobi2, this will initiate a data call.
- The IP address gets printed in dmesg, please assing the IP address statically for the usb0:1 interface.
- ifconfig usb0:1 <ipaddress> up
-
-TO disconnect a call:
->echo 0 > /sys/testgobi/gobi0, this will bring down the data call on MUX1.
->echo 0 > /sys/testgobi/gobi1, this will bring down the data call on MUX2.
->echo 0 > /sys/testgobi/gobi2, this will bring down the data call on MUX3.
-    
--------------------------------------------------------------------------------
-
-3. KNOWN ISSUES
+2. KNOWN ISSUES
 
 No known issues.
          
 -------------------------------------------------------------------------------
 
-4. KNOWN PLATFORM ISSUES
+3. KNOWN PLATFORM ISSUES
 
 a. Enabling autosuspend:
    Autosuspend is supported by the Gobi3000 module and its drivers, 
@@ -133,7 +73,6 @@ c. NetworkManager does not recognize connection after resume:
    NetworkManager service.
 
 -------------------------------------------------------------------------------
-
 
 
 

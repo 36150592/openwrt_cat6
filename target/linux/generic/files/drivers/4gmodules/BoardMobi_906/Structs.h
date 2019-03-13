@@ -3,12 +3,12 @@ FILE:
    Structs.h
 
 DESCRIPTION:
-   Declaration of structures used by the QTI Linux USB Network driver
-   
+   Declaration of structures used by the Qualcomm Linux USB Network driver
+
 FUNCTIONS:
    none
 
-Copyright (c) 2011,2015 The Linux Foundation. All rights reserved.
+Copyright (c) 2011, Code Aurora Forum. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -22,6 +22,34 @@ modification, are permitted provided that the following conditions are met:
       products derived from this software without specific prior written
       permission.
 
+Alternatively, provided that this notice is retained in full, this software
+may be relicensed by the recipient under the terms of the GNU General Public
+License version 2 ("GPL") and only version 2, in which case the provisions of
+the GPL apply INSTEAD OF those given above.  If the recipient relicenses the
+software under the GPL, then the identification text in the MODULE_LICENSE
+macro must be changed to reflect "GPLv2" instead of "Dual BSD/GPL".  Once a
+recipient changes the license terms to the GPL, subsequent recipients shall
+not relicense under alternate licensing terms, including the BSD or dual
+BSD/GPL terms.  In addition, the following license statement immediately
+below and between the words START and END shall also then apply when this
+software is relicensed under the GPL:
+
+START
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License version 2 and only version 2 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+END
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -52,10 +80,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <linux/cdev.h>
 #include <linux/kthread.h>
 #include <linux/poll.h>
-#include <linux/module.h>
-
-#define MAX_MUX_DEVICES 1
-
+#include <linux/timer.h>
+#include <linux/proc_fs.h>
+#include <linux/workqueue.h>
 
 #if (LINUX_VERSION_CODE <= KERNEL_VERSION( 2,6,24 ))
    #include "usbnet.h"
@@ -69,20 +96,42 @@ POSSIBILITY OF SUCH DAMAGE.
    #include <linux/file.h>
 #endif
 
-// DBG macro
-#define DBG( format, arg... ) \
-   if (debug == 1)\
-   { \
-      printk( KERN_INFO "GobiNet::%s " format, __FUNCTION__, ## arg ); \
-   } \
+#include <linux/semaphore.h>
 
-//#define BIG_ENDIAN  0
-#define CONFIG_DHCP 
+#define MAX_MAP (9)
+#define MAX_DSCP_ID        0x3F
+#define UNIQUE_DSCP_ID     0x40
+
+#define MAX_READ_SYNC_TASK_ID 255
+#define MAX_RETRY_LOCK_NUMBER 10
+#define MAX_RETRY_LOCK_MSLEEP_TIME 10
+#define MAX_RETRY_TASK_LOCK_TIME 10
+#define MAX_RETRY_TASK_MSLEEP_TIME 5
+#define MAX_DEVICE_MEID_SIZE 14
+#define MAX_SVC_VERSION_SIZE 512
+
+//Max number of QMUX supported 
+#define MAX_MUX_NUMBER_SUPPORTED 3
+//First supported QMUX ID
+#define MUX_ID_START 0x80
+//Last supported QMUX ID
+#define MUX_ID_END   MUX_ID_START + MAX_MUX_NUMBER_SUPPORTED
+#define RMNET_QMAP_STRING "rmnet-qmap-"
 
 // Used in recursion, defined later below
 struct sGobiUSBNet;
 
-struct sQMIDev;
+#define MAX_WQ_PROC_NAME_SIZE 512
+/*=========================================================================*/
+// Struct sGobiPrivateWorkQueues
+//
+//    Structure that defines an entry work queues per deivce
+/*=========================================================================*/
+typedef struct sGobiPrivateWorkQueues{
+   char szProcessName[MAX_WQ_PROC_NAME_SIZE];
+   struct workqueue_struct *wqprobe;
+   struct workqueue_struct *wqProcessReadCallback;
+}sGobiPrivateWorkQueues;
 
 /*=========================================================================*/
 // Struct sReadMemList
@@ -93,7 +142,7 @@ typedef struct sReadMemList
 {
    /* Data buffer */
    void *                     mpData;
-   
+
    /* Transaction ID */
    u16                        mTransactionID;
 
@@ -113,14 +162,14 @@ typedef struct sReadMemList
 typedef struct sNotifyList
 {
    /* Function to be run when data becomes available */
-   void                  (* mpNotifyFunct)(struct sGobiUSBNet *, u16, void *, struct sQMIDev *);
-   
+   void                  (* mpNotifyFunct)(struct sGobiUSBNet *, u16, void *);
+
    /* Transaction ID */
    u16                   mTransactionID;
 
    /* Data to provide as parameter to mpNotifyFunct */
    void *                mpData;
-   
+
    /* Next entry in linked list */
    struct sNotifyList *  mpNext;
 
@@ -155,17 +204,17 @@ typedef struct sClientMemList
    /* Linked list of Read entries */
    /*    Stores data read from device before sending to client */
    sReadMemList *               mpList;
-   
+
    /* Linked list of Notification entries */
-   /*    Stores notification functions to be run as data becomes 
+   /*    Stores notification functions to be run as data becomes
          available or the device is removed */
    sNotifyList *                mpReadNotifyList;
 
    /* Linked list of URB entries */
-   /*    Stores pointers to outstanding URBs which need canceled 
+   /*    Stores pointers to outstanding URBs which need canceled
          when the client is deregistered or the device is removed */
    sURBList *                   mpURBList;
-   
+
    /* Next entry in linked list */
    struct sClientMemList *      mpNext;
 
@@ -200,14 +249,14 @@ typedef struct sURBSetupPacket
 } sURBSetupPacket;
 
 // Common value for sURBSetupPacket.mLength
-//#define DEFAULT_READ_URB_LENGTH 0x1000
-#define DEFAULT_READ_URB_LENGTH 256
+#define DEFAULT_READ_URB_LENGTH 0x1000
+
 
 /*=========================================================================*/
 // Struct sAutoPM
 //
 //    Structure used to manage AutoPM thread which determines whether the
-//    device is in use or may enter autosuspend.  Also submits net 
+//    device is in use or may enter autosuspend.  Also submits net
 //    transmissions asynchronously.
 /*=========================================================================*/
 typedef struct sAutoPM
@@ -235,35 +284,12 @@ typedef struct sAutoPM
 
    /* Active URB lock (for adding and removing elements) */
    spinlock_t                 mActiveURBLock;
-   
+
    /* Duplicate pointer to USB device interface */
    struct usb_interface *     mpIntf;
 
 } sAutoPM;
 
-
-
-#ifdef CONFIG_DHCP
-/*=========================================================================*/
-// Struct sAutoPM
-//
-//    Structure used to manage AutoPM thread which determines whether the
-//    device is in use or may enter autosuspend.  Also submits net 
-//    transmissions asynchronously.
-/*=========================================================================*/
-typedef struct sAutoDhcp
-{
-   /* Thread for atomic autopm function */
-   struct task_struct *       mpThread;
-
-   /* Signal for completion when it's time for the thread to work */
-   struct completion          mThreadDoWork;
-
-   /* Time to exit? */
-   bool                       mbExit;
-
-} sAutoDhcp;
-#endif
 
 /*=========================================================================*/
 // Struct sQMIDev
@@ -289,71 +315,139 @@ typedef struct sQMIDev
 
    /* Read setup packet */
    sURBSetupPacket *          mpReadSetupPacket;
-   struct usb_ctrlrequest	*orq;
+
    /* Read buffer attached to current read URB */
    void *                     mpReadBuffer;
-   
+
    /* Inturrupt URB */
    /*    Used to asynchronously notify when read data is available */
    struct urb *               mpIntURB;
 
    /* Buffer used by Inturrupt URB */
    void *                     mpIntBuffer;
-   
+
    /* Pointer to memory linked list for all clients */
    sClientMemList *           mpClientMemList;
-   
+
    /* Spinlock for client Memory entries */
    spinlock_t                 mClientMemLock;
+   unsigned long              mFlag;
+   struct task_struct         *pTask;
+    /* semaphore for Notify */
+   struct semaphore           mNotifyMemLock;
 
    /* Transaction ID associated with QMICTL "client" */
    atomic_t                   mQMICTLTransactionID;
 
-   /* Transaction ID associated with QMI "client" */
-   unsigned short             mQMITransactionID;
+   unsigned char              qcqmi;
 
-   /*MuxId*/
-   unsigned char             MuxId;
-
-   unsigned int               IPv4Addr;
-
-   unsigned int               IPv4SubnetMask;
-
-   unsigned int               IPv4Gateway;
-
-   unsigned int               IPv4PrimaryDNS;
-
-   unsigned int               IPv4SecondaryDNS;
-   
+   int                        iInterfaceNumber;
+   struct proc_dir_entry *    proc_file;
 } sQMIDev;
 
-/*=========================================================================*/
-// Struct sEndpoints
-//
-//    Structure that defines the endpoints of the device
-/*=========================================================================*/
-typedef struct sEndpoints
+enum qos_flow_state {
+    FLOW_ACTIVATED = 0x01,
+    FLOW_SUSPENDED = 0x02,
+    FLOW_DELETED = 0x03,
+    FLOW_MODIFIED,
+    FLOW_ENABLED,
+    FLOW_DISABLED,
+    FLOW_INVALID = 0xff
+}; 
+
+typedef struct {
+    u8  dscp;
+    u32 qosId;
+    u8  state;
+} sMapping;
+
+typedef struct {
+    u8 count;
+    sMapping table[MAX_MAP];
+} sMappingTable;
+
+typedef struct {
+  u32 rx_packets;
+  u32 tx_packets;
+  u64 rx_bytes;
+  u64 tx_bytes;
+  u32 rx_errors;
+  u32 tx_errors;
+  u32 rx_overflows;
+  u32 tx_overflows;
+} sNetStats;
+
+#define IPV6_ADDR_LEN 16
+typedef struct ipv6_addr
 {
-   /* Interface number */
-   unsigned               mIntfNum;
+   u8         ipv6addr[IPV6_ADDR_LEN];
+   u8         prefix;
+}__attribute__((__packed__)) ipv6_addr;
 
-   /* Interrupt in endpoint */
-   unsigned               mIntInEndp;
 
-   /* Bulk in endpoint */
-   unsigned               mBlkInEndp;
+typedef struct {
+    u8 instance;
+    unsigned int ipAddress;
+    ipv6_addr    ipV6Address;
+} sQMuxIPTable;
 
-   /* Bulk out endpoint */
-   unsigned               mBlkOutEndp;
-   
-   struct usb_endpoint_descriptor Intep_desc;
+typedef struct gobi_qmimux_hdr{
+   u8 pad;
+   u8 mux_id;
+   __be16 pkt_len;
+}gobi_qmimux_hdr;
 
-} sEndpoints;
+typedef struct qmap_ipv4_header
+{
+#ifdef LITTLE_ENDIAN
+   unsigned char ihl:4;
+   unsigned char version:4;
+   unsigned char ecn:2;
+   unsigned char dscp:6;
+#else
+   unsigned char version:4;
+   unsigned char ihl:4;
+   unsigned char dscp:6;
+   unsigned char ecn:2;
+#endif
+   unsigned short total_length;
+   unsigned short identification;
+   unsigned short fragment_offset;
+   unsigned char ttl;
+   unsigned char protocol;
+   unsigned short header_checksum;
+   unsigned int src_address;
+   unsigned int dst_address;
+} __attribute__ ((aligned (1))) *qmap_ipv4_header_t;
+
+typedef struct qmap_ipv6_header
+{
+   unsigned int version:4;
+   unsigned int traffic_class:8;
+   unsigned int flow_label:20;
+   unsigned short length;
+   unsigned char next_header;
+   unsigned char hop_limit;
+   unsigned char src_address[16];
+   unsigned char dst_address[16];
+} __attribute__ ((aligned (1))) *qmap_ipv6_header_t;
+
+enum{
+   eDataMode_Unknown=-1,
+   eDataMode_Ethernet,
+   eDataMode_RAWIP,
+};
+
+enum{
+   eNetDeviceLink_Unknown=-1,
+   eNetDeviceLink_Disconnected,
+   eNetDeviceLink_Connected,
+};
 
 /*=========================================================================*/
 // Struct sGobiUSBNet
 //
-//    Structure that defines the data associated with the QTI USB device
+//    Structure that defines the data associated with the Qualcomm USB device
 /*=========================================================================*/
 typedef struct sGobiUSBNet
 {
@@ -362,9 +456,6 @@ typedef struct sGobiUSBNet
 
    /* Usb device interface */
    struct usb_interface * mpIntf;
-
-   /* Endpoint numbers */
-   sEndpoints *           mpEndpoints;
 
    /* Pointers to usbnet_open and usbnet_stop functions */
    int                  (* mpUSBNetOpen)(struct net_device *);
@@ -378,34 +469,95 @@ typedef struct sGobiUSBNet
 #define DRIVER_SUSPENDED      2
 #define NET_IFACE_STOPPED     3
 
-    bool mdm9x07; 
-    bool mdm9x40; 
-   bool big_endian;
    /* QMI "device" status */
    bool                   mbQMIValid;
-   bool                   mbderegisterQMI;
+   int                   mbUnload;
+   int                   mReleaseClientIDFail;
    /* QMI "device" memory */
    sQMIDev                mQMIDev;
 
-   /* QMI "device" memory for MUXING*/
-   sQMIDev                mQMIMUXDev[MAX_MUX_DEVICES];
-
    /* Device MEID */
-   char                   mMEID[14];
+   char                   mMEID[MAX_DEVICE_MEID_SIZE];
+
+   /* Service version Info */
+   u8                     svcVersion[MAX_SVC_VERSION_SIZE];
 
    /* AutoPM thread */
    sAutoPM                mAutoPM;
-#ifdef CONFIG_DHCP
-   sAutoDhcp                mAutoDhcp;
-   unsigned short       wds_client;
-#endif
-   /*QMAP DL Aggregation information */
-   unsigned int      ULAggregationMaxDatagram;
-   unsigned int    ULAggregationMaxSize;
 
-   /*WDS Connect/Disconnect kobj*/
-   struct kobject *kobj_gobi;
+   /* Ethernet header templates */
+   /* IPv4 */
+   u8  eth_hdr_tmpl_ipv4[ETH_HLEN];
+   /* IPv6 */
+   u8  eth_hdr_tmpl_ipv6[ETH_HLEN];
 
+   u32 tx_qlen;
+
+   sMappingTable maps;
+
+   /*
+    * Read write semaphore so that ReleaseClientID() waits until WriteSync() exits to handle 
+    * below limitation
+    * If a thread in your driver uses this call, make sure your disconnect()
+    * method can wait for it to complete.  Since you don't have a handle on the
+    * URB used, you can't cancel the request.
+    */
+   struct rw_semaphore shutdown_rwsem;
+   int iShutdown_read_sem;
+   int iShutdown_write_sem;
+
+   struct timer_list read_tmr;
+   u16 readTimeoutCnt;
+   u16 writeTimeoutCnt;
+
+   bool bLinkState;
+   u16 mtu;
+   #ifdef CONFIG_PM
+   bool bSuspend;
+   spinlock_t sSuspendLock;
+   #endif
+   bool mIs9x15;
+   struct usb_interface *mUsb_Interface;
+   int iTaskID;
+   struct task_struct *task;
+   
+   int iReasSyncTaskID[MAX_READ_SYNC_TASK_ID];
+   struct semaphore readSem[MAX_READ_SYNC_TASK_ID];
+   struct semaphore ReadsyncSem;
+   
+   struct semaphore taskIDSem;
+   int iIsClosing;
+   struct device *qcqmidev;
+   struct device *dev;
+   u16 WDSClientID[MAX_MUX_NUMBER_SUPPORTED];;
+   int iNetLinkStatus;
+   int iDataMode;
+   spinlock_t urb_lock;
+   spinlock_t notif_lock;
+   int iUSBState;
+   int iDeviceMuxID;
+   int iQMUXEnable;
+   int iStoppingNetDev;
+   int nRmnet;
+   int iMaxMuxID;
+   int iPacketInComplete;
+   struct sk_buff *pLastSKB;
+   struct net_device *pNetDevice[MAX_MUX_NUMBER_SUPPORTED];
+   sQMuxIPTable      qMuxIPTable[MAX_MUX_NUMBER_SUPPORTED];
+   u32 ULDatagramSize;
+   u32 ULDatagram;
+   int iIPAlias;
+   /*
+    * Workqueue and Delaywork to probe device.
+    */
+   struct workqueue_struct *wqprobe;
+   struct delayed_work dwprobe;
+   /*
+    * Workqueue and Delaywork to Process Interrupt URB.
+    */
+   struct workqueue_struct *wqProcessReadCallback;
+   struct delayed_work dwProcessReadCallback;
+   struct urb *pReadURB;
 } sGobiUSBNet;
 
 /*=========================================================================*/
@@ -418,14 +570,30 @@ typedef struct sQMIFilpStorage
 {
    /* Client ID */
    u16                  mClientID;
-
+   int                  mDeviceInvalid;
    /* Device pointer */
-   sGobiUSBNet *        mpDev;
-
-   /* QMIDevice */
-   sQMIDev *QMIDev;
-
+   sGobiUSBNet *          mpDev;
+   int iSemID ;
+   struct semaphore       mReadSem;
+   int iReleaseSemID ;
+   struct semaphore       mReleasedSem;
+   int                    iIsClosing;
+   int                    iReadSyncResult;
+   int                    iInfNum;
+   struct task_struct     *pOpenTask;
+   struct task_struct     *pReadTask;
+   struct task_struct     *pWriteTask;
+   struct task_struct     *pIOCTLTask;
+   int                    iCount;
 } sQMIFilpStorage;
 
+struct gobi_qmimux_priv {
+   struct net_device *real_dev;
+   u8 mux_id;
+};
 
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION( 3,0,0 )
+#ifndef kstrtol
+#define kstrtol strict_strtol
+#endif
+#endif
