@@ -143,16 +143,17 @@
                     init();
                 }
             });
-
-
-
         });
+		
+		function noImage(img){ 
+				img.style.display="none"; 
+		}
     </script>
 </head>
 
 <body>
 <div id="header">
-	<div id="logoDiv"><img src="images/customer.gif"></div>
+	<div id="logoDiv"><img src="images/customer.gif" onerror="noImage(this)"></div>
     <div id="siginfo">
         <table cellpadding="0" cellspacing="4">
             <tr>

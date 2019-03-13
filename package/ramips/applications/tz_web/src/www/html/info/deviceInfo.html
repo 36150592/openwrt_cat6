@@ -25,8 +25,12 @@
 
 
                     names_lte.push(device.modemVersion);
-                    names_lte.push(device.modsoftversion);
-                    names_lte.push(device.modhardwareversion);
+					
+					if(Page.Level == 1){
+						names_lte.push(device.modsoftversion);
+						names_lte.push(device.modhardwareversion);
+					}
+					
                     names_lte.push(device.imei);
                     names_lte.push(device.imsi);
                     names_lte.push(device.iccid);
@@ -50,8 +54,10 @@
 					}
 
                     values_lte.push(data2.modem.type || loading);
-                    values_lte.push(data2.modem.softver || loading);
-                    values_lte.push(data2.modem.hardware || loading);
+					if(Page.Level == 1){
+						values_lte.push(data2.modem.softver || loading);
+						values_lte.push(data2.modem.hardware || loading);
+					}
                     values_lte.push(data2.modem.imei || loading);
                     values_lte.push(data2.sim.imsi || loading);
                     values_lte.push(data2.sim.iccid || loading);
