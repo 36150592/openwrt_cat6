@@ -1,16 +1,72 @@
 #!/bin/sh /etc/rc.common
+#
+# Copyright (C) 2017 openwrt-cwmpd
+#
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+#
 
 START=99
+STOP=15
 
-start(){
-        /usr/sbin/cwmpd >/dev/null 2>&1 &
+uci_get_by_name() {       
+        local ret=$(uci get tozed.$1.$2 2>/dev/null)
+        echo ${ret:=$3}                             
+}                                                   
+                                                    
+uci_get_by_type() {    
+        local ret=$(uci get tozed.@$1[0].$2 2>/dev/null)
+        echo ${ret:=$3}                                 
+} 
+        
+gen_service_file() {
+        cat <<-EOF >$2
+[cwmp]
+enable=$(uci_get_by_name $1 tr069_app_enable 1)
+interval=$(uci_get_by_name $1 tr069_PeriodicInformInterval 30)
+soap_env=SOAP-ENV
+soap_enc=SOAP-ENC
+acs_auth=$(uci_get_by_name $1 tr069_ACS_auth 0)
+cpe_auth=$(uci_get_by_name $1 tr069_CPE_auth 0)
+event_filename=/etc/cwmpevent.bin
+acs_url=$(uci_get_by_name $1 tr069_ServerURL http://113.98.195.202:7547/)
+ca_file=/etc/ssl/private/ca.pem
+ca_password=123456
+cpe_manufacture=$(uci_get_by_name $1 tr069_Manufacture ChinaSZTozed)
+cpe_oui=$(uci_get_by_name $1 tr069_Manufacture A5555)
+cpe_sn=$(uci_get_by_name $1 tr069_Description 55555)
+cpe_name=$(uci_get_by_name $1 tr069_ModelName 6666)
+cpe_pc=$(uci_get_by_name $1 tr069_ProductClass 99T2800)
+cpe_specver=$(uci_get_by_name $1 tr069_version V1.0)
+cpe_hwver=$(uci_get_by_name $1 tr069_version V1.0)
+cpe_version=$(uci_get_by_name $1 tr069_version V1.2.7.29)
+cpe_username=$(uci_get_by_name $1 tr069_ServerUsername cwmp)
+cpe_password=$(uci_get_by_name $1 tr069_ServerPassword cwmp)
+acs_username=$(uci_get_by_name $1 tr069_ConnectionRequestUname cwmp)
+acs_password=$(uci_get_by_name $1 tr069_ConnectionRequestPassword cwmp)
+cmcc_password=sztozed
+
+[cwmpd]
+httpd_ip=
+httpd_port=5400
+http_timeout=-1
+EOF
+}
+
+start() {
+    gen_service_file cfg /etc/cwmp.conf
+    /usr/sbin/cwmpd >/dev/null 2>&1 &
 }
 
 stop(){
-	service_stop /usr/sbin/cwmpd
+        service_stop /usr/sbin/cwmpd
 }
 
 restart(){
         stop
-        start
+        if [ $(uci_get_by_name cfg tr069_app_enable 1) = 1 ]; then
+         start
+        fi
 }
+
+
