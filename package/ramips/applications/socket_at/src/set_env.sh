@@ -1,0 +1,16 @@
+export TOOLCHAIN=/home/qiao/real_sdk/rtl819x/toolchain/msdk-4.4.7-mips-EB-3.10-0.9.33-m32t-131227b
+#export TOOLCHAIN=.
+export PATH=$PATH:$TOOLCHAIN
+export CROSS_COMPILE=/home/qiao/real_sdk/rtl819x/toolchain/msdk-4.4.7-mips-EB-3.10-0.9.33-m32t-131227b/bin/mips-linux-
+export IS_BIG_ENDIAN=1
+export CC=${CROSS_COMPILE}gcc
+export AR=${CROSS_COMPILE}ar
+export LD=${CROSS_COMPILE}ld
+export STRIP=${CROSS_COMPILE}strip
+export OBJCOPY=${CROSS_COMPILE}objcopy
+export OBJDUMP=${CROSS_COMPILE}objdump
+export RANLIB=${CROSS_COMPILE}ranlib
+export LC_GENERL_INCLUDE_DIR=${TOOLCHAIN}/include
+export LC_LIB_DIR=${TOOLCHAIN}/lib
+export INSTALL_ROOT=${TOOLCHAIN}/image
+export IMAGEPATH=${TOOLCHAIN}/image
