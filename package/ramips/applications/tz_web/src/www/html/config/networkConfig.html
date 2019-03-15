@@ -38,7 +38,24 @@
 
 
         }
+		
+        function createIpListTable(reserveList) {
+            var sb = new StringBuilder();
 
+            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th></tr>',
+                networkconfightml.form1.th5));
+
+            for(var i = 0; i < reserveList.length; i++) {
+                if(reserveList[i] !== ""){
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td>{2</td></tr>',reserveList[i].ip, reserveList[i].mac,reserveList[i].leasetime));
+                }
+            }
+
+            sb.append('</table>');
+
+            $('#reserveLists').html(sb.toString());
+        }
+		
         $lis.click(function() {
             $lis.removeClass("current");
             $(this).addClass("current");
@@ -51,6 +68,7 @@
                         success: function(datas) {
                             console.log(datas);
                             var data = datas.data;
+							 createIpListTable('');
                             for(var i = 0; i <= data.length; i++){
                                 var dstatus = data[i].enable ? '1' : '0';
                                 if (dstatus == DHCPServer.CLOSED) {
@@ -68,6 +86,8 @@
                                 Page.setFormFieldValue2("ipEnd"+i, data[i].end_ip);
                                 Page.setFormFieldValue2("expireTime"+i, data[i].leasetime);
                             }
+							
+							
 
                         }
                     });
@@ -337,6 +357,9 @@
                         </table>
                     </script>
                 </form>
+				
+                <div id="reserveLists"></div>
+                       
             </div>
             <div >
                 <form id="form1">

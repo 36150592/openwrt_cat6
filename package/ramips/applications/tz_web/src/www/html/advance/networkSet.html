@@ -14,47 +14,21 @@ $(document).ready(function(){
             success: function(datas) {
                  var data = datas.data;
                  Page.setFormFieldValue2("networkMode", data.act);
-				 Page.setFormFieldValue2("lockPlmn", data.plmn);
+
             }
         });
     }
 
     getInfo();
-	
-	var rules = {
-            lockPlmn: {plmnRules:true}
-        },
-        messages = {
-            lockPlmn: {plmnRules:CHECK.required.plmnError }
-        };
-
-	
+    
     var $btnSave = $('#btnSave');
 
     $btnSave.click(function() {
         $(this).attr("disabled",true);
         var $form = $('#networkForm');
         var json = JSON.parmsToJSON($form);
-
-        var count = 0;
+        
         if(json.networkMode == $("#networkMode").attr('old')){
-            delete json["networkMode"];
-            count++;
-        }
-		
-		if(json.lockPlmn == $("#lockPlmn").attr('old')){
-            delete json["lockPlmn"];
-            count++;
-        }else {
-			if(!CheckUtil.checkForm($form, rules, messages)){
-                $(this).attr("disabled",false);
-                return false;
-            }
-            var plmnArr = json.lockPlmn.split(',');
-            json.lockPlmn = plmnArr;
-        }
-
-        if(count == 2){
             AlertUtil.alertMsg(CHECK.required.noChanges);
             $(this).attr("disabled",false);
             return false;
@@ -95,11 +69,6 @@ $(document).ready(function(){
                         <option value="3"><%- networkMode.modePriorityVal2_1 %></option>
                         <option value="0"><%- networkMode.modePriorityVal %></option>
                     </select></td>
-                </tr>
-				
-				<tr>
-                    <th><%- lbl.lockPlmn %><%- colon %></th>
-                    <td><input type="text" id="lockPlmn" name="lockPlmn" /></td>
                 </tr>
 				
 				<tr>

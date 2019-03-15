@@ -106,7 +106,7 @@
         function getInfo() {
             Page.postJSON({
                 json: {
-                    cmd: RequestCmd.REMOTE_LOGIN_GET
+                    cmd: RequestCmd.REMOTE_PIN_GET
                 },
                 success: function(datas) {
                     console.log(datas);
@@ -127,13 +127,13 @@
             <form id="childForm" >
                 <table class="detail" cellspacing="0">
                     <tr>
-                        <th><%- lbl.remoteLogin %><%- colon %></th>
+                        <th><%- lbl.pingRemote %><%- colon %></th>
                         <td>
                             <input type="checkbox" id="enableRemoteLogin" name="enableRemoteLogin" /><%- status.enable %>
                         </td>
                     </tr>
                     <tr>
-                        <th><%- lbl.remoteIpList %><%- colon %></th>
+                        <th><%- lbl.pingRemoteIp %><%- colon %></th>
                         <td>
                             <input id="btnAdd" type="button" value="<%- lbl.addRemoteIp %>" />
                             <div id="ipLists"></div>

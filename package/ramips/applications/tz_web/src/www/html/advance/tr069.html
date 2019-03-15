@@ -54,34 +54,15 @@
         });
 
         // 获取TR069数据
-//        Page.postJSON({
-//            json: {
-//                cmd: RequestCmd.TR069_CONFIG,
-//                method: JSONMethod.GET
-//                //subcmd: 0
-//            },
-//            success: function(data) {
-//                $('#noticeInterval').val(FormatUtil.formatField(data.noticeInterval));
-//                $('#url').val(FormatUtil.formatField(data.url));
-//                $('#userName').val(FormatUtil.formatField(data.userName));
-//                $('#passwd').val(FormatUtil.formatField(data.passwd));
-//                $('#linkUserName').val(FormatUtil.formatField(data.linkUserName));
-//                $('#linkPasswd').val(FormatUtil.formatField(data.linkPasswd));
-//
-//                var enabled = (data.enabled == "1");
-//                var noticeEnabled = (data.noticeEnabled == "1");
-//                var acsAuthEnabled = (data.acsAuthEnabled == "1");
-//                var cpeAuthEnabled = (data.cpeAuthEnabled == "1");
-//                setTr069CtrlsStatus(enabled, noticeEnabled, acsAuthEnabled, cpeAuthEnabled);
-//
-//                $enabled.prop("checked", enabled ? "checked" : "");
-//                $noticeEnabled.prop("checked", noticeEnabled ? "checked" : "");
-//                $acsAuthEnabled.prop("checked", acsAuthEnabled ? "checked" : "");
-//                $cpeAuthEnabled.prop("checked", cpeAuthEnabled ? "checked" : "");
-//
-//                Page.setStripeTable('#childTable');
-//            }
-//        });
+        Page.postJSON({
+            json: {
+                cmd: RequestCmd.TR069_CONFIG,
+                method: JSONMethod.GET
+            },
+            success: function(data) {
+               console.log(data);
+            }
+        });
         var rules = {
                 noticeInterval: { required: true, number: true, min: 10 },
                 userName: { required: true },

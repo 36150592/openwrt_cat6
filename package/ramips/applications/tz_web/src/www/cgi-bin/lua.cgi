@@ -11,6 +11,7 @@ local network = require "tz.network"
 local firewall = require "tz.firewall"
 local uti = require "tz.util"
 
+
 local WEB_PATH = "/tz_www"
 print("Contenttype:text/html\n")
 
@@ -527,10 +528,13 @@ function get_dhcp_list()
 	    data_array[k] = dhcp.dhcp_get_object_by_network(v)
 	end
 	
+	local lists = dhcp.dhcp_get_reserve_ip()
+	
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 102;
 	tz_answer["data"] = data_array;
+	tz_answer["reserveList"] = lists;
 	result_json = cjson.encode(tz_answer);
 	print(result_json);
 	
@@ -1550,7 +1554,6 @@ function get_networkSet()
 	local data_array = {}
 	
 	data_array["act"] = modem.modem_get_network_mode()
-	data_array["plmn"] = modem.modem_get_lock_operator() or ''
 	
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
@@ -1565,7 +1568,6 @@ function set_networkSet()
 
 	local ret 
     local act = tonumber(tz_req["networkMode"])
-	local plmn = tz_req["lockPlmn"]
 
 	if(nil ~= act)
 	 then
@@ -1575,7 +1577,35 @@ function set_networkSet()
 				tz_answer["setNetwork"] = false
 			end
 	end	
+
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json);
+
+end
+
+
+function get_plmnSet()
+    local tz_answer = {}
+	tz_answer["cmd"] = 169
+	local data_array = {}
 	
+	data_array["plmn"] = modem.modem_get_lock_operator() or ''
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function set_plmnSet()
+	local tz_answer = {}
+	tz_answer["cmd"] = 170
+
+	local ret 
+	local plmn = tz_req["lockPlmn"]
+
 	if(nil ~= plmn)
 	 then
 		ret = modem.modem_set_lock_operator(plmn)
@@ -1655,6 +1685,20 @@ end
 function get_remoteLogin()
 	local tz_answer = {}
 	tz_answer["cmd"] = 167
+	
+	local data_array = {}
+	data_array["enremote"] = firewall.firewall_remote_get_web_login()
+
+	tz_answer["success"] = true
+	tz_answer["remote"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function get_remotePin()
+	local tz_answer = {}
+	tz_answer["cmd"] = 173
 	
 	local data_array = {}
 	data_array["enremote"] = firewall.firewall_remote_get_web_login()
@@ -1827,6 +1871,18 @@ function set_wifi5macAccess()
 
 end
 
+function get_tr069()
+	local tz_answer = {}
+	tz_answer["cmd"] = 175
+	
+	
+	tz_answer["success"] = true
+	tz_answer["tr069"] = dataArr
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 
 local switch = {
      [0] = get_sysinfo,
@@ -1877,6 +1933,10 @@ local switch = {
 	 [165] = get_supprotband,
 	 [166] = set_supprotband,
 	 [167] = get_remoteLogin,
+	 [169] = get_plmnSet,
+	 [170] = set_plmnSet,
+	 [173] = get_remotePin,
+	 [175] = get_tr069,
 	 [184] = config_update,
 	 [201] = get_wifi5,
 	 [202] = set_wifi5,

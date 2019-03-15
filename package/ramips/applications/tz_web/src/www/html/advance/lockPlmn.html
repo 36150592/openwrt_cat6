@@ -1,0 +1,89 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        Page.render();
+        Page.setStripeTable();
+
+        function getInfo() {
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.LOCK_PLMN_GET
+                },
+                success: function(datas) {
+                    var data = datas.data;
+                    Page.setFormFieldValue2("lockPlmn", data.plmn);
+                }
+            });
+        }
+
+        getInfo();
+
+        var rules = {
+                lockPlmn: {plmnRules:true}
+            },
+            messages = {
+                lockPlmn: {plmnRules:CHECK.required.plmnError }
+            };
+
+
+        var $btnSave = $('#btnSave');
+
+        $btnSave.click(function() {
+            $(this).attr("disabled",true);
+            var $form = $('#lockPlmnForm');
+            var json = JSON.parmsToJSON($form);
+
+            if(json.lockPlmn == $("#lockPlmn").attr('old')){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+            }else {
+                if(!CheckUtil.checkForm($form, rules, messages)){
+                    $(this).attr("disabled",false);
+                    return false;
+                }
+                var plmnArr = json.lockPlmn.split(',');
+                json.lockPlmn = plmnArr;
+            }
+
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.LOCK_PLMN_SET;
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $("ul.tabs a").eq(1).click();
+                },
+                complete: function(){
+                    $('#btnSave').attr("disabled",false);
+                }
+            });
+
+
+        })
+
+
+    });
+</script>
+
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="lockPlmnForm">
+            <table id="lockPhyCellTable" class="detail" cellspacing="0">
+                <tr>
+                    <th><%- lbl.lockPlmn %><%- colon %></th>
+                    <td><input type="text" id="lockPlmn" name="lockPlmn" /></td>
+                </tr>
+
+                <tr>
+                    <th>&nbsp;</th>
+                    <td><input type="button" id="btnSave" value="<%- btn.set %>" /></td>
+                </tr>
+            </table>
+        </form>
+    </script>
+</div>
