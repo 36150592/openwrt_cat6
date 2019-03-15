@@ -311,7 +311,11 @@
                             console.log(datas);
                             var data = datas.maclist;
                             InputUtil.setRadiosSelectedValue($policyType, data.policy);
-                            createMacListTable(data.macs);
+                            if(data.macs == undefined){
+                                createMacListTable('');
+                            }else {
+                                createMacListTable(data.macs);
+                            }
                         }
                     });
                     $('.helper_box').hide();
