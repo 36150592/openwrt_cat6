@@ -74,7 +74,7 @@ boot() {
 	# temporary hack until configd exists
 	/sbin/reload_config
 
-	 
+	#/etc/tozed/tz_test/soft_reboot_test.sh	& 
 
 	# create /dev/root if it doesn't exist
 	[ -e /dev/root -o -h /dev/root ] || {
