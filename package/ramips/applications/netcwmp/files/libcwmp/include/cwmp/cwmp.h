@@ -25,8 +25,8 @@
 #define ASSERT assert
 #define XMLCAST(x)  ((XmlChar *)(x))
 
-#define SYSTEM_INFO_DYNAMIC "/etc/system_info_dynamic"
-#define SYSTEM_INFO_STATIC "/etc/system_info_static"
+#define SYSTEM_INFO_DYNAMIC "/tmp/.system_info_dynamic"
+#define SYSTEM_INFO_STATIC "/tmp/.system_info_static"
 
 
 #define CWMP_CPE_MF	"Shenzhen Tozed Technologies Co., Ltd"

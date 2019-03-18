@@ -103,6 +103,9 @@ model_func_t ModelFunction[] =
     {"cpe_get_igd_di_X_CMCC_RSRP", cpe_get_igd_di_X_CMCC_RSRP},
     {"cpe_get_igd_di_X_CMCC_RSRQ", cpe_get_igd_di_X_CMCC_RSRQ},
     {"cpe_get_igd_di_X_CMCC_SINR", cpe_get_igd_di_X_CMCC_SINR},
+
+    {"cpe_get_igd_di_X_CMCC_CQI", cpe_get_igd_di_X_CMCC_CQI},
+    {"cpe_get_igd_di_X_CMCC_MCS", cpe_get_igd_di_X_CMCC_MCS},    
     
     {"cpe_get_igd_di_X_CMCC_SupportedBands", cpe_get_igd_di_X_CMCC_SupportedBands},
     {"cpe_set_igd_di_X_CMCC_SupportedBands", cpe_set_igd_di_X_CMCC_SupportedBands},

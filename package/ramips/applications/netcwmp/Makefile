@@ -51,6 +51,9 @@ define Package/netcwmp/install
 	$(INSTALL_DIR) $(1)/etc/
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/cwmp.conf $(1)/etc/
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/device.xml $(1)/etc/
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/device_dialog_lk.xml $(1)/etc/
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/device_slt_lk.xml $(1)/etc/
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/device_smart.xml $(1)/etc/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/netcwmp.init $(1)/etc/init.d/netcwmp
 endef

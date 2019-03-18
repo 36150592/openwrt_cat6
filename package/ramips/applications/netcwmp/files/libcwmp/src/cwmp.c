@@ -3537,6 +3537,8 @@ int cwmp_write_doc_to_chunk(xmldoc_t *  doc, cwmp_chunk_t * chunk, pool_t * pool
 #define PROC_TOZED_WATCHDOG "/proc/tozed/watchdog"
 #define VERSION_UPDATE_FILE_NAME "/tmp/.update.version"
 #define LTE_VERSION_FILE_NAME "/tmp/.moduleinfo"
+#define LTE_STATIC_FILE_NAME "/tmp/.system_info_static"
+#define LTE_DYNAMIC_FILE_NAME "/tmp/.system_info_dynamic"
 
 //version info
 typedef struct

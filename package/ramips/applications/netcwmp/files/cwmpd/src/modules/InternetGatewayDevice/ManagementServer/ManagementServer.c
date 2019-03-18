@@ -425,6 +425,16 @@ int cpe_get_igd_di_X_CMCC_PLMN(cwmp_t * cwmp, const char * name, char ** value, 
 	return get_parameter(X_CMCC_PLMN, value);
 }
 
+int cpe_get_igd_di_X_CMCC_CQI(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	return get_parameter(X_CMCC_PLMN, value);
+}
+
+int cpe_get_igd_di_X_CMCC_MCS(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	return get_parameter(X_CMCC_PLMN, value);
+}
+
 int cpe_get_igd_di_X_CMCC_SignalQuality(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	return get_parameter(X_CMCC_SignalQuality, value);
