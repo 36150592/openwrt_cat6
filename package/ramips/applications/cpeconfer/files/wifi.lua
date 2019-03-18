@@ -1722,78 +1722,64 @@ local function get_sta_mac_table(ifname)
 
 	local cmd = nil
 	local t = nil
-	cmd = string.format("iwpriv %s show stainfo ", ifname)
+	local res = nil
+	cmd = string.format("iwpriv %s show stainfo ;dmesg > /tmp/.iwpriv_stainfo; cat /tmp/.iwpriv_stainfo | sed -n -e '/MAC.*QosMap/=' | tail -n 1 ", ifname)
 	--debug("cmd1 = ", cmd)
 	
 	t = io.popen(cmd)
+	res = t:read()
+
 	io.close(t)
 	--sleep(1)
-	cmd = string.format("dmesg | tail -n 100")
+	cmd = string.format(" cat /tmp/.iwpriv_stainfo  | sed -n '%d,$p'", tonumber(res))
 	--debug("cmd2 = ", cmd)
 	t = io.popen(cmd)
-	local res = nil
+	
 	local sta_list = nil
 	res = t:read()
-	while( res ~= nil)
+	sta_list = {}
+	
+	while(res ~= nil)
 	do
-		local start,endp =string.find(res,"MAC.+Rate.+QosMap")
-		if nil ~= start
+		
+		--print(res)
+		if string.match(res,"%x%x:%x%x:%x%x:%x%x:%x%x:%x%x") ~= nil
 		then
-			--print("clear sta_list")
-			sta_list = {}
-			--debug("get sta mac table at ", start)
-			
-			while(res ~= nil)
+			res = string.gsub(res, '                ','#')
+			res = string.gsub(res, '         ', '#')
+			res = string.gsub(res, '        ', '#')
+			res = string.gsub(res, '       ', '#')
+			res = string.gsub(res, '      ', '#')
+			res = string.gsub(res, '     ', '#')
+			res = string.gsub(res, '    ', '#')
+			res = string.gsub(res, '   ', '#')
+			res = string.gsub(res, '  ', '#')
+			res = string.gsub(res, ' ', '#')
+			--print(res)
+			local s_array = split(res,'#')
+
+			--[[for v,k in pairs(s_array)
 			do
-				res = t:read()
-				if nil == res
-				then
-					break
-				end
-
-				res = string.sub(res,start)
-				if string.match(res,"%x%x:%x%x:%x%x:%x%x:%x%x:%x%x") == nil
-				then
-					break
-				end
-				
-				res = string.gsub(res, '                ','#')
-				res = string.gsub(res, '         ', '#')
-				res = string.gsub(res, '        ', '#')
-				res = string.gsub(res, '       ', '#')
-				res = string.gsub(res, '      ', '#')
-				res = string.gsub(res, '     ', '#')
-				res = string.gsub(res, '    ', '#')
-				res = string.gsub(res, '   ', '#')
-				res = string.gsub(res, '  ', '#')
-				res = string.gsub(res, ' ', '#')
-				--print(res)
-				local s_array = split(res,'#')
-
-				--[[for v,k in pairs(s_array)
-				do
-					print(v,"=",k)
-				end]]--
-				
-				--print("MAC = ", s_array[1])
-				--debug("RSSI = ", s_array[7])
-				--debug("RATE = ", s_array[14])
-
-				if string.len(s_array[1]) == 17 and string.find(s_array[1], ':') > 0
-				then
-					
-						--print("flag = false ,new Station")
-						local temp_sta = Station:new(nil,nil)
-						temp_sta["mac"] = s_array[1]
-						temp_sta["rate"] = s_array[14]
-						sta_list[table.maxn(sta_list)+1] = temp_sta
-
-				end
+				print(v,"=",k)
+			end]]--
 			
-			end
+			--print("MAC = ", s_array[3])
+			--debug("RSSI = ", s_array[7])
+			--debug("RATE = ", s_array[14])
 
+			if string.len(s_array[3]) == 17 and string.find(s_array[3], ':') > 0
+			then
+				
+					--print("flag = false ,new Station")
+					local temp_sta = Station:new(nil,nil)
+					temp_sta["mac"] = s_array[3]
+					temp_sta["rate"] = s_array[16]
+					sta_list[table.maxn(sta_list)+1] = temp_sta
+
+			end
 		end
-		res =t:read()
+
+		res = t:read()
 	end
 
 	io.close(t)
@@ -1805,16 +1791,18 @@ local function get_sta_count_info(ifname,sta_list)
 	
 	local cmd = nil
 	local t = nil
-	cmd = string.format("iwpriv %s show stacountinfo ", ifname)
+	local res = nil
+	cmd = string.format("iwpriv %s show stacountinfo;dmesg > /tmp/.iwpriv_stacountinfo; cat /tmp/.iwpriv_stacountinfo | sed -n -e  '/MAC.*RxBytes/=' | tail -n 1", ifname)
 	--debug("cmd1 = ", cmd)
 	t = io.popen(cmd)
+	res = t:read()
 	io.close(t)
 	--sleep(1)
 	
-	cmd = string.format("dmesg | tail -n 100")
+	cmd = string.format("cat /tmp/.iwpriv_stacountinfo  |  sed -n '%d,$p'", tonumber(res))
 	--debug("cmd2 = ", cmd)
 	t = io.popen(cmd)
-	local res = nil
+	
 
 	res = t:read()
 	while( res ~= nil)
