@@ -1676,8 +1676,8 @@ void process_1s_signal(void)
 			//设置当前设备的IP地址
 			print("set the %s ip to %s   (ipv4)", network_dev_name, server_wifi_info.AP_IPADDR)
 			util_config_ipv4_addr(network_dev_name,server_wifi_info.AP_IPADDR);
-			shell_recv(NULL,0,"%s","%s start",SCRIPT_DHCPD);
-			shell_recv(NULL,0,"%s","%s start",SCRIPT_HTTPD);
+			shell_recv(NULL,0,"%s start",SCRIPT_DHCPD);
+			shell_recv(NULL,0,"%s start",SCRIPT_HTTPD);
 
 			//system("/etc/rc.d/rc.uplink.disconnected");
 			shell_recv(NULL,0,"rm -f %s",UPLINK_CONNECTION_IS_OK_TMP_FILE);
@@ -1859,24 +1859,26 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	tmp = config_get_string("main", "AP_WPA", "2");
 	strncpy(server_wifi_info->AP_WPA, tmp,strlen(tmp));
 	print("AP_WPA=%s",tmp);
-	int wpa_mode =atoi(tmp);
+	int wpa_mode =atoi(server_wifi_info->AP_WPA);
 	if(wpa_mode < 1 || wpa_mode > 3)
 	{
 		print("error wpa_mode:%d",wpa_mode);
 	}
 	else
 	{
-		if(!strcmp(server_wifi_info->AP_SECMODE,"OPEN") || !strcmp(server_wifi_info->AP_SECMODE,"SHARED") || !strcmp(server_wifi_info->AP_SECMODE,"WEPAUTO"))
+		if( !strncmp(server_wifi_info->AP_SECMODE,"OPEN", strlen(server_wifi_info->AP_SECMODE)) || 
+			!strncmp(server_wifi_info->AP_SECMODE,"SHARED", strlen(server_wifi_info->AP_SECMODE)) ||
+			!strncmp(server_wifi_info->AP_SECMODE,"WEPAUTO", strlen(server_wifi_info->AP_SECMODE)))
 		{
-			shell_recv("iwpriv %s set AuthMode=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->AP_SECMODE);
+			shell_recv(NULL,0,"iwpriv %s set AuthMode=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->AP_SECMODE);
 		}
 		else if(wpa_mode==3)
 		{
-			shell_recv("iwpriv %s set AuthMode=WPA1WPA2%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->AP_SECFILE);//WPA1WPA2 || WPA1WPA2PSK
+			shell_recv(NULL,0,"iwpriv %s set AuthMode=WPA1WPA2%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->AP_SECFILE);//WPA1WPA2 || WPA1WPA2PSK
 		}
 		else
 		{
-			shell_recv("iwpriv %s set AuthMode=%s%d%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_SECMODE,wpa_mode,server_wifi_info->AP_SECFILE);
+			shell_recv(NULL,0,"iwpriv %s set AuthMode=%s%d%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_SECMODE,wpa_mode,server_wifi_info->AP_SECFILE);
 		}
 	}
 
@@ -1884,7 +1886,7 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	tmp = config_get_string("main", "PSK_KEY", "123456789");
 	strncpy(server_wifi_info->PSK_KEY, tmp,strlen(tmp));
 	print("PSK_KEY=%s",tmp);
-	shell_recv("iwpriv %s set WPAPSK=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->PSK_KEY);
+	shell_recv(NULL,0,"iwpriv %s set WPAPSK=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->PSK_KEY);
 
 	tmp = config_get_string("main", "AP_CYPHER", "CCMP");
 	strncpy(server_wifi_info->AP_CYPHER, tmp,strlen(tmp));
