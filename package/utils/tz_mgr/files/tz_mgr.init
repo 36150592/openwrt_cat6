@@ -1,0 +1,18 @@
+#!/bin/sh /etc/rc.common
+
+START=90
+
+
+start()
+{
+	config_load tz_mgr
+	#config_foreach fun func
+	echo '--------------run csy_test -----------------'
+	#csy_test &
+}
+
+stop()
+{
+	config_load tz_mgr
+	killall tz_mgr
+}
