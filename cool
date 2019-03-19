@@ -94,8 +94,8 @@ download_something()
 {
 	if [ ! -f ${download_flag} ]; then
 		touch ${download_flag}
-		wget ${FTPADDR}/s21/some-bin/factory.bin -O project/s21/bin/factory.bin
-		wget ${FTPADDR}/s21/some-bin/old-all.bin -O project/s21/bin/old-all.bin
+		wget ${FTPADDR}/s21/some-bin/factory.bin -O project/${project}/bin/factory.bin
+		wget ${FTPADDR}/s21/some-bin/old-all.bin -O project/${project}/bin/old-all.bin
 			
 	fi
         if [ ! -e $LASTDOCS ] ; then
@@ -115,11 +115,6 @@ download_some_dl()
 	fi
 }
 
-download_some_dl
-download_something
-load_compile_count
-check_bash
-check_ubuntu_version
 
 date_start=$(date +%s)
 if [ "$1" = "" ] ; then
@@ -127,6 +122,7 @@ echo ****************************主菜单****************************
 echo cpe
 echo "默认mt7621 cat6模块"
 echo "  1:   s21 (mt7621 cat6模块)"
+echo "  2:   w13 (mt7628)"
 echo other:
 echo "  y:   看看每个人在当前分支上的提交次数吧"
 echo "  z:   看看每个月的提交次数吧"
@@ -142,8 +138,13 @@ if [ "$line" = "" ]; then
 fi
 
 
+
 if [ "$line" = "1" -o "$line" = "s21" ] ; then
 	project=s21
+	chip="mt7621"
+elif [ "$line" = "2" -o "$line" = "w13" ] ; then
+	project=w13
+	chip="mt7628"
 elif [ "$line" = "y" ] ; then
         git log --pretty='%aN' | sort | uniq -c | sort -k1 -n -r
         echo ------------------------------------------------
@@ -161,7 +162,12 @@ else
 fi
 
 
+download_something
+download_some_dl
+load_compile_count
+check_bash
 #check_ubuntu_version
+
 export TZ_PROJECT=${project}
 echo "The project is ${project}"
 
@@ -207,7 +213,7 @@ compile_result="fail"
 if [ "$options" = "1" ]; then
 	echo "快速编译"
 	cp config/default_openwrt_${project}_config .config
-	cp config/default_kernel_${project}_config target/linux/ramips/mt7621/config-3.18
+	cp config/default_kernel_${project}_config target/linux/ramips/${chip}/config-3.18
 	make V=99 -j 8
 elif [ "$options" = "2" ]; then
 	echo "完全编译(暂时不支持)"
@@ -219,9 +225,9 @@ elif [ "$options" = "a" ]; then
 	exit
 elif [ "$options" = "b" ]; then
         echo "配置kernel"
-	cp config/default_kernel_${project}_config target/linux/ramips/mt7621/config-3.18
+	cp config/default_kernel_${project}_config target/linux/ramips/${chip}/config-3.18
 	make kernel_menuconfig
-	cp target/linux/ramips/mt7621/config-3.18 config/default_kernel_${project}_config
+	cp target/linux/ramips/${chip}/config-3.18 config/default_kernel_${project}_config
 	exit
 elif [ "$options" = "q" ]; then
 	exit
@@ -251,7 +257,7 @@ if [ $compile_result = "ok" ]; then
 #		tr '\000' '\377' < /dev/zero | dd of=image/7621_cat6/emptyfirmware.bin bs=1024 count=6144 2>/dev/null
 #		dd if=image/7621_cat6/emptyfirmware.bin of=image/7621_cat6/olduboot_newfirmware.bin conv=notrunc bs=64k seek=5 2>/dev/null
 #		dd if=image/7621_cat6/openwrt-ramips-mt7621-zbt-wg2626-squashfs-sysupgrade.bin of=image/7621_cat6/olduboot_newfirmware.bin conv=notrunc bs=64k seek=5 2>/dev/null
-		. project/s21/formImage.sh
+		. project/${project}/formImage.sh
 	fi
 fi
 
@@ -271,5 +277,4 @@ if [ "$compile_result" = "fail" ] ; then
 else
 	echo  $hyphen_e "\033[;32m 会当凌绝顶 一览众山小\033[0m"
 fi
-
 

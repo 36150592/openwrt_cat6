@@ -1,0 +1,506 @@
+<?xml version="1.0"?>
+<!--
+preface用于在配置文件的最开头增加一些字符串,这个可以自己定义
+format用于设置每个字段的配置输出的格式
+class用于对各个分类的意义进行描述,config中的class指示字段所述的分类
+config用于描述配置的字段/类型/含义/所属分类
+default表示字段的默认值
+none表示字段为空情况下的显示,例如TZ_ENABLE_DHCP_SERVER的配置为空,则查找配置为yes,显示开启
+type表示字段的类型,text表示需要进行输入的字符串;select表示所属选项为选项列表类型,option列出所有可以选择的选项;
+fixvalue表示指定的配置选项总是会被设置为指定的值
+int表示要设置的值为数字,rangestart指定最小的数字,rangeend指定最大的数字
+bitcomposite表示使用位进行组合的配置字段
+-->
+<project name="configset" version="V1.00-2019-01-25">
+	<preface value=""/>
+	<format value="export ${field}=&quot;quote{value}&quot;"/>
+	<class name="SYSTEM_CONFIG_FIELD" description="系统配置"  />
+	<class name="USER_CONFIG_FIELD" description="用户配置"  />
+ 	<class name="WIFI_CONFIG_FIELD" description="WIFI配置"  />
+	<class name="DHCP_CONFIG_FIELD" description="DHCP配置"/>
+	<class name="TR069_CONFIG_FIELD" description="TR069配置"/>
+	
+	<!--能够识别的字段,使用逗号进行分割-->
+	<recognizedfields list="MANRATE,MANRETRIES,RATECTL,AP_CHMODE,PUREG,PUREN,WIFIWORKMODE,AP_SECFILE,AP_WPA_GROUP_REKEY,AP_WPA_GMK_REKEY,AP_CYPHER,AP_WPA,AP_SEC_DEBUG,AP_SECMODE,PSK_KEY" />
+	<!--1.系统配置-->
+	<config name="TZSYSTEM_CONFIG_VERSION" type="text" critical_config="yes" description="配置文件版本" detail="配置文件版本" maxlength="20" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<default value="V1.00" />
+	</config>
+
+	<config name="TZSYSTEM_CUSTOMER_SOFT_VERSION" type="text" description="客户指定软件版本" detail="客户指定软件版本" maxlength="32" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<default value="" />
+	</config>
+
+	<config name="TZSYSTEM_PREFERRED_LANGUAGE" type="select" critical_config="yes" description="默认语言" detail="默认语言" class_name="SYSTEM_CONFIG_FIELD"  >
+		<option value="zh-cn" description="中文"/>
+		<option value="en" description="English"/>
+        	<default value="en"/>
+	</config>
+
+	<config name="TZSYSTEM_SNTP_TIMEZONE" type="text" description="时区" detail="时区(-12~12, 如5.5、-4.5、8)" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<default value="8" />
+	</config>
+
+	<!--2.用户配置-->
+	<config name="TZUSER_CUSTOMER" type="select" description="使用客户" detail="使用该配置的客户" class_name="USER_CONFIG_FIELD"  >
+		<option value="Dialog" description="斯里兰卡--DIALOG" />
+		<option value="SLT" description="斯里兰卡--SLT" />
+		<option value="General" description="通用配置" />
+        	<default value="General" />
+	</config>
+
+	<!--网页超级用户设置; -->
+	<config name="TZUSER_WEB_SUPER_USER_NAME" type="text" description="网页超级用户名" detail="网页超级用户名" class_name="USER_CONFIG_FIELD"  >
+        	<default value="sztozed" />
+	</config>
+
+	<config name="TZUSER_WEB_SUPER_USER_PWD_RANDOM" type="select" description="网页超级用户密码随机" detail="网页超级用户密码随机，若否，请填写网页超级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZUSER_WEB_SUPER_USER_PWD" type="text" description="网页超级用户固定密码" detail="网页超级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<config name="TZUSER_WEB_SUPER_USER_PWD_RANDOM_WAY" type="select" description="网页超级用户密码随机方式选择" detail="网页超级用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
+        	<option value="1" description="随机方式一" />
+		<default value="1"/>
+	</config>
+
+	<!--网页高级用户设置; -->
+	<config name="TZUSER_WEB_SENIOR_USER_NAME" type="text" description="网页高级用户名" detail="网页高级用户名" class_name="USER_CONFIG_FIELD"  >
+        	<default value="Operator" />
+	</config>
+
+	<config name="TZUSER_WEB_SENIOR_USER_PWD_RANDOM" type="select" description="网页高级用户密码随机" detail="网页高级用户密码随机，若否，请填写网页高级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZUSER_WEB_SENIOR_USER_PWD" type="text" description="网页高级用户固定密码" detail="网页高级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<config name="TZUSER_WEB_SENIOR_USER_PWD_RANDOM_WAY" type="select" description="网页高级用户密码随机方式选择" detail="网页高级用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
+        	<option value="1" description="随机方式一,Dialog规则" />
+		<default value="1"/>
+	</config>
+	
+	<!--网页普通用户设置; -->
+	<config name="TZUSER_WEB_GENERAL_USER_NAME" type="text" description="网页普通用户名" detail="网页普通用户名" class_name="USER_CONFIG_FIELD"  >
+        	<default value="admin" />
+	</config>
+
+	<config name="TZUSER_WEB_GENERAL_USER_PWD_RANDOM" type="select" description="网页普通用户密码随机" detail="网页普通用户密码随机，若否，请填写网页普通用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZUSER_WEB_GENERAL_USER_PWD" type="text" description="网页普通用户固定密码" detail="网页普通用户固定密码" class_name="USER_CONFIG_FIELD"  >
+        	<default value="admin" />
+	</config>
+	
+
+	<config name="TZUSER_WEB_GENERAL_USER_PWD_RANDOM_WAY" type="select" description="网页普通用户密码随机方式选择" detail="网页普通用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
+        	<option value="1" description="随机方式一,Dialog规则" />
+		<default value="1"/>
+	</config>
+
+	<!--3.WIFI配置-->
+	
+	<!--2.4G WIFI 设置-->
+
+	<!--2.4G WIFI 主WIFI-->
+	<config name="TZWIFI_24G_MAIN_WIFI_ENABLE" type="select" description="2.4G 主wifi 开关" detail="2.4G 主wifi开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="y"/>
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_SSID_STATIC_SWITCH" type="select" description="2.4G 主wifi 固定ssid开关" detail="2.4G 主wifi 固定ssid开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="y"/>
+	</config>
+	
+	<config name="TZWIFI_24G_MAIN_WIFI_SSID" type="text" description="2.4G 主wifi 固定SSID名称" detail="2.4G 主wifi 固定SSID名称，默认为ZLT S21_XXXX" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX" />
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_SSID_PREFIX" type="text" description="2.4G 主wifi SSID名称前缀" detail="2.4G 主wifi 固定SSID前缀，默认为ZLT S21_" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_" />
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_SSID_SUFFIX" type="select" description="2.4G 主wifi SSID名称后缀" detail="2.4G 主wifi SSID名称后缀" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="1" description="mac后6位" />
+		<option value="2" description="mac后3位" />
+		<default value="1"/>
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_PWD_RANDOM" type="select" description="2.4G 主wifi 密码随机开关" detail="2.4G 主wifi 密码随机开关" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_PWD_RANDOM_WAY" type="select" description="2.4G 主wifi 密码随机方式" detail="2.4G 主wifi 密码随机方式" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="1" description="数字、大写字母" />
+		<option value="2" description="数字、大写字母、小写字母" />
+		<default value="1"/>
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_PWD" type="text" description="2.4G 主wifi 固定密码" detail="设置 2.4G 主wifi 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_MAX_STATION_NUM" type="text" description="2.4G wifi 最大连接用户数" detail="2.4G wifi 最大连接用户数" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="32" />
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_CHANNEL" type="select" description="2.4G wifi 信道" detail="2.4G wifi 信道" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="auto" description="自动" />
+		<option value="1" description="信道1" />
+		<option value="2" description="信道2" />
+		<option value="3" description="信道3" />
+		<option value="4" description="信道4" />
+		<option value="5" description="信道5" />
+		<option value="6" description="信道6" />
+		<option value="7" description="信道7" />
+		<option value="8" description="信道8" />
+		<option value="9" description="信道9" />
+		<option value="10" description="信道10" />
+		<option value="11" description="信道11" />
+		<option value="12" description="信道12" />
+		<option value="13" description="信道13" />
+		<default value="auto"/>
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_TX_POWER" type="text" description="2.4G wifi 发射功率" detail="2.4G wifi 发射功率" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="23" />
+	</config>
+
+	<!--2.4G WIFI 辅WIFI 1-->
+	<config name="TZWIFI_24G_VICE_1_WIFI_ENABLE" type="select" description="2.4G 辅wifi 1 开关" detail="2.4G 辅wifi 1 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_24G_VICE_1_WIFI_SSID" type="text" description="2.4G 辅wifi 1 固定SSID名称" detail="2.4G 辅wifi 1 固定SSID名称，默认为ZLT S21_XXXX_1" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX_1" />
+	</config>
+
+	<config name="TZWIFI_24G_VICE_1_WIFI_PWD" type="text" description="2.4G 辅wifi 1 固定密码" detail="设置 2.4G 辅wifi 1 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<!--2.4G WIFI 辅WIFI 2-->
+	<config name="TZWIFI_24G_VICE_2_WIFI_ENABLE" type="select" description="2.4G 辅wifi 2 开关" detail="2.4G 辅wifi 2 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_24G_VICE_2_WIFI_SSID" type="text" description="2.4G 辅wifi 2 固定SSID名称" detail="2.4G 辅wifi 2 固定SSID名称，默认为ZLT S21_XXXX_2" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX_2" />
+	</config>
+
+	<config name="TZWIFI_24G_VICE_2_WIFI_PWD" type="text" description="2.4G 辅wifi 2 固定密码" detail="设置 2.4G 辅wifi 2 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+		
+	<!--5.8G WIFI 设置-->
+
+	<!--5.8G WIFI 主WIFI-->
+	<config name="TZWIFI_58G_MAIN_WIFI_ENABLE" type="select" description="5.8G 主wifi 开关" detail="5.8G 主wifi开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="y"/>
+	</config>
+
+	<config name="TZWIFI_58G_MAIN_WIFI_SSID" type="text" description="5.8G 主wifi 固定SSID名称" detail="5.8G 主wifi 固定SSID名称，默认为ZLT S21_XXXX_5G" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX_5G" />
+	</config>
+
+	<config name="TZWIFI_58G_MAIN_WIFI_PWD" type="text" description="5.8G 主wifi 固定密码" detail="设置 5.8G 主wifi 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<!--5.8G WIFI 辅WIFI 1-->
+	<config name="TZWIFI_58G_VICE_1_WIFI_ENABLE" type="select" description="5.8G 辅wifi 1 开关" detail="5.8G 辅wifi 1 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_58G_VICE_1_WIFI_SSID" type="text" description="5.8G 辅wifi 1 固定SSID名称" detail="5.8G 辅wifi 1 固定SSID名称，默认为ZLT S21_XXXX_5G_1" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX_5G_1" />
+	</config>
+
+	<config name="TZWIFI_58G_VICE_1_WIFI_PWD" type="text" description="5.8G 辅wifi 1 固定密码" detail="设置 5.8G 辅wifi 1 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<!--5.8G WIFI 辅WIFI 2-->
+	<config name="TZWIFI_58G_VICE_2_WIFI_ENABLE" type="select" description="5.8G 辅wifi 2 开关" detail="5.8G 辅wifi 2 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_58G_VICE_2_WIFI_SSID" type="text" description="5.8G 辅wifi 2 固定SSID名称" detail="5.8G 辅wifi 2 固定SSID名称，默认为ZLT S21_XXXX_5G_2" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_XXXX_5G_2" />
+	</config>
+
+	<config name="TZWIFI_58G_VICE_2_WIFI_PWD" type="text" description="5.8G 辅wifi 2 固定密码" detail="设置 5.8G 辅wifi 2 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="12345678" />
+	</config>
+
+	<!--主dhcp-->
+	<config name="TZDHCP_MAIN_ENABLE" type="select" description="主DHCP服务器" detail="设置是否启用主DHCP服务,启用时为本路由器上连接的所有客户端自动分配IP地址. " class_name="DHCP_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="y"/>
+	</config>
+
+	<config name="TZDHCP_MAIN_IP" type="text" description="主DHCP的IP地址" detail="设置无线路由器LAN口的IP地址,默认为192.168.2.1" class_name="DHCP_CONFIG_FIELD"  >
+        	<default value="192.168.2.1" />
+	</config>
+
+	<!--路由器的局域网IP地址对应的子网掩码;-->
+	<config name="TZDHCP_MAIN_NETMASK" type="text" description="主DHCP的子网掩码" detail="子网掩码为IP地址中的网络号,默认为255.255.255.0. " class_name="DHCP_CONFIG_FIELD">
+		<default value="255.255.255.0"/>
+	</config>
+
+	<!--动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,否则将导致无法访问路由器的网页的问题; -->
+	<config name="TZDHCP_MAIN_DHCPSTART" type="text" description="主DHCP的IP地址池开始IP地址" detail="动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题;" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.2.100"/>
+	</config>
+
+	<!--动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,否则将导致无法访问路由器的网页的问题;-->
+	<config name="TZDHCP_MAIN_DHCPEND" type="text" description="主DHCP的IP地址池结束IP地址" detail="动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.2.200"/>
+	</config>
+
+	<!--DHCP DNS-->
+	<config name="TZDHCP_MAIN_DNS" type="text" description="主DHCP的DNS地址" detail="DNS地址" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.2.1"/>
+	</config>
+
+	<!--DHCP租期时间，单位小时,默认为86400=24×60×60秒=1天;-->
+	<config name="TZDHCP_MAIN_DHCPLEASE" type="text" description="主DHCP的DHCP租期时间(小时)" detail="启用DHCP服务时,设置租期时间.默认为一天,非专业人士不建议修改,默认为86400=24×60×60秒=1天" class_name="DHCP_CONFIG_FIELD">
+		<default value="24"/>
+	</config>
+
+	<!--辅dhcp1-->
+	<config name="TZDHCP_VICE_1_ENABLE" type="select" description="辅DHCP 1 服务器" detail="设置是否启用主DHCP服务,启用时为本路由器上连接的所有客户端自动分配IP地址. " class_name="DHCP_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="n"/>
+	</config>
+
+	<config name="TZDHCP_VICE_1_IP" type="text" description="辅DHCP 1的IP地址" detail="设置无线路由器LAN口的IP地址,默认为192.168.2.1" class_name="DHCP_CONFIG_FIELD"  >
+        	<default value="192.168.3.1" />
+	</config>
+
+	<!--路由器的局域网IP地址对应的子网掩码;-->
+	<config name="TZDHCP_VICE_1_NETMASK" type="text" description="辅DHCP 1的子网掩码" detail="子网掩码为IP地址中的网络号,默认为255.255.255.0. " class_name="DHCP_CONFIG_FIELD">
+		<default value="255.255.255.0"/>
+	</config>
+
+	<!--动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,否则将导致无法访问路由器的网页的问题; -->
+	<config name="TZDHCP_VICE_1_DHCPSTART" type="text" description="辅DHCP 1的IP地址池开始IP地址" detail="动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题;" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.3.100"/>
+	</config>
+
+	<!--动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,否则将导致无法访问路由器的网页的问题;-->
+	<config name="TZDHCP_VICE_1_DHCPEND" type="text" description="辅DHCP 1的IP地址池结束IP地址" detail="动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.3.200"/>
+	</config>
+
+	<!--DHCP DNS-->
+	<config name="TZDHCP_VICE_1_DNS" type="text" description="辅DHCP 1的DNS地址" detail="DNS地址" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.3.1"/>
+	</config>
+
+	<!--DHCP租期时间，单位小时,默认为86400=24×60×60秒=1天;-->
+	<config name="TZDHCP_VICE_1_DHCPLEASE" type="text" description="辅DHCP 1的DHCP租期时间(小时)" detail="启用DHCP服务时,设置租期时间.默认为一天,非专业人士不建议修改,默认为86400=24×60×60秒=1天" class_name="DHCP_CONFIG_FIELD">
+		<default value="24"/>
+	</config>
+
+	<!--辅dhcp2-->
+	<config name="TZDHCP_VICE_2_ENABLE" type="select" description="辅DHCP 2 服务器" detail="设置是否启用主DHCP服务,启用时为本路由器上连接的所有客户端自动分配IP地址. " class_name="DHCP_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="n"/>
+	</config>
+
+	<config name="TZDHCP_VICE_2_IP" type="text" description="辅DHCP 2的IP地址" detail="设置无线路由器LAN口的IP地址,默认为192.168.2.1" class_name="DHCP_CONFIG_FIELD"  >
+        	<default value="192.168.4.1" />
+	</config>
+
+	<config name="TZDHCP_VICE_2_NETMASK" type="text" description="辅DHCP 2的子网掩码" detail="子网掩码为IP地址中的网络号,默认为255.255.255.0. " class_name="DHCP_CONFIG_FIELD">
+		<default value="255.255.255.0"/>
+	</config>
+
+	<config name="TZDHCP_VICE_2_DHCPSTART" type="text" description="辅DHCP 2的IP地址池开始IP地址" detail="动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题;" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.4.100"/>
+	</config>
+
+	<config name="TZDHCP_VICE_2_DHCPEND" type="text" description="辅DHCP 2的IP地址池结束IP地址" detail="动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.4.200"/>
+	</config>
+
+	<!--DHCP DNS-->
+	<config name="TZDHCP_VICE_2_DNS" type="text" description="辅DHCP 2的DNS地址" detail="DNS地址" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.4.1"/>
+	</config>
+
+	<!--DHCP租期时间，单位小时,默认为86400=24×60×60秒=1天;-->
+	<config name="TZDHCP_VICE_2_DHCPLEASE" type="text" description="辅DHCP 2的DHCP租期时间(小时)" detail="启用DHCP服务时,设置租期时间.默认为一天,非专业人士不建议修改,默认为86400=24×60×60秒=1天" class_name="DHCP_CONFIG_FIELD">
+		<default value="24"/>
+	</config>
+
+
+	<!--TR069配置-->
+	<config name="TZTR069_app_enable" type="select" description="TR069 使能开关" detail="打开关闭TR069功能" class_name="TR069_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="y"/>
+	</config>
+
+	<config name="TZTR069_SOAP_ENV" type="text" description="tr069 SOAP ENV 配置，通常不需要更改" detail="SOAP ENV" class_name="TR069_CONFIG_FIELD">
+		<default value="SOAP-ENV"/>
+	</config>
+
+	<config name="TZTR069_SOAP_ENC" type="text" description="tr069 SOAP ENC 配置，通常不需要更改" detail="SOAP ENC" class_name="TR069_CONFIG_FIELD">
+		<default value="SOAP-ENC"/>
+	</config>
+
+	<config name="TZTR069_SERVER_URL" type="text" description="ACS 服务器地址URL" detail="服务器 URL" class_name="TR069_CONFIG_FIELD">
+		<default value="https://cpeacs.dialog.lk:8443/openacs/acs"/>
+	</config>
+	
+	<config name="TZTR069_PeriodicInformEnable" type="select" description="主动上报使能" detail="使能" class_name="TR069_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="y"/>
+	</config>
+
+	<config name="TZTR069_PeriodicInformInterval" type="text" description="主动上报周期(秒)" detail="上报周期 秒" class_name="TR069_CONFIG_FIELD">
+		<default value="60"/>
+	</config>
+
+	<config name="TZTR069_ACS_auth" type="select" description="ACS 帐号密码认证使能" detail="使能位" class_name="TR069_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="n"/>
+	</config>
+
+	<config name="TZTR069_ServerUsername" type="text" description="ACS服务器用户名" detail="用户名" class_name="TR069_CONFIG_FIELD">
+		<default value=""/>
+	</config>
+
+	<config name="TZTR069_ServerPassword" type="text" description="ACS服务器密码" detail="密码" class_name="TR069_CONFIG_FIELD">
+		<default value=""/>
+	</config>
+	
+	<config name="TZTR069_CPE_auth" type="select" description="CPE 帐号密码认证使能" detail="使能位" class_name="TR069_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="n"/>
+	</config>
+
+	<config name="TZTR069_ConnectionRequestUname" type="text" description="CPE认证服务器ACS用户名" detail="用户名" class_name="TR069_CONFIG_FIELD">
+		<default value=""/>
+	</config>
+
+	<config name="TZTR069_ConnectionRequestPassword" type="text" description="CPE认证服务器ACS密码" detail="密码" class_name="TR069_CONFIG_FIELD">
+		<default value=""/>
+	</config>
+
+	<!--TR069 测试参数-->
+	<config name="TZTR069_use_test_config" type="select" description="TR069测试配置" detail="测试配置选择" class_name="TR069_CONFIG_FIELD">
+		<option value="y" description="启用"/>
+		<option value="n" description="停用"/>
+		<default value="n"/>
+	</config>
+
+	<config name="TZTR069_ServerURL1" type="text" description="测试配置ACS 服务器地址URL" detail="服务器 URL" class_name="TR069_CONFIG_FIELD">
+		<default value="http://113.98.195.202:7547/"/>
+	</config>
+	
+	<config name="TZTR069_PeriodicInformEnable1" type="select" description="测试配置主动上报使能" detail="使能" class_name="TR069_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="y"/>
+	</config>
+
+	<config name="TZTR069_PeriodicInformInterval1" type="text" description="测试配置主动上报周期(秒)" detail="上报周期 秒" class_name="TR069_CONFIG_FIELD">
+		<default value="60"/>
+	</config>
+
+	<config name="TZTR069_ACS_auth1" type="select" description="测试配置ACS 帐号密码认证使能" detail="使能位" class_name="TR069_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="n"/>
+	</config>
+
+
+	<config name="TZTR069_ServerUsername1" type="text" description="测试配置ACS服务器用户名" detail="用户名" class_name="TR069_CONFIG_FIELD">
+		<default value=""/>
+	</config>
+
+	<config name="TZTR069_ServerPassword1" type="text" description="测试配置ACS服务器密码" detail="密码" class_name="TR069_CONFIG_FIELD">
+		<default value=""/>
+	</config>
+	
+	<config name="TZTR069_CPE_auth1" type="select" description="测试配置CPE 帐号密码认证使能" detail="使能位" class_name="TR069_CONFIG_FIELD">
+		<option value="y" description="开启"/>
+		<option value="n" description="关闭"/>
+		<default value="n"/>
+	</config>
+
+	<config name="TZTR069_ConnectionRequestUname1" type="text" description="测试配置CPE认证服务器ACS用户名" detail="用户名" class_name="TR069_CONFIG_FIELD">
+		<default value=""/>
+	</config>
+
+	<config name="TZTR069_ConnectionRequestPassword1" type="text" description="测试配置CPE认证服务器ACS密码" detail="密码" class_name="TR069_CONFIG_FIELD">
+		<default value=""/>
+	</config>
+
+	<!--TR069 设备信息配置-->
+
+	<config name="TZTR069_ModelName" type="text" description="设备名称Model Name" detail="设备名" class_name="TR069_CONFIG_FIELD">
+		<default value="ZLT S21"/>
+	</config>
+
+	<config name="TZTR069_ProductClass" type="text" description="设备类型ProductClass" detail="设备类型，需要和ModelName一致" class_name="TR069_CONFIG_FIELD">
+		<default value="ZLT S21"/>
+	</config>
+
+	<config name="TZTR069_DeviceSummary" type="text" description="设备描述" detail="设备描述" class_name="TR069_CONFIG_FIELD">
+		<default value="InternetGatewayDevice:1.1[](WiFiLAN:1,WAN:1,Time:1)"/>
+	</config>
+
+	<config name="TZTR069_Description" type="text" description="产品描述Description" detail="产品描述" class_name="TR069_CONFIG_FIELD">
+		<default value="S21 4G CPE"/>
+	</config>
+
+	<config name="TZTR069_Manufacturer" type="text" description="##设备商描述名称##" detail="##设备商描述##" class_name="TR069_CONFIG_FIELD">
+		<default value="Shenzhen Tozed Technologies Co., Ltd"/>
+	</config>
+
+	<config name="TZTR069_DATA_MODEL" type="select" description="设备信息配置" detail="设备信息配置" class_name="TR069_CONFIG_FIELD"  >
+		<option value="device.xml" description="标准参数" />
+		<option value="device_dialog_lk.xml" description="兰卡Dialog参数" />
+        	<default value="device_dialog_lk.xml" />
+	</config>
+
+	
+</project>
+

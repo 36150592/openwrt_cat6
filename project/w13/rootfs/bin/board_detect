@@ -1,0 +1,17 @@
+#!/bin/sh
+
+[ -d "/etc/board.d/" -a ! -f "/etc/board.json" ] && {
+	for a in `ls /etc/board.d/*`; do
+		[ -x $a ] || continue;
+		$(. $a)
+	done
+}
+
+#return 1
+
+[ -f "/etc/board.json" ] || return 1
+[ -f "/etc/config/network" ] || {
+	#touch /etc/config/network
+	/bin/config_generate
+	#cp /etc/config/network /tmp/board.network
+}

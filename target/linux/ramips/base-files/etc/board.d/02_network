@@ -135,7 +135,7 @@ ramips_setup_interfaces()
 		ucidef_add_switch_vlan "switch0" "2" "4 6t"
 	    ucidef_set_interface_4g "wwan0"
 		;;
-
+		
 	3g-6200n | \
 	ai-br100 | \
 	dir-610-a1 | \
@@ -161,7 +161,12 @@ ramips_setup_interfaces()
 		ucidef_add_switch_vlan "switch0" "1" "0 1 2 3 6t"
 		ucidef_add_switch_vlan "switch0" "2" "4 6t"
 		;;
-
+	tz-w13)
+		ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
+		ucidef_add_switch "switch0" "1" "1"
+		ucidef_add_switch_vlan "switch0" "1" "0 1 2 4 6t"
+		ucidef_add_switch_vlan "switch0" "2" "3 6t"
+		;;
 	whr-1166d)
 		ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
 		ucidef_add_switch "switch0" "1" "1"

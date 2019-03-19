@@ -134,7 +134,6 @@
 				<&gdma 3>;
 			dma-names = "tx", "rx";
 
-			status = "disabled";
 		};
 
 		spi@b00 {
@@ -310,6 +309,13 @@
 			};
 		};
 
+		ephy_pins: ephy {
+			ephy {
+				ralink,group = "ephy";
+				ralink,function = "ephy";
+			};
+		};
+
 		pwm0_pins: pwm0 {
 			pwm0 {
 				ralink,group = "pwm0";
@@ -433,6 +439,18 @@
 			#size-cells = <2>;
 
 			device_type = "pci";
+		};
+	};
+
+	gpio-keys-polled {
+		compatible = "gpio-keys-polled";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		poll-interval = <20>;
+		reset {
+			label = "reset";
+			gpios = <&gpio1 6 1>;
+			linux,code = <0x198>;
 		};
 	};
 

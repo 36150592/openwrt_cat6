@@ -14,6 +14,7 @@ platform_check_image() {
 	[ "$#" -gt 1 ] && return 1
 
 	case "$board" in
+	mt7628  |\
 	3g-6200n | \
 	3g-6200nl | \
 	3g150b | \
@@ -125,6 +126,8 @@ platform_check_image() {
 	x8 |\
 	xiaomi-miwifi-mini |\
 	y1 |\
+	tz-w13 |\
+	pf |\
 	y1s |\
 	zbt-wa05 |\
 	zbt-wg2626 |\

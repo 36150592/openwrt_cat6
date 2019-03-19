@@ -3,8 +3,8 @@
 /include/ "mt7628an.dtsi"
 
 / {
-	compatible = "mediatek,mt7628an-eval-board", "mediatek,mt7628an-soc";
-	model = "Mediatek MT7628AN evaluation board";
+	compatible = "tz", "mediatek,mt7628an-soc";
+	model = "TZ W13";
 
 	ethernet@10100000 {
 		pinctrl-names = "default";
@@ -59,7 +59,7 @@
 
 				partition@50000 {
 					label = "firmware";
-					reg = <0x50000 0x7b0000>;
+					reg = <0x50000 0xfb0000>;
 				};
 			};
 		};

@@ -17,7 +17,7 @@ KERNEL_PATCHVER:=3.18
 
 include $(INCLUDE_DIR)/target.mk
 DEFAULT_PACKAGES += \
-	kmod-leds-gpio kmod-gpio-button-hotplug wpad-mini swconfig
+	kmod-leds-gpio kmod-gpio-button-hotplug wpad-mini swconfig macwriter
 
 define Target/Description
 	Build firmware images for Ralink RT288x/RT3xxx based boards.

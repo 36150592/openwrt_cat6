@@ -86,6 +86,7 @@ get_status_led() {
 		status_led="hw550-3g:green:status"
 		;;
 	linkits7688| \
+	tz-w13| \
 	linkits7688d)
 		[ "$1" = "upgrade" ] && status_led="mediatek:orange:wifi"
 		;;
