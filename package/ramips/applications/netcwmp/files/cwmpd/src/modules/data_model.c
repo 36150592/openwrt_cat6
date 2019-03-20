@@ -36,6 +36,8 @@ model_func_t ModelFunction[] =
 	
 	{"cpe_get_igd_https_Status", cpe_get_igd_https_Status},
 	{"cpe_set_igd_https_Status", cpe_set_igd_https_Status},
+	{"cpe_get_igd_https_Port", cpe_get_igd_https_Port},
+	{"cpe_set_igd_https_Port", cpe_set_igd_https_Port},    
 
 	{"cpe_get_igd_DownloadTransports", cpe_get_igd_DownloadTransports},
 	{"cpe_get_igd_UploadTransports", cpe_get_igd_UploadTransports},

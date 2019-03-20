@@ -80,6 +80,7 @@ int cpe_get_igd_ms_username(cwmp_t * cwmp, const char * name, char ** value, poo
 //InternetGatewayDevice.ManagementServer.Username
 int cpe_set_igd_ms_username(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
+	char combuf[128];
 	cwmp_conf_set("cwmp:acs_username", value);
 	if(isTestConfig())
 	{
@@ -89,6 +90,10 @@ int cpe_set_igd_ms_username(cwmp_t * cwmp, const char * name, const char * value
 	{
 		set_single_config_attr(TZ_TR069_USERNAME, value);
 	}
+    snprintf(combuf,sizeof(combuf),"uci set tozed.cfg.tr069_ServerUsername=%s 2>/dev/null&&uci commit tozed",value);
+
+	uci_set_single_config_attr(combuf, "y");
+
 
     return FAULT_CODE_OK;
 }
@@ -104,11 +109,16 @@ int cpe_get_igd_ms_password(cwmp_t * cwmp, const char * name, char ** value, poo
 
 int cpe_set_igd_ms_password(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
+		char combuf[128];
 	cwmp_conf_set("cwmp:acs_password", value);
 	if(isTestConfig())
 		set_single_config_attr("TZ_TR069_PASSWD2", value);
 	else
 		set_single_config_attr(TZ_TR069_PASSWD, value);
+
+    snprintf(combuf,sizeof(combuf),"uci set tozed.cfg.tr069_ServerPassword=%s 2>/dev/null&&uci commit tozed",value);
+
+	uci_set_single_config_attr(combuf, "y");		
     return FAULT_CODE_OK;
 }
 
@@ -121,11 +131,17 @@ int cpe_get_igd_ms_url(cwmp_t * cwmp, const char * name, char ** value, pool_t *
 //InternetGatewayDevice.ManagementServer.URL
 int cpe_set_igd_ms_url(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
+		char combuf[128];
 	cwmp_conf_set("cwmp:acs_url", value);
 	if(isTestConfig())
 		set_single_config_attr("TZ_TR069_URL2", value);
 	else
 		set_single_config_attr(TZ_TR069_URL, value);
+
+    snprintf(combuf,sizeof(combuf),"uci set tozed.cfg.tr069_ServerURL=%s 2>/dev/null&&uci commit tozed",value);
+
+	uci_set_single_config_attr(combuf, "y");		
+		
     return FAULT_CODE_OK;
 }
 
@@ -151,6 +167,7 @@ int cpe_get_igd_ms_connectionrequestusername(cwmp_t * cwmp, const char * name, c
 
 int cpe_set_igd_ms_connectionrequestusername(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
+	char combuf[128]={0};
 	cwmp_conf_set("cwmp:cpe_username", value);
 	if(isTestConfig())
 	{
@@ -171,6 +188,10 @@ int cpe_set_igd_ms_connectionrequestusername(cwmp_t * cwmp, const char * name, c
 		}
 	}
 
+    snprintf(combuf,sizeof(combuf),"uci set tozed.cfg.tr069_ConnectionRequestUname=%s 2>/dev/null&&uci commit tozed",value);
+
+	uci_set_single_config_attr(combuf, "y");		
+
     return FAULT_CODE_OK;
 }
 
@@ -184,11 +205,15 @@ int cpe_get_igd_ms_connectionrequestpassword(cwmp_t * cwmp, const char * name, c
 
 int cpe_set_igd_ms_connectionrequestpassword(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
+	char combuf[128]={0};
 	cwmp_conf_set("cwmp:cpe_password", value);
 	if(isTestConfig())
 		set_single_config_attr("TZ_TR069_LINK_PASSWD2", value);
 	else
 		set_single_config_attr(TZ_TR069_LINK_PASSWD, value);
+    snprintf(combuf,sizeof(combuf),"uci set tozed.cfg.tr069_ConnectionRequestPassword=%s 2>/dev/null&&uci commit tozed",value);
+
+	uci_set_single_config_attr(combuf, "y");				
     return FAULT_CODE_OK;
 }
 
@@ -1323,7 +1348,10 @@ int cpe_get_igd_ms_period_intval(cwmp_t * cwmp, const char * name, char ** value
 
 int cpe_set_igd_ms_period_intval(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
+	char cmdbuf[128]={0};
     cwmp_conf_set("cwmp:interval",value);
+    sprintf(cmdbuf,"uci -q set tozed.cfg.tr069_PeriodicInformInterval=%s;uci -q commit tozed", value);
+    system(cmdbuf); 	
     return FAULT_CODE_OK;
 }
 
@@ -1413,7 +1441,7 @@ int cpe_add_igd_WANConnectionDevice(cwmp_t * cwmp, parameter_node_t * param_node
 
 int cpe_get_EnableCWMP(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {    
-	get_single_config_attr("TZ_TR069_ENABLED", param);
+	get_single_config_attr("uci get tozed.cfg.tr069_app_enable 2>/dev/null", param);
     *value = param;
     
     return FAULT_CODE_OK;
@@ -1422,9 +1450,9 @@ int cpe_get_EnableCWMP(cwmp_t * cwmp, const char * name, char ** value, pool_t *
 int cpe_set_EnableCWMP(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
 	if(!strcmp(value, "true"))
-		set_single_config_attr("TZ_TR069_ENABLED", "1");
+		uci_set_single_config_attr("uci set tozed.cfg.tr069_app_enable=y 2>/dev/null&&uci commit tozed", "y");
 	else
-		set_single_config_attr("TZ_TR069_ENABLED", "0");
+		uci_set_single_config_attr("uci set tozed.cfg.tr069_app_enable=n 2>/dev/null&&uci commit tozed", "n");
  	
     return FAULT_CODE_OK;
 }

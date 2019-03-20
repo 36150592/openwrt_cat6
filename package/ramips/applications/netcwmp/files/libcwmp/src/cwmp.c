@@ -3841,6 +3841,26 @@ int uci_get_single_config_attr(char *name, char *value) {
 	return SUCCESS;
 }
 
+int uci_set_single_config_attr(char *name, char *value) {
+
+	char shellcmd[256], buffer[256];
+	//printf("jiangyibo  111111 \n");
+	sprintf(shellcmd, "%s", name);
+	if (read_memory(shellcmd, buffer, sizeof(buffer)) == SUCCESS) {
+		//printf("jiangyibo mmmd%s\n",buffer);
+		strcpy(value,buffer);
+/*		if (get_attr_by_line(buffer, name, value) == NULL) {
+			value[0] = '\0';
+		}
+*/		
+	} else {
+		value[0] = '\0';
+	}
+
+	return SUCCESS;
+}
+
+
 
 
 int set_config_attr(char *name,const char *value) {
@@ -3886,7 +3906,46 @@ int set_config_attr(char *name,const char *value) {
 
 	return SUCCESS;
 }
+/*
+int set_single_config_attr(char *name, const char *value) {
 
+	char cmd[512];
+	char valuebuffer[512] = {0};
+	char *pointer;
+	int hasSpace = 0;
+
+	if (value == NULL) {
+		sprintf(cmd,"cfg -a %s=", name);
+		system(cmd);
+		system("cfg -c > /tmp/cfg");
+		
+		return SUCCESS;
+	}
+	strncpy(valuebuffer, value, sizeof(valuebuffer));
+	memset(cmd, 0, sizeof(cmd));
+	pointer = valuebuffer;
+	while(*pointer != '\0') {
+		if (*pointer == ' ') {
+			hasSpace = TRUE;
+		} else if (*pointer == '`') {
+			// replace special char to space
+			*pointer = ' ';
+			hasSpace = 1;
+		}
+		pointer++;
+	}
+	
+	if (hasSpace) {
+		sprintf(cmd,"cfg -a %s=\"%s\"", name, value);
+	} else {
+		sprintf(cmd,"cfg -a %s=%s", name, value);
+	}
+	system(cmd);
+	system("cfg -c > /tmp/cfg");
+	
+	return SUCCESS;
+}
+*/
 
 int set_single_config_attr(char *name, const char *value) {
 
@@ -4886,7 +4945,7 @@ static char login_status[16];
 int get_remote_login_status(char **value) {
 
 	char buffer[256];
-	get_single_config_attr(TZ_ALLOW_LOGIN_FROM_WAN, buffer);
+	uci_get_single_config_attr("uci get dhcp.lan.https 2>/dev/null", buffer);
 	if (strncmp(buffer, STR_YES, sizeof(STR_YES)) == 0) {
 		strcpy(login_status, "1");
 	} else {

@@ -1176,6 +1176,20 @@ int cpe_set_igd_https_Status(cwmp_t * cwmp, const char * name, const char * valu
 	return process_remote_login(is_true_value(value));
 }
 
+int cpe_get_igd_https_Port(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	strcpy(param,"80");
+	*value = param;
+	return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_https_Port(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
+{
+
+	return FAULT_CODE_OK;
+}
+
+
 int cpe_get_igd_DownloadTransports(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	strcpy(param,"HTTP,FTP");
