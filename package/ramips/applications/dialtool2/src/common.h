@@ -65,13 +65,13 @@
 
 typedef enum
 {
-	Dial_State_Stop,
-	Dial_State_Config,				//config 
-	Dial_State_Module_Reset,		//reset LTE Module 
+	Dial_State_Stop,		
 	Dial_State_initialized,			//send AT for test AT is ok
 	Dial_State_CMEE,			//enable result code +CME ERROR:<num>
 	Dial_State_PLMN_LOCK,		//lock plmn 
+	Dial_State_PLMN_LOCK_QUERY,
 	Dial_State_PCI_LOCK,
+	Dial_State_PCI_LOCK_QUERY,
 	Dial_State_ICCID,			//query iccid
 	Dial_State_BMIMEI,			//query module imei
 	Dial_State_CPIN_QUERY,			//query card exit or not

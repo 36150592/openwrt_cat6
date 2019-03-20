@@ -1,0 +1,290 @@
+#!/bin/sh
+# fengyuanzhao @sztozed
+# mutil apn dial shell for opwnwrt 
+# version 1.0.1
+# 2019.03.20
+local REVAT_FILE="/tmp/mutilapn_revat"
+local SENDAT_FILE="/tmp/mutilapn_sendat"
+local AT_SERIAL_PORT="/dev/ttyUSB1"
+local MUTILAPN_OUTPUT_INFO_FILE="/tmp/.mutilapn_info"
+
+send_at()
+{
+	echo $1 > ${SENDAT_FILE}
+	> ${REVAT_FILE}	
+	sendat -d${AT_SERIAL_PORT} -f${SENDAT_FILE} -o${REVAT_FILE}  > /dev/null 
+
+	local ret=`cat ${REVAT_FILE} | grep OK | wc -l`
+	if [ $ret'' == 1 ];then
+		return 0
+	fi	
+	return 1
+
+}
+
+check_udhcpc()
+{
+	echo $1
+	local pid=`pgrep -f "udhcpc.*$1" `
+	echo $pid
+	for temp in $pid
+	do
+		echo $temp
+		kill -9 $temp
+	done	
+
+	sleep 1
+	local count=`ps | grep udhcpc | grep $1 | grep -v grep | wc -l`	
+	if [ $count -eq 0 ];then
+		udhcpc -b -i $1   -s /etc/udhcpc.script
+	fi
+}
+
+check_ifname()
+{
+	local count=`ifconfig -a | grep $1 | wc -l`
+	if [ $count -eq 0 ];then
+		return 1	
+	fi
+	return 0
+}
+
+
+
+
+dial_mutilapn1()
+{
+	if [ $TZ_MUTILAPN1_ENABLE'' == '1'   -a $TZ_MUTILAPN1_IP_STACK_MODE"" != ""  -a $TZ_MUTILAPN1_APN_NAME"" != "" ];then
+
+		send_at "at+cgdcont=2,\"$TZ_MUTILAPN1_IP_STACK_MODE\",\"$TZ_MUTILAPN1_APN_NAME\""
+		echo $?
+		send_at "at\$qcpdpp=2,$TZ_MUTILAPN1_AUTH_TYPE,\"$TZ_MUTILAPN1_USERNAME\",\"$TZ_MUTILAPN1_PASSWORD\""	
+		echo $?
+		
+		local ifname=`uci get network.4g1.ifname` 
+		check_ifname $ifname
+		if [ $? -eq 0 ];then
+
+			send_at "at\$qcrmcall=0,2"                                                                                                     
+
+			check_udhcpc $ifname
+		
+			if [ $TZ_MUTILAPN1_IP_STACK_MODE'' == "IP" -o  $TZ_MUTILAPN1_IP_STACK_MODE'' == "IPV4" ];then
+				echo "in IPV4"
+				send_at "at\$qcrmcall=1,2,1,2,2"
+				echo $?
+			elif [ $TZ_MUTILAPN1_IP_STACK_MODE'' == "IPV6" ];then
+				send_at "at\$qcrmcall=1,2,2,2,2"
+				echo $?
+			else
+				echo "in else"
+				send_at "at\$qcrmcall=1,2,3,2,2"
+				echo $?
+			fi
+		else
+			echo "$ifname not found"
+		fi
+		
+			
+	fi 
+}
+
+dial_mutilapn2()
+{
+	if [ $TZ_MUTILAPN2_ENABLE'' == '1'  -a $TZ_MUTILAPN2_IP_STACK_MODE"" != ""  -a $TZ_MUTILAPN2_APN_NAME"" != "" ];then
+
+		send_at "at+cgdcont=3,\"$TZ_MUTILAPN2_IP_STACK_MODE\",\"$TZ_MUTILAPN2_APN_NAME\""
+	        echo $?                                                                          
+	        send_at "at\$qcpdpp=3,$TZ_MUTILAPN2_AUTH_TYPE,\"$TZ_MUTILAPN2_USERNAME\",\"$TZ_MUTILAPN2_PASSWORD\""
+	        echo $?                                                                                      
+	                                                                                                     
+	        local ifname=`uci get network.4g2.ifname`                                                    
+	        check_ifname $ifname                                                                         
+	        if [ $? -eq 0 ];then                                                                         
+	                                                                                                     
+			send_at "at\$qcrmcall=0,3"                                                                                                     
+
+	                check_udhcpc $ifname                                                                 
+	                                                                                                     
+	                if [ $TZ_MUTILAPN2_IP_STACK_MODE'' == "IP" -o  $TZ_MUTILAPN2_IP_STACK_MODE'' == "IPV4" ];then
+	                        echo "in IPV4"                                                               
+	                        send_at "at\$qcrmcall=1,3,1,2,3"                                             
+	                        echo $?                                                                      
+	                elif [ $TZ_MUTILAPN2_IP_STACK_MODE'' == "IPV6" ];then                                
+	                        send_at "at\$qcrmcall=1,3,2,2,3"                                             
+	                        echo $?                                                                      
+	                else                                                                                 
+	                        echo "in else"                                                               
+	                        send_at "at\$qcrmcall=1,3,3,2,3"                                             
+	                        echo $?                                                                      
+	                fi                                                                                   
+	        else                                                                                         
+	                echo "$ifname not found"                                                             
+	        fi                                                                                           
+
+	fi
+}
+
+. /lib/functions.sh
+local wan_interfaces=""
+local wan_sections=""
+load_interface() {
+        local cfgfile="$1"
+        DEVICES=
+        config_cb() {
+                local type="$1"
+                local section="$2"
+
+                config_get TYPE "$CONFIG_SECTION" TYPE
+                case "$TYPE" in
+                        interface)
+						local type=""
+						local ifname=""
+		                config_get ifname "$CONFIG_SECTION" ifname
+		                config_get type "$CONFIG_SECTION" type
+
+						if [ $type"" != "bridge"  -a $CONFIG_SECTION != "loopback" -a `echo $wan_interfaces | grep $ifname |wc -l ` == "0" ]
+						then
+	                        wan_sections="$wan_sections $CONFIG_SECTION"
+							wan_interfaces="$wan_interfaces $ifname"
+						fi
+						
+                    ;;
+                esac                     
+        }                                
+        config_load "${cfgfile:-network}"
+} 
+
+refresh_info()
+{
+	send_at "at\$qcrmcall?"
+	
+	local ret=`cat ${REVAT_FILE} | grep "$1" | wc -l`	
+	sed -i /^APN$1/d $MUTILAPN_OUTPUT_INFO_FILE
+
+	if [ $ret"" != '0' ];then
+		local ip=`sendat -d${AT_SERIAL_PORT} -e at+cgpaddr=$1 | grep '+CGPADDR:' | cut -d',' -f 2`
+		ip=`echo $ip | sed s/[[:space:]]//g`
+		if [ $ip'' != '' ];then
+			local netmask=`sendat -d${AT_SERIAL_PORT} -e at+dhcp4? | grep "$ip" | cut -d':' -f 2 | cut -d',' -f 2`
+			local gateip=`sendat -d${AT_SERIAL_PORT} -e at+dhcp4? | grep "$ip" | cut -d':' -f 2 | cut -d',' -f 3`
+			local dns1=`sendat -d${AT_SERIAL_PORT} -e at+dhcp4? | grep "$ip" | cut -d':' -f 2 | cut -d',' -f 4`
+			local dns2=`sendat -d${AT_SERIAL_PORT} -e at+dhcp4? | grep "$ip" | cut -d':' -f 2 | cut -d',' -f 5`
+			local ifname=""
+			local dhcp_gate_ip
+			local dhcp_gate_netmask
+			local ssid
+
+			for temp in $wan_sections
+			do
+				local temp_ifname=""
+				temp_ifname=`uci get network.$temp.ifname`
+				local temp_ip=`ifconfig $temp_ifname | grep "inet addr" | awk '{print $2}' | cut -d':' -f 2`
+				temp_ip=`echo $temp_ip | sed s/[[:space:]]//g`
+				if [ $temp_ip'' != $ip ];then
+
+					temp_ip=`ifconfig $temp_ifname | grep "inet6 addr" | awk '{print $3}'`
+					temp_ip=`echo $temp_ip | sed s/[[:space:]]//g`
+					[ $temp_ip'' != $ip'' ] && {
+						continue;
+					}
+					[ $temp_ip'' == $ip'' ] && {
+						ifname=$temp_ifname
+					}
+				else
+					ifname=$temp_ifname ;
+				fi
+
+				local lan_section=""
+				lan_section=`uci get network.$temp.route_lan_section`
+				dhcp_gate_ip=`uci get network.$lan_section.ipaddr`
+				dhcp_gate_netmask=`uci get network.$lan_section.netmask`
+				local ssid_sections=``
+				ssid_sections="$ssid_sections `uci show mutilssid  | grep wifi-iface | grep network | cut -d'.' -f 2`"
+				for section in `uci show wireless  | grep wifi-iface | grep network | cut -d'.' -f 2`
+				do
+					local temp_network=`uci get wireless.$section.network`
+					[ $temp_network'' == $lan_section'' ] && { 
+						ssid="$ssid `uci get wireless.$section.ssid`" 
+					}
+				done
+
+				for section in `uci show mutilssid  | grep wifi-iface | grep network | cut -d'.' -f 2`
+				do
+					local temp_network=`uci get mutilssid.$section.network`
+					[ $temp_network'' == $lan_section'' ] && { 
+						ssid="$ssid `uci get mutilssid.$section.ssid`" 
+					}
+				done
+
+				if [ ! -f $MUTILAPN_OUTPUT_INFO_FILE ];then
+					touch $MUTILAPN_OUTPUT_INFO_FILE
+				fi
+
+				
+				echo "APN$1_IP=$ip" >> $MUTILAPN_OUTPUT_INFO_FILE
+				echo "APN$1_NETMASK=$netmask" >> $MUTILAPN_OUTPUT_INFO_FILE
+				echo "APN$1_GATEIP=$gateip" >> $MUTILAPN_OUTPUT_INFO_FILE
+				echo "APN$1_DNS1=$dns1" >> $MUTILAPN_OUTPUT_INFO_FILE
+				echo "APN$1_DNS2=$dns2" >> $MUTILAPN_OUTPUT_INFO_FILE
+				echo "APN$1_IFNAME=$ifname" >> $MUTILAPN_OUTPUT_INFO_FILE
+				echo "APN$1_DHCP_GATE_IP=$dhcp_gate_ip" >> $MUTILAPN_OUTPUT_INFO_FILE
+				echo "APN$1_DHCP_GATE_NETMASK=$dhcp_gate_netmask" >> $MUTILAPN_OUTPUT_INFO_FILE
+				echo "APN$1_SSID=$ssid" >> $MUTILAPN_OUTPUT_INFO_FILE
+			done
+		fi
+	fi
+}
+
+check_4g_network()
+{
+	while [ 1 ]
+	do
+		send_at "at+bmrat"	
+		local ret=`cat ${REVAT_FILE} | grep NONE | wc -l`
+		if [ $ret -eq '0' ];then
+			break;	
+		fi
+			
+		sleep 5
+	done
+
+
+}
+
+
+check_netlink()
+{
+	while [ 1 ] 
+	do
+		check_4g_network	
+		send_at "at\$qcrmcall?"
+		local ret1=`cat ${REVAT_FILE} | grep "2" | wc -l`	
+		local ret2=`cat ${REVAT_FILE} | grep "3" | wc -l`	
+		if [ $ret1"" -eq '0' ];then
+			dial_mutilapn1
+		fi
+
+		if [ $ret2"" -eq '0' ];then
+			dial_mutilapn2
+		fi
+
+		refresh_info 1
+		refresh_info 2
+		refresh_info 3
+
+		sleep 60
+	done
+}
+
+eval `cfg -e --section modem`
+
+check_4g_network	
+
+dial_mutilapn1
+
+dial_mutilapn2
+
+load_interface
+
+check_netlink

@@ -11,18 +11,6 @@ typedef enum
 	DIAL_DIAL,
 	DIAL_DEAMON,
 }DV1;
-typedef enum
-{
-	USER_CMD_WAITING,
-	USER_CMD_UPDATE_CONFIG,
-	USER_CMD_LOCK_BAND,
-	USER_CMD_LOCK_PLMN,
-	USER_CMD_SET_NETWORK_MODE,
-	USER_CMD_LTE_LOCK_CELL,
-	USER_CMD_SEND_AT,
-	
-	USER_CMD_END,
-}UserCmd;
 
 typedef struct GLOBAL_DIALTOOL
 {
@@ -35,9 +23,7 @@ typedef struct GLOBAL_DIALTOOL
 	DV1 Dial_Lvl_1;		//section dial,init should DIAL_INIT
 	int Dial_proc_state;		//it is a ptr,so init it in module type file
 	int exe_status;
-	UserCmd user_cmd;
-	char user_param[128];
-	char user_result[128];
+	
 	/*if module reset,we should kill thread and recycle them,
 		reload ehci_hcd,if not /dev/ttyUSB which using will not work
 	*/

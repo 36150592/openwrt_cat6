@@ -11,7 +11,6 @@
 //#include "boardtype_306A.h"
 extern int global_sleep_interval_long;
 extern CSA scan_att_configs;
-//#define TEMP_DEBUG
 
 #if 0
 struct ASBM806
@@ -642,12 +641,7 @@ void bm906_sendat(int num)
 			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
 			break;
 		case Dial_State_BMDATASTATUSEN:
-
-#ifndef TEMP_DEBUG
 			util_send_cmd(global_dialtool.dev_handle,"AT+BMDATASTATUSEN=1\r",&global_dialtool.pthread_moniter_flag);
-#else
-			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
-#endif
 			break;
 		case Dial_State_PSDIALIND:
 			util_send_cmd(global_dialtool.dev_handle,"AT+PSDIALIND=1\r",&global_dialtool.pthread_moniter_flag);
@@ -874,11 +868,7 @@ void bm906_sendat(int num)
 			util_send_cmd(global_dialtool.dev_handle,"AT^SYSINFO\r",&global_dialtool.pthread_moniter_flag);		
 			break;
 		case Dial_State_BMBAND:
-#ifndef TEMP_DEBUG
-			util_send_cmd(global_dialtool.dev_handle,"AT+BMBAND\r",&global_dialtool.pthread_moniter_flag);
-#else
-			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
-#endif		
+			util_send_cmd(global_dialtool.dev_handle,"AT+BMBAND\r",&global_dialtool.pthread_moniter_flag);	
 			break;
 		case Dial_State_COPS_QUERY:
 			util_send_cmd(global_dialtool.dev_handle,"AT+COPS?\r",&global_dialtool.pthread_moniter_flag);
@@ -930,11 +920,7 @@ void bm906_sendat(int num)
 			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
 			break;
 		case Dial_State_SIGNALIND:
-#ifndef TEMP_DEBUG
-			util_send_cmd(global_dialtool.dev_handle,"AT+SIGNALIND=1\r",&global_dialtool.pthread_moniter_flag);
-#else
-			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
-#endif		
+			util_send_cmd(global_dialtool.dev_handle,"AT+SIGNALIND=1\r",&global_dialtool.pthread_moniter_flag);		
 			break;
 		case Dial_State_QCRMCALL_DISCONNECT:
 			util_send_cmd(global_dialtool.dev_handle,"AT$QCRMCALL=0,1\r",&global_dialtool.pthread_moniter_flag);
@@ -946,39 +932,19 @@ void bm906_sendat(int num)
 			util_send_cmd(global_dialtool.dev_handle,"AT+CSQ=1\r",&global_dialtool.pthread_moniter_flag);
 			break;
 		case Dial_State_HDRCSQ:
-#ifndef TEMP_DEBUG
 			util_send_cmd(global_dialtool.dev_handle,"AT^HDRCSQ\r",&global_dialtool.pthread_moniter_flag);
-#else
-			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
-#endif
 			break;
 		case Dial_State_BMDATASTATUS:
-#ifndef TEMP_DEBUG
 			util_send_cmd(global_dialtool.dev_handle,"AT+BMDATASTATUS\r",&global_dialtool.pthread_moniter_flag);
-#else
-			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
-#endif
 			break;
 		case Dial_State_BMCPNCNT:
-#ifndef TEMP_DEBUG
 			util_send_cmd(global_dialtool.dev_handle,"AT+BMCPNCNT\r",&global_dialtool.pthread_moniter_flag);
-#else
-			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
-#endif
 			break;
 		case Dial_State_GPSSTART:
-#ifndef TEMP_DEBUG
 			util_send_cmd(global_dialtool.dev_handle,"AT+GPSSTART\r",&global_dialtool.pthread_moniter_flag);
-#else
-			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
-#endif
 			break;
 		case Dial_State_GPSINFO:
-#ifndef TEMP_DEBUG
 			util_send_cmd(global_dialtool.dev_handle,"AT+GPSINFO\r",&global_dialtool.pthread_moniter_flag);
-#else
-			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
-#endif
 			break;
 		default:
 			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
@@ -1190,10 +1156,6 @@ void bm906_init(int*  Dial_proc_state)
 					break;
 				}
 		case Dial_State_BMCPNCNT:
-#ifdef TEMP_DEBUG
-				*Dial_proc_state=Dial_State_ICCID;
-				break;
-#endif
 				if(NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
 				{
 					log_error(">>>>>>>>>>>>>>>>>>int case Dial_State_BMCPNCNT\n");

@@ -43,6 +43,7 @@ TARGET_CFLAGS += \
 define Package/dialtool2/install
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dialtool_new $(1)/bin
+	$(INSTALL_BIN) ./files/mutilapn $(1)/bin
 
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) ./files/dialtool2_version $(1)/etc/dialtool2_version

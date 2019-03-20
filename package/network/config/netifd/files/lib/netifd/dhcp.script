@@ -30,24 +30,24 @@ load_interface() {
                 config_get TYPE "$CONFIG_SECTION" TYPE
                 case "$TYPE" in
                         interface)
-				local type=""
-                                config_get ifname "$CONFIG_SECTION" ifname
-                                config_get type "$CONFIG_SECTION" type
-                                if [  $type ];then
-					if [ $type == "bridge" ]
-                                	then 
-				       		lan_sections="$lan_sections $CONFIG_SECTION"
+							local type=""
+			                config_get ifname "$CONFIG_SECTION" ifname
+			                config_get type "$CONFIG_SECTION" type
+			                if [  $type ];then
+								if [ $type == "bridge" ]
+			                                	then 
+							       		lan_sections="$lan_sections $CONFIG_SECTION"
 
-                                	fi
-				else
-					if [ $CONFIG_SECTION != "loopback" -a `echo $wan_interfaces | grep $ifname |wc -l ` == "0" ]
-					then
-                                		wan_sections="$wan_sections $CONFIG_SECTION"
-						wan_interfaces="$wan_interfaces $ifname"
-					fi
-				fi                                     
+			                                	fi
+							else
+								if [ $CONFIG_SECTION != "loopback" -a `echo $wan_interfaces | grep $ifname |wc -l ` == "0" ]
+								then
+			                        wan_sections="$wan_sections $CONFIG_SECTION"
+									wan_interfaces="$wan_interfaces $ifname"
+								fi
+							fi                                     
 
-                                append inter_sections "$CONFIG_SECTION"
+                            append inter_sections "$CONFIG_SECTION"
                         ;;
                 esac                     
         }                                
@@ -89,21 +89,30 @@ setup_ip_rules () {
 		fi	
 	done
 	#templately let all lan networks go to one wan interface
-	ip rule del pref 1000
-	while [ `echo $?` == "0"  ]
-	do
-		ip rule del pref 1000  2> /dev/null
-	done
+	#ip rule del pref 1000
+	#while [ `echo $?` == "0"  ]
+	#do
+	#	ip rule del pref 1000  2> /dev/null
+	#done
 
-	for temp in $lan_sections;do
-		config_get ipaddr $temp ipaddr
-		config_get netmask $temp netmask
-		network=`/bin/ipcalc.sh $ipaddr $netmask | grep "NETWORK" | cut -d'=' -f 2`
-		prefix_num=`/bin/ipcalc.sh $ipaddr $netmask | grep "PREFIX" | cut -d'=' -f 2`
+	for temp in $wan_sections;do
 
-		ip rule add to $network/$prefix_num table $table_name pref 1000
-		ip rule add from $network/$prefix_num table $table_name pref 1000
-		ip route add $network/$prefix_num proto kernel scope link table $table_name via 0.0.0.0 dev br-$temp src $ipaddr
+		config_get route_lan_section $temp route_lan_section
+		config_get ifname $temp ifname
+
+		if [ $ifname"" == $table_name"" ];then
+
+			config_get ipaddr $route_lan_section ipaddr
+			config_get netmask $route_lan_section netmask
+			network=`/bin/ipcalc.sh $ipaddr $netmask | grep "NETWORK" | cut -d'=' -f 2`
+			prefix_num=`/bin/ipcalc.sh $ipaddr $netmask | grep "PREFIX" | cut -d'=' -f 2`
+
+			ip rule del to $network/$prefix_num
+			ip rule del from $network/$prefix_num
+			ip rule add to $network/$prefix_num table $table_name pref 1000
+			ip rule add from $network/$prefix_num table $table_name pref 1000
+			ip route add $network/$prefix_num proto kernel scope link table $table_name via 0.0.0.0 dev br-$route_lan_section src $ipaddr
+		fi
 
 	done
 }
@@ -117,6 +126,11 @@ setup_interface () {
     ifconfig $interface $ip ${subnet:-255.255.255.0}
 	setup_ip_rules
 	# TODO: apply $broadcast
+
+	local ret=`route | grep default | wc -l`
+	if [ $ret"" != "0" ];then
+		return 0
+	fi
 
 	for i in $router; do
 		proto_add_ipv4_route "$i" 32 "" "$ip"
