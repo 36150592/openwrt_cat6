@@ -30,7 +30,7 @@ define Build/Compile
 endef
 define Package/2860sh/install
 	$(INSTALL_DIR) $(1)/lib/wifi
-#	$(INSTALL_BIN) ./files/rt2860v2.sh $(1)/lib/wifi/rt2860v2.sh
+	$(INSTALL_BIN) ./files/rt2860v2.sh $(1)/lib/wifi/rt2860v2.sh
 	$(INSTALL_DIR) $(1)/etc/modules.d
 	$(INSTALL_BIN) ./files/50-rt2860v2 $(1)/etc/modules.d/50-rt2860v2
 	 $(INSTALL_BIN) ./files/50-mt7603e $(1)/etc/modules.d/

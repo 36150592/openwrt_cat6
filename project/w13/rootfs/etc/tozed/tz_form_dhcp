@@ -1,35 +1,14 @@
 #!/bin/sh
 
+
+TZDHCP_MAIN_DHCPSTART=`uci get tz_mgr.main.TZ_DHCP_IP_BEGIN`
+TZDHCP_MAIN_DHCPEND=`uci get tz_mgr.main.TZ_DHCP_IP_END`
+TZDHCP_MAIN_DHCPLEASE=`uci get tz_mgr.main.TZ_DHCP_EXPIRE_TIME`
 DHCP_MAIN_START=
 DHCP_MAIN_END=
 DHCP_MAIN_LIMIT=
 DHCP_MAIN_DHCPLEASE=
-DHCP_MAIN_DNS=
-DHCP_MAIN_NETMASK=
 
-
-DHCP_VICE_1_START=
-DHCP_VICE_1_END=
-DHCP_VICE_1_LIMIT=
-DHCP_VICE_1_DHCPLEASE=
-DHCP_VICE_1_DNS=
-DHCP_VICE_1_NETMASK=
-
-DHCP_VICE_2_START=
-DHCP_VICE_2_END=
-DHCP_VICE_2_LIMIT=
-DHCP_VICE_2_DHCPLEASE=
-DHCP_VICE_2_DNS=
-DHCP_VICE_2_NETMASK=
-
-FORM_CONFIG_STATION=/tmp/form_config/
-DHCP_CONFIG_LOAD_FILE=${FORM_CONFIG_STATION}/dhcp
-FACTORY_CONFIG_FILE=/etc/tozed_param
-
-mkdir -p ${FORM_CONFIG_STATION}
-cat ${FACTORY_CONFIG_FILE} | grep TZDHCP_ > ${DHCP_CONFIG_LOAD_FILE}
-chmod 777 ${DHCP_CONFIG_LOAD_FILE}
-. ${DHCP_CONFIG_LOAD_FILE}
 
 if [ "${TZDHCP_MAIN_DHCPSTART}" != "" ]; then
 	DHCP_MAIN_START=`echo ${TZDHCP_MAIN_DHCPSTART} | awk -F '.' '{print $4}'`
@@ -43,103 +22,16 @@ else
 	DHCP_MAIN_END=200
 fi
 
-DHCP_MAIN_LIMIT=`expr ${DHCP_MAIN_END} - ${DHCP_MAIN_START} + 1`
+DHCP_MAIN_LIMIT=`echo $((${DHCP_MAIN_END}-${DHCP_MAIN_START}))`
 
 if [ "${TZDHCP_MAIN_DHCPLEASE}" != "" ]; then
-	DHCP_MAIN_DHCPLEASE="${TZDHCP_MAIN_DHCPLEASE}h"
+	DHCP_MAIN_DHCPLEASE="$((${TZDHCP_MAIN_DHCPLEASE}/3600))h"
 else
 	DHCP_MAIN_DHCPLEASE=24h
 fi
 
-if [ "${TZDHCP_MAIN_DNS}" != "" ]; then
-	DHCP_MAIN_DNS="${TZDHCP_MAIN_DNS}"
-else
-	if [ "${TZDHCP_MAIN_IP}" = "" ]; then
-		DHCP_MAIN_DNS=192.168.2.1
-	else
-		DHCP_MAIN_DNS=${TZDHCP_MAIN_IP}
-	fi
-fi
-
-if [ "${TZDHCP_MAIN_NETMASK}" != "" ]; then
-	DHCP_MAIN_NETMASK="${TZDHCP_MAIN_NETMASK}"
-else
-	DHCP_MAIN_NETMASK=255.255.255.0
-fi
 
 
-if [ "${TZDHCP_VICE_1_DHCPSTART}" != "" ]; then
-	DHCP_VICE_1_START=`echo ${TZDHCP_VICE_1_DHCPSTART} | awk -F '.' '{print $4}'`
-else
-	DHCP_VICE_1_START=100
-fi
-
-if [ "${TZDHCP_VICE_1_DHCPEND}" != "" ]; then
-	DHCP_VICE_1_END=`echo ${TZDHCP_VICE_1_DHCPEND} | awk -F '.' '{print $4}'`
-else
-	DHCP_VICE_1_END=200
-fi
-
-DHCP_VICE_1_LIMIT=`expr ${DHCP_VICE_1_END} - ${DHCP_VICE_1_START} + 1`
-
-if [ "${TZDHCP_VICE_1_DHCPLEASE}" != "" ]; then
-	DHCP_VICE_1_DHCPLEASE="${TZDHCP_VICE_1_DHCPLEASE}h"
-else
-	DHCP_VICE_1_DHCPLEASE=24h
-fi
-
-if [ "${TZDHCP_VICE_1_DNS}" != "" ]; then
-	DHCP_VICE_1_DNS="${TZDHCP_VICE_1_DNS}"
-else
-	if [ "${TZDHCP_VICE_1_IP}" = "" ]; then
-		DHCP_VICE_1_DNS=192.168.3.1
-	else
-		DHCP_VICE_1_DNS=${TZDHCP_VICE_1_IP}
-	fi
-fi
-
-if [ "${TZDHCP_VICE_1_NETMASK}" != "" ]; then
-	DHCP_VICE_1_NETMASK="${TZDHCP_VICE_1_NETMASK}"
-else
-	DHCP_VICE_1_NETMASK=255.255.255.0
-fi
-
-
-if [ "${TZDHCP_VICE_2_DHCPSTART}" != "" ]; then
-	DHCP_VICE_2_START=`echo ${TZDHCP_VICE_2_DHCPSTART} | awk -F '.' '{print $4}'`
-else
-	DHCP_VICE_2_START=100
-fi
-
-if [ "${TZDHCP_VICE_2_DHCPEND}" != "" ]; then
-	DHCP_VICE_2_END=`echo ${TZDHCP_VICE_2_DHCPEND} | awk -F '.' '{print $4}'`
-else
-	DHCP_VICE_2_END=200
-fi
-
-DHCP_VICE_2_LIMIT=`expr ${DHCP_VICE_2_END} - ${DHCP_VICE_2_START} + 1`
-
-if [ "${TZDHCP_VICE_2_DHCPLEASE}" != "" ]; then
-	DHCP_VICE_2_DHCPLEASE="${TZDHCP_VICE_2_DHCPLEASE}h"
-else
-	DHCP_VICE_2_DHCPLEASE=24h
-fi
-
-if [ "${TZDHCP_VICE_2_DNS}" != "" ]; then
-	DHCP_VICE_2_DNS="${TZDHCP_VICE_2_DNS}"
-else
-	if [ "${TZDHCP_VICE_2_IP}" = "" ]; then
-		DHCP_VICE_2_DNS=192.168.4.1
-	else
-		DHCP_VICE_2_DNS=${TZDHCP_VICE_2_IP}
-	fi
-fi
-
-if [ "${TZDHCP_VICE_2_NETMASK}" != "" ]; then
-	DHCP_VICE_2_NETMASK="${TZDHCP_VICE_2_NETMASK}"
-else
-	DHCP_VICE_2_NETMASK=255.255.255.0
-fi
 
 cat > /etc/config/dhcp <<EOF
 
@@ -167,24 +59,7 @@ config dhcp 'lan'
         option leasetime '${DHCP_MAIN_DHCPLEASE}'
         option dhcpv6 'server'
         option ra 'server'
-        option netmask '${DHCP_MAIN_NETMASK}'
-        list dhcp_option 'option:dns-server,${DHCP_MAIN_DNS}'
 
-config dhcp 'lan1'
-        option interface 'lan1'
-        option start '${DHCP_VICE_1_START}'
-        option limit '${DHCP_VICE_1_LIMIT}'
-        option leasetime '${DHCP_VICE_1_DHCPLEASE}'
-        option netmask '${DHCP_VICE_1_NETMASK}'
-        list dhcp_option 'option:dns-server,${DHCP_VICE_1_DNS}'
-
-config dhcp 'lan2'
-        option interface 'lan2'
-        option start '${DHCP_VICE_2_START}'
-        option limit '${DHCP_VICE_2_LIMIT}'
-        option leasetime '${DHCP_VICE_2_DHCPLEASE}'
-        option netmask '${DHCP_VICE_2_NETMASK}'
-        list dhcp_option 'option:dns-server,${DHCP_VICE_2_DNS}'
 
 config dhcp 'wan'
         option interface 'wan'
@@ -196,3 +71,5 @@ config odhcpd 'odhcpd'
         option leasetrigger '/usr/sbin/odhcpd-update'
 
 EOF
+
+

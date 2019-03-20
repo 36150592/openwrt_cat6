@@ -1,38 +1,10 @@
 #!/bin/sh
 
-macaddr_add() {
-	local mac=$1
-	local val=$2
-	local oui=${mac%:*:*:*}
-	local nic=${mac#*:*:*:}
 
-	nic=$(printf "%06x" $((0x${nic//:/} + $val & 0xffffff)) | sed 's/^\(.\{2\}\)\(.\{2\}\)\(.\{2\}\)/\1:\2:\3/')
-	echo $oui:$nic
-}
-
-FORM_CONFIG_STATION=/tmp/form_config/
-DHCP_CONFIG_LOAD_FILE=${FORM_CONFIG_STATION}/dhcp
-FACTORY_CONFIG_FILE=/etc/tozed_param
-
-#export param
-mkdir -p ${FORM_CONFIG_STATION}
-cat ${FACTORY_CONFIG_FILE} | grep TZDHCP_ > ${DHCP_CONFIG_LOAD_FILE}
-chmod 777 ${DHCP_CONFIG_LOAD_FILE}
-. ${DHCP_CONFIG_LOAD_FILE}
-
-
-
-DHCP_MAIN_IP=
-DHCP_MAIN_MASK=
+TZDHCP_MAIN_IP=`uci get tz_mgr.main.AP_IPADDR`
+TZDHCP_MAIN_MASK=`uci get tz_mgr.main.AP_NETMASK`
 DHCP_MAIN_MAC=`eth_mac r lan`
 
-DHCP_VICE_1_IP=
-DHCP_VICE_1_MASK=
-DHCP_VICE_1_MAC=$(macaddr_add "$DHCP_MAIN_MAC" 2)
-
-DHCP_VICE_2_IP=
-DHCP_VICE_2_MASK=
-DHCP_VICE_2_MAC=$(macaddr_add "$DHCP_MAIN_MAC" 3)
 
 WIRED_WAN_MAC=`eth_mac r wan`
 
@@ -48,30 +20,6 @@ else
 		DHCP_MAIN_MASK=${TZDHCP_MAIN_NETMASK}
 fi
 
-if [ "${TZDHCP_VICE_1_IP}" = "" ]; then
-		DHCP_VICE_1_IP=192.168.3.1
-else
-		DHCP_VICE_1_IP=${TZDHCP_VICE_1_IP}
-fi
-
-if [ "${TZDHCP_VICE_1_NETMASK}" = "" ]; then
-		DHCP_VICE_1_MASK=255.255.255.0
-else
-		DHCP_VICE_1_MASK=${TZDHCP_VICE_1_NETMASK}
-fi
-
-
-if [ "${TZDHCP_VICE_2_IP}" = "" ]; then
-		DHCP_VICE_2_IP=192.168.4.1
-else
-		DHCP_VICE_2_IP=${TZDHCP_VICE_2_IP}
-fi
-
-if [ "${TZDHCP_VICE_2_NETMASK}" = "" ]; then
-		DHCP_VICE_2_MASK=255.255.255.0
-else
-		DHCP_VICE_2_MASK=${TZDHCP_VICE_2_NETMASK}
-fi
 
 cat > /etc/config/network <<EOF
 
@@ -82,7 +30,7 @@ config interface 'loopback'
 	option netmask '255.0.0.0'
 
 config globals 'globals'
-	option ula_prefix 'fd41:5d83:aaf2::/48'
+	option ula_prefix 'fd05:bae0:fa6b::/48'
 
 config interface 'lan'
 	option ifname 'eth0.1'
@@ -104,30 +52,6 @@ config interface 'wan6'
 	option ifname 'eth0.2'
 	option proto 'dhcpv6'
 
-config interface 'lan1'
-	option ifname 'eth0.3'
-	option force_link '1'
-	option macaddr '${DHCP_VICE_1_MAC}'
-	option type 'bridge'
-	option proto 'static'
-	option ipaddr '${DHCP_VICE_1_IP}'
-	option netmask '${DHCP_VICE_1_MASK}'
-	option ip6assign '60'
-
-config interface 'lan2'
-	option ifname 'eth0.4'
-	option force_link '1'
-	option macaddr '${DHCP_VICE_2_MAC}'
-	option type 'bridge'
-	option proto 'static'
-	option ipaddr '${DHCP_VICE_2_IP}'
-	option netmask '${DHCP_VICE_2_MASK}'
-	option ip6assign '60'
-
-config interface '4g'
-	option ifname 'wwan0'
-	option force_link '1'
-	option proto 'dhcp'
 
 config switch
 	option name 'switch0'

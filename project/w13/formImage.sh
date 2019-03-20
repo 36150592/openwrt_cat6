@@ -18,7 +18,7 @@ cp -f project/${project}/bin/factory.bin image/${project}/factory.bin
 cp -f project/${project}/bin/old-all.bin image/${project}/old-all.bin
 
 cp -f bin/ramips/openwrt-ramips-${chip}-sxx-u-boot.bin image/${project}/new_uboot.bin
-cp -f bin/ramips/openwrt-ramips-${chip}-zbt-wg2626-squashfs-sysupgrade.bin image/${project}/new_firmware-kernel-fs.bin
+cp -f bin/ramips/openwrt-ramips-${chip}-tz-w13-squashfs-sysupgrade.bin image/${project}/new_firmware-kernel-fs.bin
 cp -f project/${project}/bin/factory.bin image/${project}/
 cp -f project/${project}/bin/old-all.bin image/${project}/
 
