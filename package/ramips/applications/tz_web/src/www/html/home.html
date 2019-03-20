@@ -233,45 +233,7 @@
             return Y+M+D+h+m+s+w;
         }
 		
-        function getVersionInfo(callback) {
-            // 获取模块版本信息
-            Page.postJSON({
-                json: { cmd: RequestCmd.DEVICE_VERSION_INFO },
-                success: function(data) {
-                    Page.module = data.module;
-                    Page.modelVersion = data.modversion;
-                    Page.imei = data.imei;
-                    Page.maxAllowedStation = (data.maxAllowedStation == "NULL") ? "32" : data.maxAllowedStation;
-                    Page.hideLockCell = (data.enableHideLockCell == "yes" && data.hideLockCell == "yes");
-                    Page.closeManage = (data.closeManage == "true");
-                    Page.supportL3Bridge = (data.supportL3Bridge == "true");
-                    if (Page.closeManage) {
-                        var clientIp = (data.clientIp || "");
-                        var host = window.location.host.replace(/\.\d+$/g, "");
-                        if (clientIp.indexOf(host) < 0) {
-                            Page.closeManage = false;
-                        }
-                    }
-                    Page.enableWiFi = (data.enableWiFi == "true");
 
-                    var build = data.build;
-                    if (build.length >= 10) {
-                        var version = ' Version: ' + build.substring(2, 10).replace(/\-/g, '.');
-                        var $footer = $('#spanFooter');
-                        if ($footer.text().indexOf('Version:') < 0) {
-                            var copyright = (data.copyright || '').replaceQuote();
-                            if (copyright == 'NULL') copyright = '';
-                            $footer.text(copyright + $footer.text());
-                        }
-                    }
-                },
-                complete: function() {
-                    if ($.isFunction(callback)) {
-                        callback();
-                    }
-                }
-            });
-        }
 
         // 获取是否为入库版本
         StatusUtil.getSysStatus();

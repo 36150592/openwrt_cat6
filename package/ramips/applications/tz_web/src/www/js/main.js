@@ -97,6 +97,9 @@ var RequestCmd = {
 	
 	TR069_CONFIG: 175,
 	
+	WPS5_PIN_GET:176,
+    WPS5_PIN_SET:177,
+	
 	CONFIG_UPDATE: 184,
 
     WIFI5_INFO: 201,

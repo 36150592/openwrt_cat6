@@ -91,6 +91,7 @@ CHECK.required.urlKeyword = "URL关键字不能为空";
 CHECK.required.urlOrIp = "URL或者IP地址不能为空";
 CHECK.required.username = "请输入用户名";
 CHECK.required.webManagePort = "请输入网页管理端口";
+CHECK.required.wpsLength = "WPS PIN 必须是8位数字";
 DOC.antenna.auto = "自动";
 DOC.antenna.buildIn = "内置天线";
 DOC.antenna.external = "外置天线";
@@ -1592,6 +1593,7 @@ wlan5ghtml.tab_menu.item2 =  "辅Wi-Fi1设置";
 wlan5ghtml.tab_menu.item3 =  "辅Wi-Fi2设置";
 wlan5ghtml.tab_menu.connectedList = "连接客户端列表";
 wlan5ghtml.tab_menu.macControl = "Wi-Fi访问控制";
+wlan5ghtml.tab_menu.wps = "WPS配置";
 
 wlan5ghtml.form1.cmt = '示例';
 wlan5ghtml.form1.wifiFunction = 'Wi-Fi功能:';

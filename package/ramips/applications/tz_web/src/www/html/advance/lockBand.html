@@ -4,10 +4,10 @@
     $(document).ready(function() {
         Page.render();
 
-        var $lteDiv = $('#lteDiv').hide(), $gwDiv = $('#gwDiv').hide(),
-		$tdsDiv = $('#tdsDiv').hide(),$bandStatus = $('#bandStatus').hide();
+        var $lteTr = $('#lteTr').hide(), $gwTr = $('#gwTr').hide(),
+            $tdsTr = $('#tdsTr').hide(),$bandStatus = $('#bandStatus').hide();
 
-		var $btnSave = $('#btnSave');
+        var $btnSave = $('#btnSave');
 		
         function getInfo() {
             Page.postJSON({
@@ -21,45 +21,45 @@
                         var gw = datas.band.gw;
                         var tds = datas.band.tds;
                         if(!$.isEmptyObject(lte)){
-                            $lteDiv.show();
+                            $lteTr.show();
                             var sb = new StringBuilder();
                             for ( var i = 0; i <lte.length; i++){
-                                sb.append(String.format('<span><input type="checkbox" name="checkbox" id="checkbox" value="{0}">{1}</span>', lte[i],lte[i]));
+                                sb.append(String.format('<span><input type="checkbox" name="checkbox"  value="{0}">{1}</span>', lte[i],lte[i]));
                             }
-                            $("'"+sb+"'").appendTo($('#lteLabel'));
+                            $("'"+sb+"'").appendTo($('#lteDiv'));
                         }
                         if(!$.isEmptyObject(gw)){
-                            $gwDiv.show();
+                            $gwTr.show();
                             var sb1 = new StringBuilder();
                             for ( var j = 0; j <gw.length; j++){
-                                sb1.append(String.format('<span><input type="checkbox" name="checkbox" id="checkbox" value="{0}">{1}</span>', gw[j],gw[j]));
+                                sb1.append(String.format('<span><input type="checkbox" name="checkbox"  value="{0}">{1}</span>', gw[j],gw[j]));
                             }
-                            $("'"+sb1+"'").appendTo($('#gwLabel'));
+                            $("'"+sb1+"'").appendTo($('#gwDiv'));
                         }
                         if(!$.isEmptyObject(tds)){
-                            $tdsDiv.show();
+                            $tdsTr.show();
                             var sb2 = new StringBuilder();
                             for ( var x = 0; x <tds.length; x++){
-                                sb2.append(String.format('<span><input type="checkbox" name="checkbox" id="checkbox" value="{0}">{1}</span>', tds[x],tds[x]));
+                                sb2.append(String.format('<span><input type="checkbox" name="checkbox" value="{0}">{1}</span>', tds[x],tds[x]));
                             }
-                            $("'"+sb2+"'").appendTo($('#tdsLabel'));
+                            $("'"+sb2+"'").appendTo($('#tdsDiv'));
                         }
 
                     }else {
                         $bandStatus.show();
-                        $bandStatus.html(DOC.lbl.noSim)
-						$btnSave.disable();
+                        $bandStatus.html(DOC.lbl.noSim);
+                        $btnSave.disable();
                     }
-					
-					setlockban(datas.lockband);
+
+                    setlockban(datas.lockband);
 
                 }
             });
         }
 
         getInfo();
-		
-		function setlockban(bandArr) {
+
+        function setlockban(bandArr) {
             for ( var i = 0; i <bandArr.length; i++){
                 $('input[name="checkbox"][value="'+bandArr[i]+'"]').prop('checked', true)
             }
@@ -70,7 +70,7 @@
             $check.prop('checked', $(this).prop('checked'));
         });
 
-        
+
 
         $btnSave.click(function() {
             $(this).attr("disabled",true);
@@ -87,7 +87,7 @@
                 json: json,
                 success: function(data) {
                     AlertUtil.alertMsg(PROMPT.saving.success);
-					$("ul.tabs a").eq(2).click();
+                    $("ul.tabs a").eq(2).click();
                 },
                 complete: function(){
                     $('#btnSave').attr("disabled",false);
@@ -102,33 +102,39 @@
     <script type="text/template" id="child_template">
         <table class="detail" cellspacing="0">
 
-            <tr id="displayBandsInfo">
-                <th><%- lockband.currentSupportBandTh %><%- colon %></th>
+            <tr>
+                <th></th>
                 <td>
-					<span id="bandStatus"></span>
-                    <div id="lteDiv" style="width: 90%;font-size:18px;line-height:30px;margin-bottom: 5px" >
-                        <span>LTE<%- colon %></span>
-                        <span>  <input type="checkbox" name="allcheck">全部</span>
-                        <label id="lteLabel" class="bandLabel">
-
-                        </label>
-                    </div>
-                    <div id="gwDiv"  style="width: 90%;font-size:18px;line-height:30px;margin-bottom: 5px" >
-                        <span>GSM WCDMA<%- colon %></span>
-                        <span>  <input type="checkbox" name="allcheck">全部</span>
-                        <label id="gwLabel" class="bandLabel">
-
-                        </label>
-                    </div>
-                    <div id="tdsDiv"  style="width: 90%;font-size:18px;line-height:30px;margin-bottom: 5px" >
-                        <span>TDS<%- colon %></span>
-                        <span>  <input type="checkbox" name="allcheck">全部</span>
-                        <label id="tdsLabel" class="bandLabel">
-
-                        </label>
-
-                    </div>
+                    <span id="bandStatus" style = "font-size:18px;"></span>
                 </td>
+            </tr>
+
+
+            <tr id="lteTr">
+                <th style = "font-size:18px;">LTE<%- colon %></th>
+                <td>
+                    <div style="padding-left: 8px;font-size:18px"><input type="checkbox" name="allcheck">全部</div>
+                    <div id="lteDiv" class="bandDiv" ></div>
+                </td>
+
+            </tr>
+
+            <tr id="gwTr">
+                <th style = "font-size:18px;">GSM WCDMA<%- colon %></th>
+                <td>
+                    <div style="padding-left: 8px;font-size:18px"><input type="checkbox" name="allcheck">全部</div>
+                    <div id="gwDiv" class="bandDiv" ></div>
+                </td>
+
+            </tr>
+
+            <tr id="tdsTr">
+                <th>LTE<%- colon %></th>
+                <td>
+                    <div style="padding-left: 8px;font-size:18px"><input type="checkbox" name="allcheck">全部</div>
+                    <div id="tdsDiv" class="bandDiv"></div>
+                </td>
+
             </tr>
 
             <tr id="trLockFreqBtns1">

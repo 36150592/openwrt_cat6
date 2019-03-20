@@ -1790,7 +1790,7 @@ function set_macAccess()
 	local policy = tonumber(tz_req["policy"])
 	local maclist = tz_req["maclist"]
 	
-	if(nil ~= policy and nil ~= maclist)
+	if(nil ~= policy )
 	 then
 		ret = wifi.wifi_set_mac_access_control(id,policy,maclist)
 			if(not ret)
@@ -1799,6 +1799,7 @@ function set_macAccess()
 			end
 	end	
 	
+	wifi.wifi_restart(id)
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
@@ -1856,7 +1857,7 @@ function set_wifi5macAccess()
 	local policy = tonumber(tz_req["policy"])
 	local maclist = tz_req["maclist"]
 	
-	if(nil ~= policy and nil ~= maclist)
+	if(nil ~= policy)
 	 then
 		ret = wifi.wifi_set_mac_access_control(id,policy,maclist)
 			if(not ret)
@@ -1865,6 +1866,7 @@ function set_wifi5macAccess()
 			end
 	end	
 	
+	wifi.wifi_restart(id)
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
@@ -1882,6 +1884,183 @@ function get_tr069()
 	print(result_json)
 
 end
+
+function get_wpsSet()
+    local tz_answer = {}
+	tz_answer["cmd"] =171
+	
+	local array = wifi.wifi_get_dev()
+	local id
+	local data_array = {}
+	for k,v in pairs(array) do
+	   if(v["band"] == "2.4G")
+	     then
+		   id = v['wifi_id']				  
+		end
+	end
+	
+	data_array["status"] = wifi.wifi_get_wps_pbc_enable_status(id)
+	data_array["pin"] = wifi.wifi_get_wps_pin(id) or ''
+
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+	
+end
+
+function set_wpsSet()
+	local tz_answer = {}
+	tz_answer["cmd"] = 172
+	
+	local ret 
+	local array = wifi.wifi_get_dev()
+	
+	local id
+	for k,v in pairs(array) do
+	   if(v["band"] == "2.4G")
+	     then
+		   id = v['wifi_id']				  
+		end
+	end
+
+   	local wpsEnble = tonumber(tz_req["wpsEnble"])
+	local wpsPin = tonumber(tz_req["wpsPin"])
+		
+	if(nil ~= wpsPin)
+	 then
+	    if(0 == wpsPin)
+		 then
+			ret = wifi.wifi_set_wps_pin(id,nil)
+			if(not ret)
+				then
+				tz_answer["setwpsPin"] = false
+			end
+	    else
+			ret = wifi.wifi_set_wps_pin(id,wpsPin)
+				if(not ret)
+					then
+					tz_answer["setwpsPin"] = false
+				end
+		end
+    end
+	
+	if(nil ~= wpsEnble)
+	 then
+		if(1 == wpsEnble)
+		 then
+	       ret = wifi.wifi_enable_wps_pbc(id)
+		    if(not ret)
+			  then
+			  tz_answer["enablewps"] = false
+		    end
+		elseif(0 == wpsEnble)
+		  then
+			ret = wifi.wifi_disable_wps_pbc(id)
+			 print(ret)
+			  if(not ret)
+		        then
+			     tz_answer["disablewps"] = false
+              end
+	   end
+	end
+	
+	wifi.wifi_restart(id)
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json);
+
+end
+
+function get_wps5Set()
+    local tz_answer = {}
+	tz_answer["cmd"] =176
+	
+	local array = wifi.wifi_get_dev()
+	local id
+	local data_array = {}
+	for k,v in pairs(array) do
+	   if(v["band"] == "5G")
+	     then
+		   id = v['wifi_id']				  
+		end
+	end
+	
+	data_array["status"] = wifi.wifi_get_wps_pbc_enable_status(id)
+	data_array["pin"] = wifi.wifi_get_wps_pin(id) or ''
+
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+	
+end
+
+function set_wps5Set()
+	local tz_answer = {}
+	tz_answer["cmd"] = 177
+	
+	local ret 
+	local array = wifi.wifi_get_dev()
+	
+	local id
+	for k,v in pairs(array) do
+	   if(v["band"] == "5G")
+	     then
+		   id = v['wifi_id']				  
+		end
+	end
+
+   	local wpsEnble = tonumber(tz_req["wpsEnble"])
+	local wpsPin = tonumber(tz_req["wpsPin"])
+		
+	if(nil ~= wpsPin)
+	 then
+	    if(0 == wpsPin)
+		 then
+			ret = wifi.wifi_set_wps_pin(id,nil)
+			if(not ret)
+				then
+				tz_answer["setwpsPin"] = false
+			end
+	    else
+			ret = wifi.wifi_set_wps_pin(id,wpsPin)
+				if(not ret)
+					then
+					tz_answer["setwpsPin"] = false
+				end
+		end
+    end
+	
+	if(nil ~= wpsEnble)
+	 then
+		if(1 == wpsEnble)
+		 then
+	       ret = wifi.wifi_enable_wps_pbc(id)
+		    if(not ret)
+			  then
+			  tz_answer["enablewps"] = false
+		    end
+		elseif(0 == wpsEnble)
+		  then
+			ret = wifi.wifi_disable_wps_pbc(id)
+			 print(ret)
+			  if(not ret)
+		        then
+			     tz_answer["disablewps"] = false
+              end
+	   end
+	end
+	
+	wifi.wifi_restart(id)
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json);
+
+end
+
 
 
 local switch = {
@@ -1935,8 +2114,12 @@ local switch = {
 	 [167] = get_remoteLogin,
 	 [169] = get_plmnSet,
 	 [170] = set_plmnSet,
+	 [171] = get_wpsSet,
+	 [172] = set_wpsSet,
 	 [173] = get_remotePin,
 	 [175] = get_tr069,
+	 [176] = get_wps5Set,
+	 [177] = set_wps5Set,
 	 [184] = config_update,
 	 [201] = get_wifi5,
 	 [202] = set_wifi5,

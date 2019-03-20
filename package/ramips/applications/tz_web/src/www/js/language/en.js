@@ -91,6 +91,7 @@ CHECK.required.urlKeyword = "URL keyword can not be empty";
 CHECK.required.urlOrIp = "The URL or IP address can not be empty";
 CHECK.required.username = "Please enter your username";
 CHECK.required.webManagePort = "Please enter web management port";
+CHECK.required.wpsLength = "WPS PIN Must be 8 digits";
 DOC.antenna.auto = "Auto";
 DOC.antenna.buildIn = "Built-in";
 DOC.antenna.external = "External";
@@ -1595,6 +1596,7 @@ wlan5ghtml.tab_menu.item2 =  "Auxiliary Wi-Fi1 Settings";
 wlan5ghtml.tab_menu.item3 =  "Auxiliary Wi-Fi2 Settings";
 wlan5ghtml.tab_menu.connectedList = "Connected List";
 wlan5ghtml.tab_menu.macControl = "Wi-Fi Access Control";
+wlan5ghtml.tab_menu.wps = "WPS Settings";
 
 wlan5ghtml.form1.cmt = 'example';
 wlan5ghtml.form1.wifiFunction = 'Wi-Fi Function:';

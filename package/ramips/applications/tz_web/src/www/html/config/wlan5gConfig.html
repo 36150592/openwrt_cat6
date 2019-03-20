@@ -10,6 +10,7 @@
         TempUtil.render('macControl-template', 'macControl',wirelessconfightml.macControl);
         Page.render('#fwHead', '#fwHead_template');
         Page.render('#fwBody', '#fwBody_template');
+        Page.render('#wpsSet', '#wpsSet_template');
 
         var showText = wirelessconfightml.prompt;
         var $lis = $("ul.tabs a");
@@ -21,6 +22,7 @@
         var $policyType = $('input[name=policyType]');
         var $btnSaveControl = $('#btnSaveControl'),$btnAdd = $('#btnAdd'),$btnClose = $('#btnClose'),
             $btnSaveMac = $('#btnSaveMac'),$btnEditMac = $('#btnEditMac'),$box = $('#edit_box'), $mask = $('#mask');
+        var $btnSaveWps = $('#btnSaveWps');
 
         var editIndex = 0;
 
@@ -70,9 +72,9 @@
                 showText.edit,showText.del));
 
             for(var i = 0; i < macs.length; i++) {
-               if(macs[i] !== ""){
-				   sb.append(String.format('<tr><td>{0}</td><td><a href="javascript:;" class="macEdit">{1}</a></td><td><a href="javascript:;" class="macDel">{2}</a></td></tr>',macs[i], showText.edit,showText.del));
-				} 
+                if(macs[i] !== ""){
+                    sb.append(String.format('<tr><td>{0}</td><td><a href="javascript:;" class="macEdit">{1}</a></td><td><a href="javascript:;" class="macDel">{2}</a></td></tr>',macs[i], showText.edit,showText.del));
+                }
             }
 
             sb.append('</table>');
@@ -111,7 +113,7 @@
             $("'"+sb+"'").appendTo($('#macLists table'));
             $box.hide();
             $mask.hide();
-			$('#macList').val('');
+            $('#macList').val('');
         });
 
         $btnEditMac.click(function () {
@@ -158,11 +160,7 @@
             {
                 macArr.push($($tr[i]).children('td').eq(0).text());
             }
-            if(macArr.length == 0){
-                AlertUtil.alertMsg(CHECK.required.mac);
-                $(this).attr("disabled",false);
-                return false;
-            }
+
             var policyType = $('input:radio[name="policyType"]:checked').val();
 
             var json = {};
@@ -180,6 +178,50 @@
                     $('#btnSaveControl').attr("disabled",false);
                 }
             });
+        });
+
+        $btnSaveWps.click(function () {
+            $(this).attr("disabled",true);
+            var count = 0;
+            var $form = $('#wpsForm');
+            var json = JSON.parmsToJSON($form);
+
+            json.wpsEnble = json.wpsEnble ? '1' : '0';
+            if(json.wpsEnble ==  $("#wpsEnble").attr('old')){
+                delete json["wpsEnble"];
+                count++;
+            }
+            if(json.wpsPin ==  $("#wpsPin").attr('old')){
+                delete json["wpsPin"];
+                count++;
+            }else {
+                if(json.wpsPin.length == 0){
+                    json.wpsPin = '0';
+                }else if(json.wpsPin.length != 8){
+                    AlertUtil.alertMsg(CHECK.required.wpsLength);
+                    $(this).attr("disabled",false);
+                    return false;
+                }
+            }
+            if(count == 2){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+            }
+
+            json.cmd = RequestCmd.WPS5_PIN_SET;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    console.log(data);
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $lis.eq(5).click();
+                },
+                complete: function(){
+                    $('#btnSaveWps').attr("disabled",false);
+                }
+            });
+
         });
 
         $lis.click(function () {
@@ -316,6 +358,27 @@
                             }else {
                                 createMacListTable(data.macs);
                             }
+                        }
+                    });
+                    $('.helper_box').hide();
+                    break;
+
+                case 5:
+                    Page.postJSON({
+                        json: {
+                            cmd: RequestCmd.WPS5_PIN_GET,
+                            method: JSONMethod.GET
+                        },
+                        success: function(datas) {
+                            console.log(datas);
+                            var data = datas.data;
+                            if(data.status == 0){
+                                $('#wpsEnble').prop('checked', false);
+                            }else {
+                                $('#wpsEnble').prop('checked', true);
+                            }
+                            $('#wpsEnble').attr('old',data.status);
+                            Page.setFormFieldValue2("wpsPin", data.pin);
                         }
                     });
                     $('.helper_box').hide();
@@ -527,6 +590,7 @@
                 <li id="walnInfo3"><a href="javascript:void(0);"><%- item3 %></a></li>
                 <li id="connectedList"><a href="javascript:void(0);"><%- connectedList %></a></li>
                 <li ><a href="javascript:;"><%- macControl %></a></li>
+                <li ><a href="javascript:;"><%- wps %></a></li>
             </script>
         </ul>
     </div>
@@ -833,6 +897,33 @@
                             <td><input type="button" id="btnSaveControl" value="<%- btnSave %>" /></td>
                         </tr>
                     </table>
+                </script>
+            </div>
+
+            <div  id="wpsSet">
+                <script type="text/template" id="wpsSet_template">
+                    <form id="wpsForm" >
+                        <table class="detail" cellspacing="0">
+                            <tr>
+                                <th><%- lbl.wpsEnble %><%- colon %></th>
+                                <td>
+                                    <input type="checkbox" id="wpsEnble" name="wpsEnble" /><%- status.enable %>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th><%- lbl.wpsPin %><%- colon %></th>
+                                <td>
+                                    <input type="text" id="wpsPin" name="wpsPin"  class="normal"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>&nbsp;</th>
+                                <td><input type="button" id="btnSaveWps" value="<%- btn.save %>" /></td>
+                            </tr>
+                        </table>
+                    </form>
+                    <span style="clear:both"></span>
                 </script>
             </div>
 
