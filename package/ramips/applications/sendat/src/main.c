@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <errno.h>
 
 #include "log.h"
 #include "serial.h"
@@ -19,18 +20,40 @@
 
 #define CMD_RESULT_CME_ERROR "\r\n+CME ERROR:"
 #define CMD_RESULT_CMS_ERROR "\r\n+CMS ERROR:"
+#define CMD_RESULT_NO_CARRIER "NO CARRIER"
+
+#define SEND_AT_LOCK_FILE "/tmp/.sendat.lock"
+#define CREATE_LOCK_FILE_CMD "touch "SEND_AT_LOCK_FILE
+#define REMOVE_LOCK_FILE_CMD "rm -f "SEND_AT_LOCK_FILE
 //no carrier
 //#define CMD_RESULT_NO_CARRIER "\r\nNO CARRIER\r\n"
 
-#if 0
-int sig_int_flag=0;
 
-void sig_int()
+void sig_int(int num)
 {
-	sig_int(SIGINT,sig_int);
-	sig_int_flag=1;
+	if(SIGINT == num)
+	{
+		system(REMOVE_LOCK_FILE_CMD);
+		exit(1);
+	}
 }
-#endif
+
+
+int check_file_exist(char *file_path)
+{
+	errno=0;
+	if( access( file_path,F_OK ) && errno ==ENOENT)
+	{
+		return FALSE;
+	}
+	else
+	{
+		return TRUE;
+	}
+
+}
+
+
 int config_device_mode(int dev_handle,int baud_rate,int databits, int stopbits, int parity)
 {
 	int baud_rate_value=util_get_baud_rate_value( baud_rate );
@@ -142,9 +165,9 @@ void thr_recv(void *arg)
 	char buffer_output[1024]={0};
 	struct timeval tv;
 	FILE* f_recv;
-
+	int retry_count = 10;
 	while(1)
-	{
+	{	
 		tv.tv_sec=6;
 		tv.tv_usec=0;
 		FD_ZERO(&readfds);
@@ -153,13 +176,13 @@ void thr_recv(void *arg)
 		if(select(maxfd,&readfds,NULL,NULL,&tv))
 			bytes_n+=read(f,buffer_output+bytes_n,sizeof(buffer_output)-bytes_n);
 	
-		//printf("%s",buffer_output);
 		if(mode==mode_sendat)
 		{
 			if(NULL!=strstr(buffer_output,CMD_EXE_OK) ||
 				NULL!=strstr(buffer_output,CMD_EXE_ERROR) || 
 				NULL!=strstr(buffer_output,CMD_RESULT_CME_ERROR) || 
-				NULL!=strstr(buffer_output,CMD_RESULT_CMS_ERROR) )
+				NULL!=strstr(buffer_output,CMD_RESULT_CMS_ERROR) ||
+				NULL!=strstr(buffer_output,CMD_RESULT_NO_CARRIER))
 			{
 				f_recv=fopen(at_recv_file,"w+");
 				if(NULL!=f_recv)
@@ -169,6 +192,22 @@ void thr_recv(void *arg)
 					break;
 				}
 			}
+			else
+				retry_count--;
+
+			if(retry_count <= 0)
+			{
+				f_recv=fopen(at_recv_file,"w+");
+				if(NULL!=f_recv)
+				{
+					fputs("TIMEOUT",f_recv);
+					fclose(f_recv);
+					break;
+				}
+				
+				break;
+			}
+				
 		}
 		else if(mode_terminal == mode)
 		{
@@ -182,15 +221,23 @@ void thr_recv(void *arg)
 			if(NULL!=strstr(buffer_output,CMD_EXE_OK) ||
 				NULL!=strstr(buffer_output,CMD_EXE_ERROR) || 
 				NULL!=strstr(buffer_output,CMD_RESULT_CME_ERROR) || 
-				NULL!=strstr(buffer_output,CMD_RESULT_CMS_ERROR) )
+				NULL!=strstr(buffer_output,CMD_RESULT_CMS_ERROR) ||
+				NULL!=strstr(buffer_output,CMD_RESULT_NO_CARRIER))
 			{
 				printf("%s",buffer_output);
 				fsync(f);
-				exit(0);
+				break;
+			}
+			else
+				retry_count--;
+
+			if(retry_count <= 0)
+			{
+				printf("TIMEOUT\n");
+				break;
 			}
 			
 		}
-		
 	}
 }
 
@@ -204,6 +251,7 @@ int main(int argc,char *argv[])
 //	int n=0;
 	int ret;
 	mode=mode_sendat;
+	signal(SIGINT,sig_int);
 	while((ret= getopt(argc,argv,"e:d:f:o:t")) != -1)
 	{
 		switch(ret)
@@ -226,16 +274,19 @@ int main(int argc,char *argv[])
 				break;
 			default:
 				printf("error");
-				exit(-1);
+				goto ERROR;
 		}
 	}
-	
+
+	while(check_file_exist(SEND_AT_LOCK_FILE)) 
+		sleep(1);
+	system(CREATE_LOCK_FILE_CMD);
 	if(mode==mode_sendat)
 	{
 		if(argc!=4)
 		{
 			printf("sendat -d/dev/ttyUSB1 -f/tmp/at_send -o /tmp/at_recv\n");
-			exit(1);
+			goto ERROR;
 		}
 	}
 	else if(mode_terminal == mode)
@@ -243,7 +294,7 @@ int main(int argc,char *argv[])
 		if(argc!=3)
 		{
 			printf("sendat -d/dev/ttyUSB1 -t\n");
-			exit(1);
+			goto ERROR;
 		}
 	}
 	else if(mode_once == mode)
@@ -251,25 +302,25 @@ int main(int argc,char *argv[])
 		if(argc != 3 && argc != 4)
 		{
 			printf("sendat -d/dev/ttyUSB1 -e at-cmd OR sendat -e at-cmd \n");
-			exit(1);
+			goto ERROR;
 		}
 	}
 	else
 	{
 		printf("please special the mode(t:f:e)\n");
-		exit(1);
+		goto ERROR;
 	}
 	
 	f=open(serial_port,O_RDWR);
 	if(-1 == f)
 	{
-		strncpy(serial_port, "/dev/ttyUSB3",sizeof(serial_port));
+		strncpy(serial_port, "/dev/ttyUSB1",sizeof(serial_port));
 		f=open(serial_port,O_RDWR);
 	}
 	if(-1 == f)
 	{
 		printf("open serial port error!");
-		return 1;
+		goto ERROR;
 	}
 		
 	config_device_mode(f,baudrate,8,1,'s');	
@@ -277,7 +328,7 @@ int main(int argc,char *argv[])
     if(pthread_create(&thread_recv,NULL,(void *)thr_recv,NULL) != 0)
 	{
 		log_error("thr_recv create error\n");
-		return -1;                                                          
+		goto ERROR;                                                          
 	}
 
 /* the mode for sendat ,just compatible for old sendat
@@ -299,7 +350,7 @@ int main(int argc,char *argv[])
 			fclose(f_sendat);
 		}
 		else
-			return 1;
+			goto ERROR;
 	}
 /* the mode like terminator,can send at cmd like minicom
  */
@@ -326,13 +377,15 @@ int main(int argc,char *argv[])
 		}
 		write(f,buffer_input,strlen(buffer_input));
 		fsync(f);
-		pthread_join(thread_recv,NULL);
-		close(f);
-		return 0;
 	}
 	
 	pthread_join(thread_recv,NULL);
 	close(f);
+	system(REMOVE_LOCK_FILE_CMD);
 	return 0;
+ERROR:
+	system(REMOVE_LOCK_FILE_CMD);
+	return 1;
+	
 }
 
