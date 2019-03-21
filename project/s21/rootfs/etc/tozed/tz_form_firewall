@@ -22,6 +22,8 @@ config zone
 	list   network		'wan'
 	list   network		'wan6'
 	list   network		'4g'
+	list   network		'4g1'
+	list   network		'4g2'
 	option input		REJECT
 	option output		ACCEPT
 	option forward		REJECT
