@@ -6,11 +6,12 @@ local tzlib = require("luatzlib")
 local x = uci.cursor()
 local MODEM_CONFIG_FILE="network"
 local TOZED_CONFIG_FILE="tozed"
-local UCI_SECTION_DIALTOOL2="cfg"
+local UCI_SECTION_DIALTOOL2="modem"
 local MODEM_DYNAMIC_STATUS_PATH="/tmp/.system_info_dynamic"
 local MODEM_STATIC_INFO_PATH="/tmp/.system_info_static"
 local DIALTOOL2_SOCKET_FILE="/tmp/dialtool2.socket"
-local GENERATE_DIALTOOL_CONFIG_CMD="cfg -e |grep -v 'export value' |  awk '{print $2}' | grep 'TZ_DIALTOOL2' > /tmp/dialtool2_config"
+local MUTILAPN_INFO_FILE="/tmp/.mutilapn_info"
+local GENERATE_DIALTOOL_CONFIG_CMD="cfg -e  --section modem |grep -v 'export value' |  awk '{print $2}' | grep 'TZ_DIALTOOL2' > /tmp/dialtool2_config"
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
@@ -369,48 +370,7 @@ local function send_dialtool_socket_cmd(cmd)
 end
 
 function modem_module.modem_reload_config()
-	local ret1 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
-	local ret2 =  send_dialtool_socket_cmd("USER_CMD_UPDATE_CONFIG####abdc")
-	local ret3 = false
-	local rte4 = false
-
-	if ret2 ~= true
-	then
-		debug("send module reset command error")
-		return false
-	end
-
-	sleep(20)
-	local f = io.popen("sendat -d/dev/ttyUSB1 -e at\r")
-
-
-	local res = f:read("*a")
-	local count = 10
-	while string.find(res,"OK") == nil and count > 0
-	do
-		debug(res)
-		io.close(f)
-		sleep(5)
-		f = io.popen("sendat -d/dev/ttyUSB1 -e at\r")
-		res = f:read("*a")
-		count = count - 1
-	end
-
-	io.close(f)
-	debug("count = ", count)
-	if count > 0
-	then
-		ret3 = true
-	end
-
-	debug("ret3 = ", ret3)
-	if ret3
-	then
-		ret4 = os.execute("/etc/init.d/dialtool2 start")
-	end
-
-
-	return ret1 and ret2 and ret3 and ret4
+	return os.execute("/etc/init.d/dialtool2 restart")
 end
 
 
@@ -438,9 +398,7 @@ function modem_module.modem_set_network_mode(mode)
 	end
 
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_MODULE_MODE", mode)
-	local ret1 = x:commit(TOZED_CONFIG_FILE)
-	local ret2 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
-	return ret1 and ret2 and send_dialtool_socket_cmd("USER_CMD_SET_NETWORK_MODE####abdc")
+	return x:commit(TOZED_CONFIG_FILE)
 end
 
 -- get network mode 
@@ -731,8 +689,7 @@ function modem_module.modem_set_lock_band(band_list)
 	end
 
 	x:commit(TOZED_CONFIG_FILE)
-	local ret1 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
-	return gw_ret and lte_ret and tds_ret and ret1 and send_dialtool_socket_cmd("USER_CMD_LOCK_BAND####abdc")
+	return gw_ret and lte_ret and tds_ret 
 
 end
 
@@ -810,10 +767,7 @@ function modem_module.modem_set_lock_operator(operator_list)
 	operator_str = string.sub(operator_str, 2, string.len(operator_str))
 
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PLMN_LOCK", operator_str)
-	local ret2 = x:commit(TOZED_CONFIG_FILE) 
-	local ret1 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
-	return ret1 and ret2 and send_dialtool_socket_cmd("USER_CMD_LOCK_PLMN####abdc")
-
+	return x:commit(TOZED_CONFIG_FILE) 
 end
 
 -- get the operator lock list 
@@ -856,9 +810,8 @@ function modem_module.modem_set_lte_lock_cell(pci, earfcn)
 		debug("input error")
 		return false
 	end
-	local ret2  = x:commit(TOZED_CONFIG_FILE)
-	local ret1 = os.execute(GENERATE_DIALTOOL_CONFIG_CMD)
-	return  ret2 and ret1 and send_dialtool_socket_cmd("USER_CMD_LTE_LOCK_CELL####abdc")
+	return x:commit(TOZED_CONFIG_FILE)
+
 end
 
 -- get lock LTE CELL
@@ -881,6 +834,208 @@ function modem_module.modem_get_lte_lock_cell()
 	return pci,earfcn
 end
 
+modem_module.modem_mutilapn_config = {
+	["profile_name"]  = nil,      		--string
+	["apn_name"]  = nil,	--string
+	["username"]  = nil,		--string
+	["password"]  = nil,			--string
+	["ip_stack"]  = nil,			--string IP IPV4 IPV6 IPV4V6
+	["auth_type"] = nil,			--number 0:NONE 1:PAP 2:CHAP 3:PAP&CHAP
+	["mtu"] = nil,					--number 
+	["enable"] = nil,				--number 0:disable 1:enable
+}
+
+function modem_module.modem_mutilapn_config:new(o,obj)
+
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+	
+	self["profile_name"]  = obj["profile_name"] or  nil
+	self["apn_name"]  = obj["apn_name"] or  nil
+	self["username"]  = obj["username"] or  nil
+	self["password"]  = obj["password"] or  nil
+	self["ip_stack"]  = obj["ip_stack"] or  nil
+	self["auth_type"]  = obj["auth_type"] or  nil
+	self["mtu"]  = obj["mtu"] or  nil
+	self["enable"]  = obj["enable"] or  nil
+end
+
+-- get mutil apn config
+-- input:NONE
+-- return:the array of modem_mutilapn_config . the No.0 is the primary apn
+function modem_module.modem_get_mutilapn_config()
+	local ar = {}
+	local primary_apn = modem_module.modem_mutilapn_config:new(nil,nil)
+	local primary_apn1 = modem_module.modem_mutilapn_config:new(nil,nil)
+	local primary_apn2 = modem_module.modem_mutilapn_config:new(nil,nil)
+
+	primary_apn["profile_name"] = "main_apn"
+	primary_apn["apn_name"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_APN_NAME")
+	primary_apn["username"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PPP_USERNAME")
+	primary_apn["password"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PPP_PASSWORD")
+	primary_apn["ip_stack"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_IP_STACK_MODE")
+	primary_apn["auth_type"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_AUTH_TYPE"))
+	primary_apn["mtu"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_MTU_USB0"))
+	primary_apn["enable"] = 1
+
+	ar[1] = primary_apn
+
+	primary_apn1["profile_name"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_PROFILE_NAME")
+	primary_apn1["apn_name"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_APN_NAME")
+	primary_apn1["username"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_USERNAME")
+	primary_apn1["password"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_PASSWORD")
+	primary_apn1["ip_stack"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_IP_STACK_MODE")
+	primary_apn1["auth_type"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_AUTH_TYPE"))
+	primary_apn1["mtu"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_MTU"))
+	primary_apn1["enable"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_ENABLE"))
+
+	ar[2] = primary_apn1
+
+	primary_apn2["profile_name"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_PROFILE_NAME")
+	primary_apn2["apn_name"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_APN_NAME")
+	primary_apn2["username"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_USERNAME")
+	primary_apn2["password"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_PASSWORD")
+	primary_apn2["ip_stack"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_IP_STACK_MODE")
+	primary_apn2["auth_type"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_AUTH_TYPE"))
+	primary_apn2["mtu"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_MTU"))
+	primary_apn2["enable"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_ENABLE"))
+
+	ar[3] = primary_apn2
+
+	return ar
+end
 
 
+-- set mutil apn config
+-- input:the array of modem_mutilapn_config . the No.0 is the primary apntrue 
+-- return:true if success OR false if fail
+function modem_module.modem_set_mutilapn_config(apn_list)
+
+	local apns = apn_list[1]
+	--apns["profile_name"] = "main_apn"
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_APN_NAME",apns["apn_name"] or "")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PPP_USERNAME", apns["username"] or "")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PPP_PASSWORD",apns["password"] or "")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_IP_STACK_MODE",apns["ip_stack"] or "IP")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_AUTH_TYPE",apns["auth_type"] or 3)
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_MTU_USB0",apns["mtu"] or 1500)
+	--apns["enable"] = 1
+
+	apns = apn_list[2]
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_PROFILE_NAME",apns["profile_name"] or "apn1")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_APN_NAME",apns["apn_name"]  or "")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_USERNAME",apns["username"] or "")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_PASSWORD",apns["password"] or "")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_IP_STACK_MODE",apns["ip_stack"] or "IP")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_AUTH_TYPE",apns["auth_type"] or 3)
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_MTU",apns["mtu"] or 1500)
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_ENABLE",apns["enable"] or 0)
+
+	apns = apn_list[3]
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_PROFILE_NAME",apns["profile_name"] or "apn1")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_APN_NAME",apns["apn_name"]  or "")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_USERNAME",apns["username"] or "")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_PASSWORD",apns["password"] or "")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_IP_STACK_MODE",apns["ip_stack"] or "IP")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_AUTH_TYPE",apns["auth_type"] or 3)
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_MTU",apns["mtu"] or 1500)
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_ENABLE",apns["enable"] or 0)
+
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
+modem_module.modem_mutilapn_status = {
+	["ipaddr"]  = nil,      		--string
+	["netmask"]  = nil,	--string
+	["ifname"]  = nil,		--string
+	["lan_gate_ip"]  = nil,			--string
+	["lan_gate_netmask"]  = nil,			--string I
+	["ssid"] = nil,			--string 
+	["dial_status"] = nil   -- number 0:disconnect 1:connect
+}
+
+function modem_module.modem_mutilapn_status:new(o,obj)
+
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+	
+	self["ipaddr"]  = obj["ipaddr"] or  nil
+	self["netmask"]  = obj["netmask"] or  nil
+	self["ifname"]  = obj["ifname"] or  nil
+	self["lan_gate_ip"]  = obj["lan_gate_ip"] or  nil
+	self["lan_gate_netmask"]  = obj["lan_gate_netmask"] or  nil
+	self["ssid"]  = obj["ssid"] or  nil
+	self["dial_status"]  = obj["dial_status"] or  nil
+end
+
+-- get mutilapn status
+-- input:none
+-- return:then array of mutilapn_status or nil if error 
+function modem_module.modem_get_mutilapn_status()
+	local f = nil
+	local primary_apn = modem_module.modem_mutilapn_status:new(nil,nil)
+	local apn1 = modem_module.modem_mutilapn_status:new(nil,nil)
+	local apn2 = modem_module.modem_mutilapn_status:new(nil,nil)
+	local res = nil
+	local pointer = nil
+
+	f = io.open(MUTILAPN_INFO_FILE,"r")
+	if nil == f
+	then
+		debug("open ",MUTILAPN_INFO_FILE, " fail")
+		return nil
+	end
+
+	res = f:read()
+	while( res ~= nil)
+	do
+
+
+		local array = split(res,":")
+		--print(array[1],"=", array[2])
+		local key = string.gsub(array[1],"\t","")
+		local value = string.gsub(array[2],"\t","")
+		local ar = split(value,",")
+
+		if string.find(key,"APN1") ~= nil
+		then
+			pointer = primary_apn
+		elseif string.find(key,"APN2") ~= nil
+		then
+			pointer = apn1
+		elseif string.find(key,"APN3") ~= nil
+		then
+			pointer = apn2
+		end
+
+		pointer["ipaddr"]  = ar[1]
+		pointer["netmask"]  = ar[2]
+		pointer["ifname"]  = ar[3]
+		pointer["lan_gate_ip"]  = ar[4]
+		pointer["lan_gate_netmask"]  = ar[5]
+		pointer["ssid"] = ar[6]
+		if nil == pointer["ipaddr"] or "" == pointer["ipaddr"]
+		then
+			pointer["dial_status"] =  0
+		else
+			pointer["dial_status"] =  1
+		end
+
+		res = f:read()
+	end
+
+	io.close(f)
+
+	return {primary_apn,apn1,apn2}
+
+
+end
 return modem_module

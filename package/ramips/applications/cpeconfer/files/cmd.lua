@@ -778,6 +778,40 @@ function network_get_4g_net_info()
 
 end
 
+function network_get_4g1_net_info()
+
+	print("in network_get_4g1_net_info")
+	local info = network.network_get_4g1_net_info()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			print(k,"=", v)
+	end
+
+end
+
+function network_get_4g2_net_info()
+
+	print("in network_get_4g2_net_info")
+	local info = network.network_get_4g2_net_info()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			print(k,"=", v)
+	end
+
+end
+
 function modem_reload_config()
 	print("in modem_reload_config")
 	local ret = modem.modem_reload_config()
@@ -789,6 +823,61 @@ function modem_reload_config()
 		print("reload fail")
 	end
 end
+
+function modem_get_mutilapn_status()
+
+	local ret = modem.modem_get_mutilapn_status()
+
+	if nil == ret
+	then
+		print("error ,got nil")
+	end
+
+	for k,v in pairs(ret)
+	do
+		for key,value in pairs(v)
+		do
+
+			print(key,"=",value)
+		end
+
+		print("<------------------------>")
+	end
+
+end 
+
+function modem_get_mutilapn_config()
+
+	local ret = modem.modem_get_mutilapn_config()
+
+	for k,v in pairs(ret)
+	do
+		for key,value in pairs(v)
+		do
+
+			print(key,"=",value)
+		end
+
+		print("<------------------------>")
+	end
+
+end
+
+function modem_set_mutilapn_config()
+
+	local list = {
+{["profile_name"]="main_apn",["apn_name"]="",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
+{["profile_name"]="apn1",["apn_name"]="ctlte",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
+{["profile_name"]="apn2",["apn_name"]="ctnet",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
+
+}
+
+	local ret =  modem.modem_set_mutilapn_config(list)
+
+	print(ret)
+end
+
+
 
 function modem_get_supprot_band()
 	local gw,lte,tds = modem.modem_get_support_band()
@@ -2063,11 +2152,15 @@ local api_func = {
 	["modem_set_lte_lock_cell"] = modem_set_lte_lock_cell,
 	["modem_get_lte_lock_cell"] = modem_get_lte_lock_cell,
 	["modem_get_support_band"] = modem_get_supprot_band,
+	["modem_get_mutilapn_config"] = modem_get_mutilapn_config,
+	["modem_set_mutilapn_config"] = modem_set_mutilapn_config,
+	["modem_get_mutilapn_status"] = modem_get_mutilapn_status,
 
 	--network
 	["network_get_wan_info"] = network_get_wan_info,
 	["network_get_4g_net_info"] = network_get_4g_net_info,
-
+	["network_get_4g1_net_info"] = network_get_4g1_net_info,
+	["network_get_4g2_net_info"] = network_get_4g2_net_info,
 	--sim
 	["sim_get_status"] = sim_get_status,
 	["sim_pin_lock_enable"] = sim_pin_lock_enable,

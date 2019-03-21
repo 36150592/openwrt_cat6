@@ -231,5 +231,50 @@ function network_module.network_get_4g_net_info()
 	return info
 end
 
+-- get 4g1 net info
+-- input:none
+-- return:
+-- 		the struct of net_info , nil if no ip on the net interface
+function network_module.network_get_4g1_net_info()
+
+	local info = network_module.net_info:new(nil,nil)
+
+	local ifname = x:get(NETWORK_CONFIG_FILE, "4g1", "ifname")
+
+	local temp
+	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
+	info["gateway"] = get_gateway(ifname)
+	info["first_dns"],info["second_dns"] = get_dns()
+	if nil == info["ipaddr"]
+	then
+		debug("no ip was assign to the 4g interface,return nil")
+		return nil
+	end
+
+	return info
+end
+
+-- get 4g2 net info
+-- input:none
+-- return:
+-- 		the struct of net_info , nil if no ip on the net interface
+function network_module.network_get_4g2_net_info()
+
+	local info = network_module.net_info:new(nil,nil)
+
+	local ifname = x:get(NETWORK_CONFIG_FILE, "4g2", "ifname")
+
+	local temp
+	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
+	info["gateway"] = get_gateway(ifname)
+	info["first_dns"],info["second_dns"] = get_dns()
+	if nil == info["ipaddr"]
+	then
+		debug("no ip was assign to the 4g interface,return nil")
+		return nil
+	end
+
+	return info
+end
 
 return network_module
