@@ -3,6 +3,8 @@ require("io")
 sim_module = {}
 local util=require("tz.util")
 local x = uci.cursor()
+local TOZED_CONFIG_FILE="tozed"
+local UCI_SECTION_DIALTOOL2="modem"
 local SIM_CONFIG_FILE="network"
 local SIM_DYNAMIC_STATUS_PATH="/tmp/.system_info_dynamic"
 local SIM_SEND_AT_CMD="sendat -d/dev/ttyUSB1 -f/tmp/at_send -o/tmp/at_recv"
@@ -125,6 +127,7 @@ function sim_module.sim_reload()
 	return false
 end
 
+-- must start the dialtool_new
 function sim_module.sim_get_status()
 	local f = nil
 	local status = nil
@@ -230,6 +233,38 @@ function sim_module.sim_pin_unlock(pin_passwd)
 
 	return send_at_cmd(format_pin_unlock_at_cmd(pin_passwd))
 
+end
+
+
+--get pin remember setting, restart the dialtool_new to take effecct
+--input:
+--		enable:string 1:remember the pin and auto unlock pin 0:don't auto unlock the pin
+--		pin_passwd:string pin password
+--return:true if success OR false if fail
+function sim_module.sim_pin_set_remember(enable,pin_passwd)
+
+	if "0" == enable 
+	then
+		x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_ENABLE_PIN",0)
+		x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PIN_CODE", pin_passwd)
+	elseif "1" == enable
+	then
+		x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_ENABLE_PIN",1)
+		x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PIN_CODE", pin_passwd)
+	else
+		return false
+	end
+
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
+-- get pin remember setting
+-- input:none
+-- return,enable(0 or 1) ,pin_code
+function sim_module.sim_pin_get_remember()
+	local enable = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_ENABLE_PIN")
+	local pin_code = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PIN_CODE")
+	return enable,pin_code
 end
 
 return sim_module

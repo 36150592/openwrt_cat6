@@ -687,6 +687,21 @@ function sim_reload()
 	end
 end
 
+function sim_pin_set_remember()
+
+	local ret = sim.sim_pin_set_remember(arg[2],arg[3])
+
+	print(ret)
+end
+
+function sim_pin_get_remember()
+
+	local enable,passwd = sim.sim_pin_get_remember()
+
+	print("enable = ",enable)
+	print("pin_password = ", passwd)
+end
+
 function sim_get_status()
 
 	print("in sim_get_status")
@@ -2166,6 +2181,8 @@ local api_func = {
 	["sim_pin_lock_enable"] = sim_pin_lock_enable,
 	["sim_pin_lock_disable"] = sim_pin_lock_disable,
 	["sim_pin_unlock"] = sim_pin_unlock,
+	["sim_pin_set_remember"] = sim_pin_set_remember,
+	["sim_pin_get_remember"] = sim_pin_get_remember,
 	["sim_reload"] = sim_reload,
 	
 	--system
