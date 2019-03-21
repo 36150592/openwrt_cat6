@@ -1,18 +1,15 @@
 #!/bin/sh /etc/rc.common
 
 START=90
+USE_PROCD=1
 
 
-start()
+start_service() 
 {
-	config_load tz_mgr
-	#config_foreach fun func
-	echo '--------------run csy_test -----------------'
-	#csy_test &
+	procd_open_instance
+	procd_set_param command /usr/bin/tz_mgr -i br-lan
+	procd_set_param respawn
+	procd_close_instance
 }
 
-stop()
-{
-	config_load tz_mgr
-	killall tz_mgr
-}
+

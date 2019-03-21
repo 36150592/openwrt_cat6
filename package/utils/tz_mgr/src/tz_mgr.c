@@ -29,6 +29,8 @@
 #ifndef FALSE
 #define FALSE 0
 #endif
+
+#define TZ_WIFI_MAX_TXPOWER	23
 //send to server
 #define PROTOCOL_TYPE_ECTSP 0x9886
 
@@ -37,7 +39,7 @@
 
 #define NAME_OF_WIRELESS_INTERFACE	"ra0"
 #define SCRIPT_DHCPD		"/etc/init.d/odhcpd"
-#define SCRIPT_HTTPD		"/etc/init.d/uhttpd"
+#define SCRIPT_HTTPD		"/etc/init.d/mini_httpd"
 
 //空宏
 #define IN 
@@ -483,16 +485,19 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 				break;
 			case CMD_TYPE_UPDATE_SYNC:
 				{
+					print("%s","receive CMD_TYPE_UPDATE_SYNC!");
 					util_client_send_update_sync_ack_frame();
 				}
 				break;
 			case CMD_TYPE_UPDATE_ACK:
 				{
+					print("%s","receive CMD_TYPE_UPDATE_ACK!");
 					//start to update file
 				}
 				break;
 			case CMD_TYPE_SERVER_IND:
 				{
+					print("%s","receive CMD_TYPE_SERVER_IND!");
 					first_disconnected=TRUE;
 					frame_sent_counter=0;
 					is_connected_to_server=TRUE;
@@ -505,6 +510,7 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 				break;
 			case CMD_TYPE_RESTORE_SYNC:
 				{
+					print("%s","receive CMD_TYPE_RESTORE_SYNC!");
 					//send reboot sync ack message
 					util_client_send_restore_sync_ack_frame();
 				}
@@ -548,6 +554,7 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 
 			//not recognized cmd
 			default:
+				print("unkown cmd 0x%x", field);
 				util_get_common_data_from_frame(p_null,field_length);
 				break;
 		}
@@ -570,7 +577,7 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 }
 
 
-//根据指令做响应
+//收到服务器下发的配置信息
 int util_decode_field_info(unsigned char* p_ethernet_frame,int frame_len)
 {
 	int current_len=0;
@@ -744,6 +751,14 @@ int util_decode_field_info(unsigned char* p_ethernet_frame,int frame_len)
 			case CMD_INFO_TZ_ENABLE_WATCHDOG:
 				print("CMD_INFO_TZ_ENABLE_WATCHDOG:%s", ( const char* )p_ethernet_frame);
 				strcpy(server_wifi_info.TZ_ENABLE_WATCHDOG,( const char* )p_ethernet_frame);
+			case CMD_INFO_AP_GATEWAY_IP:
+				print("CMD_INFO_AP_GATEWAY_IP:%s", ( const char* )p_ethernet_frame);
+				strcpy(server_wifi_info.AP_GATEWAY,( const char* )p_ethernet_frame);
+				break;
+			case CMD_INFO_TZ_WIFI_40M_ENABLE:
+				print("CMD_INFO_TZ_WIFI_40M_ENABLE:%s", ( const char* )p_ethernet_frame);
+				strcpy(server_wifi_info.TZ_WIFI_40M_ENABLE,( const char* )p_ethernet_frame);
+				break;
 				/*if( !strcmp(server_wifi_info.TZ_ENABLE_WATCHDOG,"no") )
 				{
 					system("dwatchdog");
@@ -755,6 +770,7 @@ int util_decode_field_info(unsigned char* p_ethernet_frame,int frame_len)
 				break;
 			//not recognized cmd
 			default:
+				print("unkown cmd 0x%x", field);
 				util_get_common_data_from_frame(p_null,field_length);
 				break;
 		}
@@ -804,6 +820,8 @@ int util_sync_config_info(void)
 		{
 			print("error:config_set_string AP_SSID failed! ret=%d",ret);
 		}
+		//默认只有一个ssid
+		shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].ssid=%s",server_wifi_info.AP_SSID);
 		config_have_changed=TRUE;
 	}
 
@@ -892,6 +910,9 @@ int util_sync_config_info(void)
 		{
 			print("error:config_set_string TZ_ENABLE_WIFI failed! ret=%d",ret);
 		}
+		int disabled = strcmp(server_wifi_info.TZ_ENABLE_WIFI,"yes")?0:1;
+		shell_recv(NULL,0,"uci set wireless.%s.disabled=%d", NAME_OF_WIRELESS_INTERFACE, disabled);
+
 		config_have_changed=TRUE;
 	}
 
@@ -983,16 +1004,7 @@ int util_sync_config_info(void)
 		config_have_changed=TRUE;
 	}
 
-	if( strcmp( server_wifi_info_backup.WIFIWORKMODE,server_wifi_info.WIFIWORKMODE ) )
-	{
-		print("set WIFIWORKMODE to %s..",server_wifi_info.WIFIWORKMODE);
-		ret = config_set_string("main", "WIFIWORKMODE", server_wifi_info.WIFIWORKMODE);
-		if(ret < 0)
-		{
-			print("error:config_set_string WIFIWORKMODE failed! ret=%d",ret);
-		}
-		config_have_changed=TRUE;
-	}
+
 
 
 	if( strcmp( server_wifi_info_backup.TZ_ISOLATE_WLAN_CLIENTS,server_wifi_info.TZ_ISOLATE_WLAN_CLIENTS ) )
@@ -1048,6 +1060,8 @@ int util_sync_config_info(void)
 		{
 			print("error:config_set_string AP_HIDESSID failed! ret=%d",ret);
 		}
+		shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].hidden=%s", server_wifi_info.AP_HIDESSID);
+
 		config_have_changed=TRUE;
 	}
 
@@ -1065,13 +1079,16 @@ int util_sync_config_info(void)
 		if( server_wifi_info.is_ip_not_the_same_with_server )
 		{
 			//设置当前设备的IP地址
-			print("set the %s ip to %s   (ipv4)", network_dev_name, server_wifi_info.AP_IPADDR)
-			util_config_ipv4_addr( network_dev_name,server_wifi_info.AP_IPADDR );
+			print("set the %s ip to %s   (ipv4)", network_dev_name, server_wifi_info.AP_IPADDR);
+			shell_recv(NULL,0,"uci set network.lan.ipaddr=%s",server_wifi_info.AP_IPADDR);
+			//util_config_ipv4_addr( network_dev_name,server_wifi_info.AP_IPADDR );
 		}
 		else
 		{
 			//清除配置的IP地址
-			util_config_ipv4_addr( network_dev_name,"0.0.0.0" );
+			print("ip %s  is same to server, set %s ip to 0.0.0.0", server_wifi_info.AP_IPADDR, network_dev_name);
+			shell_recv(NULL,0,"uci set network.lan.ipaddr=%s","0.0.0.0");
+			//util_config_ipv4_addr( network_dev_name,"0.0.0.0" );
 		}
 	}
 
@@ -1127,7 +1144,21 @@ int util_sync_config_info(void)
 		{
 			print("error:config_set_string AP_PRIMARY_CH failed! ret=%d",ret);
 		}
+		shell_recv(NULL,0,"uci set wireless.%s.channel=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info.AP_PRIMARY_CH);
 		config_have_changed=TRUE;
+	}
+	bool wifi_mode_changed = false;
+
+	if( strcmp( server_wifi_info_backup.WIFIWORKMODE,server_wifi_info.WIFIWORKMODE ) )
+	{
+		print("set WIFIWORKMODE to %s..",server_wifi_info.WIFIWORKMODE);
+		ret = config_set_string("main", "WIFIWORKMODE", server_wifi_info.WIFIWORKMODE);
+		if(ret < 0)
+		{
+			print("error:config_set_string WIFIWORKMODE failed! ret=%d",ret);
+		}
+		config_have_changed=TRUE;
+		wifi_mode_changed=true;
 	}
 
 	if( strcmp( server_wifi_info_backup.AP_CHMODE,server_wifi_info.AP_CHMODE ) )
@@ -1139,16 +1170,67 @@ int util_sync_config_info(void)
 			print("error:config_set_string AP_CHMODE failed! ret=%d",ret);
 		}
 		config_have_changed=TRUE;
+		wifi_mode_changed = true;
 	}
+	if(wifi_mode_changed == true)//这里字符串的对应关系是通过网页下发指令，w13侧抓包得到，而wifi_mode的值为对应uci配置的值，没有为什么!!!
+	{
+		int wifi_mode = 0;
+		if(!strcmp(server_wifi_info.WIFIWORKMODE,"m11ng") && !strcmp(server_wifi_info.AP_CHMODE,"11NGHT20") )
+		{
+			wifi_mode=9;//bgn
+		}
+		else if(!strcmp(server_wifi_info.WIFIWORKMODE,"m11b") && !strcmp(server_wifi_info.AP_CHMODE,"11B"))
+		{
+			wifi_mode=1;//b
+		}
+		else if(!strcmp(server_wifi_info.WIFIWORKMODE,"m11g") && !strcmp(server_wifi_info.AP_CHMODE,"11G"))
+		{
+			wifi_mode=4;//g
+		}
+		else if(!strcmp(server_wifi_info.WIFIWORKMODE,"m11bg") && !strcmp(server_wifi_info.AP_CHMODE,"11G"))
+		{
+			wifi_mode=0;//bg
+		}
+		else if(!strcmp(server_wifi_info.WIFIWORKMODE,"m11n") && !strcmp(server_wifi_info.AP_CHMODE,"11NGHT20"))
+		{
+			wifi_mode=6;//n
+		}
+		else
+		{
+			wifi_mode=6;//other default n
+		}
+		shell_recv(NULL,0,"uci set wireless.%s.mode=%d", NAME_OF_WIRELESS_INTERFACE, wifi_mode);
+	}
+
+
 
 	if( strcmp( server_wifi_info_backup.TXPOWER,server_wifi_info.TXPOWER ) )
 	{
-		print("set TXPOWER to %s..",server_wifi_info.TXPOWER);
+		int txpower=atoi(server_wifi_info.TXPOWER);
+		txpower= txpower*100/TZ_WIFI_MAX_TXPOWER;
+		//取整数 10 - 100%
+		txpower -=(txpower%10);
+		if(txpower < 0)
+		{
+			print("error txpower=%d",txpower);
+			txpower=100;
+		}
+		else if(txpower == 0)
+		{
+			txpower=1;//支持1%
+		}
+		else if(txpower > 100)//最大100%
+		{
+			txpower = 100;
+		}
+
+		print("set TXPOWER to %d%%.. dbm=%s", txpower, server_wifi_info.TXPOWER);
 		ret = config_set_string("main", "TXPOWER", server_wifi_info.TXPOWER);
 		if(ret < 0)
 		{
 			print("error:config_set_string TXPOWER failed! ret=%d",ret);
 		}
+		shell_recv(NULL,0,"uci set wireless.%s.txpower=%d", NAME_OF_WIRELESS_INTERFACE, txpower);
 		config_have_changed=TRUE;
 	}
 
@@ -1163,6 +1245,26 @@ int util_sync_config_info(void)
 		config_have_changed=TRUE;
 	}
 
+	if( strcmp( server_wifi_info_backup.AP_GATEWAY,server_wifi_info.AP_GATEWAY ) )
+	{
+		print("set AP_GATEWAY to %s..",server_wifi_info.AP_GATEWAY);
+		ret = config_set_string("main", "AP_GATEWAY", server_wifi_info.AP_GATEWAY);
+		if(ret < 0)
+		{
+			print("error:config_set_string AP_GATEWAY failed! ret=%d",ret);
+		}
+		config_have_changed=TRUE;
+	}
+	if( strcmp( server_wifi_info_backup.TZ_WIFI_40M_ENABLE,server_wifi_info.TZ_WIFI_40M_ENABLE ) )
+	{
+		print("set TZ_WIFI_40M_ENABLE to %s..",server_wifi_info.TZ_WIFI_40M_ENABLE);
+		ret = config_set_string("main", "AP_GATEWAY", server_wifi_info.TZ_WIFI_40M_ENABLE);
+		if(ret < 0)
+		{
+			print("error:config_set_string TZ_WIFI_40M_ENABLE failed! ret=%d",ret);
+		}
+		config_have_changed=TRUE;
+	}
 	//commit the changes
 	if( config_have_changed )
 	{
@@ -1173,6 +1275,7 @@ int util_sync_config_info(void)
 	config_deinit();//释放uci上下文
 	return config_have_changed;
 }
+
 
 
 //配置IP地址
@@ -1616,9 +1719,10 @@ void process_1s_signal(void)
 	//no server found
 	if( !is_connected_to_server )
 	{
+
 		util_client_send_probe_server_frame( FALSE );
 		frame_sent_counter++;
-
+		print("Send search server packet! frame_sent_counter=%d",frame_sent_counter);
 		if( frame_sent_counter >= 0x7fffffff )
 		{
 			frame_sent_counter=4;
@@ -1634,8 +1738,8 @@ void process_1s_signal(void)
 			first_disconnected=TRUE;
 			//turn off telnet,http,dns,dhcp server
 			print("%s","---------------server connected --------------------");
-			shell_recv(NULL,0,"%s","%s stop",SCRIPT_DHCPD);
-			shell_recv(NULL,0,"%s","%s stop",SCRIPT_HTTPD);
+			shell_recv(NULL,0,"%s stop",SCRIPT_DHCPD);
+			shell_recv(NULL,0,"%s stop",SCRIPT_HTTPD);
 			//设置当前设备的IP地址
 			util_config_ipv4_addr(network_dev_name,"0.0.0.0");
 			//system("/etc/rc.d/rc.uplink.connected");
@@ -1663,7 +1767,6 @@ void process_1s_signal(void)
 		//indicate no signal
 		//cmd_update_signal_ind( 0,FALSE );
 		print("-----------cmd ctrl led!!!----------");
-		is_connected_to_server=FALSE;
 		//research the server
 		client_status=CLIENT_STATUS_SEARCH_SERVER;
 		counter=0;
@@ -1673,6 +1776,9 @@ void process_1s_signal(void)
 			first_connected=TRUE;
 			//start telnet,http,dns,dhcp server
 			print("%s","---------------no response from server start telnet,http,dns,dhcp server--------------------");
+			is_connected_to_server=FALSE;
+			//这里最好断开连接则退出程序，由procd重启，避免因为修改网络接口导致socket没更新一直收不到server响应，也可以重建socket，但需要使用条件变量先暂停线程
+			raise(SIGQUIT);
 			//设置当前设备的IP地址
 			print("set the %s ip to %s   (ipv4)", network_dev_name, server_wifi_info.AP_IPADDR)
 			util_config_ipv4_addr(network_dev_name,server_wifi_info.AP_IPADDR);
@@ -1763,6 +1869,10 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	strncpy(server_wifi_info->AP_NETMASK, tmp,strlen(tmp));
 	print("AP_NETMASK=%s",tmp);
 
+	tmp = config_get_string("main", "AP_GATEWAY", "192.168.5.1");
+	strncpy(server_wifi_info->AP_GATEWAY, tmp,strlen(tmp));
+	print("AP_GATEWAY=%s",tmp);
+
 	tmp = config_get_string("main", "TZ_DHCP_IP_BEGIN", "192.168.0.100");
 	strncpy(server_wifi_info->TZ_DHCP_IP_BEGIN, tmp,strlen(tmp));
 	print("TZ_DHCP_IP_BEGIN=%s",tmp);
@@ -1818,10 +1928,10 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	tmp = config_get_string("main", "TZ_ENABLE_WIFI", "yes");
 	strncpy(server_wifi_info->TZ_ENABLE_WIFI, tmp,strlen(tmp));
 	print("TZ_ENABLE_WIFI=%s",tmp);
-	if(!strcmp(server_wifi_info->TZ_ENABLE_WIFI,"no"))
+	/*if(!strcmp(server_wifi_info->TZ_ENABLE_WIFI,"no"))
 	{
 		shell_recv(NULL,0,"iwpriv %s set RadioOn=0",NAME_OF_WIRELESS_INTERFACE);
-	}
+	}*/
 
 	tmp = config_get_string("main", "WIFIWORKMODE", "m11b");
 	strncpy(server_wifi_info->WIFIWORKMODE, tmp,strlen(tmp));
@@ -1830,18 +1940,18 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	tmp = config_get_string("main", "AP_SSID", "Default-SSID");
 	strncpy(server_wifi_info->AP_SSID, tmp,strlen(tmp));
 	print("AP_SSID=%s",tmp);
-	shell_recv(NULL,0,"iwpriv %s set SSID=%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_SSID);
+	//shell_recv(NULL,0,"iwpriv %s set SSID=%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_SSID);
 
 
 	tmp = config_get_string("main", "AP_HIDESSID", "0");
 	strncpy(server_wifi_info->AP_HIDESSID, tmp,strlen(tmp));
 	print("AP_HIDESSID=%s",tmp);
-	shell_recv(NULL,0,"iwpriv %s set HideSSID=%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_HIDESSID);
+	//shell_recv(NULL,0,"iwpriv %s set HideSSID=%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_HIDESSID);
 
 	tmp = config_get_string("main", "AP_PRIMARY_CH", "auto");
 	strncpy(server_wifi_info->AP_PRIMARY_CH, tmp,strlen(tmp));
 	print("AP_PRIMARY_CH=%s",tmp);
-	shell_recv(NULL,0,"iwpriv %s set Channel=%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_PRIMARY_CH);
+	//shell_recv(NULL,0,"iwpriv %s set Channel=%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_PRIMARY_CH);
 
 
 	tmp = config_get_string("main", "TXPOWER", "18");
@@ -1859,34 +1969,12 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	tmp = config_get_string("main", "AP_WPA", "2");
 	strncpy(server_wifi_info->AP_WPA, tmp,strlen(tmp));
 	print("AP_WPA=%s",tmp);
-	int wpa_mode =atoi(server_wifi_info->AP_WPA);
-	if(wpa_mode < 1 || wpa_mode > 3)
-	{
-		print("error wpa_mode:%d",wpa_mode);
-	}
-	else
-	{
-		if( !strncmp(server_wifi_info->AP_SECMODE,"OPEN", strlen(server_wifi_info->AP_SECMODE)) || 
-			!strncmp(server_wifi_info->AP_SECMODE,"SHARED", strlen(server_wifi_info->AP_SECMODE)) ||
-			!strncmp(server_wifi_info->AP_SECMODE,"WEPAUTO", strlen(server_wifi_info->AP_SECMODE)))
-		{
-			shell_recv(NULL,0,"iwpriv %s set AuthMode=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->AP_SECMODE);
-		}
-		else if(wpa_mode==3)
-		{
-			shell_recv(NULL,0,"iwpriv %s set AuthMode=WPA1WPA2%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->AP_SECFILE);//WPA1WPA2 || WPA1WPA2PSK
-		}
-		else
-		{
-			shell_recv(NULL,0,"iwpriv %s set AuthMode=%s%d%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_SECMODE,wpa_mode,server_wifi_info->AP_SECFILE);
-		}
-	}
 
 
 	tmp = config_get_string("main", "PSK_KEY", "123456789");
 	strncpy(server_wifi_info->PSK_KEY, tmp,strlen(tmp));
 	print("PSK_KEY=%s",tmp);
-	shell_recv(NULL,0,"iwpriv %s set WPAPSK=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->PSK_KEY);
+	//shell_recv(NULL,0,"iwpriv %s set WPAPSK=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->PSK_KEY);
 
 	tmp = config_get_string("main", "AP_CYPHER", "CCMP");
 	strncpy(server_wifi_info->AP_CYPHER, tmp,strlen(tmp));
@@ -1919,10 +2007,10 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	tmp = config_get_string("main", "TZ_ISOLATE_WLAN_CLIENTS", "Not found");
 	strncpy(server_wifi_info->TZ_ISOLATE_WLAN_CLIENTS, tmp,strlen(tmp));
 	print("TZ_ISOLATE_WLAN_CLIENTS=%s",tmp);
-	if(!strcmp(server_wifi_info->TZ_ISOLATE_WLAN_CLIENTS,"yes"))
-		shell_recv(NULL,0,"iwpriv %s set NoForwarding=1",NAME_OF_WIRELESS_INTERFACE);
+	//if(!strcmp(server_wifi_info->TZ_ISOLATE_WLAN_CLIENTS,"yes"))
+		//shell_recv(NULL,0,"iwpriv %s set NoForwarding=1",NAME_OF_WIRELESS_INTERFACE);
 
-	shell_recv(NULL,0,"iwpriv %s set MaxStaNum=%s",NAME_OF_WIRELESS_INTERFACE, config_get_string("main", "TZ_MAX_STANUM", "32"));
+	//shell_recv(NULL,0,"iwpriv %s set MaxStaNum=%s",NAME_OF_WIRELESS_INTERFACE, config_get_string("main", "TZ_MAX_STANUM", "32"));
 
 	tmp = config_get_string("main", "TZ_WIFI_40M_ENABLE", "no");
 	strncpy(server_wifi_info->TZ_WIFI_40M_ENABLE, tmp,strlen(tmp));

@@ -33,7 +33,7 @@ config globals 'globals'
 	option ula_prefix 'fd05:bae0:fa6b::/48'
 
 config interface 'lan'
-	option ifname 'eth0.1'
+	option ifname 'eth0.1 eth0.2'
 	option force_link '1'
 	option macaddr '${DHCP_MAIN_MAC}'
 	option type 'bridge'

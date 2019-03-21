@@ -51,6 +51,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) $(FILES_DIR)/$(PKG_NAME).config $(1)/etc/config/$(PKG_NAME)
 	$(INSTALL_CONF) $(FILES_DIR)/$(PKG_NAME)_cfg.default $(1)/etc/config/.$(PKG_NAME)_cfg.default
+	$(INSTALL_CONF) $(FILES_DIR)/.flag_factory_config $(1)/etc/.flag_factory_config
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

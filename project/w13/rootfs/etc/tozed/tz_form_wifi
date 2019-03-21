@@ -78,16 +78,16 @@ else
 fi
 
 #20dbm
-TZ_WIFI_TX_POWER_MAX=20
+TZ_WIFI_TX_POWER_MAX=23
 TX_POWER=`uci get tz_mgr.main.TXPOWER`
-TZ_WIFI_TX_POWER=`echo $((${TX_POWER}*100/${TZ_WIFI_TX_POWER_MAX}))`
+TZ_WIFI_TX_POWER=`echo $((${TX_POWER}*100/${TZ_WIFI_TX_POWER_MAX}/10*10))`
 
 TZ_WIFI_CHANNEL=`uci get tz_mgr.main.AP_PRIMARY_CH`
 
 TZ_WIFI_MAX_STATION_NUM=`uci get tz_mgr.main.TZ_MAX_STANUM`
 
 TZ_ISOLATE_WLAN_CLIENTS=`uci get tz_mgr.main.TZ_ISOLATE_WLAN_CLIENTS`
-
+TZ_WIFI_HIDDEN=`uci get tz_mgr.main.AP_HIDESSID`
 
 
 
@@ -97,9 +97,10 @@ config wifi-device  'ra0'
 	option mode 	'9'
 	option channel  '${TZ_WIFI_CHANNEL}'
 	option txpower 	'${TZ_WIFI_TX_POWER}'
-	option ht 	'20+40'	#bandwidth   20 | 40 | 20+40
+	option ht 	'20+40'
 	option country 'US'
 	option disabled '${TZ_24G_WIFI_MAIN_DISABLE}'
+
 	
 config wifi-iface
 	option device   'ra0'
@@ -109,6 +110,7 @@ config wifi-iface
 	option maxassoc '${TZ_WIFI_MAX_STATION_NUM}'
 	option isolate 	'${TZ_ISOLATE_WLAN_CLIENTS}'
 	option encryption '${TZ_ENCRYPTION}'
+	option hidden   '${TZ_WIFI_HIDDEN}'
 ${IF_NO_KEY}	option key '${TZ_WIFI_KEY}'
                            
 EOF
