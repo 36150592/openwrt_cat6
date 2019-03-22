@@ -97,7 +97,7 @@ config wifi-device  'ra0'
 	option mode 	'9'
 	option channel  '${TZ_WIFI_CHANNEL}'
 	option txpower 	'${TZ_WIFI_TX_POWER}'
-	option ht 	'20+40'
+	option ht 	'20'
 	option country 'US'
 	option disabled '${TZ_24G_WIFI_MAIN_DISABLE}'
 
