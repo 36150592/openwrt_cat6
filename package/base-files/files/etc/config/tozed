@@ -3,6 +3,7 @@ config value 'cfg'
 	option TZ_PREFERRED_LANGUAGE 'en'
 
 config value 'modem'
+    option TZ_ENABLE_AUTO_DIAL '1'
     option TZ_DIALTOOL2_ENABLE_PIN ''
     option TZ_DIALTOOL2_PIN_CODE ''
     option TZ_DIALTOOL2_PUK_CODE ''

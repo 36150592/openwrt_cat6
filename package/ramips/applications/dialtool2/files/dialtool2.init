@@ -5,6 +5,7 @@ START=60
 STOP=85
 start(){
     cfg -e --section modem |grep -v 'export value' |  awk '{print $2}' | grep "TZ_DIALTOOL2" > /tmp/dialtool2_config
+    cfg -e --section modem |grep -v 'export value' |  awk '{print $2}' | grep "TZ_ENABLE_AUTO_DIAL" >> /tmp/dialtool2_config
     /bin/dialtool_new -s /tmp/dialtool2_config  -p /tmp/.dialtool_new.pid &
     /bin/mutilapn &
 }

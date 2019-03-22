@@ -839,6 +839,21 @@ function modem_reload_config()
 	end
 end
 
+function modem_enable_auto_dial()
+	local ret = modem.modem_enable_auto_dial()
+	print(ret)
+end
+
+function modem_disable_auto_dial()
+	local ret = modem.modem_disable_auto_dial()
+	print(ret)
+end
+
+function modem_get_auto_dial()
+	local ret = modem.modem_get_auto_dial()
+	print(ret)
+end
+
 function modem_get_mutilapn_status()
 
 	local ret = modem.modem_get_mutilapn_status()
@@ -2170,6 +2185,9 @@ local api_func = {
 	["modem_get_mutilapn_config"] = modem_get_mutilapn_config,
 	["modem_set_mutilapn_config"] = modem_set_mutilapn_config,
 	["modem_get_mutilapn_status"] = modem_get_mutilapn_status,
+	["modem_enable_auto_dial"] = modem_enable_auto_dial,
+	["modem_disable_auto_dial"] = modem_disable_auto_dial,
+	["modem_get_auto_dial"] = modem_get_auto_dial,
 
 	--network
 	["network_get_wan_info"] = network_get_wan_info,

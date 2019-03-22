@@ -2016,6 +2016,7 @@ void bm916_dial(int* Dial_proc_state )
 				//sometimes have no signal,and we search nothing,but we must be sure wihich network we are on 
 				if(global_dial_vars.network_mode_bmrat!=31)
 				{
+					
 					*Dial_proc_state=Dial_State_QCRMCALL;
 					exception_count=0;
 				}
@@ -2029,6 +2030,10 @@ void bm916_dial(int* Dial_proc_state )
 					exception_count=0;
 					*Dial_proc_state=Dial_State_CFUN_DISABLE;
 				}
+
+				if('0' == global_init_parms.enable_auto_dial[0])
+					*Dial_proc_state=Dial_State_SYSINFO;
+				
 				break;
 			}
 			break;

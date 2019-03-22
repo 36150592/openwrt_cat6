@@ -67,6 +67,7 @@ typedef struct GLOBAL_INIT_PARAMS
 	char lte_earfcn_lock[64];
 	int signal_rssi_lvl[5];
 	int signal_rsrp_lvl[5];
+	char enable_auto_dial[8];
 }GIP;
 
 typedef struct  GLOBAL_DIAL_VARIABLES
@@ -142,6 +143,7 @@ typedef struct CONFIG_PARAMS
 	PARMS lte_earfcn_lock;
 	PARMS ipstack;
 	PARMS network_card_mtu;
+	PARMS enable_auto_dial;
 }CPS;
 
 typedef struct CONFIG_SCAN_ATT

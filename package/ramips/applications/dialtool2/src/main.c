@@ -57,6 +57,7 @@ extern int project_info_len(void);
 
 void init_parms(PARMS *cfg,int len)
 {
+	strcpy(configs.enable_auto_dial.Name,"TZ_ENABLE_AUTO_DIAL");
 	strcpy(configs.enable_pin.Name,"TZ_DIALTOOL2_ENABLE_PIN");
 	strcpy(configs.pin.Name,"TZ_DIALTOOL2_PIN_CODE");
 	strcpy(configs.puk.Name,"TZ_DIALTOOL2_PUK_CODE");
@@ -90,6 +91,11 @@ void init_parms(PARMS *cfg,int len)
 	//{
 		//strcpy(configs.apn.Value,"0");
 	//}
+	get_config_specified(cfg,len,configs.enable_auto_dial.Name,configs.enable_auto_dial.Value);
+	if(configs.enable_auto_dial.Value[0] =='\0')
+	{
+		strcpy(configs.enable_auto_dial.Value,"1");
+	}
 	get_config_specified(cfg,len,configs.network_mode_web.Name,configs.network_mode_web.Value);
 	if(configs.network_mode_web.Value[0] =='\0')
 	{
@@ -191,7 +197,7 @@ void init_parms(PARMS *cfg,int len)
 		}
 	}
 
-	
+	strcpy(global_init_parms.enable_auto_dial,configs.enable_auto_dial.Value);
 	strcpy(global_init_parms.enable_pin,configs.enable_pin.Value);
 	strcpy(global_init_parms.apn,configs.apn.Value);
 	strcpy(global_init_parms.puk,configs.puk.Value);

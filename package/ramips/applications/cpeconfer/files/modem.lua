@@ -1038,4 +1038,30 @@ function modem_module.modem_get_mutilapn_status()
 
 
 end
+
+function modem_module.modem_enable_auto_dial()
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_AUTO_DIAL",1)
+	local ret1 = x:commit(TOZED_CONFIG_FILE)
+	os.execute("/etc/init.d/dialtool2 restart")
+	return ret1 
+end
+
+function modem_module.modem_disable_auto_dial()
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_AUTO_DIAL",0)
+	local ret1 = x:commit(TOZED_CONFIG_FILE)
+	os.execute("/etc/init.d/dialtool2 restart")
+	return ret1
+end
+
+function modem_module.modem_get_auto_dial()
+	local ret = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_AUTO_DIAL")
+
+	if "1" == ret 
+	then 
+		return 1
+	else
+		return 0
+	end
+end
+
 return modem_module
