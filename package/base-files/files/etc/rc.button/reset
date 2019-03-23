@@ -6,14 +6,21 @@
 
 logger "$BUTTON pressed for $SEEN seconds"
 
-if [ "$SEEN" -lt 1 ]
-then
-	echo "REBOOT" > /dev/console
-	reboot
-elif [ "$SEEN" -gt 5 ]
+#if [ "$SEEN" -lt 1 ]
+#then
+#	echo "REBOOT" > /dev/console
+#	reboot
+#elif [ "$SEEN" -gt 5 ]
+
+
+if [ "$SEEN" -gt 3 ]
 then
 	echo "FACTORY RESET" > /dev/console
-	jffs2reset -y && reboot &
+	#jffs2reset -y && reboot &
+	
+	/etc/tozed/tz_restore_factory
+
+	reboot
 fi
 
 return 0

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+#restore /etc/config/*
+
+rm -rf /etc/config
+cp -rf /rom/etc/config /etc/ 2>/dev/null
+rm -rf  /etc/config/wireless
+
+#restore all apps switch
+cp -rf /rom/etc/rc.d /etc/ 2>/dev/null
+
+sync
