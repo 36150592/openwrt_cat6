@@ -10,7 +10,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&ephy_pins>;
 		mtd-mac-address = <&factory 0x28>;
-		ralink,port-map = "llllw";
+		ralink,port-map = "lwl";
 	};
 
 	memory@0 {
@@ -21,7 +21,7 @@
 	pinctrl {
 		state_default: pinctrl0 {
 			gpio {
-				ralink,group = "i2c", "i2s";
+				ralink,group = "gpio", "ephy_p0", "ephy_p1", "ephy_p2", "ephy_p3", "ephy_p4";
 				ralink,function = "gpio";
 			};
 		};
@@ -67,29 +67,34 @@
 
 	gpio-leds {
 		compatible = "gpio-leds";
-		wifisignal1 {
-			label = "signal1";
-			gpios = <&gpio0 4 1>;
+		lan1 {
+			label = "deco:lan1";
+			gpios = <&gpio1 10 1>;
 		};
-		wifisignal2 {
-			label = "signal2";
-			gpios = <&gpio0 5 1>;
+		lan2 {
+			label = "deco:lan2";
+			gpios = <&gpio1 9 1>;
 		};
-		wifisignal3 {
-			label = "signal3";
-			gpios = <&gpio0 3 1>;
+		wan {
+			label = "deco:wan";
+			gpios = <&gpio1 7 1>;
 		};
-		wifisignal4 {
-			label = "signal4";
-			gpios = <&gpio0 2 1>;
+		lte_r {
+			label = "deco:lte_r";
+			gpios = <&gpio1 11 1>;
 		};
-		wifirun {
-			label = "wifirun";
-			gpios = <&gpio1 5 1>;
+		lte_g {
+			label = "deco:lte_g";
+			gpios = <&gpio1 8 1>;
 		};
-		sim {
-			label = "sim";
+		act {
+			label = "deco:act";
 			gpios = <&gpio1 12 1>;
 		};
+		wps {
+			label = "deco:wps";
+			gpios = <&gpio1 5 1>;
+		};
 	};
+
 };
