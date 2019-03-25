@@ -173,10 +173,9 @@ function firewall_remote_set_web_login()
 	end
 end
 
-function firewall_remote_get_login_iplist()
-	print("in firewall_remote_get_login_iplist")
-	local ret,iplist= firewall.firewall_remote_get_login_iplist()
-	print("ret = ", ret)
+function firewall_remote_get_default_list()
+	print("in firewall_remote_get_default_list")
+	local iplist= firewall.firewall_remote_get_default_list()
 	for k,v in pairs(iplist)
 	do
 		print(k, " = ", v)
@@ -184,10 +183,33 @@ function firewall_remote_get_login_iplist()
 
 end
 
-function firewall_remote_set_login_iplist()
-	print("in firewall_remote_set_login_iplist")
+function firewall_remote_set_default_list()
+	print("in firewall_remote_set_default_list")
 	local iplist = {"192.168.2.9", "192.168.2.10", "192.168.2.11", "192.168.2.12"}
-	local ret = firewall.firewall_remote_set_login_iplist(1, iplist)
+	local ret = firewall.firewall_remote_set_default_list(iplist)
+	if ret
+	then
+		print("set success")
+	else
+		print("set fail")
+	end
+end
+
+
+function firewall_remote_get_web_login_list()
+	print("in firewall_remote_get_web_login_list")
+	local iplist= firewall.firewall_remote_get_web_login_list()
+	for k,v in pairs(iplist)
+	do
+		print(k, " = ", v)
+	end
+
+end
+
+function firewall_remote_set_web_login_list()
+	print("in firewall_remote_set_web_login_list")
+	local iplist = {"192.168.2.9", "192.168.2.10", "192.168.2.11", "192.168.2.12"}
+	local ret = firewall.firewall_remote_set_web_login_list(iplist)
 	if ret
 	then
 		print("set success")
@@ -212,6 +234,29 @@ function firewall_remote_set_ping()
 		print("set fail")
 	end
 end
+
+function firewall_remote_get_ping_list()
+	print("in firewall_remote_get_ping_list")
+	local iplist= firewall.firewall_remote_get_ping_list()
+	for k,v in pairs(iplist)
+	do
+		print(k, " = ", v)
+	end
+
+end
+
+function firewall_remote_set_ping_list()
+	print("in firewall_remote_set_ping_list")
+	local iplist = {"192.168.2.9", "192.168.2.10", "192.168.2.11", "192.168.2.12"}
+	local ret = firewall.firewall_remote_set_ping_list(iplist)
+	if ret
+	then
+		print("set success")
+	else
+		print("set fail")
+	end
+end
+
 
 function firewall_set_default_action()
 
@@ -2243,10 +2288,14 @@ local api_func = {
 	["firewall_clear_all_rules"] = firewall.firewall_clear_all_user_rule,
 	["firewall_remote_get_web_login"] = firewall_remote_get_web_login,
 	["firewall_remote_set_web_login"] = firewall_remote_set_web_login,
-	["firewall_remote_get_login_iplist"] = firewall_remote_get_login_iplist,
-	["firewall_remote_set_login_iplist"] = firewall_remote_set_login_iplist,
+	["firewall_remote_get_default_list"] = firewall_remote_get_default_list,
+	["firewall_remote_set_default_list"] = firewall_remote_set_default_list,
+	["firewall_remote_get_web_login_list"] = firewall_remote_get_web_login_list,
+	["firewall_remote_set_web_login_list"] = firewall_remote_set_web_login_list,
 	["firewall_remote_set_ping"] = firewall_remote_set_ping,
 	["firewall_remote_get_ping"] = firewall_remote_get_ping,
+	["firewall_remote_get_ping_list"] = firewall_remote_get_ping_list,
+	["firewall_remote_set_ping_list"] = firewall_remote_set_ping_list,
 	["firewall_set_mutil_nat"] = firewall_set_mutil_nat,
 	["firewall_get_mutil_nat"] = firewall_get_mutil_nat,
 	["firewall_get_lan_network"] = firewall_get_lan_network,
