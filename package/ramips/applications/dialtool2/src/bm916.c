@@ -1037,7 +1037,7 @@ void bm916_sendat(int num)
 			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
 			break;
 		case Dial_State_SIGNALIND:
-			util_send_cmd(global_dialtool.dev_handle,"AT+SIGNALIND=1\r",&global_dialtool.pthread_moniter_flag);
+			util_send_cmd(global_dialtool.dev_handle,"AT+SIGNALIND=0\r",&global_dialtool.pthread_moniter_flag);
 			break;
 		case Dial_State_QCRMCALL_DISCONNECT:
 			util_send_cmd(global_dialtool.dev_handle,"AT$QCRMCALL=0,1\r",&global_dialtool.pthread_moniter_flag);
