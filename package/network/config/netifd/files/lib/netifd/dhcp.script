@@ -100,6 +100,10 @@ setup_ip_rules () {
 		config_get route_lan_section $temp route_lan_section
 		config_get ifname $temp ifname
 
+		if [ $route_lan_section"" == "" ];then
+			continue
+		fi
+
 		if [ $ifname"" == $table_name"" ];then
 
 			config_get ipaddr $route_lan_section ipaddr
@@ -107,10 +111,22 @@ setup_ip_rules () {
 			network=`/bin/ipcalc.sh $ipaddr $netmask | grep "NETWORK" | cut -d'=' -f 2`
 			prefix_num=`/bin/ipcalc.sh $ipaddr $netmask | grep "PREFIX" | cut -d'=' -f 2`
 
-			ip rule del to $network/$prefix_num
-			ip rule del from $network/$prefix_num
-			ip rule add to $network/$prefix_num table $table_name pref 1000
-			ip rule add from $network/$prefix_num table $table_name pref 1000
+			local primary_apn
+			config_get primary_apn $temp primary_apn
+			if [ $primary_apn"" == "1" ];then
+				local ret=`ip rule list | grep $network | wc -l`
+				if [ $ret"" == "0" ];then
+					ip rule del to $network/$prefix_num
+					ip rule del from $network/$prefix_num
+					ip rule add to $network/$prefix_num table $table_name pref 1000
+					ip rule add from $network/$prefix_num table $table_name pref 1000
+				fi
+			else
+				ip rule del to $network/$prefix_num
+				ip rule del from $network/$prefix_num				
+				ip rule add to $network/$prefix_num table $table_name pref 1000
+				ip rule add from $network/$prefix_num table $table_name pref 1000
+			fi
 			ip route add $network/$prefix_num proto kernel scope link table $table_name via 0.0.0.0 dev br-$route_lan_section src $ipaddr
 		fi
 
@@ -127,10 +143,67 @@ setup_interface () {
 	setup_ip_rules
 	# TODO: apply $broadcast
 
-	local ret=`route | grep default | wc -l`
-	if [ $ret"" != "0" ];then
+	local land_wan_if
+	local primary_apn_if
+	local primary_apn_section
+
+	for temp in $wan_sections;do
+		config_get land_wan $temp land_wan
+		if [ $land_wan"" == "1" ];then
+			config_get land_wan_if $temp ifname
+		fi
+
+		config_get primary_apn $temp primary_apn
+
+		if [ $primary_apn"" == "1" ];then
+			config_get primary_apn_if $temp ifname
+			primary_apn_section=$temp
+		fi
+	done
+
+	if [ $land_wan_if"" == "" ];then
+		config_get land_wan_if 'wan' ifname
+	fi
+
+	if [ $primary_apn_if"" == "" ];then
+		config_get primary_apn_if '4g' ifname
+	fi
+
+	if [ $interface"" == $land_wan_if ];then		
+		local ret=`route | grep default | awk '{print $8}'`
+		if [ $ret"" != "" ];then
+		
+			for target in `ip route list table  $ret | awk '{print $1}'`
+			do
+				ip route del $target
+			done
+		fi 
+	elif [ $interface"" == $primary_apn_if ]; then
+		local ret=`route | grep default | grep $land_wan_if | wc -l`
+		if [ $ret"" != "0" ];then
+			ping -w 3 8.8.8.8
+			
+			if [ $? == "0" ];then 
+				return 0
+			fi
+		else
+			local ret=`route | grep default | awk '{print $8}'`
+			if [ $ret"" != "" ];then
+			
+				for target in `ip route list table  $ret | awk '{print $1}'`
+				do
+					ip route del $target
+				done
+				
+				
+			fi 
+		fi
+	else
 		return 0
 	fi
+
+
+
 
 	for i in $router; do
 		proto_add_ipv4_route "$i" 32 "" "$ip"
