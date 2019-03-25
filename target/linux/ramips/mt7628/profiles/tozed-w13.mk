@@ -9,7 +9,8 @@ define Profile/TZ-W13
 	NAME:=Tozed w13
 	PACKAGES:=\
 		kmod-usb-core kmod-usb2 kmod-usb-ohci \
-		kmod-ledtrig-usbdev
+		kmod-ledtrig-netdev kmod-ledtrig-usbdev kmod-ledtrig-gpio kmod-ledtrig-heartbeat \
+		mtk-mt76x8-linkwatch
 endef
 
 define Profile/TZ-W13/Description
