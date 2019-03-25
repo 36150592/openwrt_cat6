@@ -58,15 +58,15 @@ load_interface() {
 redirect_lan(){
 	for lan in $lan_sections
 	do
-                if [ $lan'' == '' ];then
-                        continue
-                fi
-		iptables -t nat -I PREROUTING -i br-$lan -p tcp --dport 80 -j REDIRECT --to-ports $REMOTE_MINI_HTTP_LISTEN_PORT
-		iptables -t nat -I PREROUTING -i br-$lan -p udp --dport 80 -j REDIRECT --to-ports $REMOTE_MINI_HTTP_LISTEN_PORT
-
-                iptables -t nat -I PREROUTING -i br-$lan -p tcp --dport 443 -j REDIRECT --to-ports $REMOTE_MINI_HTTPS_LISTEN_PORT
-                iptables -t nat -I PREROUTING -i br-$lan -p udp --dport 443 -j REDIRECT --to-ports $REMOTE_MINI_HTTPS_LISTEN_PORT
-
+                if [ $lan'' == '' ];then                                              
+                        continue                                                                
+                fi                                                    
+                config_get gateip $lan ipaddr
+                iptables -t nat -I PREROUTING -i br-$lan -p tcp -d $gateip --dport 80 -j REDIRECT --to-ports $REMOTE_MINI_HTTP_LISTEN_PORT
+                iptables -t nat -I PREROUTING -i br-$lan -p udp -d $gateip --dport 80 -j REDIRECT --to-ports $REMOTE_MINI_HTTP_LISTEN_PORT
+                                                                    
+                iptables -t nat -I PREROUTING -i br-$lan -p tcp -d $gateip --dport 443 -j REDIRECT --to-ports $REMOTE_MINI_HTTPS_LISTEN_PORT
+                iptables -t nat -I PREROUTING -i br-$lan -p udp -d $gateip --dport 443 -j REDIRECT --to-ports $REMOTE_MINI_HTTPS_LISTEN_PORT
 	done
 
 }
