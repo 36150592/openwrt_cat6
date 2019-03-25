@@ -769,10 +769,10 @@ void bm916_sendat(int num)
 			util_send_cmd(global_dialtool.dev_handle,"AT\r",&global_dialtool.pthread_moniter_flag);
 			break;
 		case Dial_State_BMDATASTATUSEN:
-			util_send_cmd(global_dialtool.dev_handle,"AT+BMDATASTATUSEN=1\r",&global_dialtool.pthread_moniter_flag);
+			util_send_cmd(global_dialtool.dev_handle,"AT+BMDATASTATUSEN=0\r",&global_dialtool.pthread_moniter_flag);
 			break;
 		case Dial_State_PSDIALIND:
-			util_send_cmd(global_dialtool.dev_handle,"AT+PSDIALIND=1\r",&global_dialtool.pthread_moniter_flag);
+			util_send_cmd(global_dialtool.dev_handle,"AT+PSDIALIND=0\r",&global_dialtool.pthread_moniter_flag);
 			break;
 		case Dial_State_BMTCELLINFO:
 			util_send_cmd(global_dialtool.dev_handle,"AT+BMTCELLINFO\r",&global_dialtool.pthread_moniter_flag);
