@@ -1,0 +1,26 @@
+#!/bin/sh
+
+FORM_CONFIG_STATION=/tmp/form_config/
+FACTORY_CONFIG_FILE=/etc/tozed_param
+MODEM_CONFIG_LOAD_FILE=${FORM_CONFIG_STATION}/remote_control
+
+mkdir -p ${FORM_CONFIG_STATION}
+
+#export param
+cat ${FACTORY_CONFIG_FILE} | grep TZSYSTEM_ > ${MODEM_CONFIG_LOAD_FILE}
+chmod 777 ${MODEM_CONFIG_LOAD_FILE}
+. ${MODEM_CONFIG_LOAD_FILE}
+
+
+
+cfg -a TZ_REMOTE_LOGIN="${TZSYSTEM_REMOTE_LOGIN}" --section remote_control
+cfg -a TZ_REMOTE_PING="${TZSYSTEM_REMOTE_PING}" --section remote_control
+cfg -d TZSYSTEM_REMOTE_DEFAULT_LIST --section remote_control
+for temp in ${TZSYSTEM_REMOTE_DEFAULT_LIST}
+do
+	cfg -p TZ_REMOTE_DEFAULT_LIST="${temp}" --section remote_control
+done
+
+
+cfg -c
+

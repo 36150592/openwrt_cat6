@@ -15,6 +15,7 @@ bitcomposite表示使用位进行组合的配置字段
 	<preface value=""/>
 	<format value="export ${field}=&quot;quote{value}&quot;"/>
 	<class name="SYSTEM_CONFIG_FIELD" description="系统配置"  />
+	<class name="MODEM_CONFIG_FIELD" description="MODEM配置"  />
 	<class name="USER_CONFIG_FIELD" description="用户配置"  />
  	<class name="WIFI_CONFIG_FIELD" description="WIFI配置"  />
 	<class name="DHCP_CONFIG_FIELD" description="DHCP配置"/>
@@ -40,6 +41,22 @@ bitcomposite表示使用位进行组合的配置字段
 	<config name="TZSYSTEM_SNTP_TIMEZONE" type="text" description="时区" detail="时区(-12~12, 如5.5、-4.5、8)" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
         	<default value="8" />
 	</config>
+
+	<config name="TZSYSTEM_REMOTE_LOGIN" type="text" description="远程登录开关" detail="远程EWB登录开关" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<option value="1" description="开启" />
+		<option value="0" description="关闭" />
+		<default value="0"/>
+	</config>
+	<config name="TZSYSTEM_REMOTE_PING" type="text" description="远程登录PING开关" detail="远程PING开关" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<option value="1" description="开启" />
+		<option value="0" description="关闭" />
+		<default value="0"/>
+	</config>
+
+	<config name="TZSYSTEM_REMOTE_DEFAULT_LIST" type="select" description="远程登录内置IP列表" detail="远程登录内置IP列表 空格分隔" maxlength="128" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<default value="0" />
+	</config>
+
 
 	<!--2.用户配置-->
 	<config name="TZUSER_CUSTOMER" type="select" description="使用客户" detail="使用该配置的客户" class_name="USER_CONFIG_FIELD"  >
@@ -501,6 +518,509 @@ bitcomposite表示使用位进行组合的配置字段
         	<default value="device_dialog_lk.xml" />
 	</config>
 
+	<!-- modem 配置 -->
+	<config name="TZMODEM_AUTO_DIAL" type="select" description="自动拨号开关" detail="自动拨号开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="1" description="开启" />
+		<option value="0" description="关闭" />
+        	<default value="1" />
+	</config>
+
+	<config name="TZ_LOCK_BAND_ENABLE" type="select" description="锁频开关" detail="锁频开关打开后，频段支持选项才能生效" class_name="MODEM_CONFIG_FIELD">
+		<option value="1" description="开启"/>
+		<option value="0" description="关闭"/>
+		<default value="0"/>
+	</config>
+	 <config name="TZ_BAND_PREF_1" type="select" bit_offset="0" bit_count="1" description="开启频段1的支持" detail="开启对FDD频段1的支持,CPE将可以注册到LTE网络的1频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_2" type="select" bit_offset="1" bit_count="1" description="开启频段2的支持" detail="开启对FDD频段2的支持,CPE将可以注册到LTE网络的2频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_3" type="select" bit_offset="2" bit_count="1" description="开启频段3的支持" detail="开启对FDD频段3的支持,CPE将可以注册到LTE网络的3频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_4" type="select" bit_offset="3" bit_count="1" description="开启频段4的支持" detail="开启对FDD频段4的支持,CPE将可以注册到LTE网络的4频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_5" type="select" bit_offset="4" bit_count="1" description="开启频段5的支持" detail="开启对FDD频段5的支持,CPE将可以注册到LTE网络的5频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_6" type="select" bit_offset="5" bit_count="1" description="开启频段6的支持" detail="开启对频段6的支持,CPE将可以注册到LTE网络的6频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_7" type="select" bit_offset="6" bit_count="1" description="开启频段7的支持" detail="开启对FDD频段7的支持,CPE将可以注册到LTE网络的7频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_8" type="select" bit_offset="7" bit_count="1" description="开启频段8的支持" detail="开启对FDD频段8的支持,CPE将可以注册到LTE网络的8频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_9" type="select" bit_offset="8" bit_count="1" description="开启频段9的支持" detail="开启对频段9的支持,CPE将可以注册到LTE网络的9频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_10" type="select" bit_offset="9" bit_count="1" description="开启频段10的支持" detail="开启对频段10的支持,CPE将可以注册到LTE网络的10频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_11" type="select" bit_offset="10" bit_count="1" description="开启频段11的支持" detail="开启对频段11的支持,CPE将可以注册到LTE网络的11频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_12" type="select" bit_offset="11" bit_count="1" description="开启频段12的支持" detail="开启对频段12的支持,CPE将可以注册到LTE网络的12频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_13" type="select" bit_offset="12" bit_count="1" description="开启频段13的支持" detail="开启对FDD频段13的支持,CPE将可以注册到LTE网络的13频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_14" type="select" bit_offset="13" bit_count="1" description="开启频段14的支持" detail="开启对频段14的支持,CPE将可以注册到LTE网络的14频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_15" type="select" bit_offset="14" bit_count="1" description="开启频段15的支持" detail="开启对频段15的支持,CPE将可以注册到LTE网络的15频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_16" type="select" bit_offset="15" bit_count="1" description="开启频段16的支持" detail="开启对频段16的支持,CPE将可以注册到LTE网络的16频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_17" type="select" bit_offset="16" bit_count="1" description="开启频段17的支持" detail="开启对FDD频段17的支持,CPE将可以注册到LTE网络的17频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_18" type="select" bit_offset="17" bit_count="1" description="开启频段18的支持" detail="开启对频段18的支持,CPE将可以注册到LTE网络的18频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_19" type="select" bit_offset="18" bit_count="1" description="开启频段19的支持" detail="开启对频段19的支持,CPE将可以注册到LTE网络的19频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_20" type="select" bit_offset="19" bit_count="1" description="开启频段20的支持" detail="开启对FDD频段20的支持,CPE将可以注册到LTE网络的20频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_21" type="select" bit_offset="20" bit_count="1" description="开启频段21的支持" detail="开启对频段21的支持,CPE将可以注册到LTE网络的21频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_22" type="select" bit_offset="21" bit_count="1" description="开启频段22的支持" detail="开启对频段22的支持,CPE将可以注册到LTE网络的22频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_23" type="select" bit_offset="22" bit_count="1" description="开启频段23的支持" detail="开启对频段23的支持,CPE将可以注册到LTE网络的23频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_24" type="select" bit_offset="23" bit_count="1" description="开启频段24的支持" detail="开启对频段24的支持,CPE将可以注册到LTE网络的24频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_25" type="select" bit_offset="24" bit_count="1" description="开启频段25的支持" detail="开启对频段25的支持,CPE将可以注册到LTE网络的25频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_26" type="select" bit_offset="25" bit_count="1" description="开启频段26的支持" detail="开启对频段26的支持,CPE将可以注册到LTE网络的26频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_27" type="select" bit_offset="26" bit_count="1" description="开启频段27的支持" detail="开启对频段27的支持,CPE将可以注册到LTE网络的27频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_28" type="select" bit_offset="27" bit_count="1" description="开启频段28的支持" detail="开启对FDD频段28的支持,CPE将可以注册到LTE网络的28频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_29" type="select" bit_offset="28" bit_count="1" description="开启频段29的支持" detail="开启对频段29的支持,CPE将可以注册到LTE网络的29频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_30" type="select" bit_offset="29" bit_count="1" description="开启频段30的支持" detail="开启对频段30的支持,CPE将可以注册到LTE网络的30频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_31" type="select" bit_offset="30" bit_count="1" description="开启频段31的支持" detail="开启对FDD频段31的支持,CPE将可以注册到LTE网络的31频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_32" type="select" bit_offset="31" bit_count="1" description="开启频段32的支持" detail="开启对FDD频段32的支持,CPE将可以注册到LTE网络的32频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_33" type="select" bit_offset="32" bit_count="1" description="开启频段33的支持" detail="开启对FDD频段33的支持,CPE将可以注册到LTE网络的33频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_34" type="select" bit_offset="33" bit_count="1" description="开启频段34的支持" detail="开启对FDD频段34的支持,CPE将可以注册到LTE网络的34频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_35" type="select" bit_offset="34" bit_count="1" description="开启频段35的支持" detail="开启对FDD频段35的支持,CPE将可以注册到LTE网络的35频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_36" type="select" bit_offset="35" bit_count="1" description="开启频段36的支持" detail="开启对FDD频段36的支持,CPE将可以注册到LTE网络的36频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_37" type="select" bit_offset="36" bit_count="1" description="开启频段37的支持" detail="开启对FDD频段37的支持,CPE将可以注册到LTE网络的37频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_38" type="select" bit_offset="37" bit_count="1" description="开启频段38(2570MHz-2620MHz)的支持" detail="开启对TDD频段38(2570MHz-2620MHz)的支持,CPE将可以注册到LTE网络的38频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_39" type="select" bit_offset="38" bit_count="1" description="开启频段39(1880MHz-1920MHz)的支持" detail="开启对TDD频段39(1880MHz-1920MHz)的支持,CPE将可以注册到LTE网络的39频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_40" type="select" bit_offset="39" bit_count="1" description="开启频段40(2300MHz-2400MHz)的支持" detail="开启对TDD频段40(2300MHz-2400MHz)的支持,CPE将可以注册到LTE网络的40频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_41" type="select" bit_offset="40" bit_count="1" description="开启频段41(2500MHz~2690MHz)的支持" detail="开启对TDD频段41(2500MHz~2690MHz)的支持,CPE将可以注册到LTE网络的41频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_42" type="select" bit_offset="41" bit_count="1" description="开启频段42的支持" detail="开启对FDD频段42的支持,CPE将可以注册到LTE网络的42频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_43" type="select" bit_offset="42" bit_count="1" description="开启频段43的支持" detail="开启对FDD频段43的支持,CPE将可以注册到LTE网络的43频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_44" type="select" bit_offset="43" bit_count="1" description="开启频段44的支持" detail="开启对FDD频段44的支持,CPE将可以注册到LTE网络的44频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_45" type="select" bit_offset="44" bit_count="1" description="开启频段45的支持" detail="开启对FDD频段45的支持,CPE将可以注册到LTE网络的45频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_46" type="select" bit_offset="45" bit_count="1" description="开启频段46的支持" detail="开启对FDD频段46的支持,CPE将可以注册到LTE网络的46频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_47" type="select" bit_offset="46" bit_count="1" description="开启频段47的支持" detail="开启对FDD频段47的支持,CPE将可以注册到LTE网络的47频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_48" type="select" bit_offset="47" bit_count="1" description="开启频段48的支持" detail="开启对FDD频段47的支持,CPE将可以注册到LTE网络的48频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZ_BAND_PREF_49" type="select" bit_offset="48" bit_count="1" description="开启频段49的支持" detail="开启对FDD频段48的支持,CPE将可以注册到LTE网络的49频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_50" type="select" bit_offset="49" bit_count="1" description="开启频段50的支持" detail="开启对FDD频段50的支持,CPE将可以注册到LTE网络的50频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_51" type="select" bit_offset="50" bit_count="1" description="开启频段51的支持" detail="开启对FDD频段51的支持,CPE将可以注册到LTE网络的51频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_52" type="select" bit_offset="51" bit_count="1" description="开启频段52的支持" detail="开启对FDD频段52的支持,CPE将可以注册到LTE网络的52频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_53" type="select" bit_offset="52" bit_count="1" description="开启频段53的支持" detail="开启对FDD频段53的支持,CPE将可以注册到LTE网络的53频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_54" type="select" bit_offset="53" bit_count="1" description="开启频段54的支持" detail="开启对FDD频段54的支持,CPE将可以注册到LTE网络的54频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_55" type="select" bit_offset="54" bit_count="1" description="开启频段55的支持" detail="开启对FDD频段55的支持,CPE将可以注册到LTE网络的55频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_56" type="select" bit_offset="55" bit_count="1" description="开启频段56的支持" detail="开启对FDD频段56的支持,CPE将可以注册到LTE网络的56频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_57" type="select" bit_offset="56" bit_count="1" description="开启频段57的支持" detail="开启对FDD频段57的支持,CPE将可以注册到LTE网络的57频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_58" type="select" bit_offset="57" bit_count="1" description="开启频段58的支持" detail="开启对FDD频段58的支持,CPE将可以注册到LTE网络的58频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_59" type="select" bit_offset="58" bit_count="1" description="开启频段59的支持" detail="开启对FDD频段59的支持,CPE将可以注册到LTE网络的59频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_60" type="select" bit_offset="59" bit_count="1" description="开启频段60的支持" detail="开启对FDD频段60的支持,CPE将可以注册到LTE网络的60频段"
+class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_61" type="select" bit_offset="60" bit_count="1" description="开启频段61的支持" detail="开启对FDD频段61的支持,CPE将可以注册到LTE网络的61频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_62" type="select" bit_offset="61" bit_count="1" description="开启频段62的支持" detail="开启对FDD频段62的支持,CPE将可以注册到LTE网络的62频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_63" type="select" bit_offset="62" bit_count="1" description="开启频段63的支持" detail="开启对FDD频段63的支持,CPE将可以注册到LTE网络的63频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZ_BAND_PREF_64" type="select" bit_offset="63" bit_count="1" description="开启频段64的支持" detail="开启对FDD频段64的支持,CPE将可以注册到LTE网络的64频段" class_name="MODEM_CONFIG_FIELD">
+	  <option value="0" description="否"/>
+	  <option value="1" description="是"/>
+	  <default value="0"/>
+	 </config>
+	 <config name="TZMODEM_BAND_PREF" type="bitcomposite" format="hex" lower_case="false" description="锁频支持" detail="锁频支持" class_name="MODEM_CONFIG_FIELD">
+	  <depend value="TZ_BAND_PREF_1"/>
+	  <depend value="TZ_BAND_PREF_2"/>
+	  <depend value="TZ_BAND_PREF_3"/>
+	  <depend value="TZ_BAND_PREF_4"/>
+	  <depend value="TZ_BAND_PREF_5"/>
+	  <depend value="TZ_BAND_PREF_6"/>
+	  <depend value="TZ_BAND_PREF_7"/>
+	  <depend value="TZ_BAND_PREF_8"/>
+	  <depend value="TZ_BAND_PREF_9"/>
+	  <depend value="TZ_BAND_PREF_10"/>
+	  <depend value="TZ_BAND_PREF_11"/>
+	  <depend value="TZ_BAND_PREF_12"/>
+	  <depend value="TZ_BAND_PREF_13"/>
+	  <depend value="TZ_BAND_PREF_14"/>
+	  <depend value="TZ_BAND_PREF_15"/>
+	  <depend value="TZ_BAND_PREF_16"/>
+	  <depend value="TZ_BAND_PREF_17"/>
+	  <depend value="TZ_BAND_PREF_18"/>
+	  <depend value="TZ_BAND_PREF_19"/>
+	  <depend value="TZ_BAND_PREF_20"/>
+	  <depend value="TZ_BAND_PREF_21"/>
+	  <depend value="TZ_BAND_PREF_22"/>
+	  <depend value="TZ_BAND_PREF_23"/>
+	  <depend value="TZ_BAND_PREF_24"/>
+	  <depend value="TZ_BAND_PREF_25"/>
+	  <depend value="TZ_BAND_PREF_26"/>
+	  <depend value="TZ_BAND_PREF_27"/>
+	  <depend value="TZ_BAND_PREF_28"/>
+	  <depend value="TZ_BAND_PREF_29"/>
+	  <depend value="TZ_BAND_PREF_30"/>
+	  <depend value="TZ_BAND_PREF_31"/>
+	  <depend value="TZ_BAND_PREF_32"/>
+	  <depend value="TZ_BAND_PREF_33"/>
+	  <depend value="TZ_BAND_PREF_34"/>
+	  <depend value="TZ_BAND_PREF_35"/>
+	  <depend value="TZ_BAND_PREF_36"/>
+	  <depend value="TZ_BAND_PREF_37"/>
+	  <depend value="TZ_BAND_PREF_38"/>
+	  <depend value="TZ_BAND_PREF_39"/>
+	  <depend value="TZ_BAND_PREF_40"/>
+	  <depend value="TZ_BAND_PREF_41"/>
+	  <depend value="TZ_BAND_PREF_42"/>
+	  <depend value="TZ_BAND_PREF_43"/>
+	  <depend value="TZ_BAND_PREF_44"/>
+	  <depend value="TZ_BAND_PREF_45"/>
+	  <depend value="TZ_BAND_PREF_46"/>
+	  <depend value="TZ_BAND_PREF_47"/>
+	  <depend value="TZ_BAND_PREF_48"/>
+	  <depend value="TZ_BAND_PREF_49"/>
+	  <depend value="TZ_BAND_PREF_50"/>
+	  <depend value="TZ_BAND_PREF_51"/>
+	  <depend value="TZ_BAND_PREF_52"/>
+	  <depend value="TZ_BAND_PREF_53"/>
+	  <depend value="TZ_BAND_PREF_54"/>
+	  <depend value="TZ_BAND_PREF_55"/>
+	  <depend value="TZ_BAND_PREF_56"/>
+	  <depend value="TZ_BAND_PREF_57"/>
+	  <depend value="TZ_BAND_PREF_58"/>
+	  <depend value="TZ_BAND_PREF_59"/>
+	  <depend value="TZ_BAND_PREF_60"/>
+	  <depend value="TZ_BAND_PREF_61"/>
+	  <depend value="TZ_BAND_PREF_62"/>
+	  <depend value="TZ_BAND_PREF_63"/>
+	  <depend value="TZ_BAND_PREF_64"/>
+	  <default value="0"/>
+	 </config>
+	<config name="TZMODEM_PLMN_LOCK" type="text"  description="锁运营商" detail="锁运营商，值为空时关闭锁运营商，值不为空时开启" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+
+	<config name="TZMODEM_APN0_NAME" type="text"  description="主apn 名称" detail="主apn 名称" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN0_PROFILE" type="text"  description="主apn配置名 " detail="主apn配置名" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN0_USERNAME" type="text"  description="主apn 用户名" detail="主apn 用户名" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN0_PASSWORD" type="text"  description="主apn密码" detail="主apn密码" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN0_AUTH_TYPE" type="select"  description="主apn 认证方式" detail="主apn 认证方式0:NONE 1:PAP 2:CHAP 3:PAP and CHAP" class_name="MODEM_CONFIG_FIELD">
+		<option value="0" description="NONE"/>
+		<option value="1" description="PAP"/>
+		<option value="2" description="CHAP"/>
+		<option value="3" description="CHAP and PAP"/>
+	  	<default value="3"/>
+	 </config>
+	<config name="TZMODEM_APN0_IP_STACK" type="text"  description="主apn 协议类型" detail="主apn 协议类型" class_name="MODEM_CONFIG_FIELD">
+	 	<option value="IP" description="IPv4"/>
+		<option value="IPV6" description="IPV6"/>
+		<option value="IPV4V6" description="IPV4 and IPV6"/>
+	  	<default value="IP"/>
+	 </config>
+	<config name="TZMODEM_APN0_MTU" type="text"  description="主apn MTU" detail="主apn MTU" class_name="MODEM_CONFIG_FIELD">
+	  <default value="1500"/>
+	 </config>
+	
+
+
+	<config name="TZMODEM_APN1_NAME" type="text"  description="副apn1 名称" detail="副apn1 名称" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN1_PROFILE" type="text"  description="副apn1配置名 " detail="副apn1 配置名" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN1_USERNAME" type="text"  description="副apn1 用户名" detail="副apn1 用户名" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN1_PASSWORD" type="text"  description="副apn1密码" detail="副apn1密码" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN1_AUTH_TYPE" type="select"  description="副apn1认证方式" detail="副apn1 认证方式0:NONE 1:PAP 2:CHAP 3:PAP and CHAP" class_name="MODEM_CONFIG_FIELD">
+		<option value="0" description="NONE"/>
+		<option value="1" description="PAP"/>
+		<option value="2" description="CHAP"/>
+		<option value="3" description="CHAP and PAP"/>
+	  	<default value="3"/>
+	 </config>
+	<config name="TZMODEM_APN1_IP_STACK" type="text"  description="副apn1 协议类型" detail="副apn1 协议类型" class_name="MODEM_CONFIG_FIELD">
+	 	<option value="IP" description="IPv4"/>
+		<option value="IPV6" description="IPV6"/>
+		<option value="IPV4V6" description="IPV4 and IPV6"/>
+	  	<default value="IP"/>
+	 </config>
+	<config name="TZMODEM_APN1_MTU" type="text"  description="副apn1 MTU" detail="副apn1 MTU" class_name="MODEM_CONFIG_FIELD">
+	  <default value="1500"/>
+	 </config>
+	<config name="TZMODEM_APN1_ENABLE" type="text"  description="副apn1 开关" detail="副apn1 开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="0" description="关闭"/>
+		<option value="1" description="开启"/>
+	 	<default value="0"/>
+	 </config>
+
+
+	<config name="TZMODEM_APN2_NAME" type="text"  description="副apn2  名称" detail="副apn2  名称" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN2_PROFILE" type="text"  description="副apn2 配置名 " detail="副apn2  配置名" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN2_USERNAME" type="text"  description="副apn2  用户名" detail="副apn2  用户名" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN2_PASSWORD" type="text"  description="副apn2 密码" detail="副apn2 密码" class_name="MODEM_CONFIG_FIELD">
+	  <default value=""/>
+	 </config>
+	<config name="TZMODEM_APN2_AUTH_TYPE" type="select"  description="副apn2 认证方式" detail="副apn2  认证方式0:NONE 1:PAP 2:CHAP 3:PAP and CHAP" class_name="MODEM_CONFIG_FIELD">
+		<option value="0" description="NONE"/>
+		<option value="1" description="PAP"/>
+		<option value="2" description="CHAP"/>
+		<option value="3" description="CHAP and PAP"/>
+	  	<default value="3"/>
+	 </config>
+	<config name="TZMODEM_APN2_IP_STACK" type="text"  description="副apn2  协议类型" detail="副apn2  协议类型" class_name="MODEM_CONFIG_FIELD">
+	 	<option value="IP" description="IPv4"/>
+		<option value="IPV6" description="IPV6"/>
+		<option value="IPV4V6" description="IPV4 and IPV6"/>
+	  	<default value="IP"/>
+	 </config>
+	<config name="TZMODEM_APN2_MTU" type="text"  description="副apn2  MTU" detail="副apn2  MTU" class_name="MODEM_CONFIG_FIELD">
+	  <default value="1500"/>
+	 </config>
+	<config name="TZMODEM_APN2_ENABLE" type="text"  description="副apn2 开关" detail="副apn2  开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="0" description="关闭"/>
+		<option value="1" description="开启"/>
+	 	<default value="0"/>
+	 </config>
 	
 </project>
 

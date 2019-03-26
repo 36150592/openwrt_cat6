@@ -23,8 +23,26 @@ cat << EOF
         -e          Export or list all the parameters
         -t <config> Export some Specific parameters
         -x          Clean all the parameters
-	--section  <section> point up the section. default cfg
+        -p          add list 
+        -d          delete config
+	   --section  <section> point up the section. default cfg
 EOF
+}
+
+add_list()
+{
+    ## 保存参数时，变量不能以数字开头，否则export时出错。
+    res=`echo ${ARGS} | cut -d '=' -f1 |grep '^[0-9]'`
+    if [ -n "$res" ]; then
+        echo "Parameter error: The first character of a variable can't be a number."
+    else
+        ${UCI} add_list tozed."${SECTION}"."${ARGS}"
+    fi
+}
+
+delete_para()
+{
+    ${UCI} delete tozed."${SECTION}"."${ARGS}"
 }
 
 set_para()
@@ -102,6 +120,12 @@ case ${CMD} in
         ;;
     -t)
         read_few_para
+        ;;
+    -p)
+        add_list
+        ;;
+    -d)
+        delete_para
         ;;
     *)
         usage
