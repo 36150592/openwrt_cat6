@@ -161,7 +161,7 @@ int main(int argc, char * const argv[])
 	int ch;
 	if( argc == 1 )
 	{
-		print("%s","please use -i [net_work_interface] specify the network interface!");
+		printf("%s","please use -i [net_work_interface] specify the network interface!");
 		return 0;
 	}
 
@@ -766,6 +766,7 @@ int util_decode_field_info(unsigned char* p_ethernet_frame,int frame_len)
 			case CMD_INFO_TZ_ENABLE_WATCHDOG:
 				print("CMD_INFO_TZ_ENABLE_WATCHDOG:%s", ( const char* )p_ethernet_frame);
 				strcpy(server_wifi_info.TZ_ENABLE_WATCHDOG,( const char* )p_ethernet_frame);
+				break;
 			case CMD_INFO_AP_GATEWAY_IP:
 				print("CMD_INFO_AP_GATEWAY_IP:%s", ( const char* )p_ethernet_frame);
 				strcpy(server_wifi_info.AP_GATEWAY,( const char* )p_ethernet_frame);
@@ -1009,7 +1010,8 @@ int util_sync_config_info(void)
 		{
 			print("error:config_set_string TZ_ENABLE_WIFI failed! ret=%d",ret);
 		}
-		int disabled = strcmp(server_wifi_info.TZ_ENABLE_WIFI,"yes")?0:1;
+		int disabled = strcmp(server_wifi_info.TZ_ENABLE_WIFI,"yes")?1:0;
+		print("set wireless.%s.disabled=%d..", NAME_OF_WIRELESS_INTERFACE, disabled);
 		shell_recv(NULL,0,"uci set wireless.%s.disabled=%d", NAME_OF_WIRELESS_INTERFACE, disabled);
 		network_config_changed=true;
 		config_have_changed=TRUE;
