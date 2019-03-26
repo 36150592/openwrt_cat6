@@ -1,0 +1,21 @@
+{
+  "Login":{
+		"TZ_TEST_USERNAME":{
+			"AUTH":"0xF8F8E0",
+			"LEVEL":"1"
+		},
+        "TZ_SUPER_USERNAME":{
+			"AUTH":"0xF8F8E0",
+			"LEVEL":"2"
+		},
+		 "TZ_USERNAME":{
+			"AUTH":"0x00F8E0",
+			"LEVEL":"3"
+		}
+  },
+  "Language":"cn",
+  "LanguageList":"6"
+
+  
+  
+}

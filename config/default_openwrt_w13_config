@@ -3174,7 +3174,8 @@ CONFIG_PACKAGE_sendat=y
 # CONFIG_PACKAGE_smtplog is not set
 CONFIG_PACKAGE_switch=y
 CONFIG_PACKAGE_tozed_tool=y
-CONFIG_PACKAGE_tz_web=y
+# CONFIG_PACKAGE_tz_web is not set
+CONFIG_PACKAGE_tz_w13_web=y
 CONFIG_PACKAGE_uci2dat=y
 CONFIG_PACKAGE_unzip=y
 # CONFIG_PACKAGE_wapid is not set
