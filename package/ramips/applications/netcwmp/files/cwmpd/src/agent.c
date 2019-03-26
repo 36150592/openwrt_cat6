@@ -1123,13 +1123,14 @@ int update_exec(download_arg_t *dlarg)
     }
     if(strcmp(dlarg->filetype, "1 Firmware Upgrade Image") == 0) 
     {
-       sprintf(shellcmd,"sysupgrade -T %s",filePath);
+/*       sprintf(shellcmd,"sysupgrade -T %s",filePath);
        if(system(shellcmd) != 0)
        {
             return CWMP_ERROR;
        }
+*/       
        memset(shellcmd,0,sizeof(shellcmd));
-       sprintf(shellcmd,"sysupgrade -q %s",filePath);
+       sprintf(shellcmd,"upgrade %s",filePath);
        system(shellcmd);
     }
     else if(strcmp(dlarg->filetype, "3 Vendor Configuration File") == 0)

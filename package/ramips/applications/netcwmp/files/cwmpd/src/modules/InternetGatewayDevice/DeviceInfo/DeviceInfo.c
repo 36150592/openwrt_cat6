@@ -21,7 +21,7 @@ int cpe_get_igd_di_manufactureroui(cwmp_t * cwmp, const char * name, char ** val
 int cpe_get_igd_di_ModelName(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {	
 	char buff[128];
-	sprintf(buff, "cat /version | grep device: | awk -F: \'{print $2}\'");
+	sprintf(buff, "cat /version | grep device= | awk -F= \'{print $2}\'");
 	read_memory(buff,param,sizeof(param));
 	util_strip_traling_spaces(param);
 	if (strlen(param) == 0) {
@@ -36,7 +36,7 @@ int cpe_get_igd_di_ModelName(cwmp_t * cwmp, const char * name, char ** value, po
 int cpe_get_igd_di_ModelNumber(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	char buff[128];
-	sprintf(buff, "cat /version | grep hwversion: | awk -F: \'{print $2}\'");
+	sprintf(buff, "cat /version | grep hwversion= | awk -F= \'{print $2}\'");
 	read_memory(buff,param,sizeof(param));
 	util_strip_traling_spaces(param);
 	if (strlen(param) == 0) {
@@ -52,7 +52,7 @@ int cpe_get_igd_di_ModelNumber(cwmp_t * cwmp, const char * name, char ** value, 
 int cpe_get_igd_di_Description(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	char buff[128];
-	sprintf(buff, "cat /version | grep device: | awk -F: \'{print $2}\'");
+	sprintf(buff, "cat /version | grep device= | awk -F= \'{print $2}\'");
 	read_memory(buff,param,sizeof(param));
 	util_strip_traling_spaces(param);
 	strcat(param, " WirelessRouter");
@@ -99,8 +99,8 @@ int cpe_get_igd_di_hardwareversion(cwmp_t * cwmp, const char * name, char ** val
 int cpe_get_igd_di_softwareversion(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
     //return get_sys_parameter(X_SYS_SoftwareVersion, value);
-    char shcmd[32];
-    sprintf(shcmd, "head -n 1 /etc/openwrt_version");
+    char shcmd[128];
+    sprintf(shcmd, "cat /version |grep software_version|awk -F= \'{print $2}\'");
     read_memory(shcmd, param, sizeof(param));
     util_strip_traling_spaces(param);
     if (strlen(param) == 0) {
@@ -153,7 +153,7 @@ int cpe_get_igd_di_uptime(cwmp_t * cwmp, const char * name, char ** value, pool_
 int cpe_get_igd_di_AdditionalHardwareVersion(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
     	char buff[128];
-	sprintf(buff, "cat /version | grep features: | awk -F: \'{print $2}\'");
+	sprintf(buff, "cat /version | grep features= | awk -F= \'{print $2}\'");
 	read_memory(buff,param,sizeof(param));
 	util_remove_special_char(param,' ');
 	util_strip_traling_spaces(param);
@@ -170,7 +170,7 @@ int cpe_get_igd_di_AdditionalHardwareVersion(cwmp_t * cwmp, const char * name, c
 int cpe_get_igd_di_AdditionalSoftwareVersion(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
     char shellcmd[128];
-	sprintf(shellcmd, "cat /version | grep -E \"type:|branch:|compile_option:\" | awk -F: \'{print $2}\' | sed \':a;N;$!ba;s/\\n/,/g\'");
+	sprintf(shellcmd, "cat /version | grep -E \"type|branch|build\" | awk -F= \'{print $2}\' | sed \':a;N;$!ba;s/\\n/,/g\'");
 	read_memory(shellcmd,param,sizeof(param));
 	util_strip_traling_spaces(param);
 	if (strlen(param) == 0) {
@@ -1218,11 +1218,50 @@ int cpe_get_igd_Time_Status(cwmp_t * cwmp, const char * name, char ** value, poo
 	*value = param;
 	return FAULT_CODE_OK;
 }
+int cpe_get_igd_UpdateURL(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	strcpy(param,"query.hicloud.com");
+	*value = param;
+	return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_UpdatePort(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	strcpy(param,"80");
+	*value = param;
+	return FAULT_CODE_OK;
+}
+
+
+int cpe_get_igd_Time_NTPServer0(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    read_memory("uci -q get system.ntp.server | awk '{print $1}'", param, 64); 
+    util_strip_traling_spaces(param);
+	if (strlen(param) == 0) {
+		*value = NULL;
+	} else {
+		*value = param;
+	}
+
+	return FAULT_CODE_OK;
+
+}
+
+int cpe_set_igd_Time_NTPServer0(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
+{
+	if ( value == NULL || strlen(value) == 0) {
+		nv_cfg_set("sntp_server0", "");
+	} else {
+		nv_cfg_set("sntp_server0", "Other");
+		nv_cfg_set("sntp_other_server0", value);
+	}
+	return FAULT_CODE_OK;
+}
 
 
 int cpe_get_igd_Time_NTPServer1(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-    read_memory("uci -q get system.ntp.server | awk '{print $1}'", param, 64); 
+    read_memory("uci -q get system.ntp.server | awk '{print $2}'", param, 64); 
     util_strip_traling_spaces(param);
 	if (strlen(param) == 0) {
 		*value = NULL;
@@ -1243,7 +1282,7 @@ int cpe_set_igd_Time_NTPServer1(cwmp_t * cwmp, const char * name, const char * v
 
 int cpe_get_igd_Time_NTPServer2(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-    read_memory("uci -q get system.ntp.server | awk '{print $2}'", param, 64); 
+    read_memory("uci -q get system.ntp.server | awk '{print $3}'", param, 64); 
     util_strip_traling_spaces(param);
 	//get_single_config_attr("TZ_NTP_SERVER2", param);
 	if (strlen(param) == 0) {
@@ -1265,7 +1304,7 @@ int cpe_set_igd_Time_NTPServer2(cwmp_t * cwmp, const char * name, const char * v
 
 int cpe_get_igd_Time_NTPServer3(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-    read_memory("uci -q get system.ntp.server | awk '{print $3}'", param, 64); 
+    read_memory("uci -q get system.ntp.server | awk '{print $4}'", param, 64); 
     util_strip_traling_spaces(param);
     	//get_single_config_attr("TZ_NTP_SERVER3", param);
 	if (strlen(param) == 0) {

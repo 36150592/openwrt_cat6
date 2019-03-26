@@ -2,6 +2,7 @@
 #define WIRELESS_INTERFACE_NAME_5G        "rai"
 #define MAX_WIRELESS_CLIENT				40
 #define MAX_HOSTS						80
+#define MAX_MULTI_SSID_COUNT            4
 
 struct WlanClient
 {
@@ -240,6 +241,125 @@ static int uci_get_wifi_param(const char * name, const char * option, char ** va
     }
     return FAULT_CODE_OK;
 }
+
+static int uci_mul_get_wifi_num(void)
+{
+    return 4;
+}
+
+static int uci_mul_get_wifi_param(const char * name, const char * option, char ** value)
+{
+    int index;
+    int num;
+    char cmdbuf[64] = {0};
+    num = uci_mul_get_wifi_num();
+    printf("jiangyibo %s\n",name);
+    index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    
+    if (0 < index && index <= num)
+    {
+        
+        sprintf(cmdbuf,"uci -q get mutilssid.@wifi-iface[%d].%s",index - 1,option);
+        printf("jiangyibo 88 %s\n",cmdbuf);
+        read_memory(cmdbuf, param, sizeof(param));
+        printf("jiangyibo 88 %s\n",param);
+        util_strip_traling_spaces(param);
+        *value = param;
+    }
+    else
+    {   
+        return FAULT_CODE_9005;
+    }
+    printf("jiangyibo %d\n",index);
+    return FAULT_CODE_OK;
+}
+
+static int uci_mul_set_wifi_param(const char * name, const char * option, char * value)
+{
+    int index;
+    int num;
+    char cmdbuf[128] = {0};
+    num = uci_mul_get_wifi_num();
+    index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    if (0 < index && index <= num)
+    {
+        sprintf(cmdbuf,"uci -q set mutilssid.@wifi-iface[%d].%s=%s&&uci -q commit mutilssid",index - 1,option,value);
+        
+		system(cmdbuf);
+        cmd_touch(REBOOT_WIFI_MODULE);
+ //       callback_reg(cwmp, restart_wifi, NULL, NULL);
+    }
+    else
+    {   
+        return FAULT_CODE_9005;
+    }
+    return FAULT_CODE_OK;
+}
+
+static int uci_mul_get_dhcp_param(const char * name, const char * option, char ** value)
+{
+    int index;
+    int num;
+    char cmdbuf[64] = {0};
+    num = uci_mul_get_wifi_num();
+    index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    if (0 < index && index <= num)
+    {
+        sprintf(cmdbuf,"uci -q get dhcp.lan%d.%s",(index - 1)%2+1,option);
+        printf("jiangyibo 8811 %s\n",cmdbuf);
+        read_memory(cmdbuf, param, sizeof(param));
+        util_strip_traling_spaces(param);
+        *value = param;
+    }
+    else
+    {   
+        return FAULT_CODE_9005;
+    }
+    return FAULT_CODE_OK;
+}
+static int uci_mul_get_ipaddr_param(const char * name, const char * option, char ** value)
+{
+    int index;
+    int num;
+    char cmdbuf[64] = {0};
+    num = uci_mul_get_wifi_num();
+    index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    if (0 < index && index <= num)
+    {
+        sprintf(cmdbuf,"uci -q get network.lan%d.%s",(index - 1)%2+1,option);
+        read_memory(cmdbuf, param, sizeof(param));
+        printf("jiangyibo 2222 %s\n",cmdbuf);
+        util_strip_traling_spaces(param);
+        *value = param;
+    }
+    else
+    {   
+        return FAULT_CODE_9005;
+    }
+    return FAULT_CODE_OK;
+}
+
+
+static int uci_mul_set_dhcp_param(const char * name, const char * option, char * value)
+{
+    int index;
+    int num;
+    char cmdbuf[64] = {0};
+    num = uci_mul_get_wifi_num();
+    index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    if (0 < index && index <= num)
+    {
+        sprintf(cmdbuf,"uci -q set dhcp.lan[%d].%s=%s&&uci -q commit dhcp",(index - 1)%2,option,value);
+		system(cmdbuf);
+        cmd_touch(REBOOT_WIFI_MODULE);
+    }
+    else
+    {   
+        return FAULT_CODE_9005;
+    }
+    return FAULT_CODE_OK;
+}
+
 
 int getHostsInfo(HostsInfo *info)
 {
@@ -2172,7 +2292,7 @@ int cpe_set_igd_WMMEnable(cwmp_t *cwmp, const char *name, const char *value, int
 
 int cpe_refresh_igd_MultiSSID(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
 {
-    cwmp_refresh_i_parameter(cwmp, param_node, 1);
+    cwmp_refresh_i_parameter(cwmp, param_node, 4);
     cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg); 
 
     return FAULT_CODE_OK;
@@ -2820,4 +2940,539 @@ int cpe_get_WPSRegistrarDeviceName(cwmp_t * cwmp, const char * name, char ** val
 	
     return FAULT_CODE_OK;
 }
+
+int cpe_add_igd_tr_MultiSSID(cwmp_t * cwmp, parameter_node_t * param_node, int *pinstance_number, callback_register_func_t callback_reg)
+{
+    if(!param_node)
+    {
+        return FAULT_CODE_9002;
+    }
+
+    int num = 4;
+    int i;
+
+    cwmp_log_info("cpe_add_igd_tr_MultiSSID node=%s",param_node->name);
+    *pinstance_number = 1;
+
+    parameter_node_t  *child_param;
+    child_param = param_node->child;
+    if(child_param)
+    {
+        /*for(tmp_param=child_param->next_sibling; tmp_param; )
+        {
+            cwmp_log_info("refresh X_CMCC_MonitorConfig node, delete param %s\n", tmp_param->name);
+            tmp_node = tmp_param->next_sibling;
+            cwmp_model_delete_parameter(tmp_param);
+            tmp_param = tmp_node;
+        }
+        child_param->next_sibling = NULL; */
+
+        parameter_node_t * wan1_param;
+        for (i = 0; i < num; i++) {
+            cwmp_model_copy_parameter(param_node, &wan1_param, i + 1);
+        }
+
+        cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg);
+    }
+
+    *pinstance_number = num++;
+
+    cwmp_log_info("==================== add ");
+    _walk_parameter_node_tree(param_node, 0);
+
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_MultiSSIDEnable(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	strcpy(param, "Enable");
+	*value = param;
+	return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_MultiSSIDEnable(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_EnableOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	int res = uci_mul_get_wifi_param(name, "disabled", value);
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    if(0 == strcmp(*value, "1")){
+    	strcpy(param, "false");
+    }
+    else{
+    	strcpy(param, "true");
+    }
+    *value = param;
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_EnableOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	char nv_name[64] = {0};
+	if(!strcmp(value, "1")) {
+        strcpy(param, "1");
+		cwmp_log_debug("[tr069][wifi]User enable WIFI swtich! %s\n",param);
+    } else if(!strcmp(value, "0")) {
+        strcpy(param, "0");
+		cwmp_log_debug("[tr069][wifi]User disable WIFI swtich! %s\n",param);
+    } else {
+    	return FAULT_CODE_OK;
+    }
+	int res = uci_mul_set_wifi_param(name, "disabled", param);
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_SSIDOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	int res = uci_mul_get_wifi_param(name, "ssid", value);
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_SSIDOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+    printf("jiangyibo uu\n");
+    int res = uci_mul_set_wifi_param(name, "ssid", value);
+    printf("jiangyibo uu22\n");
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_PasswordOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	int res = uci_mul_get_wifi_param(name, "key", value);
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_PasswordOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	if (value == NULL || strlen(value) == 0) {
+		return FAULT_CODE_OK;
+	}
+	char base64_buf[128] = {0};
+	char nv_name[16] = {0};
+	char nv_name1[16] = {0};
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	index++;
+	sprintf(nv_name,"WPAPSK%d", index);
+	sprintf(nv_name1,"WPAPSK%d_encode", index);
+	if (strlen(nv_name) == 0 || index == 1) {
+		strcpy(nv_name, "WPAPSK1");
+		strcpy(nv_name1, "WPAPSK1_encode");
+	}
+    if(strlen(value) >= 8 && strlen(value) <= 63) {
+        nv_cfg_set(nv_name, value);
+		cwmpd_zte_base64_encode(value, strlen(value), base64_buf, sizeof(base64_buf));
+		nv_cfg_set(nv_name1, base64_buf);
+		system("/securefs/wifi_script/realtek/mutil_ssid.sh > /dev/null 2>&1");
+    }
+
+    return FAULT_CODE_OK;
+}
+int cpe_get_igd_EncrypModeOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	int ret = -1;
+	int res = uci_mul_get_wifi_param(name, "encryption", value);
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+/*	
+	if (!strcmp(buffer, "OPEN")) {
+		
+		strcpy(param, "OPEN");
+	} else if (!strcmp(buffer, "WPA2PSK")){
+	
+		strcpy(param, "WPA2-PSK[AES]");
+		
+	} else if (!strcmp(buffer, "WPAPSKWPA2PSK")){
+	
+		strcpy(param, "WPA-PSK/WPA2-PSK");
+	} else {
+		*value = NULL;
+    	return FAULT_CODE_OK;
+	}
+    *value = param;
+*/
+    printf("jiangyibo 111\n");
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_EncrypModeOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	index++;
+	char EncrypType[16] = {0};
+	char AuthMode[16] = {0};
+	sprintf(EncrypType,"EncrypType%d", index);
+	
+	sprintf(AuthMode,"AuthMode%d", index);
+	cwmp_log_debug("EncrypType index: %s %s\n", EncrypType, AuthMode);
+	if (value == NULL || !strcmp(value, "0")) {
+		char WPAPSK[16] = {0};
+		char WPAPSK_encode[16] = {0};
+		
+		sprintf(WPAPSK,"WPAPSK%d", index);
+		sprintf(WPAPSK_encode,"WPAPSK%d_encode", index);
+		cwmp_log_debug("WPAPSK encode index: %s %s\n", WPAPSK, WPAPSK_encode);
+		nv_cfg_set(EncrypType, (char *)WPAEncryptionModes[0][0]);
+		cwmp_log_debug("\nEncrypType was set OPEN!\n");
+		nv_cfg_set(WPAPSK, "");
+		nv_cfg_set(WPAPSK_encode, "");
+		nv_cfg_set(AuthMode, "OPEN");
+		
+	} else if (!strcmp(value, "1")) {
+
+		nv_cfg_set(AuthMode, "WPA2PSK");
+		nv_cfg_set(EncrypType, (char *)WPAEncryptionModes[1][0]);
+		
+	} else if (!strcmp(value, "2")) {
+
+		nv_cfg_set(AuthMode, "WPAPSKWPA2PSK");
+		nv_cfg_set(EncrypType, (char *)WPAEncryptionModes[2][0]);
+	}
+	system("/securefs/wifi_script/realtek/mutil_ssid.sh > /dev/null 2>&1");
+	return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_NATSwitchOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+
+	strcpy(param, "OFF");
+    *value = param;
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_NATSwitchOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_DHCPSwitchOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    printf("jiangyibo jj \n");
+    int res = uci_mul_get_dhcp_param(name, "ignore", value);
+    if(*value == NULL)
+    {
+          strcpy(param, "ON");
+          *value = param;
+        return FAULT_CODE_OK;
+    }
+    printf("jiangyibo jj %s\n",*value);
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    if(0 == strcmp(*value, "1")){
+    	strcpy(param, "OFF");
+    }
+    else{
+    	strcpy(param, "ON");
+    }
+    *value = param;
+    return FAULT_CODE_OK;
+
+}
+
+int cpe_set_igd_DHCPSwitchOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	char nv_name[16] = {0};
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	index++;
+	sprintf(nv_name,"tz_dhcp%d_enable", index);
+	if (strlen(value) == 0 || strcmp(value,"1") == 0) {
+		nv_cfg_set(nv_name, "1");
+	} else {
+		nv_cfg_set(nv_name, "0");
+	}
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_IPAddressOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int res = uci_mul_get_ipaddr_param(name, "dhcp_option", value);
+   
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_IPAddressOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+    
+    return FAULT_CODE_OK;
+}
+int cpe_get_igd_DHCPLeaseTimeOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int res = uci_mul_get_dhcp_param(name, "leasetime", value);
+   
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_DHCPLeaseTimeOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+        int res = uci_mul_set_dhcp_param(name, "leasetime", value);
+   return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_MinAddressOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+    int res = uci_mul_set_dhcp_param(name, "start", value);
+    return FAULT_CODE_OK;
+}
+int cpe_get_igd_MinAddressOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+        int res = uci_mul_get_dhcp_param(name, "start", value);
+
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_MaxAddressOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+    int res = uci_mul_set_dhcp_param(name, "limit", value);
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_MaxAddressOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int res = uci_mul_get_dhcp_param(name, "limit", value);
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_SubnetMaskOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+        int res = uci_mul_set_dhcp_param(name, "netmask", value);
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_SubnetMaskOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int res = uci_mul_get_dhcp_param(name, "netmask", value);
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_GatewayOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_GatewayOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+        strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_FirstDNSOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_FirstDNSOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int i, j;
+	int count;
+	char cmd[128];
+	char buffer[128];
+
+    int res = uci_mul_get_dhcp_param(name, "dhcp_option", value);
+    return FAULT_CODE_OK;
+}
+//P25 No second dns
+int cpe_set_igd_SecondDNSOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_SecondDNSOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+}
+//P25 No second dns
+
+int cpe_set_igd_APNSwitchOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	char nv_name[16] = {0};
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	index++;// 2 3
+	sprintf(nv_name,"tz_apn%d_enable", index);
+	if (strlen(value) != 0) {
+		nv_cfg_set(nv_name, value);
+	}
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_APNSwitchOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_ConfigNameOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	char nv_name[16] = {0};
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	index++;// 2, 3
+	sprintf(nv_name,"apn%d_profile_name", index);
+	if (strlen(value) != 0) {
+		nv_cfg_set(nv_name, value);
+	}
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_ConfigNameOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	char nv_name[16] = {0};
+	int ret = -1;
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+
+}
+
+int cpe_set_igd_APNNameOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	char nv_name[16] = {0};
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	index++;// 2, 3
+	sprintf(nv_name,"apn%d_wan", index);
+	if (strlen(value) != 0) {
+		nv_cfg_set(nv_name, value);
+	}
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_APNNameOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	char nv_name[16] = {0};
+	int ret = -1;
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+
+}
+
+int cpe_set_igd_UsernameOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	char nv_name[16] = {0};
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	index++;// 2, 3
+	sprintf(nv_name,"apn%d_username", index);
+	if (strlen(value) != 0) {
+		nv_cfg_set(nv_name, value);
+	}
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_UsernameOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	char nv_name[16] = {0};
+	int ret = -1;
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_APNPasswordOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	char nv_name[16] = {0};
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	index++;// 2, 3
+	sprintf(nv_name,"apn%d_passwd", index);
+	if (strlen(value) != 0) {
+		nv_cfg_set(nv_name, value);
+	}
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_APNPasswordOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	char nv_name[16] = {0};
+	int ret = -1;
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_PDPTypeOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{
+	char nv_name[16] = {0};
+	char nv_value[16] = {0};
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	index++;// 2, 3
+	sprintf(nv_name,"apn%d_type", index);
+	if (strlen(value) != 0) {
+		switch (atoi(value)) {
+			case 1:
+				strcpy(nv_value, "IP");
+				break;
+			case 2:
+				strcpy(nv_value, "IPv6");
+				break;
+			case 3:
+				strcpy(nv_value, "IPv4v6");
+				break;
+			default:
+				cwmp_log_debug("Set PDP type error! value:%s\n", value);
+				return FAULT_CODE_9002;
+				break;
+		}
+		nv_cfg_set(nv_name, nv_value);
+	}
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_PDPTypeOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	char nv_name[16] = {0};
+	int ret = -1;
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_ApnWanIpOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	char nv_name[16] = {0};
+	int ret = -1;
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_ApnPrimaryDNSOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	char nv_name[16] = {0};
+	int ret = -1;
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_ApnSecondDNSOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	char nv_name[16] = {0};
+	int ret = -1;
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    strcpy(param, "");
+    *value = param;
+    return FAULT_CODE_OK;
+}
+
 

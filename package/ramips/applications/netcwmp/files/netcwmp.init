@@ -45,11 +45,11 @@ event_filename=/etc/cwmpevent.bin
 acs_url=$(uci_get_by_name $1 tr069_ServerURL http://113.98.195.202:7547/)
 ca_file=/etc/ssl/private/ca.pem
 ca_password=123456
-cpe_manufacture=$(uci_get_by_name $1 tr069_Manufacturer ChinaSZTozed)
-cpe_oui=$(uci_get_by_name $1 tr069_Description A5555)
+cpe_manufacture=$(uci_get_by_name $1 tr069_Manufacturer 'Shenzhen Tozed Technologies Co., Ltd')
+cpe_oui=$(uci_get_by_name $1 tr069_Description D8D866)
 cpe_sn=S21$(eth_mac g imei)
 cpe_name=$(uci_get_by_name $1 tr069_ModelName 6666)
-cpe_pc=$(uci_get_by_name $1 tr069_ProductClass 99T2800)
+cpe_pc=$(uci_get_by_name $1 tr069_ProductClass 'ZLT S21')
 cpe_specver=$(uci_get_by_name $1 tr069_version V1.0)
 cpe_hwver=$(uci_get_by_name $1 tr069_version V1.0)
 cpe_version=$(uci_get_by_name $1 tr069_version V1.2.7.29)
@@ -69,7 +69,7 @@ EOF
 start() {
     local ret=$(uci_get_by_name cfg TZ_TR069_DATA_MODEL device.xml)
     gen_service_file cfg /etc/cwmp.conf
-    cp /etc/$ret /etc/device.xml
+    cp /etc/$ret /etc/device.xml -a
     /usr/sbin/cwmpd >/dev/null 2>&1 &
 }
 

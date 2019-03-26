@@ -434,6 +434,87 @@ xmlnode_t * cwmp_xml_create_child_node(env_t * env ,  xmlnode_t * parentNode, co
     return (xmlnode_t *)newNode;
 }
 
+void cwmpd_zte_base64_encode(const char* data, int data_len, char* encode, int encode_len) 
+{ 
+    //int data_len = strlen(data); 
+    int prepare = 0; 
+    int ret_len; 
+    int temp = 0; 
+    char *ret = NULL; 
+    char *f = NULL; 
+    int tmp = 0; 
+    char changed[4]; 
+    int i = 0; 
+    const char base[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="; 
+    
+    if(data == NULL)
+    {
+        return;
+    }
+    if(encode == NULL)
+    {
+        return;
+    }
+    if(data_len == 0)
+    {
+        return;
+    }
+    ret_len = data_len / 3; 
+    temp = data_len % 3; 
+    if (temp > 0) 
+    { 
+        ret_len += 1; 
+    } 
+    ret_len = ret_len*4 + 1; 
+    ret = (char *)malloc(ret_len); 
+    
+    if (ret == NULL) 
+    { 
+        printf("No enough memory.\n"); 
+        return;
+    } 
+    memset(ret, 0, ret_len); 
+    f = ret; 
+    while (tmp < data_len) 
+    { 
+        temp = 0; 
+        prepare = 0; 
+        memset(changed, '\0', 4); 
+        while (temp < 3) 
+        { 
+            //printf("tmp = %d\n", tmp); 
+            if (tmp >= data_len) 
+            { 
+                break; 
+            } 
+            prepare = ((prepare << 8) | (data[tmp] & 0xFF)); 
+            tmp++; 
+            temp++; 
+        } 
+        prepare = (prepare<<((3-temp)*8)); 
+        //printf("before for : temp = %d, prepare = %d\n", temp, prepare); 
+        for (i = 0; i < 4 ;i++ ) 
+        { 
+            if (temp < i) 
+            { 
+                changed[i] = 0x40; 
+            } 
+            else 
+            { 
+                changed[i] = (prepare>>((3-i)*6)) & 0x3F; 
+            } 
+            *f = base[(int)changed[i]]; 
+            //printf("%.2X", changed[i]); 
+            f++; 
+        } 
+    } 
+    *f = '\0'; 
+    strncpy(encode, ret, encode_len - 1);
+    if(ret != NULL)
+    {
+        free(ret);
+    }  
+}
 
 int cwmp_xml_set_node_attribute(env_t * env,  xmlnode_t * node, const char * name, const char * value)
 {
@@ -444,9 +525,32 @@ int cwmp_xml_set_node_attribute(env_t * env,  xmlnode_t * node, const char * nam
         return CWMP_ERROR;
 }
 
+int nv_cfg_set(const char *name,const char *value)
+{
+	int len = strlen(name) + 3;
+	int len2 = strlen(value) + 3;
+	char buffer_v[len2];
+	char buffer_n[len];
+	
+	strcpy(buffer_n,name);
+	strcpy(buffer_v,value);
 
+	
 
+	return 1;
+}
 
+int nv_cfg_get_item(const char *name, char* buf, int bufLen)
+{
+	int len = strlen(name) + 3;
+	char buffer_n[len];
+	
+	strcpy(buffer_n,name);
+	
+	buffer_n[strlen(buffer_n)] = '\0';
+	
+	return 1;
+}
 
 
 
@@ -3642,7 +3746,8 @@ static char BANDS[][20] = { "LTE-FDD band 1", "", "LTE-FDD band 3", "", "", "",
 			
 //所有的http参数
 static HttpParams all_http_params;
-InfoStruct system_version_info;
+InfoStruct 
+system_version_info;
 WanInfo wan_info;
 static PPPUserInfo ppp_users[4];
 
@@ -4280,6 +4385,15 @@ int read_lte_param( const char* config_file,InfoStruct* server_wifi_info )
 		{
 			STRCPY_S( server_wifi_info->LAC,field_value );
 		}
+		else if( !strcmp( field_name,"iccid" ) )
+		{
+			STRCPY_S( system_version_info.iccid,field_value );
+		}
+		else if( !strcmp( field_name,"imsi" ) )
+		{
+			STRCPY_S( system_version_info.imsi,field_value );
+			
+		}				
 	}
 
 	//关掉文件句柄

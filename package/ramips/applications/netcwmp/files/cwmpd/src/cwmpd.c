@@ -238,6 +238,7 @@ int main(int argc, char **argv)
 	{
                 read_memory("getinfacestatus -i wan -p l3_device",network_dev_name,sizeof(network_dev_name));
                 util_strip_traling_spaces(network_dev_name);
+				strcpy(network_dev_name,"bmwan1");
 		while( cmd_netdev_exist( network_dev_name ) )
 		{
 			//check if ipv4 addr exist
@@ -262,7 +263,7 @@ int main(int argc, char **argv)
 
 NETWORK_IS_OK:
 
-    cwmp_log_init("/tmp/cwmpd.log", CWMP_LOG_WARN);
+    cwmp_log_init("/tmp/cwmpd.log", CWMP_LOG_DEBUG);
     //cwmp_log_init("/tmp/cwmpd.log", CWMP_LOG_DEBUG);
     //cwmp_log_init(NULL, CWMP_LOG_ERROR);
     //cwmp_log_init(NULL, CWMP_LOG_DEBUG);
