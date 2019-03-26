@@ -44,19 +44,24 @@ FTPADDR=ftp://soft:83583000@192.168.1.154:14147/openwrt_cat6
 container_prefix=openwrt_cat6
 CURDIRNAME=`pwd |tr // _ `
 
+addtodockergroup()
+{
+	inGroup=$(id | grep docker)
+	if [ "$inGroup" = "" ] ; then
+		sudo usermod -a -G docker `whoami`
+	fi
+}
 
 docker_run()
 {
        container=$(sudo docker ps -a | grep $container_prefix$dockerimagever$CURDIRNAME)
        if [ "$container" = "" ] ; then
                echo "It seem you never build this system...."
-               sudo docker run -i -t  -v $TOPDIR:/$container_prefix -v /lib/modules:/lib/modules -v /usr/src:/usr/src  --name $container_prefix$dockerimagever$CURDIRNAME  -u tozedsoft -w /$container_prefix $docker_image_name ./cool $coolparam
+               docker run -i -t  -v $TOPDIR:/$container_prefix -v /lib/modules:/lib/modules -v /usr/src:/usr/src  --name $container_prefix$dockerimagever$CURDIRNAME  -u tozedsoft -w /$container_prefix $docker_image_name ./cool $coolparam
        else
-               sudo docker start $container_prefix$dockerimagever$CURDIRNAME
-               echo cool $coolparam
-               #sudo docker attach container_sqn3220_$dockerimagever$CURDIRNAME
-               #sudo docker exec -it container_sqn3220_$dockerimagever$CURDIRNAME bash
-               sudo docker exec -it $container_prefix$dockerimagever$CURDIRNAME ./cool $coolparam
+               docker start $container_prefix$dockerimagever$CURDIRNAME
+               docker exec -it $container_prefix$dockerimagever$CURDIRNAME ./cool $coolparam
+		#docker exec -it $container_prefix$dockerimagever$CURDIRNAME bash
        fi
 }
 
@@ -69,6 +74,7 @@ check_ubuntu_version()
 		if [ "$get_docker" = "" ]; then
                         wget ftp://192.168.1.123/sqn3220/docker/get-docker.sh -nv -m -nH --restrict-file-name=nocontrol --cut-dirs=2
                         sudo sh get-docker.sh --mirror Aliyun
+			sudo usermod -a -G docker `whoami`
                 fi
                 get_images=$(sudo docker images | grep $docker_image_name)
                 if [ "$get_images" = "" ]; then
