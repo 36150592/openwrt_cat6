@@ -14,7 +14,6 @@ export echo="echo"
 
 #echo -e "${ECHO_STYLE_01}echo command terminal style example${ECHO_STYLE_00}"
 
-
 ok_count=0
 fail_count=0
 
@@ -55,7 +54,7 @@ addtodockergroup()
 docker_run()
 {
 	addtodockergroup
-       container=$(sudo docker ps -a | grep $container_prefix$dockerimagever$CURDIRNAME)
+       container=$(docker ps -a | grep $container_prefix$dockerimagever$CURDIRNAME)
        if [ "$container" = "" ] ; then
                echo "It seem you never build this system...."
                docker run -i -t  -v $TOPDIR:/$container_prefix -v /lib/modules:/lib/modules -v /usr/src:/usr/src  --name $container_prefix$dockerimagever$CURDIRNAME  -u tozedsoft -w /$container_prefix $docker_image_name ./cool $coolparam
@@ -77,7 +76,7 @@ check_ubuntu_version()
                         sudo sh get-docker.sh --mirror Aliyun
 			sudo usermod -a -G docker `whoami`
                 fi
-                get_images=$(sudo docker images | grep $docker_image_name)
+                get_images=$(docker images | grep $docker_image_name)
                 if [ "$get_images" = "" ]; then
 			wget $FTPADDR/$docker_image_name$docker_image_ver.tar.gz
 			sudo docker load -i$docker_image_name$docker_image_ver.tar.gz
