@@ -226,7 +226,16 @@ refresh_info()
 				ssid=""
 				get_ssid_by_lan_section $lan_section
 
-				echo "APN$1:$ip,$netmask,$ifname,$dhcp_gate_ip,$dhcp_gate_netmask,$ssid" >> $MUTILAPN_OUTPUT_INFO_FILE
+				local temp_network=`/bin/ipcalc.sh $dhcp_gate_ip $dhcp_gate_netmask | grep "NETWORK" | cut -d'=' -f 2`
+				local temp_netmask=`/bin/ipcalc.sh $dhcp_gate_ip $dhcp_gate_netmask | grep "PREFIX" | cut -d'=' -f 2`
+				local route_table=`ip rule | grep $temp_network/$temp_netmask | grep "all to" | awk '{print $7}'`
+
+				if [ $route_table"" == $ifname ];then
+					echo "APN$1:$temp,$ip,$netmask,$ifname,$temp_network,$dhcp_gate_netmask,$ssid" >> $MUTILAPN_OUTPUT_INFO_FILE
+				else
+					echo "APN$1:$temp,$ip,$netmask,$ifname,,," >> $MUTILAPN_OUTPUT_INFO_FILE
+				fi
+				
 			done
 		fi
 	
@@ -246,8 +255,60 @@ refresh_info()
 		dhcp_gate_netmask=`uci get network.$lan_section.netmask`
 		ssid=""
 		get_ssid_by_lan_section $lan_section
-		echo "APN$1:,,$ifname,$dhcp_gate_ip,$dhcp_gate_netmask,$ssid" >> $MUTILAPN_OUTPUT_INFO_FILE
+		local network=`/bin/ipcalc.sh $dhcp_gate_ip $dhcp_gate_netmask | grep "NETWORK" | cut -d'=' -f 2`
+		local netmask=`/bin/ipcalc.sh $dhcp_gate_ip $dhcp_gate_netmask | grep "PREFIX" | cut -d'=' -f 2`
+		local route_table=`ip rule | grep $network/$netmask | grep "all to" | awk '{print $7}'`
+
+		if [ $route_table"" == $ifname ];then
+			echo "APN$1:$wan_sec_name,,,$ifname,$network,$dhcp_gate_netmask,$ssid" >> $MUTILAPN_OUTPUT_INFO_FILE
+		else
+			echo "APN$1:$wan_sec_name,,,$ifname,,," >> $MUTILAPN_OUTPUT_INFO_FILE
+		fi
 	fi
+}
+
+refresh_eth()
+{
+	for temp in $wan_sections
+	do
+
+		local ret=`uci get network.$temp.land_wan`
+
+		if [ $ret"" != "1" ];then
+			continue
+		fi
+
+		local ifname=`uci get network.$temp.ifname`
+		
+
+		local lan_section=`uci get network.$temp.route_lan_section`
+		local dhcp_gate_ip=`uci get network.$lan_section.ipaddr`
+		local dhcp_gate_netmask=`uci get network.$lan_section.netmask`
+		local ssid=""
+		get_ssid_by_lan_section $lan_section
+
+		
+		local network=`/bin/ipcalc.sh $dhcp_gate_ip $dhcp_gate_netmask | grep "NETWORK" | cut -d'=' -f 2`
+		local netmask=`/bin/ipcalc.sh $dhcp_gate_ip $dhcp_gate_netmask | grep "PREFIX" | cut -d'=' -f 2`
+		local route_table=`ip rule | grep $network/$netmask | grep "all to" | awk '{print $7}'`
+
+		local temp_ip=`ifconfig $ifname | grep "inet addr" | awk '{print $2}' | cut -d':' -f 2`
+		temp_ip=`echo $temp_ip | sed s/[[:space:]]//g`
+		local temp_netmask=`ifconfig $ifname | grep "inet addr" | awk '{print $4}' | cut -d':' -f 2`
+		temp_netmask=`echo $temp_netmask | sed s/[[:space:]]//g`
+
+		if [ $route_table"" == $ifname ];then
+			#sed -i /^APN1/d $MUTILAPN_OUTPUT_INFO_FILE
+
+			sed -i /^ETH/d $MUTILAPN_OUTPUT_INFO_FILE
+			echo "ETH:$temp,$temp_ip,$temp_netmask,$ifname,$network,$dhcp_gate_netmask,$ssid" >> $MUTILAPN_OUTPUT_INFO_FILE
+		else
+			sed -i /^ETH/d $MUTILAPN_OUTPUT_INFO_FILE
+			echo "ETH:$temp,$temp_ip,$temp_netmask,$ifname,,," >> $MUTILAPN_OUTPUT_INFO_FILE
+		fi
+	done
+
+
 }
 
 check_4g_network()
@@ -407,6 +468,7 @@ check_netlink()
 		refresh_info 1
 		refresh_info 2
 		refresh_info 3
+		refresh_eth
 		check_route
 		sleep 30
 	done

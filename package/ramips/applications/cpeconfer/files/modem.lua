@@ -950,6 +950,7 @@ end
 
 modem_module.modem_mutilapn_status = {
 	["ipaddr"]  = nil,      		--string
+	["type"] = nil, -- wan section like wan,4g,4g1,4g2
 	["netmask"]  = nil,	--string
 	["ifname"]  = nil,		--string
 	["lan_gate_ip"]  = nil,			--string
@@ -984,6 +985,7 @@ function modem_module.modem_get_mutilapn_status()
 	local primary_apn = modem_module.modem_mutilapn_status:new(nil,nil)
 	local apn1 = modem_module.modem_mutilapn_status:new(nil,nil)
 	local apn2 = modem_module.modem_mutilapn_status:new(nil,nil)
+	local eth = modem_module.modem_mutilapn_status:new(nil,nil)
 	local res = nil
 	local pointer = nil
 
@@ -1014,14 +1016,18 @@ function modem_module.modem_get_mutilapn_status()
 		elseif string.find(key,"APN3") ~= nil
 		then
 			pointer = apn2
+		elseif string.find(key,"ETH") ~= nil
+		then
+			pointer = eth
 		end
 
-		pointer["ipaddr"]  = ar[1]
-		pointer["netmask"]  = ar[2]
-		pointer["ifname"]  = ar[3]
-		pointer["lan_gate_ip"]  = ar[4]
-		pointer["lan_gate_netmask"]  = ar[5]
-		pointer["ssid"] = ar[6]
+		pointer["type"] = ar[1]
+		pointer["ipaddr"]  = ar[2]
+		pointer["netmask"]  = ar[3]
+		pointer["ifname"]  = ar[4]
+		pointer["lan_gate_ip"]  = ar[5]
+		pointer["lan_gate_netmask"]  = ar[6]
+		pointer["ssid"] = ar[7]
 		if nil == pointer["ipaddr"] or "" == pointer["ipaddr"]
 		then
 			pointer["dial_status"] =  0
@@ -1034,7 +1040,7 @@ function modem_module.modem_get_mutilapn_status()
 
 	io.close(f)
 
-	return {primary_apn,apn1,apn2}
+	return {primary_apn,apn1,apn2,eth}
 
 
 end
