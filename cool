@@ -37,16 +37,51 @@ check_bash()
         fi
 }
 
+
+docker_image_name=openwrt_cc
+docker_image_ver=
+FTPADDR=ftp://soft:83583000@192.168.1.154:14147/openwrt_cat6
+container_prefix=openwrt_cat6
+CURDIRNAME=`pwd |tr // _ `
+
+
+docker_run()
+{
+       container=$(sudo docker ps -a | grep $container_prefix$dockerimagever$CURDIRNAME)
+       if [ "$container" = "" ] ; then
+               echo "It seem you never build this system...."
+               sudo docker run -i -t  -v $TOPDIR:/$container_prefix -v /lib/modules:/lib/modules -v /usr/src:/usr/src  --name $container_prefix$dockerimagever$CURDIRNAME  -u tozedsoft -w /$container_prefix $docker_image_name ./cool $coolparam
+       else
+               sudo docker start $container_prefix$dockerimagever$CURDIRNAME
+               echo cool $coolparam
+               #sudo docker attach container_sqn3220_$dockerimagever$CURDIRNAME
+               #sudo docker exec -it container_sqn3220_$dockerimagever$CURDIRNAME bash
+               sudo docker exec -it $container_prefix$dockerimagever$CURDIRNAME ./cool $coolparam
+       fi
+}
+
+
 check_ubuntu_version()
 {
 	ubuntu_version=`cat /etc/issue | awk '{print $2}' | awk -F '.' '{print $1}'`
 	if [ "${ubuntu_version}" != "14" ]; then
-		echo  $hyphen_e "\033[;31m 请使用ubuntu14.04来编译程序 \033[0m"
-		exit
+		get_docker=$(which docker)
+		if [ "$get_docker" = "" ]; then
+                        wget ftp://192.168.1.123/sqn3220/docker/get-docker.sh -nv -m -nH --restrict-file-name=nocontrol --cut-dirs=2
+                        sudo sh get-docker.sh --mirror Aliyun
+                fi
+                get_images=$(sudo docker images | grep $docker_image_name)
+                if [ "$get_images" = "" ]; then
+			wget $FTPADDR/$docker_image_name$docker_image_ver.tar.gz
+			sudo docker load -i$docker_image_name$docker_image_ver.tar.gz
+                fi
+                docker_run
+                rm -f $docker_image_name$docker_image_ver.tar.gz
+                rm -f get-docker.sh
+                exit
 	fi
 }
 
-FTPADDR=ftp://soft:83583000@192.168.1.154:14147/openwrt_cat6
 download_flag=.flag_download_something_2018_12_20
 LASTDOCS=.doc20190222
 download_something()
@@ -78,6 +113,7 @@ download_some_dl
 download_something
 load_compile_count
 check_bash
+check_ubuntu_version
 
 date_start=$(date +%s)
 if [ "$1" = "" ] ; then
@@ -119,7 +155,7 @@ else
 fi
 
 
-check_ubuntu_version
+#check_ubuntu_version
 export TZ_PROJECT=${project}
 echo "The project is ${project}"
 
