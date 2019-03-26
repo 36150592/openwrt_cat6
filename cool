@@ -54,6 +54,7 @@ addtodockergroup()
 
 docker_run()
 {
+	addtodockergroup
        container=$(sudo docker ps -a | grep $container_prefix$dockerimagever$CURDIRNAME)
        if [ "$container" = "" ] ; then
                echo "It seem you never build this system...."
