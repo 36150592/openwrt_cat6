@@ -115,6 +115,7 @@ download_some_dl()
 	fi
 }
 
+check_ubuntu_version
 
 date_start=$(date +%s)
 if [ "$1" = "" ] ; then
