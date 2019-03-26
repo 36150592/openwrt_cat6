@@ -519,6 +519,7 @@ int down_udhcpc(char *card_name)
 			return 1; 
 		memset(buff,0,sizeof(buff));
 		fgets(buff,512,pstr);
+		pclose(pstr);
 		log_info("buff = %s", buff);
 		if(strlen(buff)==0)
 			return 1; 
@@ -551,6 +552,7 @@ int up_udhcpc(char *card_name)
 			return 1; 
 		memset(buff,0,sizeof(buff));
 		fgets(buff,512,pstr);
+		pclose(pstr);
 		log_info("buff = %s", buff);
 		if(strlen(buff)==0)
 			return 1; 
