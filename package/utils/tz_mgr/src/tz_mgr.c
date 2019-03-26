@@ -1880,8 +1880,6 @@ void process_1s_signal(void)
 			//start telnet,http,dns,dhcp server
 			print("%s","---------------no response from server start telnet,http,dns,dhcp server--------------------");
 			is_connected_to_server=FALSE;
-			//这里最好断开连接则退出程序，由procd重启，避免因为修改网络接口导致socket没更新一直收不到server响应，也可以重建socket，但需要使用条件变量先暂停线程
-			raise(SIGQUIT);
 			//设置当前设备的IP地址
 			print("set the %s ip to %s   (ipv4)", network_dev_name, server_wifi_info.AP_IPADDR)
 			util_config_ipv4_addr(network_dev_name,server_wifi_info.AP_IPADDR);
@@ -1892,6 +1890,9 @@ void process_1s_signal(void)
 			//system("/etc/rc.d/rc.uplink.disconnected");
 			shell_recv(NULL,0,"rm -f %s",UPLINK_CONNECTION_IS_OK_TMP_FILE);
 			//cmd_rm( UPLINK_CONNECTION_IS_OK_TMP_FILE );
+			sleep(1);
+			//这里最好断开连接则退出程序，由procd重启，避免因为修改网络接口导致socket没更新一直收不到server响应，也可以重建socket，但需要使用条件变量先暂停线程
+			raise(SIGQUIT);
 		}
 	}
 
