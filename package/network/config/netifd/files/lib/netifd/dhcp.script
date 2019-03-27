@@ -173,7 +173,7 @@ setup_interface () {
 		local ret=`route | grep default | awk '{print $8}'`
 		if [ $ret"" != "" ];then
 		
-			for target in `ip route list table  $ret | awk '{print $1}'`
+			for target in `ip route | grep $ret | awk '{print $1}'`
 			do
 				ip route del $target
 			done
@@ -190,7 +190,7 @@ setup_interface () {
 			local ret=`route | grep default | awk '{print $8}'`
 			if [ $ret"" != "" ];then
 			
-				for target in `ip route list table  $ret | awk '{print $1}'`
+				for target in `ip route | grep $ret | awk '{print $1}'`
 				do
 					ip route del $target
 				done
