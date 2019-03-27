@@ -75,6 +75,7 @@ CONFIG_DEFAULT_kmod-usb-core=y
 CONFIG_DEFAULT_kmod-usb3=y
 CONFIG_DEFAULT_libc=y
 CONFIG_DEFAULT_libgcc=y
+CONFIG_DEFAULT_macwriter=y
 CONFIG_DEFAULT_mtd=y
 CONFIG_DEFAULT_netifd=y
 CONFIG_DEFAULT_odhcp6c=y
@@ -2232,6 +2233,7 @@ CONFIG_PACKAGE_kmod-nls-base=y
 # CONFIG_PACKAGE_kmod-nls-cp864 is not set
 # CONFIG_PACKAGE_kmod-nls-cp866 is not set
 # CONFIG_PACKAGE_kmod-nls-cp932 is not set
+# CONFIG_PACKAGE_kmod-nls-cp936 is not set
 # CONFIG_PACKAGE_kmod-nls-iso8859-1 is not set
 # CONFIG_PACKAGE_kmod-nls-iso8859-13 is not set
 # CONFIG_PACKAGE_kmod-nls-iso8859-15 is not set
@@ -2942,6 +2944,7 @@ CONFIG_PACKAGE_sendat=y
 CONFIG_PACKAGE_socket_at=y
 # CONFIG_PACKAGE_switch is not set
 CONFIG_PACKAGE_tozed_tool=y
+# CONFIG_PACKAGE_tz_w13_web is not set
 CONFIG_PACKAGE_tz_web=y
 CONFIG_PACKAGE_uci2dat=y
 CONFIG_PACKAGE_unzip=y
@@ -3421,6 +3424,7 @@ CONFIG_PACKAGE_maccalc=y
 # CONFIG_PACKAGE_robocfg is not set
 # CONFIG_PACKAGE_spidev-test is not set
 # CONFIG_PACKAGE_strace is not set
+# CONFIG_PACKAGE_tz_mgr is not set
 # CONFIG_PACKAGE_uboot-envtools is not set
 # CONFIG_PACKAGE_ugps is not set
 # CONFIG_PACKAGE_usb-modeswitch is not set

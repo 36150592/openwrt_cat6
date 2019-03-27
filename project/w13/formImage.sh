@@ -14,13 +14,8 @@ echo "Soft=${SOFTWARE_VERSION}"
 mkdir -p image/${project}/update
 rm -rf image/${project}/update/*
 
-cp -f project/${project}/bin/factory.bin image/${project}/factory.bin
-cp -f project/${project}/bin/old-all.bin image/${project}/old-all.bin
-
 cp -f bin/ramips/openwrt-ramips-${chip}-sxx-u-boot.bin image/${project}/new_uboot.bin
 cp -f bin/ramips/openwrt-ramips-${chip}-tz-w13-squashfs-sysupgrade.bin image/${project}/new_firmware-kernel-fs.bin
-cp -f project/${project}/bin/factory.bin image/${project}/
-cp -f project/${project}/bin/old-all.bin image/${project}/
 
 #new uboot new firmware
 rm -f image/${project}/new_firmware_factory.bin
