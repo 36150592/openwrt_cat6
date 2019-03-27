@@ -73,7 +73,7 @@ endef
 define KernelPackage/mt7603e/install
 	$(INSTALL_DIR) $(1)/lib/wifi/
 	$(INSTALL_BIN) ./files/mt7603e.sh $(1)/lib/wifi/
-	$(INSTALL_BIN) ./files/ralink_common.sh $(1)/lib/wifi/
+#	$(INSTALL_BIN) ./files/ralink_common.sh $(1)/lib/wifi/
 	$(INSTALL_DIR) $(1)/etc/wireless/mt7603e/
 #	$(INSTALL_BIN) ./files/mt7603e.dat $(1)/etc/wireless/mt7603e/
 	-$(INSTALL_BIN) ./files/mt7603e.eeprom.bin $(1)/etc/wireless/mt7603e/

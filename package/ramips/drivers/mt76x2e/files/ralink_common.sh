@@ -224,6 +224,7 @@ enable_ralink_wifi() {
             bridge="$(bridge_interface "$net_cfg")"
             config_set "$vif" bridge "$bridge"
             start_net "$ifname" "$net_cfg"
+            brctl addif $bridge $ifname
         }
         set_wifi_up "$vif" "$ifname"
     done
