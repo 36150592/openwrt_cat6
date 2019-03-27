@@ -37,6 +37,13 @@
 //send to client
 #define PROTOCOL_TYPE_ECTCP 0x9887
 
+#define DEV_LED_RED			"r"
+#define DEV_LED_GREEN		"g"
+#define DEV_LED_WPS			"wps"
+#define CMD_LED_ON			1
+#define CMD_LED_OFF			0
+
+
 #define NAME_OF_WIRELESS_INTERFACE	"ra0"
 #define SCRIPT_DHCPD		"/etc/init.d/odhcpd"
 #define SCRIPT_DNSMAQ		"/etc/init.d/dnsmasq"
@@ -74,6 +81,9 @@ int util_client_send_probe_server_frame(int have_server_mac);
 void process_1s_signal(void);
 int process_client_state_machine( int socket_handle );
 int uci_get_config(InfoStruct* server_wifi_info);//获取数据库内容到缓冲区
+void w13_config_lte_led_according2quality(int quality);
+void w13_config_lte_led_according2quality_color(int color);
+void w13_config_led_according2dial_status(int dial_status);
 
 char network_dev_name[16]="";//网络接口的名字
 unsigned char self_mac_addr[6]="";//本机网络接口的MAC地址
@@ -741,11 +751,22 @@ int util_decode_field_info(unsigned char* p_ethernet_frame,int frame_len)
 			case CMD_INFO_DIAL_STATUS:
 				print("CMD_INFO_DIAL_STATUS:%s", ( const char* )p_ethernet_frame);
 				server_wifi_info.dial_status=atoi( ( const char* )p_ethernet_frame );
+				w13_config_led_according2dial_status(server_wifi_info.dial_status);
 				break;
 			case CMD_INFO_SIGNAL_QUALITY:
 				print("CMD_INFO_SIGNAL_QUALITY:%s", ( const char* )p_ethernet_frame);
 				server_wifi_info.signal_quality=atoi( ( const char* )p_ethernet_frame );
+				w13_config_lte_led_according2quality(server_wifi_info.signal_quality);
 				//cmd_update_signal_ind( server_wifi_info.signal_quality,FALSE );
+				break;
+			case CMD_INFO_SIGNAL_QUALITY_COLOR:
+				server_wifi_info.signal_quality_color=atoi( ( const char* )p_ethernet_frame );
+				w13_config_lte_led_according2quality_color(server_wifi_info.signal_quality_color);
+				//cmd_update_signal_ind_color(server_wifi_info.signal_quality_color);
+				break;
+			case CMD_INFO_RESEND_SEARCH_SERVER:
+				print("CMD_INFO_RESEND_SEARCH_SERVER:%s", ( const char* )p_ethernet_frame);
+				util_send_search_server_frame();
 				break;
 			case CMD_INFO_CONFIG_CHANGED_BY_SERVER:
 				print("CMD_INFO_CONFIG_CHANGED_BY_SERVER:%s", ( const char* )p_ethernet_frame);
@@ -774,9 +795,7 @@ int util_decode_field_info(unsigned char* p_ethernet_frame,int frame_len)
 			case CMD_INFO_TZ_WIFI_40M_ENABLE:
 				print("CMD_INFO_TZ_WIFI_40M_ENABLE:%s", ( const char* )p_ethernet_frame);
 				strcpy(server_wifi_info.TZ_WIFI_40M_ENABLE,( const char* )p_ethernet_frame);
-				break;
-			case CMD_INFO_RESEND_SEARCH_SERVER:
-				print("CMD_INFO_RESEND_SEARCH_SERVER:%s", ( const char* )p_ethernet_frame);
+				break;		
 				/*if( !strcmp(server_wifi_info.TZ_ENABLE_WATCHDOG,"no") )
 				{
 					system("dwatchdog");
@@ -833,7 +852,6 @@ int util_sync_config_info(void)
 
 		config_deinit();
 	*/
-
 
 	if( strcmp( server_wifi_info_backup.AP_SSID,server_wifi_info.AP_SSID ) )
 	{
@@ -1869,7 +1887,8 @@ void process_1s_signal(void)
 	{
 		//indicate no signal
 		//cmd_update_signal_ind( 0,FALSE );
-		print("-----------cmd ctrl led!!!----------");
+		print("-----------turn off wps led!!!----------");
+		w13_config_led_according2dial_status(0);
 		//research the server
 		client_status=CLIENT_STATUS_SEARCH_SERVER;
 		counter=0;
@@ -2130,5 +2149,87 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	config_deinit();//释放uci上下文
 	return 0;
 
+}
+
+//w13根据信号质量值控制lte指示灯
+void w13_config_lte_led_according2quality(int quality)
+{
+	if(quality < 0)
+	{
+		print("invalid quality value:%d!",quality);
+	}
+	else if(quality == 0)//off
+	{
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_OFF, DEV_LED_RED);//red off
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_OFF, DEV_LED_GREEN);//green off
+	}
+	else if(quality == 1)//bad --> red
+	{
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_ON, DEV_LED_RED);//red on
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_OFF, DEV_LED_GREEN);//green off
+	}
+	else if(quality == 2)//mid --> red+green=>orange
+	{
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_ON, DEV_LED_RED);//red on
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_ON, DEV_LED_GREEN);//green on
+	}
+	else//good --> green
+	{
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_OFF, DEV_LED_RED);//red off
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_ON, DEV_LED_GREEN);//green on
+	}
+	return;
+}
+
+//w13根据信号颜色值控制lte指示灯
+void w13_config_lte_led_according2quality_color(int color)
+{
+	if(color < 0)
+	{
+		print("invalid color value:%d!",color);
+	}
+	else if(color == 1)//bad --> red
+	{
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_ON, DEV_LED_RED);//red on
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_OFF, DEV_LED_GREEN);//green off
+	}
+	else if(color == 2)//mid --> red+green=>orange
+	{
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_ON, DEV_LED_RED);//red on
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_ON, DEV_LED_GREEN);//green on
+	}
+	else if(color == 3)//good --> green
+	{
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_OFF, DEV_LED_RED);//red off
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_ON, DEV_LED_GREEN);//green on
+	}
+	else//off
+	{
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_OFF, DEV_LED_RED);//red off
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:lte_%s/brightness", CMD_LED_OFF, DEV_LED_GREEN);//green off
+	}
+	return;
+}
+
+//w13根据dial_status值控制指示灯
+void w13_config_led_according2dial_status(int dial_status)
+{
+	if(dial_status < 0)
+	{
+		print("invalid dial_status value:%d!",dial_status);
+	}
+	else if(dial_status == 0)//put out sim
+	{
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:%s/brightness", CMD_LED_OFF, DEV_LED_WPS);//off
+	}
+	else if(dial_status == 1)//pull in sim
+	{
+		shell_recv(NULL,0,"echo %d > /sys/class/leds/deco\\:%s/brightness", CMD_LED_ON, DEV_LED_WPS);//on
+	}
+	else
+	{
+		print("unkown dial_status value:%d!",dial_status);
+	}
+	return;
 }
 

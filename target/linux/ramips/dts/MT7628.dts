@@ -79,12 +79,12 @@
 			label = "deco:wan";
 			gpios = <&gpio1 7 1>;
 		};
-		lte_r {
-			label = "deco:lte_r";
-			gpios = <&gpio1 11 1>;
-		};
 		lte_g {
 			label = "deco:lte_g";
+			gpios = <&gpio1 11 1>;
+		};
+		lte_r {
+			label = "deco:lte_r";
 			gpios = <&gpio1 8 1>;
 		};
 		act {
