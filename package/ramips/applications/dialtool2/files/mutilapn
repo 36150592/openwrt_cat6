@@ -24,18 +24,17 @@ send_at()
 
 check_udhcpc()
 {
-	echo $1
 	local pid=`pgrep -f "udhcpc.*$1" `
-	echo $pid
+	logger "check_udhcpc:$1 kill $pid"
 	for temp in $pid
 	do
-		echo $temp
 		kill -9 $temp
 	done	
 
 	sleep 1
 	local count=`ps | grep udhcpc | grep $1 | grep -v grep | wc -l`	
 	if [ $count -eq 0 ];then
+		logger "up udhcpc for $1"
 		udhcpc -b -i $1   -s /etc/udhcpc.script
 	fi
 }
@@ -57,9 +56,9 @@ dial_mutilapn1()
 	if [ $TZ_ENABLE_AUTO_DIAL'' == '1' -a $TZ_MUTILAPN1_ENABLE'' == '1'   -a $TZ_MUTILAPN1_IP_STACK_MODE"" != ""  -a $TZ_MUTILAPN1_APN_NAME"" != "" ];then
 
 		send_at "at+cgdcont=2,\"$TZ_MUTILAPN1_IP_STACK_MODE\",\"$TZ_MUTILAPN1_APN_NAME\""
-		echo $?
+		logger "dial_mutilapn1:send_at at+cgdcont=2,\"$TZ_MUTILAPN1_IP_STACK_MODE\",\"$TZ_MUTILAPN1_APN_NAME\"  ret = $? "
 		send_at "at\$qcpdpp=2,$TZ_MUTILAPN1_AUTH_TYPE,\"$TZ_MUTILAPN1_USERNAME\",\"$TZ_MUTILAPN1_PASSWORD\""	
-		echo $?
+		logger "dial_mutilapn1:send_at at\$qcpdpp=2,$TZ_MUTILAPN1_AUTH_TYPE,\"$TZ_MUTILAPN1_USERNAME\",\"$TZ_MUTILAPN1_PASSWORD\" ret = $?"
 		
 		local ifname=`uci get network.4g1.ifname` 
 		check_ifname $ifname
@@ -70,19 +69,20 @@ dial_mutilapn1()
 			check_udhcpc $ifname
 		
 			if [ $TZ_MUTILAPN1_IP_STACK_MODE'' == "IP" -o  $TZ_MUTILAPN1_IP_STACK_MODE'' == "IPV4" ];then
-				echo "in IPV4"
+				logger "dial_mutilapn1:dial IPV4 for $ifname"
 				send_at "at\$qcrmcall=1,2,1,2,2"
-				echo $?
+				logger "dial_mutilapn1:send_at at\$qcrmcall=1,2,1,2,2 ret = $?"
 			elif [ $TZ_MUTILAPN1_IP_STACK_MODE'' == "IPV6" ];then
+				logger "dial_mutilapn1:dial IPV6 for $ifname"
 				send_at "at\$qcrmcall=1,2,2,2,2"
-				echo $?
+				logger "dial_mutilapn1:send_at at\$qcrmcall=1,2,2,2,2 ret = $?"
 			else
-				echo "in else"
+				logger "dial_mutilapn1:dial IPV4V6 for $ifname"
 				send_at "at\$qcrmcall=1,2,3,2,2"
-				echo $?
+				logger "dial_mutilapn1:send_at at\$qcrmcall=1,2,3,2,2 ret = $?"
 			fi
 		else
-			echo "$ifname not found"
+			logger "dial_mutilapn1:ERROR $ifname not found"
 		fi
 		
 			
@@ -94,33 +94,34 @@ dial_mutilapn2()
 	if [ $TZ_ENABLE_AUTO_DIAL'' == '1' -a  $TZ_MUTILAPN2_ENABLE'' == '1'  -a $TZ_MUTILAPN2_IP_STACK_MODE"" != ""  -a $TZ_MUTILAPN2_APN_NAME"" != "" ];then
 
 		send_at "at+cgdcont=3,\"$TZ_MUTILAPN2_IP_STACK_MODE\",\"$TZ_MUTILAPN2_APN_NAME\""
-	        echo $?                                                                          
-	        send_at "at\$qcpdpp=3,$TZ_MUTILAPN2_AUTH_TYPE,\"$TZ_MUTILAPN2_USERNAME\",\"$TZ_MUTILAPN2_PASSWORD\""
-	        echo $?                                                                                      
-	                                                                                                     
-	        local ifname=`uci get network.4g2.ifname`                                                    
-	        check_ifname $ifname                                                                         
-	        if [ $? -eq 0 ];then                                                                         
-	                                                                                                     
+        logger "dial_mutilapn2:send_at at+cgdcont=3,\"$TZ_MUTILAPN2_IP_STACK_MODE\",\"$TZ_MUTILAPN2_APN_NAME\"  ret = $? "                                                                          
+        send_at "at\$qcpdpp=3,$TZ_MUTILAPN2_AUTH_TYPE,\"$TZ_MUTILAPN2_USERNAME\",\"$TZ_MUTILAPN2_PASSWORD\""
+        logger "dial_mutilapn2:send_at at\$qcpdpp=3,$TZ_MUTILAPN2_AUTH_TYPE,\"$TZ_MUTILAPN2_USERNAME\",\"$TZ_MUTILAPN2_PASSWORD\" ret = $? "                                                                                       
+                                                                                                     
+        local ifname=`uci get network.4g2.ifname`                                                    
+        check_ifname $ifname                                                                         
+        if [ $? -eq 0 ];then                                                                         
+                                                                                                     
 			send_at "at\$qcrmcall=0,3"                                                                                                     
 
-	                check_udhcpc $ifname                                                                 
-	                                                                                                     
-	                if [ $TZ_MUTILAPN2_IP_STACK_MODE'' == "IP" -o  $TZ_MUTILAPN2_IP_STACK_MODE'' == "IPV4" ];then
-	                        echo "in IPV4"                                                               
-	                        send_at "at\$qcrmcall=1,3,1,2,3"                                             
-	                        echo $?                                                                      
-	                elif [ $TZ_MUTILAPN2_IP_STACK_MODE'' == "IPV6" ];then                                
-	                        send_at "at\$qcrmcall=1,3,2,2,3"                                             
-	                        echo $?                                                                      
-	                else                                                                                 
-	                        echo "in else"                                                               
-	                        send_at "at\$qcrmcall=1,3,3,2,3"                                             
-	                        echo $?                                                                      
-	                fi                                                                                   
-	        else                                                                                         
-	                echo "$ifname not found"                                                             
-	        fi                                                                                           
+            check_udhcpc $ifname                                                                 
+                                                                                                 
+            if [ $TZ_MUTILAPN2_IP_STACK_MODE'' == "IP" -o  $TZ_MUTILAPN2_IP_STACK_MODE'' == "IPV4" ];then
+                    logger "dial_mutilapn2:dial IPV4 for $ifname"                                                              
+                    send_at "at\$qcrmcall=1,3,1,2,3"                                             
+                    logger "dial_mutilapn2:send_at at\$qcrmcall=1,3,1,2,3 ret = $?"                                                                      
+            elif [ $TZ_MUTILAPN2_IP_STACK_MODE'' == "IPV6" ];then
+            		logger "dial_mutilapn2:dial IPV6 for $ifname"                             
+                    send_at "at\$qcrmcall=1,3,2,2,3"                                             
+                    logger "dial_mutilapn2:send_at at\$qcrmcall=1,3,2,2,3 ret = $?"                                                                       
+            else                                                                                 
+                    logger "dial_mutilapn2:dial IPV4V6 for $ifname"                                                              
+                    send_at "at\$qcrmcall=1,3,3,2,3"                                             
+                    logger "dial_mutilapn2:send_at at\$qcrmcall=1,3,3,2,3 ret = $?"                                                                      
+            fi                                                                                   
+        else                                                                                         
+            logger "dial_mutilapn2:ERROR $ifname not found"                                                             
+        fi                                                                                           
 
 	fi
 }
@@ -318,7 +319,9 @@ check_4g_network()
 		send_at "at+bmrat"	
 		local ret=`cat ${REVAT_FILE} | grep NONE | wc -l`
 		if [ $ret -eq '0' ];then
-			break;	
+			break;
+		else
+			logger "check_4g_network:NOT REGISTED!"
 		fi
 			
 		sleep 5
@@ -350,7 +353,7 @@ add_able_default_route()
 
 check_route()
 {
-	ping -w 3 8.8.8.8
+	ping -w 3 8.8.8.8 > /dev/null
 	if [ $? != '0' ];then
 
 		local land_wan_if
@@ -396,7 +399,7 @@ check_route()
 		local ret=`route | grep default | awk '{print $8}'`
 		if [ $ret"" != "" ];then
 		
-			for target in `ip route list table  $ret | awk '{print $1}'`
+			for target in `ip route | grep $ret | awk '{print $1}'`
 			do
 				ip route del $target
 			done
@@ -437,6 +440,7 @@ check_netlink()
 {
 	while [ 1 ] 
 	do
+		logger "check_4g_network"
 		check_4g_network	
 		send_at "at\$qcrmcall?"
 		local ret1=`cat ${REVAT_FILE} | grep "2" | wc -l`	
@@ -449,11 +453,17 @@ check_netlink()
 			dial_mutilapn2
 		fi
 
+		logger "refresh_info 1"
 		refresh_info 1
+		logger "refresh_info 2"
 		refresh_info 2
+		logger "refresh_info 3"
 		refresh_info 3
+		logger "refresh_eth"
 		refresh_eth
+		logger "check_route"
 		check_route
+		logger "Sleep ..."
 		sleep 30
 	done
 }
