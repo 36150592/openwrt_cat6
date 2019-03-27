@@ -1404,7 +1404,7 @@ function deal_at()
 	local tz_answer = {}
 	tz_answer["cmd"] = 19  
 
-	local f = io.popen(string.format("sendat -d/dev/ttyUSB3 -e  %s", tz_req["atCmd"]))
+	local f = io.popen(string.format("sendat -d/dev/ttyUSB1 -e  %s", tz_req["atCmd"]))
 	tz_answer["data"] = f:read("*a")
 	io.close(f)
 	tz_answer["success"] = true
