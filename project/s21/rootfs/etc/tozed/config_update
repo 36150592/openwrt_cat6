@@ -48,18 +48,19 @@ rm -rf ${CONFIG_WORK_STATION}/*
 unzip -P ${zip_pwd} ${CONFIG_ZIP_FILE} -d ${CONFIG_WORK_STATION}
 
 cd ${CONFIG_WORK_STATION}
-if [ ! -f md5sum.txt ]; then
-        config_go_exit "fail" "the config md5.txt not exist"
-fi
 
-config_md5_value_in_file=`cat md5sum.txt | awk '{print $1}'`
+#if [ ! -f md5sum.txt ]; then
+#        config_go_exit "fail" "the config md5.txt not exist"
+#fi
+
+#config_md5_value_in_file=`cat md5sum.txt | awk '{print $1}'`
 
 config_file=`ls | grep .conf`
-config_md5_value_by_cal=`md5sum ${config_file} | awk '{print $1}'`
+#config_md5_value_by_cal=`md5sum ${config_file} | awk '{print $1}'`
 
-if [ "${config_md5_value_in_file}" != "${config_md5_value_by_cal}" ]; then
-        config_go_exit "fail" "md5sum is error!"
-fi
+#if [ "${config_md5_value_in_file}" != "${config_md5_value_by_cal}" ]; then
+#        config_go_exit "fail" "md5sum is error!"
+#fi
 
 
 ##start update config
