@@ -155,10 +155,10 @@ function system_module.system_get_status()
 		return status
 end
 
-local TMP_NETWORK_TOOL_LOG_FILE="/tmp/.network_tool_log"
+local TMP_NETWORK_TOOL_LOG_FILE="/tmp/log_tar/network_tool_log"
 local TMP_TCPDUMP_FILE="/tmp/web_upload/tcpdump"
 local TMP_PKG_DOWNLOAD_FILE="/tz_www/html/manage/network_tool_log.tcpdump"
-local TMP_LOG_DOWNLOAD_FILE="/tz_www/html/manage/network_tool_log.log"
+local TMP_LOG_DOWNLOAD_FILE="/tz_www/html/manage/network_tool_log.tar"
 local LOG_FILE_LIMIT=40960000 -- log file limit 40M
 function system_module.system_network_tool(tz_req)
 	
@@ -227,7 +227,11 @@ function system_module.system_network_tool(tz_req)
 	elseif "log_stop" == tz_req["tool"]
 	then
 		os.execute("ps | grep 'logread' | grep -v grep | awk '{print $1}' | xargs kill -9")
-		os.execute(string.format("ln -sf %s %s ", TMP_NETWORK_TOOL_LOG_FILE, TMP_LOG_DOWNLOAD_FILE))
+		os.execute("rm -rf /tmp/log_tar;mkdir /tmp/log_tar ; iptables -S > /tmp/log_tar/iptables;iptables -S -t nat >> /tmp/log_tar/iptables;")
+		os.execute("iwconfig  > /tmp/log_tar/iwconifg;ifconfig -a > /tmp/log_tar/ifconfig;ip route > /tmp/log_tar/ip_route ;ip rule list > /tmp/log_tar/ip_rule")
+		os.execute("ps > /tmp/log_tar/ps ;cat /proc/meminfo  > /tmp/log_tar/meminfo;dmesg > /tmp/log_tar/dmesg")
+		os.execute("tar cvf /tmp/log.tar /tmp/log_tar/* ")
+		os.execute(string.format("ln -sf %s %s ", "/tmp/log.tar", TMP_LOG_DOWNLOAD_FILE))
 	end
 
 	return tz_answer
