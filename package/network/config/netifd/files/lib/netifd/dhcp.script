@@ -184,6 +184,15 @@ setup_interface () {
 			ping -w 3 8.8.8.8
 			
 			if [ $? == "0" ];then 
+
+				for dns in $dns; do
+					proto_add_dns_server "$dns"
+				done
+				for domain in $domain; do
+					proto_add_dns_search "$domain"
+				done
+
+				proto_send_update "$INTERFACE"
 				return 0
 			fi
 		else
@@ -199,6 +208,14 @@ setup_interface () {
 			fi 
 		fi
 	else
+		for dns in $dns; do
+			proto_add_dns_server "$dns"
+		done
+		for domain in $domain; do
+			proto_add_dns_search "$domain"
+		done
+
+		proto_send_update "$INTERFACE"
 		return 0
 	fi
 
