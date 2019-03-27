@@ -836,6 +836,7 @@ int util_sync_config_info(void)
 {
 	int config_have_changed=FALSE;
 	bool network_config_changed=false;
+	bool wifi_config_changed=false;
 	int ret = -1;
 	ret = config_init(APP_NAME);//初始化uci上下文
 	if(ret < 0)
@@ -864,7 +865,7 @@ int util_sync_config_info(void)
 		}
 		//默认只有一个ssid
 		shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].ssid=%s",server_wifi_info.AP_SSID);
-		network_config_changed=true;
+		wifi_config_changed=true;
 		config_have_changed=TRUE;
 	}
 
@@ -930,7 +931,7 @@ int util_sync_config_info(void)
 	}
 	if(encrypt_changed)
 	{
-		network_config_changed = true;
+		wifi_config_changed = true;
 		if(!strcmp(server_wifi_info.AP_SECMODE, "None"))//none
 		{
 			print("%s","encrypt mode == none");
@@ -1031,7 +1032,7 @@ int util_sync_config_info(void)
 		int disabled = strcmp(server_wifi_info.TZ_ENABLE_WIFI,"yes")?1:0;
 		print("set wireless.%s.disabled=%d..", NAME_OF_WIRELESS_INTERFACE, disabled);
 		shell_recv(NULL,0,"uci set wireless.%s.disabled=%d", NAME_OF_WIRELESS_INTERFACE, disabled);
-		network_config_changed=true;
+		wifi_config_changed=true;
 		config_have_changed=TRUE;
 	}
 
@@ -1157,7 +1158,7 @@ int util_sync_config_info(void)
 			print("error:config_set_string AP_HIDESSID failed! ret=%d",ret);
 		}
 		shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].hidden=%s", server_wifi_info.AP_HIDESSID);
-		network_config_changed = true;
+		wifi_config_changed = true;
 		config_have_changed=TRUE;
 	}
 
@@ -1246,7 +1247,7 @@ int util_sync_config_info(void)
 		}
 		shell_recv(NULL,0,"uci set wireless.%s.channel=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info.AP_PRIMARY_CH);
 		config_have_changed=TRUE;
-		network_config_changed = true;
+		wifi_config_changed = true;
 	}
 	bool wifi_mode_changed = false;
 
@@ -1301,7 +1302,7 @@ int util_sync_config_info(void)
 			wifi_mode=6;//other default n
 		}
 		shell_recv(NULL,0,"uci set wireless.%s.mode=%d", NAME_OF_WIRELESS_INTERFACE, wifi_mode);
-		network_config_changed = true;
+		wifi_config_changed = true;
 	}
 
 
@@ -1334,7 +1335,7 @@ int util_sync_config_info(void)
 		}
 		shell_recv(NULL,0,"uci set wireless.%s.txpower=%d", NAME_OF_WIRELESS_INTERFACE, txpower);
 		config_have_changed=TRUE;
-		network_config_changed = true;
+		wifi_config_changed = true;
 	}
 
 	if( strcmp( server_wifi_info_backup.TZ_ENABLE_WATCHDOG,server_wifi_info.TZ_ENABLE_WATCHDOG ) )
@@ -1377,7 +1378,7 @@ int util_sync_config_info(void)
 			print("-->set wireless.%s.ht=%s", NAME_OF_WIRELESS_INTERFACE, "20");
 			shell_recv(NULL,0,"uci set wireless.%s.ht=%s", NAME_OF_WIRELESS_INTERFACE, "20");
 		}
-		network_config_changed = true;
+		wifi_config_changed = true;
 	}
 	//commit the changes
 	if( config_have_changed )
@@ -1386,10 +1387,15 @@ int util_sync_config_info(void)
 		config_commit();//提交修改
 		shell_recv(NULL,0,"%s","uci commit");
 		sleep(1);
-		if(network_config_changed == true)
+		if(network_config_changed == true)//include wifi config
 		{
 			print("%s","-----------------network config has benn changed!-------------------");
 			shell_recv(NULL,0,"%s","/etc/init.d/network restart");
+		}
+		else if(wifi_config_changed == true)
+		{
+			print("%s","-----------------wifi config has benn changed!-------------------");
+			shell_recv(NULL,0,"%s","wifi restart");
 		}
 	}
 	config_deinit();//释放uci上下文
@@ -1887,7 +1893,8 @@ void process_1s_signal(void)
 	{
 		//indicate no signal
 		//cmd_update_signal_ind( 0,FALSE );
-		print("-----------turn off wps led!!!----------");
+		print("-----------turn off signal led!!!----------");
+		w13_config_lte_led_according2quality(0);
 		w13_config_led_according2dial_status(0);
 		//research the server
 		client_status=CLIENT_STATUS_SEARCH_SERVER;
