@@ -236,9 +236,14 @@ int main(int argc, char **argv)
 
 	while( TRUE )
 	{
-                read_memory("getinfacestatus -i wan -p l3_device",network_dev_name,sizeof(network_dev_name));
+ //               read_memory("getinfacestatus -i wan -p l3_device",network_dev_name,sizeof(network_dev_name));
+                read_memory("route -n|awk  '{print $1,$8}'|grep 0.0.0.0|awk  '{print $2}'|head -1",network_dev_name,sizeof(network_dev_name));
                 util_strip_traling_spaces(network_dev_name);
-				strcpy(network_dev_name,"bmwan1");
+				if(strlen(network_dev_name)==0)
+				{
+				   strcpy(network_dev_name,"eth0.2");
+				}
+				printf("jiangyibo network_dev_name %s\n",network_dev_name);
 		while( cmd_netdev_exist( network_dev_name ) )
 		{
 			//check if ipv4 addr exist

@@ -1081,7 +1081,7 @@ int cwmp_agent_upload_file(upload_arg_t * ularg)
 void restore_factory()
 {
 	write_sys_log("TR069: factory reset ...");
-	system("/etc/rc.d/rc.restore_default > /tmp/cfg");
+	system("/etc/tozed/tz_restore_factory&&reboot &");
 }
 
 enum REBOOT_TYPE{
@@ -1135,9 +1135,10 @@ int update_exec(download_arg_t *dlarg)
     }
     else if(strcmp(dlarg->filetype, "3 Vendor Configuration File") == 0)
     {
-       sprintf(shellcmd,"sysupgrade -r %s",filePath);
+       sprintf(shellcmd,"/etc/tozed/config_update %s 0",filePath);
        if(system(shellcmd) != 0)
-       {
+       {    
+            if(cmd_file_exist("/tmp/.update_config_fail"))
             return CWMP_ERROR;
        }
        cmd_touch(NEED_TO_REBOOT_TEMP_FILE);
@@ -1253,8 +1254,8 @@ int cwmp_agent_run_tasks(cwmp_t * cwmp)
 					//cwmp_event_clear_active(cwmp);
 					//system("factoryreset");
 					
-					//restore_factory();
-					system("jffs2reset -y");
+					restore_factory();
+//					system("jffs2reset -y");
 					remove(TR069_BOOTSTRAP_FLAG);
 					remove(TR069_REBOOT_FLAG);
 					cwmp_event_set_value(cwmp, INFORM_BOOTSTRAP, 1, NULL, 0, 0, 0);
