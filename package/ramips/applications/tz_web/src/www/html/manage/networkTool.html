@@ -29,6 +29,7 @@ function readSize(){
         TempUtil.render('networktoolform2-template', 'form2', networktoolhtml.form2);
         TempUtil.render('networktoolform3-template', 'form3', networktoolhtml.form3);
         TempUtil.render('networktoolform4-template', 'form4', networktoolhtml.form4);
+        TempUtil.render('networktoolform5-template', 'form5', networktoolhtml.form5);
         var showText = networktoolhtml.prompt;
 
         var $lis = $("ul.tabs a");
@@ -55,6 +56,7 @@ function readSize(){
         });
 
         $lis.eq(0).click();
+
 
         //PING
         $('#btnPingStart').click(function(){
@@ -247,6 +249,38 @@ function readSize(){
 
              window.clearInterval(timer_id);
         });
+
+
+        //qxdm log switch
+
+        var $form5 = $('#form5');
+        var json = JSON.parmsToJSON($form5);
+        json.method = JSONMethod.POST;
+        json.cmd = RequestCmd.SOCKETAT_GET;
+        //console.log(json);
+        Page.postJSON({
+            json: json,
+            success: function(data) {
+                $('#qxdmSwitch').attr("checked",data.swtich);
+            }
+        });
+
+        $('#btnSetting').click(function(){
+            var $form5 = $('#form5');
+            var json = JSON.parmsToJSON($form5);
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.SOCKETAT_SET;
+
+            var status = $('#qxdmSwitch').is(":checked");
+            json.appEnable = status;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                }
+            });
+        });
+
     });
 </script>
 
@@ -258,6 +292,7 @@ function readSize(){
                 <li><a href="javascript:;"><%- item2 %></a></li>
                 <li><a href="javascript:;"><%- item3 %></a></li>
                 <li><a href="javascript:;"><%- item4 %></a></li>
+                <li><a href="javascript:;"><%- item5 %></a></li>
             </script>
         </ul>
     </div>
@@ -387,6 +422,31 @@ function readSize(){
                                     <a id="logLink" href="html/manage/network_tool_log.tar" download><%- downfile %></a>
                                 </td>
                             </tr>
+                        </table>
+                    </script>
+                </form>
+
+            </div>
+
+            <div class="main_box">
+                <form id="form5">
+                    <script type="text/template" id="networktoolform5-template">
+                        <table class="detail" cellspacing="0">
+
+                            <tr>
+                                <th><%- qxdmMessage %></th>
+                                <td>
+                                    <input type="checkbox" id="qxdmSwitch" name="qxdmSwitch" /><%- status %>
+                                </td>
+                            </tr>
+                            
+                            <tr class="even" >
+                                <th>&nbsp;</th>
+                                <td>
+                                    <input type="button" id="btnSetting" value="<%- btnSetting %>"/>
+                                </td>
+                            </tr>
+
                         </table>
                     </script>
                 </form>

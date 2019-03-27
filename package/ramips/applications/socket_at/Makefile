@@ -44,6 +44,8 @@ define Package/socket_at/install
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/socket_at $(1)/bin
 
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/socket_at.init $(1)/etc/init.d/socket_at
 endef
 
 

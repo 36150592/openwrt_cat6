@@ -294,6 +294,43 @@ function system_module.update_config(file_path)
 end
 
 
+function system_module.get_socket_at_switch()
+	local app_switch = x:get("tozed","cfg","TZ_SOCKET_AT_ENABLE")
+	if(nil ~= app_switch)
+	then
+		if ("1" == app_switch)
+		then
+			return true
+		end
+
+		return false
+	end
+
+	return false
+end
+
+
+function system_module.set_socket_at_app(isOpen)
+	if(nil ~= isOpen)
+	then
+		if(true == isOpen)
+		then
+			os.execute("cfg -a TZ_SOCKET_AT_ENABLE=1")
+			os.execute("cfg -c")
+			os.execute("/etc/init.d/socket_at stop 1>/dev/null 2>&1")
+			os.execute("/etc/init.d/socket_at start 1>/dev/null 2>&1 &")
+		else
+			os.execute("cfg -a TZ_SOCKET_AT_ENABLE=")
+			os.execute("cfg -c")
+			os.execute("/etc/init.d/socket_at stop 1>/dev/null 2>&1")
+		end
+		return 0
+	end
+
+	return -1
+end
+
+
 local timezone_location = {
 	["Africa/Abidjan"]= "GMT0",
 	["Africa/Accra"]= "GMT0",

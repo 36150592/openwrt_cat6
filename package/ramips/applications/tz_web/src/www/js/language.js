@@ -149,6 +149,7 @@ networktoolhtml.form1 = {};
 networktoolhtml.form2 = {};
 networktoolhtml.form3 = {};
 networktoolhtml.form4 = {};
+networktoolhtml.form5 = {};
 networktoolhtml.helper = {};
 networktoolhtml.ipMacEdit = {};
 networktoolhtml.prompt = {};

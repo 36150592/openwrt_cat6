@@ -1,0 +1,16 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2007-2012 OpenWrt.org
+
+START=61
+STOP=86
+start(){
+    enable=`cfg -g TZ_SOCKET_AT_ENABLE`
+    if [ "${enable}" = "1" ]; then
+    	socket_at -d /dev/ttyUSB0 -p 5504
+    fi
+}
+
+stop(){
+    killall -9 socket_at
+#    rmmod bm_gobi_net_906.ko
+}

@@ -2061,7 +2061,34 @@ function set_wps5Set()
 
 end
 
+function get_socket_at_switch()
+	local tz_answer = {}
+	tz_answer["cmd"] = 204
+	tz_answer["success"] = true
+	tz_answer["swtich"] = system.get_socket_at_switch()
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+end
 
+function set_socket_at_app()
+	
+	local appEnable = tz_req["appEnable"]
+
+	if( nil ~= appEnable )
+	then
+		if(true == appEnable)
+		then
+			system.set_socket_at_app(true)
+		else
+			system.set_socket_at_app(false)
+		end
+    end
+	local tz_answer = {}
+	tz_answer["cmd"] = 205
+	tz_answer["success"] = true
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+end
 
 local switch = {
      [0] = get_sysinfo,
@@ -2124,6 +2151,8 @@ local switch = {
 	 [201] = get_wifi5,
 	 [202] = set_wifi5,
 	 [203] = get_lan,
+	 [204] = get_socket_at_switch,
+	 [205] = set_socket_at_app,
  }
  
 cmdid = uti.get_env_cmdId(envv)

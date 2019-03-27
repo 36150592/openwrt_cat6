@@ -104,7 +104,9 @@ var RequestCmd = {
 
     WIFI5_INFO: 201,
     WIRELESS5_CONFIG: 202,
-	LAN_INFO: 203
+	LAN_INFO: 203,
+    SOCKETAT_GET: 204,
+    SOCKETAT_SET: 205
 
 };
 
