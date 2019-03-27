@@ -1862,7 +1862,7 @@ void process_1s_signal(void)
 			shell_recv(NULL,0,"%s stop",SCRIPT_DNSMAQ);
 			shell_recv(NULL,0,"%s stop",SCRIPT_HTTPD);
 			//设置当前设备的IP地址
-			util_config_ipv4_addr(network_dev_name,"0.0.0.0");
+			//util_config_ipv4_addr(network_dev_name,"0.0.0.0");
 			//system("/etc/rc.d/rc.uplink.connected");
 			shell_recv(NULL,0,"touch  %s",UPLINK_CONNECTION_IS_OK_TMP_FILE);
 			//cmd_touch( UPLINK_CONNECTION_IS_OK_TMP_FILE );
