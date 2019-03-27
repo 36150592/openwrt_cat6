@@ -430,22 +430,6 @@ check_route()
 			return
 		fi
 
-		for temp in $wan_sections;do
-			config_get ifname $temp ifname
-			ret=""
-			add_able_default_route $ifname
-			ret=$?
-
-			if [ $ret"" == "0" ];then
-				ip rule del to $primary_lan_network/$primary_lan_netmask
-				ip rule del from $primary_lan_network/$primary_lan_netmask
-				ip rule add to $primary_lan_network/$primary_lan_netmask table $ifname pref 1000
-				ip rule add from $primary_lan_network/$primary_lan_netmask table $ifname pref 1000
-				ip route add $primary_lan_network/$primary_lan_netmask proto kernel scope link table $ifname via 0.0.0.0 dev br-$route_lan_section src $ipaddr
-				return
-			fi
-		done
-
 	fi
 }
 
