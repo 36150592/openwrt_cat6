@@ -69,7 +69,7 @@ docker_run()
 check_ubuntu_version()
 {
 	ubuntu_version=`cat /etc/issue | awk '{print $2}' | awk -F '.' '{print $1}'`
-	if [ "${ubuntu_version}" != "14" ]; then
+	if [ "${ubuntu_version}" != "14" -a "${ubuntu_version}" != "16" ]; then
 		get_docker=$(which docker)
 		if [ "$get_docker" = "" ]; then
                         wget ftp://192.168.1.123/sqn3220/docker/get-docker.sh -nv -m -nH --restrict-file-name=nocontrol --cut-dirs=2
