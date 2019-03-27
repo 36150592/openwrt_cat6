@@ -783,7 +783,11 @@ end
 -- 		0:disable
 -- 		1:enable
 function wifi_module.wifi_get_hidden_ssid(wifi_id)
-	return common_config_get(wifi_id, "hidden", "HideSSID")
+	local str = common_config_get(wifi_id, "hidden", "HideSSID")
+
+	-- mutil ssid has turn on and get from dat file
+	local ar = split(str, ";")
+	return ar[1]
 end
 
 
