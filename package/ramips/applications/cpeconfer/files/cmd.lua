@@ -1917,7 +1917,7 @@ function dhcp_get_reserve_ip()
 	do
 		print("ip = ", v["ip"])
 		print("mac = ", v["mac"])
-		print("leasetime = ", v["leasetime"])
+		--print("leasetime = ", v["leasetime"])
 
 		print("-------------------")
 	end
@@ -1931,6 +1931,9 @@ function dhcp_set_reserve_ip()
 		{["ip"]="192.168.2.6",["mac"]="11:aa:99:22:88:bb"},
 		{["ip"]="192.168.2.8",["mac"]="11:aa:99:22:88:bc"},
 		{["ip"]="192.168.2.9",["mac"]="11:aa:99:22:88:bd"},
+		{["ip"]="192.168.4.6",["mac"]="11:aa:99:22:81:bb"},
+		{["ip"]="192.168.4.8",["mac"]="11:aa:99:22:82:bc"},
+		{["ip"]="192.168.4.9",["mac"]="11:aa:99:22:83:bd"},
 	}
 
 	local ret = dhcp.dhcp_set_reserve_ip(list)

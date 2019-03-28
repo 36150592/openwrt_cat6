@@ -662,7 +662,7 @@ function dhcp_module.dhcp_get_reserve_ip()
 
 		temp["ip"] = s["ip"]
 		temp["mac"] = s["mac"]
-		temp["leasetime"] = s["leasetime"]
+		--temp["leasetime"] = s["leasetime"]
 
 		list[i] = temp
 		i = i + 1

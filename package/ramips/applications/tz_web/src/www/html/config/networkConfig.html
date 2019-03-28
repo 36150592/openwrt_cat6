@@ -15,6 +15,9 @@
         var $btnSaveLan = $('input[id^=btnSaveLan]');
         var $chkDHCP = $('input[id^=dhcpServer]');
         var ipMacs = [], firstRequest = true;
+        var reserveIpMacs0 = [];
+        var reserveIpMacs1 = [];
+        var reserveIpMacs2 = [];
 
         function createIpMacTable() {
 
@@ -39,7 +42,7 @@
 
         }
 		
-        function createIpListTable(reserveList) {
+        function createIpListTable0(reserveList) {
             var sb = new StringBuilder();
 
             sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th></tr>',
@@ -53,7 +56,54 @@
 
             sb.append('</table>');
 
-            $('#reserveLists').html(sb.toString());
+            $('#reserveLists0').html(sb.toString());
+        }
+
+        function createIpListTable1(reserveList) {
+            var sb = new StringBuilder();
+
+            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th></tr>',
+                networkconfightml.form1.th5));
+
+            for(var i = 0; i < reserveList.length; i++) {
+                if(reserveList[i] !== ""){
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td>{2</td></tr>',reserveList[i].ip, reserveList[i].mac,reserveList[i].leasetime));
+                }
+            }
+
+            sb.append('</table>');
+
+            $('#reserveLists1').html(sb.toString());
+        }
+
+        function createIpListTable2(reserveList) {
+            var sb = new StringBuilder();
+
+            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th></tr>',
+                networkconfightml.form1.th5));
+
+            for(var i = 0; i < reserveList.length; i++) {
+                if(reserveList[i] !== ""){
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td>{2</td></tr>',reserveList[i].ip, reserveList[i].mac,reserveList[i].leasetime));
+                }
+            }
+
+            sb.append('</table>');
+
+            $('#reserveLists2').html(sb.toString());
+        }
+
+        function create_reserve_ip_mac_list_dhcp(reserveList, dhcp_ip_pre, reserveIpMacsList){
+            for(var i = 0; i < reserveList.length; i++) {
+                if(reserveList[i] !== "")
+                {
+                    console.log(reserveList[i].ip.substring(0, reserveList[i].ip.lastIndexOf('.')));
+                    if( reserveList[i].ip.substring(0, reserveList[i].ip.lastIndexOf('.')) == dhcp_ip_pre )
+                    {
+                        reserveIpMacsList.push(reserveList[i]);
+                    }
+                }
+            }
         }
 		
         $lis.click(function() {
@@ -66,10 +116,14 @@
                     Page.postJSON({
                         json: { cmd: RequestCmd.DHCP_INFO },
                         success: function(datas) {
+                            reserveIpMacs0 = [];
+                            reserveIpMacs1 = [];
+                            reserveIpMacs2 = [];
                             console.log(datas);
                             var data = datas.data;
-							 createIpListTable('');
-                            for(var i = 0; i <= data.length; i++){
+                            var dhcp_reserve_ip = datas.reserveList;
+							 //createIpListTable(dhcp_reserve_ip);
+                            for(var i = 0; i < data.length; i++){
                                 var dstatus = data[i].enable ? '1' : '0';
                                 if (dstatus == DHCPServer.CLOSED) {
                                     $('#dhcpServer' + i).prop("checked", false);
@@ -87,7 +141,26 @@
                                 Page.setFormFieldValue2("expireTime"+i, data[i].leasetime);
                             }
 							
-							
+							var dhcp0_ip = $("#lanIp0").val();
+                            var dhcp0_ip_pre = dhcp0_ip.substring(0, dhcp0_ip.lastIndexOf('.'));
+                            var dhcp1_ip = $("#lanIp1").val();
+                            var dhcp1_ip_pre = dhcp1_ip.substring(0, dhcp1_ip.lastIndexOf('.'));
+                            var dhcp2_ip = $("#lanIp2").val();
+                            var dhcp2_ip_pre = dhcp2_ip.substring(0, dhcp2_ip.lastIndexOf('.'));
+
+
+                            create_reserve_ip_mac_list_dhcp(dhcp_reserve_ip, dhcp0_ip_pre, reserveIpMacs0);
+                            create_reserve_ip_mac_list_dhcp(dhcp_reserve_ip, dhcp1_ip_pre, reserveIpMacs1);
+                            create_reserve_ip_mac_list_dhcp(dhcp_reserve_ip, dhcp2_ip_pre, reserveIpMacs2);
+
+
+                            console.log(reserveIpMacs0);
+                            console.log(reserveIpMacs1);
+                            console.log(reserveIpMacs2);
+
+                            createIpListTable0(reserveIpMacs0);
+                            createIpListTable1(reserveIpMacs1);
+                            createIpListTable2(reserveIpMacs2);
 
                         }
                     });
@@ -358,7 +431,7 @@
                     </script>
                 </form>
 				
-                <div id="reserveLists"></div>
+                <div id="reserveLists0"></div>
                        
             </div>
             <div >
@@ -401,6 +474,7 @@
                         </table>
                     </script>
                 </form>
+                <div id="reserveLists1"></div>
             </div>
             <div >
                 <form id="form2">
@@ -442,6 +516,7 @@
                         </table>
                     </script>
                 </form>
+                <div id="reserveLists2"></div>
             </div>
             <div id="ipMacEdit">
                 <script type="text/template" id="networkipMacEdit-template">
