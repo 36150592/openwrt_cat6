@@ -9,22 +9,33 @@ logger "$BUTTON pressed for $SEEN seconds"
 
 if [ "$SEEN" -lt 1 ]
 then
-    for var in `uci show wireless | grep ifname | cut -d'=' -f 1`
-    do
-        ifname=`uci get $var`
-        res=`iwconfig $ifname | grep ESSID | wc -l`
+        res=` uci get wireless.@wifi-iface[0].disabled`
         if [[ $res == "1" ]];then
-	        echo "Stop wifi... " > /dev/console
-            /sbin/wifi down
-
-        else
 	        echo "Start wifi... " > /dev/console
-            /sbin/wifi 
+
+	        echo "enable wifi... " > /dev/console
+		uci set   wireless.@wifi-iface[0].disabled=0
+		uci set   wireless.@wifi-iface[1].disabled=0
+		uci set   mutilssid.@wifi-iface[0].disabled=0
+		uci set   mutilssid.@wifi-iface[1].disabled=0
+		uci set   mutilssid.@wifi-iface[2].disabled=0
+		uci set   mutilssid.@wifi-iface[3].disabled=0
+		/sbin/wifi 
+        else
+	        echo "Stop wifi... " > /dev/console
+	        echo "disable wifi... " > /dev/console
+		uci set  wireless.@wifi-iface[0].disabled=1
+		uci set  wireless.@wifi-iface[1].disabled=1
+		uci set   mutilssid.@wifi-iface[0].disabled=1
+		uci set   mutilssid.@wifi-iface[1].disabled=1
+		uci set   mutilssid.@wifi-iface[2].disabled=1
+		uci set   mutilssid.@wifi-iface[3].disabled=1
+		/sbin/wifi  down 
         fi
-        return 0
-    done
-
-
+	
+	uci commit wireless
+	uci commit mutilssid
+	return 0
 
 elif [ "$SEEN" -gt 5 ]
 then
