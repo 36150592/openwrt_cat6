@@ -41,7 +41,7 @@ if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
 	fi
 
 	if [ "${TZWIFI_24G_MAIN_WIFI_TX_POWER}" = "" ]; then
-		TZ_24G_WIFI_MAIN_TX_POWER=22
+		TZ_24G_WIFI_MAIN_TX_POWER=100
 	else
 		TZ_24G_WIFI_MAIN_TX_POWER="${TZWIFI_24G_MAIN_WIFI_TX_POWER}"
 	fi
