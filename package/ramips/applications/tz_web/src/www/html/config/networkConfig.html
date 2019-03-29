@@ -45,12 +45,12 @@
         function createIpListTable0(reserveList) {
             var sb = new StringBuilder();
 
-            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th></tr>',
-                networkconfightml.form1.th5));
+            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
+                networkconfightml.form1.edit, networkconfightml.form1.del));
 
             for(var i = 0; i < reserveList.length; i++) {
                 if(reserveList[i] !== ""){
-                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td>{2</td></tr>',reserveList[i].ip, reserveList[i].mac,reserveList[i].leasetime));
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
                 }
             }
 
@@ -62,12 +62,12 @@
         function createIpListTable1(reserveList) {
             var sb = new StringBuilder();
 
-            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th></tr>',
-                networkconfightml.form1.th5));
+            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
+                networkconfightml.form1.edit, networkconfightml.form1.del));
 
             for(var i = 0; i < reserveList.length; i++) {
                 if(reserveList[i] !== ""){
-                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td>{2</td></tr>',reserveList[i].ip, reserveList[i].mac,reserveList[i].leasetime));
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
                 }
             }
 
@@ -79,15 +79,15 @@
         function createIpListTable2(reserveList) {
             var sb = new StringBuilder();
 
-            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th></tr>',
-                networkconfightml.form1.th5));
+            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
+                networkconfightml.form1.edit, networkconfightml.form1.del));
 
             for(var i = 0; i < reserveList.length; i++) {
                 if(reserveList[i] !== ""){
-                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td>{2</td></tr>',reserveList[i].ip, reserveList[i].mac,reserveList[i].leasetime));
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
                 }
             }
-
+            
             sb.append('</table>');
 
             $('#reserveLists2').html(sb.toString());
