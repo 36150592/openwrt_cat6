@@ -70,6 +70,11 @@ local function get_ip_bcast_mask_mac(ifname)
 				ip = temp()
 				bcast = temp()
 				mask = temp()
+				if nil == mask
+				then
+					mask = bcast
+				end
+
 		elseif string.match(res,"HWaddr") ~= nil
 		then
 			local temp = string.gmatch(res,"%x%x:%x%x:%x%x:%x%x:%x%x:%x%x")
@@ -154,33 +159,62 @@ local function get_mac(ifname)
 
 end
 
-local function get_dns()
+local function get_dns(section)
 
 	local cmd = nil
 	local f = nil
 	local dns1,dns2
-	cmd = string.format("cat %s | awk '{print $2}' | tail -n 2",NETWORK_DNS_MAIN_RESOLV_FILE)
 
-    f = io.popen(cmd)
+	if nil == section
+	then
+		cmd = string.format("cat %s | awk '{print $2}' | tail -n 2",NETWORK_DNS_MAIN_RESOLV_FILE)
 
-    dns1 = f:read()
+	    f = io.popen(cmd)
 
-    if nil == dns1 or string.match(dns1,"%d+%.%d+%.%d+%.%d+") == nil or "127.0.0.1" == dns1
-    then
-    	io.close(f)
-    	cmd = string.format("cat %s | awk '{print $2}' | tail -n 2",NETWORK_DNS_SECOND_RESOLV_FILE)
-    	f = io.popen(cmd)
+	    dns1 = f:read()
+	    dns2 = f:read()
+		if nil == dns1 or string.match(dns1,"%d+%.%d+%.%d+%.%d+") == nil or "127.0.0.1" == dns1
+		then
+			dns1 = nil
+		end
 
-    	dns1 = f:read()
-    	if nil == dns1 or string.match(dns1,"%d+%.%d+%.%d+%.%d+") == nil or "127.0.0.1" == dns1
-    	then 
-			io.close(f)
-    		debug("no dns found")
-    		return nil,nil
-    	end
-    end
+		if nil == dns2 or string.match(dns2,"%d+%.%d+%.%d+%.%d+") == nil or "127.0.0.1" == dns2
+		then
+			dns2 = nil
+		end
 
-    dns2 = f:read()
+	    io.close(f)
+	    return dns1,dns2
+	end
+
+
+	cmd = string.format("cat %s ",NETWORK_DNS_SECOND_RESOLV_FILE)
+	f = io.popen(cmd)
+
+	local res = f:read()
+
+	while nil ~= res
+	do
+		if string.find(res,section) ~= nil
+		then
+			res = f:read()
+			if nil ~= res
+			then
+				local temp = string.gmatch(res,"%d+%.%d+%.%d+%.%d+")
+				dns1 = temp()
+			end
+
+			res = f:read()
+			if nil ~= res
+			then
+				temp = string.gmatch(res,"%d+%.%d+%.%d+%.%d+")
+				dns2 = temp()
+			end
+		end
+
+		res=f:read()
+	end
+
     io.close(f)
     return dns1,dns2
 end
@@ -197,7 +231,7 @@ function network_module.network_get_wan_info()
 	local temp
 	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
-	info["first_dns"],info["second_dns"] = get_dns()
+	info["first_dns"],info["second_dns"] = get_dns("wan")
 
 	if nil == info["ipaddr"]
 	then
@@ -221,7 +255,7 @@ function network_module.network_get_4g_net_info()
 	local temp
 	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
-	info["first_dns"],info["second_dns"] = get_dns()
+	info["first_dns"],info["second_dns"] = get_dns("4g")
 	if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the 4g interface,return nil")
@@ -244,7 +278,7 @@ function network_module.network_get_4g1_net_info()
 	local temp
 	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
-	info["first_dns"],info["second_dns"] = get_dns()
+	info["first_dns"],info["second_dns"] = get_dns("4g1")
 	if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the 4g interface,return nil")
@@ -267,7 +301,7 @@ function network_module.network_get_4g2_net_info()
 	local temp
 	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
-	info["first_dns"],info["second_dns"] = get_dns()
+	info["first_dns"],info["second_dns"] = get_dns("4g2")
 	if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the 4g interface,return nil")
