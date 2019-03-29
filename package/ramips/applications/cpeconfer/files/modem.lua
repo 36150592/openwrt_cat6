@@ -86,7 +86,9 @@ modem_module.modem_status= {
 	["lte_lock_band"]=nil,			--number in hex                                           
 	["tds_lock_band"]=nil,			--number in hex                                           
 	["operator"]=nil, 				--string                                               
-	["plmn"]=nil   				--string like 46001
+	["plmn"]=nil,   				--string like 46001
+	["cqi"]=nil,					--string
+	["msc"]=nil                     --string
 }
 
 modem_module.modem_device = {
@@ -139,6 +141,8 @@ function modem_module.modem_status:new(o,obj)
 	self["tds_lock_band"] = obj["tds_lock_band"] or  nil                                        
 	self["operator"] = obj["operator"] or  nil                                      
 	self["plmn"] = obj["plmn"] or  nil
+	self["cqi"] = obj["cqi"] or  nil                                      
+	self["msc"] = obj["msc"] or  nil
    return o
 end
 
@@ -192,7 +196,9 @@ local status_keys = {
 	"lte_lock_band",                                           
 	"tds_lock_band",                                           
 	"operator",                                                
-	"plmn",   
+	"plmn", 
+	"cqi",
+	"msc",
 }
 
 local device_keys = {"type","manufacturer","hardware","softver","imei"}
