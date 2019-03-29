@@ -1081,13 +1081,7 @@ void bm916_init(int*  Dial_proc_state)
 		case Dial_State_initialized:
 			memcpy(global_dial_vars.moduleType,"bm916",5);
 			if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
-				*Dial_proc_state=Dial_State_CMEE;
-			break;
-		case Dial_State_CMEE:
-			if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
-			{
 				*Dial_proc_state=Dial_State_BMBANDPREF_SUPPORT_BAND_QUERY;
-			}
 			break;
 		case Dial_State_BMBANDPREF_SUPPORT_BAND_QUERY:
 			{
@@ -1307,16 +1301,8 @@ void bm916_init(int*  Dial_proc_state)
 				break;
 		case Dial_State_BMDATASTATUSEN:
 				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
-					*Dial_proc_state=Dial_State_PSDIALIND;
-				break;
-		case Dial_State_PSDIALIND:
-				if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
-					*Dial_proc_state=Dial_State_SIGNALIND;
-				break;
-		case Dial_State_SIGNALIND:
-				if(NULL!= strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
 					*Dial_proc_state=Dial_State_CPIN_QUERY;
-				break;		
+				break;	
 		case Dial_State_CPIN_QUERY:
 				global_dial_vars.pin_qpin_flag=0;		//set flag ,so we can choose which cmd to input pin 
 				if(NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && 
@@ -2041,6 +2027,7 @@ void bm916_dial(int* Dial_proc_state )
 			break;
 		case Dial_State_QCRMCALL:
 				*Dial_proc_state=Dial_State_QCRMCALL_QUERY;
+				//system("cat /proc/uptime | awk '{print $1}' >> /root/begin_dial_time");
 				break;
 		case Dial_State_QCRMCALL_QUERY:		
 			if(NULL!= strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
@@ -2080,7 +2067,8 @@ void bm916_dial(int* Dial_proc_state )
 					*/
 					exception_count=0;
 					global_sleep_interval_long = 1;
-					sleep(5);
+					//sleep(5);
+					//system("cat /proc/uptime | awk '{print $1}' >> /root/dial_success_time");
 					*Dial_proc_state=Dial_State_BMDATASTATUS;
 				}
 				else
@@ -2135,9 +2123,23 @@ void bm916_dial(int* Dial_proc_state )
 		case Dial_State_CSQ_SET:
 			if(NULL!=strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) )
 			{
-				*Dial_proc_state=Dial_State_CSQ;
+				*Dial_proc_state=Dial_State_CMEE;
 			}
 			break;
+		case Dial_State_CMEE:
+			if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+			{
+				*Dial_proc_state=Dial_State_PSDIALIND;
+			}
+			break;	
+		case Dial_State_PSDIALIND:
+			if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				*Dial_proc_state=Dial_State_SIGNALIND;
+			break;
+		case Dial_State_SIGNALIND:
+			if(NULL!= strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				*Dial_proc_state=Dial_State_CSQ;
+			break;	
 		case Dial_State_HDRCSQ:
 			if(NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && NULL != strstr(global_dialtool.buffer_at_sponse,"^HDRCSQ:"))
 			{
@@ -3277,9 +3279,9 @@ void bm916_get_moduleinfo(MDI* p)
 	buffer_recv=(char *)m_malloc(RECV_BUFF_SIZE);
 	char* ptr_tmp=buffer_recv;
 	char* ptr_tmp1=NULL;
-	int retry = 3;
+	//int retry = 3;
 	
-	//cfun=0, 1 to reset modem
+	/*//cfun=0, 1 to reset modem
 	memset(buffer_recv,0,RECV_BUFF_SIZE);
 	util_send_cmd(global_dialtool.dev_handle,"at+cfun=0\r",&global_dialtool.pthread_moniter_flag);
 	sleep(1);
@@ -3311,7 +3313,7 @@ void bm916_get_moduleinfo(MDI* p)
 		system("/etc/rc.d/rc.reset_module");
 		exit(-1);
 	}
-	
+	*/
 	while(1)
 	{
 		memset(buffer_recv,0,RECV_BUFF_SIZE);
