@@ -389,6 +389,8 @@ int write_sysinfo_dynamic(GDV* p)
 		fprintf(f,"ENODEBID:%s\n",p->enodebid);
 		fprintf(f,"TAC:%s\n",p->tac);
 		fprintf(f,"RRC_STATUS:%s\n",p->rrc_status);
+		fprintf(f,"CQI:%s\n",p->cqi);
+		fprintf(f,"MSC:%s\n",p->msc);
 		//BAND 
 		fprintf(f,"GW_ALL_BAND:%s\n",p->gw_all_band);
 		fprintf(f,"LTE_ALL_BAND:%s\n",p->lte_all_band); 

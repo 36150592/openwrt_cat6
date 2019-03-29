@@ -2534,6 +2534,49 @@ void bm916_deamon(int* Dial_proc_state)
 						strncpy(global_dial_vars.rrc_status,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
+
+					if(NULL!= strstr(ptr_tmp,"CQI:"))
+					{
+						ptr_tmp2=strstr(ptr_tmp,"CQI:")+strlen("CQI:");
+						memset(buffer_tmp,0,RECV_BUFF_SIZE);
+						strncpy(buffer_tmp,ptr_tmp2,RECV_BUFF_SIZE);
+						
+						if(NULL!=(ptr_tmp3=strstr(buffer_tmp,",")) )
+						{
+							ptr_tmp3[0]='\0';
+						}
+						if(NULL!=(ptr_tmp3=strstr(buffer_tmp,"\n")) )
+						{
+							ptr_tmp3[0]='\0';
+						}			
+						ptr_tmp3=strip_head_tail_space(buffer_tmp);
+
+						strncpy(global_dial_vars.cqi,ptr_tmp3,strlen(ptr_tmp3));
+
+					}
+
+					if(NULL!= strstr(ptr_tmp,"MSC:"))
+					{
+						ptr_tmp2=strstr(ptr_tmp,"MSC:")+strlen("MSC:");
+						memset(buffer_tmp,0,RECV_BUFF_SIZE);
+						strncpy(buffer_tmp,ptr_tmp2,RECV_BUFF_SIZE);
+						if(NULL!=(ptr_tmp3=strstr(buffer_tmp,",")) )
+						{
+							ptr_tmp3[0]='\0';
+						}
+						if(NULL!=(ptr_tmp3=strstr(buffer_tmp,"\n")) )
+						{
+							ptr_tmp3[0]='\0';
+						}	
+						if(NULL!=(ptr_tmp3=strstr(buffer_tmp,"\r")) )
+						{
+							ptr_tmp3[0]='\0';
+						}
+						ptr_tmp3=strip_head_tail_space(buffer_tmp);
+						strncpy(global_dial_vars.msc,ptr_tmp3,strlen(ptr_tmp3));
+
+					}
+					
 	#if 0
 				}
 	#endif				
