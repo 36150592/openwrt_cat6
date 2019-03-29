@@ -97,7 +97,6 @@
             for(var i = 0; i < reserveList.length; i++) {
                 if(reserveList[i] !== "")
                 {
-                    console.log(reserveList[i].ip.substring(0, reserveList[i].ip.lastIndexOf('.')));
                     if( reserveList[i].ip.substring(0, reserveList[i].ip.lastIndexOf('.')) == dhcp_ip_pre )
                     {
                         reserveIpMacsList.push(reserveList[i]);
@@ -119,7 +118,6 @@
                             reserveIpMacs0 = [];
                             reserveIpMacs1 = [];
                             reserveIpMacs2 = [];
-                            console.log(datas);
                             var data = datas.data;
                             var dhcp_reserve_ip = datas.reserveList;
 							 //createIpListTable(dhcp_reserve_ip);
@@ -154,10 +152,6 @@
                             create_reserve_ip_mac_list_dhcp(dhcp_reserve_ip, dhcp2_ip_pre, reserveIpMacs2);
 
 
-                            console.log(reserveIpMacs0);
-                            console.log(reserveIpMacs1);
-                            console.log(reserveIpMacs2);
-
                             createIpListTable0(reserveIpMacs0);
                             createIpListTable1(reserveIpMacs1);
                             createIpListTable2(reserveIpMacs2);
@@ -178,7 +172,6 @@
                         Page.postJSON({
                             json: {cmd: RequestCmd.DHCPCLIENT_INFO},
                             success: function (datas) {
-                                console.log(datas);
                                 ipMacs = datas.data;
                                 createIpMacTable();
                                 firstRequest = false;
@@ -318,7 +311,6 @@
              }*/
 
 
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {

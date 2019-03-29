@@ -60,7 +60,6 @@
                 method: JSONMethod.GET
             },
             success: function(data) {
-               console.log(data);
             }
         });
         var rules = {
@@ -85,7 +84,6 @@
             }
 
             var json = JSON.parmsToJSON($form);
-			console.log(json);
             json.cmd = RequestCmd.TR069_CONFIG;
             json.method = JSONMethod.POST;
             json.enabled = (json.enabled) ? "1" : "0";

@@ -15,7 +15,6 @@
                     cmd: RequestCmd.LOCK_BAND_GET
                 },
                 success: function(datas) {
-                    console.log(datas);
                     if(!$.isEmptyObject(datas.band)){
                         var lte = datas.band.lte;
                         var gw = datas.band.gw;

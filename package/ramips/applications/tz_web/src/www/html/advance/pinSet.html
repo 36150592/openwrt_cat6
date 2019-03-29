@@ -18,7 +18,6 @@
                     cmd: RequestCmd.QUERY_SIM_STATUS
                 },
                 success: function(datas) {
-                    console.log(datas);
 					 if(datas.sim != ''){
 						if(datas.sim.card_status == '1'){
                             $pinStatus.html(DOC.status.opened);
@@ -44,7 +43,6 @@
 			$(this).attr("disabled",true);
             var $form = $('#pingForm');
             var json = JSON.parmsToJSON($form);
-            console.log(json);
 
             if(json.radPins == $("#trPinOper").attr('old')){
                 AlertUtil.alertMsg(CHECK.required.noChanges);
@@ -71,7 +69,6 @@
                  json.passwd = $('#pinPassword').val();
                  json.method = JSONMethod.POST;
                  json.cmd = RequestCmd.SET_PIN_STATUS;
-                 console.log(json);
 				 Page.postJSON({
                      json: json,
                      success: function(data) {

@@ -36,7 +36,6 @@ $(document).ready(function(){
         
 		json.method = JSONMethod.POST;
         json.cmd = RequestCmd.NETWORKSET_SET;
-        console.log(json);
         Page.postJSON({
             json: json,
             success: function(data) {

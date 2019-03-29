@@ -590,7 +590,6 @@ var StatusUtil = {
                 },
                 success: function(datas) {
                     sysStatus = datas.data;
-                    console.log(data);
                 },
                 complete: function() {
 
@@ -1201,7 +1200,6 @@ function getOpenInfo() {
         Page.postJSON({
             json: { cmd: RequestCmd.ROUTER_INFO },
             success: function(datas) {
-                console.log(datas);
                 theRouterInfo = datas.data;
 
                 //	getLteInfo(routerInfo);
