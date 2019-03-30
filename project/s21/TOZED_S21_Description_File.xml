@@ -201,7 +201,13 @@ bitcomposite表示使用位进行组合的配置字段
 	</config>
 
 	<!--2.4G WIFI 辅WIFI 1-->
-	<config name="TZWIFI_24G_VICE_1_WIFI_ENABLE" type="select" description="2.4G 辅wifi 1 开关" detail="2.4G 辅wifi 1 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+	<config name="TZWIFI_24G_VICE_1_WIFI_ENABLE" type="select" description="2.4G 辅wifi 1 开关" detail="2.4G 辅wifi 1 开关，默认关闭" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_24G_VICE_1_WIFI_STATIC_ENABLE" type="select" description="2.4G 辅wifi 1 固定ssid和密码开关" detail="2.4G 辅wifi 1 固定ssid和密码开关，默认关闭" class_name="WIFI_CONFIG_FIELD"  >
         	<option value="n" description="关闭" />
 		<option value="y" description="开启" />
 		<default value="n"/>
@@ -217,6 +223,12 @@ bitcomposite表示使用位进行组合的配置字段
 
 	<!--2.4G WIFI 辅WIFI 2-->
 	<config name="TZWIFI_24G_VICE_2_WIFI_ENABLE" type="select" description="2.4G 辅wifi 2 开关" detail="2.4G 辅wifi 2 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_24G_VICE_2_WIFI_STATIC_ENABLE" type="select" description="2.4G 辅wifi 2 固定ssid和密码开关" detail="2.4G 辅wifi 2 固定ssid和密码开关，默认关闭" class_name="WIFI_CONFIG_FIELD"  >
         	<option value="n" description="关闭" />
 		<option value="y" description="开启" />
 		<default value="n"/>
@@ -254,6 +266,12 @@ bitcomposite表示使用位进行组合的配置字段
 		<default value="n"/>
 	</config>
 
+	<config name="TZWIFI_58G_VICE_1_WIFI_STATIC_ENABLE" type="select" description="5.8G 辅wifi 1 固定ssid和密码开关" detail="5.8G 辅wifi 1 固定ssid和密码开关，默认关闭" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
 	<config name="TZWIFI_58G_VICE_1_WIFI_SSID" type="text" description="5.8G 辅wifi 1 固定SSID名称" detail="5.8G 辅wifi 1 固定SSID名称，默认为ZLT S21_XXXX_5G_1" class_name="WIFI_CONFIG_FIELD"  >
         	<default value="ZLT S21_XXXX_5G_1" />
 	</config>
@@ -264,6 +282,12 @@ bitcomposite表示使用位进行组合的配置字段
 
 	<!--5.8G WIFI 辅WIFI 2-->
 	<config name="TZWIFI_58G_VICE_2_WIFI_ENABLE" type="select" description="5.8G 辅wifi 2 开关" detail="5.8G 辅wifi 2 开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_58G_VICE_2_WIFI_STATIC_ENABLE" type="select" description="5.8G 辅wifi 2 固定ssid和密码开关" detail="5.8G 辅wifi 2 固定ssid和密码开关，默认关闭" class_name="WIFI_CONFIG_FIELD"  >
         	<option value="n" description="关闭" />
 		<option value="y" description="开启" />
 		<default value="n"/>
