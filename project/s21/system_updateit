@@ -42,6 +42,47 @@ unzip -P ${zip_pwd} ${TARGET_PACKAGE} -d ${WORK_STATION}
 ##config update
 
 
+#check modem update
+cd ${WORK_STATION}
+modem_update_result=0
+
+modem_bin=`ls ModemUpdate/ | grep .bin 2>/dev/null`
+if [ "${modem_bin}" != "" ]; then
+	/etc/init.d/dialtool2 stop
+	adb push ${WORK_STATION}/ModemUpdate/${modem_bin} /cache/firmware.bin
+	tmp_result=$?
+	if [ "${tmp_result}" == "0" ]; then
+		echo ">>>>>>>>>>>1"
+		tmp_result=`sendat -e "at+bmcmd=UPGRADE,/cache/firmware.bin,1" | grep +BMCMD-UPGRADE | awk '{print $2}'`
+		echo "ret= ${tmp_result}"
+		if [ "${tmp_result}" == "OK" ]; then
+			echo ">>>>>>>>>>>2"
+			sleep 40
+			tmp_result=`sendat -e "at+bmcmd=BMFTPST" | grep +BMCMD-BMFTPST | awk '{print $2}'`
+			echo "ret= ${tmp_result}"
+			if [ "${tmp_result}" == "60" ]; then
+				echo ">>>>>>>>>>>3"
+				sendat -e "at+bmcmd=SWITCH_BACKUP_BOOT"
+				sleep 50
+				tmp_result=`sendat -e "at+bmcmd=BMFTPST" | grep +BMCMD-BMFTPST | awk '{print $2}'`
+				echo "ret= ${tmp_result}"
+				if [ "${tmp_result}" == "90" ]; then
+					echo ">>>>>>>>>>>4"
+					modem_update_result=1
+				fi
+			fi
+		fi
+		
+
+	fi
+fi
+
+if [ "${modem_update_result}" == "1" ]; then
+	echo "modem update success"
+else
+	echo "modem update fail"
+fi
+
 
 #check firmware md5sum
 cd ${WORK_STATION}

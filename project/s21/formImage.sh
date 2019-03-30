@@ -21,6 +21,10 @@ cp -f bin/ramips/openwrt-ramips-mt7621-zbt-wg2626-squashfs-sysupgrade.bin image/
 cp -f project/s21/bin/factory.bin image/${project}/
 cp -f project/s21/bin/old-all.bin image/${project}/
 
+mkdir -p image/${project}/update/ModemUpdate
+mkdir -p image/${project}/update/ConfigUpdateAll
+mkdir -p image/${project}/update/ConfigUpdateSome
+
 #new uboot new firmware
 rm -f image/${project}/new_firmware_factory.bin
 tr '\000' '\377' < /dev/zero | dd of=image/${project}/new_firmware_factory.bin bs=1024 count=16384 2>/dev/null
@@ -38,5 +42,5 @@ dd if=image/${project}/new_firmware-kernel-fs.bin of=image/7621_cat6/olduboot_ne
 cp image/${project}/new_firmware-kernel-fs.bin image/${project}/update/firmware-kernel-fs-v${SOFTWARE_VERSION}.bin
 cp project/s21/system_updateit image/${project}/update/updateit
 md5sum image/${project}/update/firmware-kernel-fs-v${SOFTWARE_VERSION}.bin >> image/${project}/update/md5sum.txt
-cd image/${project}/update && zip -P ${zip_pwd} ${project}_v${SOFTWARE_VERSION}.bin firmware-kernel-fs-v${SOFTWARE_VERSION}.bin updateit md5sum.txt
+cd image/${project}/update && zip -P ${zip_pwd} ${project}_v${SOFTWARE_VERSION}.bin * -r
 
