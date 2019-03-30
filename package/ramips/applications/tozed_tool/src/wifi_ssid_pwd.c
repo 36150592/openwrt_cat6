@@ -50,7 +50,7 @@ static void get_24g_ssid(char* ssid)
 
 		if(strlen(tz_config_wifi_ssid) == 0)
 		{
-			strcpy(tz_config_wifi_ssid, "s21_2.4g_main");
+			strcpy(tz_config_wifi_ssid, "ZLT S21 WIFI");
 		}	
 	}
 	else

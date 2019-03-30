@@ -251,12 +251,22 @@ bitcomposite表示使用位进行组合的配置字段
 		<default value="y"/>
 	</config>
 
+	<config name="TZWIFI_58G_MAIN_WIFI_SSID_PWD_LIKE_24G_SWITCH" type="select" description="5.8G 主wifi 的ssid和pwd基于2.4G 主wifi的规则做调整" detail="5.8G 主wifi 的ssid和pwd基于2.4G 主wifi的规则做调整，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="y"/>
+	</config>
+
 	<config name="TZWIFI_58G_MAIN_WIFI_SSID" type="text" description="5.8G 主wifi 固定SSID名称" detail="5.8G 主wifi 固定SSID名称，默认为ZLT S21_XXXX_5G" class_name="WIFI_CONFIG_FIELD"  >
         	<default value="ZLT S21_XXXX_5G" />
 	</config>
 
 	<config name="TZWIFI_58G_MAIN_WIFI_PWD" type="text" description="5.8G 主wifi 固定密码" detail="设置 5.8G 主wifi 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
         	<default value="12345678" />
+	</config>
+
+	<config name="TZWIFI_58G_MAIN_WIFI_MAX_STATION_NUM" type="text" description="5.8G wifi 最大连接用户数" detail="5.8G wifi 最大连接用户数" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="32" />
 	</config>
 
 	<!--5.8G WIFI 辅WIFI 1-->

@@ -36,7 +36,7 @@ if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
 		TZ_24G_WIFI_MAIN_SSID="`cat /tmp/wifi_24g_ssid_pwd_file | grep wifi_24g_ssid= | awk -F = '{print $2}'`"
 		TZ_24G_WIFI_MAIN_PWD="`cat /tmp/wifi_24g_ssid_pwd_file | grep wifi_24g_pwd= | awk -F = '{print $2}'`"
 	else
-		TZ_24G_WIFI_MAIN_SSID=s21_2.4g
+		TZ_24G_WIFI_MAIN_SSID=ZLT S21 WIFI
 		TZ_24G_WIFI_MAIN_PWD=12345678
 	fi
 
@@ -115,16 +115,27 @@ if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
 		TZ_58G_WIFI_MAIN_DISABLE=0
 	fi
 
-	if [ "${TZWIFI_58G_MAIN_WIFI_SSID}" = "" ]; then
-		TZ_58G_WIFI_MAIN_SSID=s21_5.8g_main
+	if [ "${TZWIFI_58G_MAIN_WIFI_SSID_PWD_LIKE_24G_SWITCH}" = "n"  ]; then
+		if [ "${TZWIFI_58G_MAIN_WIFI_SSID}" = "" ]; then
+			TZ_58G_WIFI_MAIN_SSID=${TZ_24G_WIFI_MAIN_SSID}5
+		else
+			TZ_58G_WIFI_MAIN_SSID="${TZWIFI_58G_MAIN_WIFI_SSID}"
+		fi
+
+		if [ "${TZWIFI_58G_MAIN_WIFI_PWD}" = "" ]; then
+			TZ_58G_WIFI_MAIN_PWD=${TZ_24G_WIFI_MAIN_PWD}
+		else
+			TZ_58G_WIFI_MAIN_PWD="${TZWIFI_58G_MAIN_WIFI_PWD}"
+		fi
 	else
-		TZ_58G_WIFI_MAIN_SSID="${TZWIFI_58G_MAIN_WIFI_SSID}"
+		TZ_58G_WIFI_MAIN_SSID=${TZ_24G_WIFI_MAIN_SSID}5
+		TZ_58G_WIFI_MAIN_PWD=${TZ_24G_WIFI_MAIN_PWD}
 	fi
 
-	if [ "${TZWIFI_58G_MAIN_WIFI_PWD}" = "" ]; then
-		TZ_58G_WIFI_MAIN_PWD=87654321
+	if [ "${TZWIFI_58G_MAIN_WIFI_MAX_STATION_NUM}" = "" ]; then
+		TZ_58G_WIFI_MAIN_MAX_STATION_NUM=32
 	else
-		TZ_58G_WIFI_MAIN_PWD="${TZWIFI_58G_MAIN_WIFI_PWD}"
+		TZ_58G_WIFI_MAIN_MAX_STATION_NUM="${TZWIFI_58G_MAIN_WIFI_MAX_STATION_NUM}"
 	fi
 
 #######5.8g vice 1 wifi
@@ -138,16 +149,16 @@ if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
 		TZ_58G_WIFI_VICE_1_DISABLE=1
 	fi
 
-	if [ "${TZWIFI_58G_VICE_1_WIFI_SSID}" = "" ]; then
-		TZ_58G_WIFI_VICE_1_SSID=s21_5.8g_vice_1
-	else
+	if [ "${TZWIFI_58G_VICE_1_WIFI_STATIC_ENABLE}" = "y" -a "${TZWIFI_58G_VICE_1_WIFI_SSID}" != "" ]; then
 		TZ_58G_WIFI_VICE_1_SSID="${TZWIFI_58G_VICE_1_WIFI_SSID}"
+	else
+		TZ_58G_WIFI_VICE_1_SSID=${TZ_58G_WIFI_MAIN_SSID}_1
 	fi
 
-	if [ "${TZWIFI_58G_VICE_1_WIFI_PWD}" = "" ]; then
-		TZ_58G_WIFI_VICE_1_PWD=87654321
-	else
+	if [ "${TZWIFI_58G_VICE_1_WIFI_STATIC_ENABLE}" = "y" -a "${TZWIFI_58G_VICE_1_WIFI_PWD}" != "" ]; then
 		TZ_58G_WIFI_VICE_1_PWD="${TZWIFI_58G_VICE_1_WIFI_PWD}"
+	else
+		TZ_58G_WIFI_VICE_1_PWD=12345678
 	fi
 
 #######5.8g vice 2 wifi
@@ -161,16 +172,16 @@ if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
 		TZ_58G_WIFI_VICE_2_DISABLE=1
 	fi
 
-	if [ "${TZWIFI_58G_VICE_2_WIFI_SSID}" = "" ]; then
-		TZ_58G_WIFI_VICE_2_SSID=s21_5.8g_vice_2
-	else
+	if [ "${TZWIFI_58G_VICE_2_WIFI_STATIC_ENABLE}" = "y" -a "${TZWIFI_58G_VICE_2_WIFI_SSID}" != "" ]; then
 		TZ_58G_WIFI_VICE_2_SSID="${TZWIFI_58G_VICE_2_WIFI_SSID}"
+	else
+		TZ_58G_WIFI_VICE_2_SSID=${TZ_58G_WIFI_MAIN_SSID}_2
 	fi
 
-	if [ "${TZWIFI_58G_VICE_2_WIFI_PWD}" = "" ]; then
-		TZ_58G_WIFI_VICE_2_PWD=87654321
-	else
+	if [ "${TZWIFI_58G_VICE_2_WIFI_STATIC_ENABLE}" = "y" -a "${TZWIFI_58G_VICE_2_WIFI_PWD}" != "" ]; then
 		TZ_58G_WIFI_VICE_2_PWD="${TZWIFI_58G_VICE_2_WIFI_PWD}"
+	else
+		TZ_58G_WIFI_VICE_2_PWD=12345678
 	fi
 
 
@@ -215,7 +226,7 @@ config wifi-iface
 	option ssid     '${TZ_58G_WIFI_MAIN_SSID}'
 	option encryption psk2+ccmp
 	option key      '${TZ_58G_WIFI_MAIN_PWD}'
-	option maxassoc 20
+	option maxassoc '${TZ_58G_WIFI_MAIN_MAX_STATION_NUM}'
 	option disabled ${TZ_58G_WIFI_MAIN_DISABLE}
                            
 EOF
