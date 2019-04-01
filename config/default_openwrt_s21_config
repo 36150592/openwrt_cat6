@@ -2920,6 +2920,7 @@ CONFIG_PACKAGE_luci-lib-json=y
 CONFIG_PACKAGE_ated=y
 # CONFIG_PACKAGE_btnd is not set
 CONFIG_PACKAGE_cpeconfer=y
+# CONFIG_PACKAGE_w13_cpeconfer is not set
 CONFIG_PACKAGE_dialtool2=y
 CONFIG_PACKAGE_eth_mac=y
 # CONFIG_PACKAGE_gpio is not set

@@ -1,0 +1,243 @@
+. /lib/functions.sh
+local REMOTE_MINI_HTTP_LISTEN_PORT=`cat /tz_www/mini_httpd.conf | grep port | cut -d'=' -f2` 
+local REMOTE_MINI_HTTPS_LISTEN_PORT=`cat /tz_www/mini_httpd_https.conf | grep port | cut -d'=' -f2`
+local TZ_REMOTE_LOGIN=`cfg -g  TZ_REMOTE_LOGIN --section remote_control`
+local TZ_REMOTE_DEFAULT_LIST=`cfg -g  TZ_REMOTE_DEFAULT_LIST --section remote_control`
+local TZ_REMOTE_LOGIN_LIST=`cfg -g  TZ_REMOTE_LOGIN_LIST --section remote_control`
+local TZ_REMOTE_PING=`cfg -g  TZ_REMOTE_PING --section remote_control`
+local TZ_REMOTE_PING_LIST=`cfg -g  TZ_REMOTE_PING_LIST --section remote_control`
+
+if [ $REMOTE_MINI_HTTP_LISTEN_PORT'' == '' ];then
+        REMOTE_MINI_HTTP_LISTEN_PORT=80
+fi
+
+if [ $REMOTE_MINI_HTTPS_LISTEN_PORT'' == '' ];then
+        REMOTE_MINI_HTTPS_LISTEN_PORT=443
+fi
+
+
+#the abobe lines can not be move to other position
+local wan_sections=""
+local lan_sections=""
+local inter_sections=""
+local wan_interfaces=""
+load_interface() {
+        local cfgfile="$1"
+        DEVICES=
+        config_cb() {
+                local type="$1"
+                local section="$2"
+
+                config_get TYPE "$CONFIG_SECTION" TYPE
+                case "$TYPE" in
+                        interface)
+								local type=""
+                                config_get ifname "$CONFIG_SECTION" ifname
+                                config_get type "$CONFIG_SECTION" type
+                                if [  $type ];then
+									if [ $type == "bridge" ]
+                                	then 
+				       					lan_sections="$lan_sections $CONFIG_SECTION"
+
+                                	fi
+								else
+									if [ $CONFIG_SECTION != "loopback" -a `echo $wan_interfaces | grep $ifname |wc -l ` == "0" ]
+									then
+                                		wan_sections="$wan_sections $CONFIG_SECTION"
+										wan_interfaces="$wan_interfaces $ifname"
+									fi
+								fi                                     
+
+                                append inter_sections "$CONFIG_SECTION"
+                        ;;
+                esac                     
+        }                                
+        config_load "${cfgfile:-network}"
+}    
+
+redirect_lan(){
+	for lan in $lan_sections
+	do
+                if [ $lan'' == '' ];then                                              
+                        continue                                                                
+                fi                                                    
+                config_get gateip $lan ipaddr
+                iptables -t nat -I PREROUTING -i br-$lan -p tcp -d $gateip --dport 80 -j REDIRECT --to-ports $REMOTE_MINI_HTTP_LISTEN_PORT
+                iptables -t nat -I PREROUTING -i br-$lan -p udp -d $gateip --dport 80 -j REDIRECT --to-ports $REMOTE_MINI_HTTP_LISTEN_PORT
+                                                                    
+                iptables -t nat -I PREROUTING -i br-$lan -p tcp -d $gateip --dport 443 -j REDIRECT --to-ports $REMOTE_MINI_HTTPS_LISTEN_PORT
+                iptables -t nat -I PREROUTING -i br-$lan -p udp -d $gateip --dport 443 -j REDIRECT --to-ports $REMOTE_MINI_HTTPS_LISTEN_PORT
+	done
+
+}
+
+drop_wan(){
+	for wan in $wan_interfaces
+	do
+                if [ $wan'' == '' ];then
+                        continue
+                fi
+		iptables -I INPUT -i $wan -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j DROP
+		iptables -I INPUT -i $wan -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j DROP
+
+                iptables -I INPUT -i $wan -p tcp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j DROP
+                iptables -I INPUT -i $wan -p udp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j DROP
+
+	done
+
+}
+
+turn_off_remote_web_login(){
+	drop_wan
+
+        for ip in $TZ_REMOTE_DEFAULT_LIST
+        do
+                if [ $ip'' == '' ];then
+                        continue
+                fi
+                iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
+                iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
+                iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
+                iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
+        done
+}
+
+turn_on_remote_web_login(){
+        drop_wan
+
+        for ip in $TZ_REMOTE_DEFAULT_LIST
+        do
+                if [ $ip'' == '' ];then
+                        continue
+                fi
+                iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
+                iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
+                iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
+                iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
+        done
+
+        for ip in $TZ_REMOTE_LOGIN_LIST
+        do
+                if [ $ip'' == '' ];then
+                        continue
+                fi
+                iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
+                iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
+                iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
+                iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
+        done
+}
+
+
+turn_off_remote_ping(){
+	
+	for wan in $wan_interfaces
+	do
+                if [ $wan'' == '' ];then
+                        continue
+                fi
+		iptables  -I INPUT -i $wan -p icmp -j DROP
+                iptables  -I INPUT -i $wan -p icmp --icmp-type 0 -j ACCEPT
+	done
+
+        for ip in $TZ_REMOTE_DEFAULT_LIST
+        do
+                if [ $ip'' == '' ];then
+                        continue
+                fi
+                iptables -I INPUT -s $ip -p icmp  -j ACCEPT
+        done
+}
+
+
+turn_on_remote_ping(){
+        
+        for wan in $wan_interfaces
+        do
+                if [ $wan'' == '' ];then
+                        continue
+                fi
+                iptables  -I INPUT -i $wan -p icmp -j DROP
+                iptables  -I INPUT -i $wan -p icmp --icmp-type 0 -j ACCEPT
+        done
+
+        for ip in $TZ_REMOTE_DEFAULT_LIST
+        do
+                if [ $ip'' == '' ];then
+                        continue
+                fi
+                iptables -I INPUT -s $ip -p icmp -j ACCEPT
+        done
+
+        for ip in $TZ_REMOTE_PING_LIST
+        do
+                if [ $ip'' == '' ];then
+                        continue
+                fi
+               iptables -I INPUT -s $ip -p icmp  -j ACCEPT
+
+        done
+}
+
+
+set_user_static_route(){
+        local rows=`cat /etc/config/tozed | grep TZ_STATIC_ROUTE | wc -l `
+        local ip
+        local netmask
+        local network
+        local table_name
+        local i=1
+        while [ $i -le $rows ]
+        do
+                item=`cat /etc/config/tozed | grep TZ_STATIC_ROUTE | sed -n ${i}p | sed  s/\'//g `
+                let i=$i+1
+                local ifname=`echo $item | awk '{print $3}'`
+                local target_ip=`echo $item | awk '{print $4}'`
+                local target_netmask=`echo $item | awk '{print $5}'`
+                local next_ip=`echo $item | awk '{print $6}'`  
+
+                #echo $ifname $target_ip $target_netmask $next_ip
+                if [ $ifname'' != '' ];then
+                        ip=`ifconfig $ifname | grep 'inet addr.*Mask'  | awk -F ':' '{print $2}' | awk '{print $1}'`
+                        netmask=`ifconfig $ifname | grep 'inet addr.*Mask'  | awk -F 'Mask:' '{print $2}'`
+                fi
+                if [ $ip'' == '' ];then
+                        ip route add ${target_ip}/${target_netmask} via $next_ip dev $ifname 
+                        continue
+                fi
+
+                network=`ipcalc.sh  $ip $netmask |grep NETWORK | awk -F '=' '{print $2}'`
+                table_name=`ip rule list  | grep $network | grep to | awk '{print $7}'`
+
+                echo $table_name
+                if [ $table_name'' == '' ];then
+                        ip route add ${target_ip}/${target_netmask} via $next_ip dev $ifname
+                else
+                        ip route add ${target_ip}/${target_netmask} table $table_name via $next_ip dev $ifname 
+                fi 
+
+        done 
+
+} 
+
+load_interface
+
+redirect_lan
+
+if [ $TZ_REMOTE_LOGIN"" == "1" ];then
+        turn_on_remote_web_login
+else
+        turn_off_remote_web_login
+fi
+
+if [ $TZ_REMOTE_PING"" == "1" ];then
+        turn_on_remote_ping
+else
+        turn_off_remote_ping
+fi
+
+set_user_static_route
+
+echo -n 
+
+
