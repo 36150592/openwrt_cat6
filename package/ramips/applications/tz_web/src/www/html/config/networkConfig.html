@@ -47,7 +47,7 @@
 		
         function createIpListTable0(reserveList) {
             var sb = new StringBuilder();
-
+            sb.append(String.format('<span style="font-size:20px;">{0}</span>',networkconfightml.form1.ipAddres));
             sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
                 networkconfightml.form1.edit, networkconfightml.form1.del));
 
@@ -62,7 +62,7 @@
 
         function createIpListTable1(reserveList) {
             var sb = new StringBuilder();
-
+            sb.append(String.format('<span style="font-size:20px;">{0}</span>',networkconfightml.form1.ipAddres));
             sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
                 networkconfightml.form1.edit, networkconfightml.form1.del));
             for(var i = 0; i < reserveList.length; i++) {
@@ -234,7 +234,7 @@
 
         function createIpListTable2(reserveList) {
             var sb = new StringBuilder();
-
+            sb.append(String.format('<span style="font-size:20px;">{0}</span>',networkconfightml.form1.ipAddres));
             sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
                 networkconfightml.form1.edit, networkconfightml.form1.del));
 
@@ -619,7 +619,7 @@
                                 <td><input type="button" id="btnSaveLan0" value="<%- btnSave %>"/></td>
                             </tr>
                         </table>
-                        <div id="reserveLists0"></div>
+                        <div id="reserveLists0" style="margin-top:70px;"></div>
                           <div style="margin-top:10px;"> <input id="btnAdd0" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
                     </script>
                 </form>
@@ -666,7 +666,7 @@
                                 <td><input type="button" id="btnSaveLan1" value="<%- btnSave %>"/></td>
                             </tr>
                         </table>
-                         <div id="reserveLists1"></div>
+                         <div id="reserveLists1" style="margin-top:70px;"></div>
                  <div style="margin-top:10px;"> <input id="btnAdd1" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
                     </script>
                 </form>
@@ -710,7 +710,7 @@
                                 <td><input type="button" id="btnSaveLan2" value="<%- btnSave %>"/></td>
                             </tr>
                         </table>
-                         <div id="reserveLists2"></div>
+                         <div id="reserveLists2" style="margin-top:70px;"></div>
                  <div style="margin-top:10px;"> <input id="btnAdd2" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
                     </script>
                 </form>
