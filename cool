@@ -89,7 +89,7 @@ check_ubuntu_version()
 }
 
 download_flag=.flag_download_something_2018_12_20
-LASTDOCS=.doc20190222
+LASTDOCS=.doc20190402
 download_something()
 {
 	if [ ! -f ${download_flag} ]; then
