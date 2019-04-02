@@ -88,6 +88,7 @@
             $('#edit_title').text(DOC.table.edit + DOC.net.mac);
             SysUtil.setBoxStyle1($box);
             $('#macList').val($(this).parent().parent().children('td').eq(1).text());
+            $('#macListIp').val($(this).parent().parent().children('td').eq(0).text());
             editIndex = $('a[class="macEdit0"]').index(this);
         });
 
@@ -100,6 +101,7 @@
             $('#edit_title').text(DOC.table.edit + DOC.net.mac);
             SysUtil.setBoxStyle1($box);
             $('#macList').val($(this).parent().parent().children('td').eq(1).text());
+            $('#macListIp').val($(this).parent().parent().children('td').eq(0).text());
             editIndex = $('a[class="macEdit1"]').index(this);
         });
 
@@ -112,6 +114,7 @@
             $('#edit_title').text(DOC.table.edit + DOC.net.mac);
             SysUtil.setBoxStyle1($box);
             $('#macList').val($(this).parent().parent().children('td').eq(1).text());
+            $('#macListIp').val($(this).parent().parent().children('td').eq(0).text());
             editIndex = $('a[class="macEdit2"]').index(this);
         });
 
@@ -207,8 +210,17 @@
         });
 
          $btnEditMac.click(function () {
-          
+           
+            
             var mac = $('#macList').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
+            var ipaddr=$('#macListIp').val();
+            var dhcp0_ip = $("#lanIp0").val();
+            var dhcp0_ip_pre = dhcp0_ip.substring(0, dhcp0_ip.lastIndexOf('.'));
+            var dhcp1_ip = $("#lanIp1").val();
+            var dhcp1_ip_pre = dhcp1_ip.substring(0, dhcp1_ip.lastIndexOf('.'));
+            var dhcp2_ip = $("#lanIp2").val();
+            var dhcp2_ip_pre = dhcp2_ip.substring(0, dhcp2_ip.lastIndexOf('.'));
+            var ipaddrList = ipaddr.substring(0,ipaddr.lastIndexOf('.'));
             if (mac == "") {
                 AlertUtil.alertMsg(CHECK.required.mac);
                 return false;
@@ -219,15 +231,29 @@
                 return false;
             }
             if(flag==1){
+                if(dhcp0_ip_pre != ipaddrList){
+                    AlertUtil.alertMsg(showText.ipCheckMsg2);
+                    return false;
+                }
                 $('#reserveLists0 table tr').eq(editIndex+1).children('td').eq(1).text(mac);
+                $('#reserveLists0 table tr').eq(editIndex+1).children('td').eq(0).text(ipaddr);
             }else if(flag==2){
+                if(dhcp1_ip_pre != ipaddrList){
+                    AlertUtil.alertMsg(showText.ipCheckMsg2);
+                    return false;
+                }
                 $('#reserveLists1 table tr').eq(editIndex+1).children('td').eq(1).text(mac);
             }else if(flag==3){
+                if(dhcp2_ip_pre != ipaddrList){
+                    AlertUtil.alertMsg(showText.ipCheckMsg2);
+                    return false;
+                }
                 $('#reserveLists2 table tr').eq(editIndex+1).children('td').eq(1).text(mac);
             }   
             
             $box.hide();
             $mask.hide();
+            $("#macListIp").val('');
             $('#macList').val('');
 
         });
