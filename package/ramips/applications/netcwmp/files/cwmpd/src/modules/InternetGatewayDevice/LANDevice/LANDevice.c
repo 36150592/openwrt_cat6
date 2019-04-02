@@ -3024,6 +3024,10 @@ int cpe_set_igd_EnableOfMultiSSID(cwmp_t *cwmp, const char *name, const char *va
     	return FAULT_CODE_OK;
     }
 	int res = uci_mul_set_wifi_param(name, "disabled", param);
+
+    cmd_touch(REBOOT_WIFI_MODULE);
+    callback_reg(cwmp, restart_wifi, NULL, NULL);
+
     return FAULT_CODE_OK;
 }
 
@@ -3041,6 +3045,8 @@ int cpe_set_igd_SSIDOfMultiSSID(cwmp_t *cwmp, const char *name, const char *valu
     printf("jiangyibo uu\n");
     int res = uci_mul_set_wifi_param(name, "ssid", value);
     printf("jiangyibo uu22\n");
+        cmd_touch(REBOOT_WIFI_MODULE);
+    callback_reg(cwmp, restart_wifi, NULL, NULL);
     return FAULT_CODE_OK;
 }
 
@@ -3058,29 +3064,19 @@ int cpe_set_igd_PasswordOfMultiSSID(cwmp_t *cwmp, const char *name, const char *
 	if (value == NULL || strlen(value) == 0) {
 		return FAULT_CODE_OK;
 	}
-	char base64_buf[128] = {0};
-	char nv_name[16] = {0};
-	char nv_name1[16] = {0};
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-	index++;
-	sprintf(nv_name,"WPAPSK%d", index);
-	sprintf(nv_name1,"WPAPSK%d_encode", index);
-	if (strlen(nv_name) == 0 || index == 1) {
-		strcpy(nv_name, "WPAPSK1");
-		strcpy(nv_name1, "WPAPSK1_encode");
-	}
     if(strlen(value) >= 8 && strlen(value) <= 63) {
-        nv_cfg_set(nv_name, value);
-		cwmpd_zte_base64_encode(value, strlen(value), base64_buf, sizeof(base64_buf));
-		nv_cfg_set(nv_name1, base64_buf);
-		system("/securefs/wifi_script/realtek/mutil_ssid.sh > /dev/null 2>&1");
+        int res = uci_mul_set_wifi_param(name, "key", value);
+        if(FAULT_CODE_OK != res){
+            return res;
+        }
     }
+        cmd_touch(REBOOT_WIFI_MODULE);
+    callback_reg(cwmp, restart_wifi, NULL, NULL);
 
     return FAULT_CODE_OK;
 }
 int cpe_get_igd_EncrypModeOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	int ret = -1;
 	int res = uci_mul_get_wifi_param(name, "encryption", value);
     if(FAULT_CODE_OK != res){
         return res;
@@ -3109,38 +3105,13 @@ int cpe_get_igd_EncrypModeOfMultiSSID(cwmp_t * cwmp, const char * name, char ** 
 int cpe_set_igd_EncrypModeOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
 	
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-	index++;
-	char EncrypType[16] = {0};
-	char AuthMode[16] = {0};
-	sprintf(EncrypType,"EncrypType%d", index);
-	
-	sprintf(AuthMode,"AuthMode%d", index);
-	cwmp_log_debug("EncrypType index: %s %s\n", EncrypType, AuthMode);
-	if (value == NULL || !strcmp(value, "0")) {
-		char WPAPSK[16] = {0};
-		char WPAPSK_encode[16] = {0};
-		
-		sprintf(WPAPSK,"WPAPSK%d", index);
-		sprintf(WPAPSK_encode,"WPAPSK%d_encode", index);
-		cwmp_log_debug("WPAPSK encode index: %s %s\n", WPAPSK, WPAPSK_encode);
-		nv_cfg_set(EncrypType, (char *)WPAEncryptionModes[0][0]);
-		cwmp_log_debug("\nEncrypType was set OPEN!\n");
-		nv_cfg_set(WPAPSK, "");
-		nv_cfg_set(WPAPSK_encode, "");
-		nv_cfg_set(AuthMode, "OPEN");
-		
-	} else if (!strcmp(value, "1")) {
-
-		nv_cfg_set(AuthMode, "WPA2PSK");
-		nv_cfg_set(EncrypType, (char *)WPAEncryptionModes[1][0]);
-		
-	} else if (!strcmp(value, "2")) {
-
-		nv_cfg_set(AuthMode, "WPAPSKWPA2PSK");
-		nv_cfg_set(EncrypType, (char *)WPAEncryptionModes[2][0]);
-	}
-	system("/securefs/wifi_script/realtek/mutil_ssid.sh > /dev/null 2>&1");
+	int ret = -1;
+	int res = uci_mul_set_wifi_param(name, "encryption", value);
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+        cmd_touch(REBOOT_WIFI_MODULE);
+    callback_reg(cwmp, restart_wifi, NULL, NULL);
 	return FAULT_CODE_OK;
 }
 
@@ -3193,6 +3164,8 @@ int cpe_set_igd_DHCPSwitchOfMultiSSID(cwmp_t *cwmp, const char *name, const char
 	} else {
 		nv_cfg_set(nv_name, "0");
 	}
+        cmd_touch(REBOOT_WIFI_MODULE);
+    callback_reg(cwmp, restart_wifi, NULL, NULL);
     return FAULT_CODE_OK;
 }
 
