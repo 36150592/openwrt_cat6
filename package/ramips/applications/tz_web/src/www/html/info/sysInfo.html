@@ -4,6 +4,7 @@
     $(document).ready(function() {
         var currentId = Page.currentId;
         var count = 0;
+        var sysInfo_plmn;
         var loading = '-';
         function getPinPukWarning(reqPin, reqPuk){
             if (reqPin == 1) {
@@ -43,6 +44,10 @@
 
         function loop() {
             loadPage();
+            loadPage2();
+            loadPage3();
+            loadPage4();
+            loadPage5();
             loadWlanPage();
             loadWlan5gPage();
         }
@@ -145,95 +150,11 @@
             Page.postJSON({
                 json: { cmd: RequestCmd.SYS_INFO },
                 success: function(datas) {
-                    var data2 = datas.data;
-					
-                    var data_system = data2.system;
-                    var data_sim = data2.sim;
-                    var data_lan = data2.lan;
-                    var data_modem = data2.modem;
+                    var data2 = datas.data;   
                     var data_wan = data2.network;
-
-                    Page.isNULLToSpace = true;
-
-                    var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
+                     var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
                     var values_run = [], values_sim = [], values_net = [], values_lan = [], values_wan = [], values_lte = [];
-                    names_run.push(DOC.lbl.runtime);
-                    names_run.push(DOC.lbl.loadAvg);
-//                    names_run.push(run_text.currentSys);
-                    names_run.push(DOC.lbl.memory);
-
-                    var runtime = ConvertUtil.timeStamp(data_system.runtime || 0);
-                    values_run.push(runtime);
-                    values_run.push((data_system.cpu_average1 || loading) + ", " + (data_system.cpu_average5 || loading) + ", " + (data_system.cpu_average15 || loading));
-                    values_run.push("MemTotal "+ (data_system.mem_total ? FormatUtil.formatField(data_system.mem_total, 'KB') : loading) +
-                                    "MemFree " + (data_system.mem_free ? FormatUtil.formatField(data_system.mem_free, 'KB') : loading) +
-                                    "Cached  " + (data_system.mem_cache ? FormatUtil.formatField(data_system.mem_cache, 'KB') : loading));
-
-                    names_sim.push(DOC.lbl.usim);
-                   // names_sim.push(DOC.lbl.pinCode);
-                   // names_sim.push(DOC.lbl.pukCode);
-				    names_sim.push(DOC.device.imsi);
-                    names_sim.push(DOC.device.iccid);
-                    names_sim.push(DOC.lbl.plmn);
-
-                    var stateInfo = "";
-                   // var pinPukStateInfo = getPinPukState(data_sim.card_status);
-                    values_sim.push(getCardState(data_sim.is_sim_exist));
-                  //  values_sim.push(pinPukStateInfo.pinState);
-                  //  values_sim.push(pinPukStateInfo.pukState);
-				  
-				    values_sim.push(data_sim.imsi || loading);
-                    values_sim.push(data_sim.iccid || loading);
-                    values_sim.push(FormatUtil.formatPLMN(data_modem.plmn));
-
-
-
-                    names_net.push(DOC.lbl.netMode);
-                    names_net.push(DOC.lbl.signal);
-                   // names_net.push(DOC.lbl.signalLevel);
-                  //  names_net.push(DOC.lbl.plmn);
-                  //  names_net.push(DOC.lbl.regState);
-                  //    names_net.push(DOC.lbl.psReg);
-                  //   names_net.push(DOC.lbl.epsReg);
-				 
-				    names_net.push(DOC.lte.rsrp);
-                    names_net.push(DOC.lte.rssi);
-                    names_net.push(DOC.lte.rsrq);
-                    names_net.push(DOC.lte.sinr);
-                    names_net.push(DOC.lte.phyCellId);
-                    names_net.push(DOC.lte.freqPoint);
-                    names_net.push(DOC.lte.enodeB);
-                    names_net.push(DOC.lte.cellId);
-                    names_net.push(DOC.lte.cqi);
-                    names_net.push(DOC.lte.mcs);
-					names_net.push(DOC.lte.plmn);
-
-                    //var netState = StatusUtil.getNetState(data.signalLevel, data.eregStat, data.act, 0);
-                    var netState = getNetState(data_modem.act);
-                    var singalLevel = data_modem.signal_lvl;
-
-                    // 网络都注册失败时显示未知
-                    // if (!StatusUtil.isAnyRegSuccess(data.regStat, data.gregStat, data.eregStat)) {
-                    //  netState = "?";
-                    //  singalLevel = 0;
-                    // }
-                    values_net.push(netState);
-                    values_net.push(StatusUtil.formatSingalLevel(singalLevel));
-                   // values_net.push(data_modem.rsrp || loading);
-
-                  //  values_net.push(FormatUtil.formatPLMN(data_modem.plmn));
-					
-					values_net.push(data_modem.rsrp ? FormatUtil.formatField(data_modem.rsrp, 'dBm') : loading);
-                    values_net.push(data_modem.rssi ? FormatUtil.formatField(data_modem.rssi, 'dBm') : loading);
-                    values_net.push(data_modem.rsrq ? FormatUtil.formatField(data_modem.rsrq, 'dB') : loading);
-                    values_net.push(data_modem.sinr ? FormatUtil.formatField(data_modem.sinr, 'dB') : loading);
-					values_net.push(data_modem.pci || loading);
-                    values_net.push(data_modem.earfcn ||loading);
-                    values_net.push(data_modem.enodebid || loading);
-                    values_net.push(data_modem.cell_id || loading);
-                    values_net.push(loading);
-                    values_net.push(loading);
-					values_net.push(data_modem.plmn || loading);
+                    Page.isNULLToSpace = true;
 
                   //  var ps_cs = parseInt(data_modem.ps_cs, 10);
                   //  var regState = getRegState(ps_cs);
@@ -241,24 +162,6 @@
                   //  values_net.push(regState.psRegState);
                  // //  values_net.push(netState == "3G" ? DOC.status.noreg : StatusUtil.getRegState(data.eregStat));
                  //   values_net.push("-");
-
-                    names_lan.push(DOC.net.mac);
-                    names_lan.push(DOC.net.ip);
-                    names_lan.push(DOC.net.mask);
-
-                    values_lan.push(data_lan.lan_mac || loading);
-
-                    Page.lanIp = data_lan.server_ip;
-                    values_lan.push(data_lan.server_ip || loading);
-                    values_lan.push(data_lan.netmask || loading);
-
-                    names_lan.push(DOC.net.dhcpServer);
-                    var dhcp = data_lan.enable ? '1' : '0';
-                    if(dhcp == DHCPServer.CLOSED){
-                        values_lan.push(DOC.status.closed);
-                    } else {
-                        values_lan.push(DOC.status.opened);
-                    }
 
                     names_wan.push(DOC.net.mac);
                     names_wan.push(DOC.net.ip);
@@ -304,18 +207,12 @@
                     //if (warningsss != ""){
                     //  var stateWan = String.format('<span style="color:black;"> &nbsp;{0}</span>', warningsss);
 					
-                    var run_html = Page.createTable(DOC.title.run, names_run, values_run, names_run.length, 2).replace("<td>", "<td style=\"width:32%;\">");
-                    var sim_html = Page.createTable(DOC.title.sim + stateInfo, names_sim, values_sim, names_sim.length, 2).replace("<td>", "<td style=\"width:32%;\">");
-                    var net_html = Page.createTable(DOC.title.network, names_net, values_net, names_net.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    
+                   
+                   
                     var wan_html = Page.createTable(DOC.title.wan, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
-                    var lan_html = Page.createTable(DOC.title.lan, names_lan, values_lan, names_lan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
-
-
-                    $('#run_info').html(run_html);
-                    $('#net_info').html(net_html);
-                    $('#sim_info').html(sim_html);
                     $('#wan_info').html(wan_html);
-                    $('#lan_info').html(lan_html);
+                    
 
                    // Page.setStripeTable();
                     Page.isNULLToSpace = false;
@@ -324,6 +221,171 @@
 
 
         }
+
+        function loadPage2() {
+
+            Page.postJSON({
+                json: { cmd: RequestCmd.SYS_INFO_2},
+                success: function(datas) {
+                    Page.isNULLToSpace = true;
+                    var data2 = datas.data;
+                    var data_system = data2.system;
+                     var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
+                    var values_run = [], values_sim = [], values_net = [], values_lan = [], values_wan = [], values_lte = [];
+                    names_run.push(DOC.lbl.runtime);
+                    names_run.push(DOC.lbl.loadAvg);
+//                    names_run.push(run_text.currentSys);
+                    names_run.push(DOC.lbl.memory);
+
+                     var runtime = ConvertUtil.timeStamp(data_system.runtime || 0);
+                    values_run.push(runtime);
+                    values_run.push((data_system.cpu_average1 || loading) + ", " + (data_system.cpu_average5 || loading) + ", " + (data_system.cpu_average15 || loading));
+                    values_run.push("MemTotal "+ (data_system.mem_total ? FormatUtil.formatField(data_system.mem_total, 'KB') : loading) +
+                                    "MemFree " + (data_system.mem_free ? FormatUtil.formatField(data_system.mem_free, 'KB') : loading) +
+                                    "Cached  " + (data_system.mem_cache ? FormatUtil.formatField(data_system.mem_cache, 'KB') : loading));
+                    var run_html = Page.createTable(DOC.title.run, names_run, values_run, names_run.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                     $('#run_info').html(run_html);
+                     Page.isNULLToSpace = false;
+                }
+            })
+        }
+        function loadPage3() {
+
+            Page.postJSON({
+                json: { cmd: RequestCmd.SYS_INFO_3},
+                success: function(datas) {
+
+                    var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
+                    var values_run = [], values_sim = [], values_net = [], values_lan = [], values_wan = [], values_lte = [];
+                    Page.isNULLToSpace = true;
+
+                    var data2 = datas.data;
+                    var data_modem = data2.modem;
+                    console.log(data_modem);
+                    names_net.push(DOC.lbl.netMode);
+                    names_net.push(DOC.lbl.signal);
+                   // names_net.push(DOC.lbl.signalLevel);
+                  //  names_net.push(DOC.lbl.plmn);
+                  //  names_net.push(DOC.lbl.regState);
+                  //    names_net.push(DOC.lbl.psReg);
+                  //   names_net.push(DOC.lbl.epsReg);
+                 
+                    names_net.push(DOC.lte.rsrp);
+                    names_net.push(DOC.lte.rssi);
+                    names_net.push(DOC.lte.rsrq);
+                    names_net.push(DOC.lte.sinr);
+                    names_net.push(DOC.lte.phyCellId);
+                    names_net.push(DOC.lte.freqPoint);
+                    names_net.push(DOC.lte.enodeB);
+                    names_net.push(DOC.lte.cellId);
+                    names_net.push(DOC.lte.cqi);
+                    names_net.push(DOC.lte.mcs);
+                    names_net.push(DOC.lte.plmn);
+
+                    //var netState = StatusUtil.getNetState(data.signalLevel, data.eregStat, data.act, 0);
+                    var netState = getNetState(data_modem.act);
+                    var singalLevel = data_modem.signal_lvl;
+
+                    // 网络都注册失败时显示未知
+                    // if (!StatusUtil.isAnyRegSuccess(data.regStat, data.gregStat, data.eregStat)) {
+                    //  netState = "?";
+                    //  singalLevel = 0;
+                    // }
+                    values_net.push(netState);
+                    values_net.push(StatusUtil.formatSingalLevel(singalLevel));
+                   // values_net.push(data_modem.rsrp || loading);
+
+                  //  values_net.push(FormatUtil.formatPLMN(data_modem.plmn));
+                    
+                    values_net.push(data_modem.rsrp ? FormatUtil.formatField(data_modem.rsrp, 'dBm') : loading);
+                    values_net.push(data_modem.rssi ? FormatUtil.formatField(data_modem.rssi, 'dBm') : loading);
+                    values_net.push(data_modem.rsrq ? FormatUtil.formatField(data_modem.rsrq, 'dB') : loading);
+                    values_net.push(data_modem.sinr ? FormatUtil.formatField(data_modem.sinr, 'dB') : loading);
+                    values_net.push(data_modem.pci || loading);
+                    values_net.push(data_modem.earfcn ||loading);
+                    values_net.push(data_modem.enodebid || loading);
+                    values_net.push(data_modem.cell_id || loading);
+                    values_net.push(loading);
+                    values_net.push(loading);
+                    values_net.push(data_modem.plmn || loading);
+                    sysInfo_plmn = data_modem.plmn; 
+                     var net_html = Page.createTable(DOC.title.network, names_net, values_net, names_net.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                     $('#net_info').html(net_html);
+                     Page.isNULLToSpace = false;
+                     return sysInfo_plmn;
+                }
+            })
+        }
+        function loadPage4() {
+
+            Page.postJSON({
+                json: { cmd: RequestCmd.SYS_INFO_4},
+                success: function(datas) {
+                    var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
+                    var values_run = [], values_sim = [], values_net = [], values_lan = [], values_wan = [], values_lte = [];
+                    Page.isNULLToSpace = true;
+                    
+                    var data2 = datas.data;
+                    var data_sim = data2.sim;
+                    names_sim.push(DOC.lbl.usim);
+                   // names_sim.push(DOC.lbl.pinCode);
+                   // names_sim.push(DOC.lbl.pukCode);
+                    names_sim.push(DOC.device.imsi);
+                    names_sim.push(DOC.device.iccid);
+                    names_sim.push(DOC.lbl.plmn);
+
+                    var stateInfo = "";
+                   // var pinPukStateInfo = getPinPukState(data_sim.card_status);
+                    values_sim.push(getCardState(data_sim.is_sim_exist));
+                  //  values_sim.push(pinPukStateInfo.pinState);
+                  //  values_sim.push(pinPukStateInfo.pukState);
+                  
+                    values_sim.push(data_sim.imsi || loading);
+                    values_sim.push(data_sim.iccid || loading);
+                    values_sim.push(FormatUtil.formatPLMN(sysInfo_plmn));
+                     var sim_html = Page.createTable(DOC.title.sim + stateInfo, names_sim, values_sim, names_sim.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                     $('#sim_info').html(sim_html);
+                    Page.isNULLToSpace = false;
+                }
+            })
+        }
+        function loadPage5() {
+
+            Page.postJSON({
+                json: { cmd: RequestCmd.SYS_INFO_5},
+                success: function(datas) {
+                    var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
+                    var values_run = [], values_sim = [], values_net = [], values_lan = [], values_wan = [], values_lte = [];
+                    Page.isNULLToSpace = true;
+                    var data2 = datas.data;
+                    var data_lan = data2.lan;
+                    names_lan.push(DOC.net.mac);
+                    names_lan.push(DOC.net.ip);
+                    names_lan.push(DOC.net.mask);
+
+                    values_lan.push(data_lan.lan_mac || loading);
+
+                    Page.lanIp = data_lan.server_ip;
+                    values_lan.push(data_lan.server_ip || loading);
+                    values_lan.push(data_lan.netmask || loading);
+
+                    names_lan.push(DOC.net.dhcpServer);
+                    var dhcp = data_lan.enable ? '1' : '0';
+                    if(dhcp == DHCPServer.CLOSED){
+                        values_lan.push(DOC.status.closed);
+                    } else {
+                        values_lan.push(DOC.status.opened);
+                    }
+                    var lan_html = Page.createTable(DOC.title.lan, names_lan, values_lan, names_lan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    $('#lan_info').html(lan_html);
+                    Page.isNULLToSpace = false;
+                }
+            })
+        }
+
+
+
+
 
         function getWlanSecMode(encry)
         {

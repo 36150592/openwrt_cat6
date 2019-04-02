@@ -107,7 +107,11 @@ var RequestCmd = {
 	LAN_INFO: 203,
     SOCKETAT_GET: 204,
     SOCKETAT_SET: 205,
-    SET_DHCP_IP_MAC:206
+    SET_DHCP_IP_MAC:206,
+    SYS_INFO_2:207,
+    SYS_INFO_3:208,
+    SYS_INFO_4:209,
+    SYS_INFO_5:210,
 
 };
 
@@ -1074,7 +1078,6 @@ function getOpenInfo() {
            // names_advanced.push(lteNames.volteRegisterStatus);
             names_advanced.push(TAB.advance.roaming);
             names_advanced.push(DOC.device.imei);
-
             //values_advanced.push(lteInfo.tm ? FormatUtil.formatField('tm ' + lteInfo.tm) : loading);
             values_advanced.push(status.earfcn ||loading);
             values_advanced.push(status.rsrq ? FormatUtil.formatField(status.rsrq, 'dB') : loading);
@@ -1091,7 +1094,6 @@ function getOpenInfo() {
             }
             values_advanced.push(roam);
             values_advanced.push(divice.imei || loading);
-
             html = Page.createTable(DOC.title.lteInfoBasic, names, values, names.length, 1);
             $('#device_check').show();
             $(lte_info_id).html(html);

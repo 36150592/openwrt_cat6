@@ -193,15 +193,65 @@ end
 function get_sysinfo()
 	local data_array = {}
 
-    data_array["system"]  = system.system_get_status() or ''
-	data_array["modem"] = modem.modem_get_status() or ''
-	data_array["sim"] = sim.sim_get_status() or ''
 	data_array["network"] = network.network_get_wan_info() 
 	if nil == data_array["network"]
 	  then
 	    data_array["network"] = network.network_get_4g_net_info() or ''
 	end
-    --data_array["lan"] = dhcp.dhcp_get_object_list()
+		
+	local tz_answer = {};
+    tz_answer["success"] = true;
+	tz_answer["cmd"] = 0;
+	tz_answer["data"] = data_array;
+	result_json = cjson.encode(tz_answer);
+	print(result_json); 
+
+end
+
+function get_sysinfo_2()
+	local data_array = {}
+
+    data_array["system"]  = system.system_get_status() or ''
+		
+	local tz_answer = {};
+    tz_answer["success"] = true;
+	tz_answer["cmd"] = 0;
+	tz_answer["data"] = data_array;
+	result_json = cjson.encode(tz_answer);
+	print(result_json); 
+
+end
+
+function get_sysinfo_3()
+	local data_array = {}
+
+	data_array["modem"] = modem.modem_get_status() or ''
+		
+	local tz_answer = {};
+    tz_answer["success"] = true;
+	tz_answer["cmd"] = 0;
+	tz_answer["data"] = data_array;
+	result_json = cjson.encode(tz_answer);
+	print(result_json); 
+
+end
+
+function get_sysinfo_4()
+	local data_array = {}
+
+	data_array["sim"] = sim.sim_get_status() or ''
+		
+	local tz_answer = {};
+    tz_answer["success"] = true;
+	tz_answer["cmd"] = 0;
+	tz_answer["data"] = data_array;
+	result_json = cjson.encode(tz_answer);
+	print(result_json); 
+
+end
+
+function get_sysinfo_5()
+	local data_array = {}
 	local array = wifi.wifi_get_dev()
 	if next(array) ~= nil
 	then
@@ -219,6 +269,7 @@ function get_sysinfo()
 	print(result_json); 
 
 end
+
 
 function get_diviceinfo()
 	local data_array = {}
@@ -2178,6 +2229,10 @@ local switch = {
 	 [204] = get_socket_at_switch,
 	 [205] = set_socket_at_app,
 	 [206] = set_dhcp_ip_mac,
+	 [207] = get_sysinfo_2,
+	 [208] = get_sysinfo_3,
+	 [209] = get_sysinfo_4,
+	 [210] = get_sysinfo_5,
  }
  
 cmdid = uti.get_env_cmdId(envv)
