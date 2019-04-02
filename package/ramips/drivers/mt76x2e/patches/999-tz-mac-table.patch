@@ -1,0 +1,148 @@
+Index: mt76x2e-3.0.4.0/rlt_wifi/ap/ap_cfg.c
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/ap/ap_cfg.c
++++ mt76x2e-3.0.4.0/rlt_wifi/ap/ap_cfg.c
+@@ -14215,6 +14215,9 @@ INT RTMP_AP_IoctlHandle(
+ 		case CMD_RTPRIV_IOCTL_GET_MAC_TABLE:
+ 			RTMPIoctlGetMacTable(pAd,wrq);
+ 		    break;
++		case CMD_RTPRIV_IOCTL_GET_ONLINE_CLIENT:
++			RTMPIoctlGetOnlineClient(pAd,wrq);
++		    break;
+ 
+ #if defined (AP_SCAN_SUPPORT) || defined (CONFIG_STA_SUPPORT)
+ 		case CMD_RTPRIV_IOCTL_GSITESURVEY:
+Index: mt76x2e-3.0.4.0/rlt_wifi/common/cmm_info.c
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/common/cmm_info.c
++++ mt76x2e-3.0.4.0/rlt_wifi/common/cmm_info.c
+@@ -3364,6 +3364,56 @@ LabelOK:
+ 		os_free_mem(NULL, pMacTab);
+ }
+ 
++VOID RTMPIoctlGetOnlineClient(
++	IN PRTMP_ADAPTER pAd, 
++	IN RTMP_IOCTL_INPUT_STRUCT *wrq)
++{
++	INT i;
++	char *msg;
++	os_alloc_mem(NULL, (UCHAR **)&msg, sizeof(CHAR)*(MAX_LEN_OF_MAC_TABLE*MAC_LINE_LEN));
++	if (msg == NULL)
++	{
++		DBGPRINT(RT_DEBUG_ERROR, ("%s():Alloc memory failed\n", __FUNCTION__));
++		return ;
++	}
++	memset(msg, 0 ,MAX_LEN_OF_MAC_TABLE*MAC_LINE_LEN );
++	sprintf(msg,"%s","\n");
++	/*sprintf(msg+strlen(msg),"%-19s%-4s%-9s%-4s%-12s%-12s%-12s%-12s%-12s\n",
++		"MAC", "AID", "CTxRate", "BW","RSSI0/1/2","TxBytes","RxBytes","TxPackets","RxPackets");*/
++
++	sprintf(msg+strlen(msg),"%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
++		"MAC", "AID", "CTxRate", "BW","RSSI0/1/2","TxBytes","RxBytes","TxPackets","RxPackets");
++	for (i=0; i<MAX_LEN_OF_MAC_TABLE; i++)
++	{
++		MAC_TABLE_ENTRY *pEntry = &pAd->MacTab.Content[i];
++		if (IS_ENTRY_CLIENT(pEntry) && (pEntry->Sst == SST_ASSOC))
++		{
++			if((strlen(msg)+MAC_LINE_LEN ) >= (MAX_LEN_OF_MAC_TABLE*MAC_LINE_LEN) )
++				break;	
++			sprintf(msg+strlen(msg),"%02x:%02x:%02x:%02x:%02x:%02x\t", PRINT_MAC(pEntry->Addr));
++			sprintf(msg+strlen(msg),"%d\t", (int)pEntry->Aid);
++			sprintf(msg+strlen(msg),"%d\t",RateIdToMbps[pAd->MacTab.Content[i].CurrTxRate]);
++			sprintf(msg+strlen(msg),"%s\t", get_bw_str(pEntry->HTPhyMode.field.BW));
++			sprintf(msg+strlen(msg),"%d/%d/%d\t", pEntry->RssiSample.AvgRssi0,pEntry->RssiSample.AvgRssi1,pEntry->RssiSample.AvgRssi2);
++			sprintf(msg+strlen(msg),"%ld\t", (ULONG)pEntry->TxBytes);
++			sprintf(msg+strlen(msg),"%ld\t", (ULONG)pEntry->RxBytes);
++			sprintf(msg+strlen(msg),"%ld\t", (ULONG)pEntry->TxPackets.QuadPart);
++			sprintf(msg+strlen(msg),"%ld\n", (ULONG)pEntry->RxPackets.QuadPart);
++		}
++	} 
++
++	/* for compatible with old API just do the printk to console*/
++	wrq->u.data.length = strlen(msg);
++	if (copy_to_user(wrq->u.data.pointer, msg, wrq->u.data.length))
++	{
++		DBGPRINT(RT_DEBUG_OFF, ("%s", msg));
++	}
++
++	DBGPRINT(RT_DEBUG_TRACE, ("%s", msg));
++	os_free_mem(NULL, msg);
++
++}
++
+ #if defined(INF_AR9) || defined(BB_SOC)
+ #if defined(AR9_MAPI_SUPPORT) || defined(BB_SOC)
+ #ifdef CONFIG_AP_SUPPORT
+Index: mt76x2e-3.0.4.0/rlt_wifi/include/ap_cfg.h
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/include/ap_cfg.h
++++ mt76x2e-3.0.4.0/rlt_wifi/include/ap_cfg.h
+@@ -57,7 +57,10 @@ VOID RTMPIoctlGetMacTableStaInfo(
+ VOID RTMPIoctlGetMacTable(
+ 	IN PRTMP_ADAPTER pAd, 
+ 	IN RTMP_IOCTL_INPUT_STRUCT *wrq);
+-
++	
++VOID RTMPIoctlGetOnlineClient(
++		IN PRTMP_ADAPTER pAd, 
++		IN RTMP_IOCTL_INPUT_STRUCT *wrq);
+ 
+ VOID RTMPAPIoctlE2PROM(
+     IN  PRTMP_ADAPTER   pAdapter,
+Index: mt76x2e-3.0.4.0/rlt_wifi/include/os/rt_os.h
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/include/os/rt_os.h
++++ mt76x2e-3.0.4.0/rlt_wifi/include/os/rt_os.h
+@@ -66,6 +66,7 @@
+ #define RTPRIV_IOCTL_GSITESURVEY					(SIOCIWFIRSTPRIV + 0x0D)
+ #define RT_PRIV_IOCTL_EXT							(SIOCIWFIRSTPRIV + 0x0E) /* Sync. with RT61 (for wpa_supplicant) */
+ #define RTPRIV_IOCTL_GET_MAC_TABLE					(SIOCIWFIRSTPRIV + 0x0F)
++#define RTPRIV_IOCTL_GET_ONLINE_CLIENT				(SIOCIWFIRSTPRIV + 0x1B)
+ #define RTPRIV_IOCTL_GET_MAC_TABLE_STRUCT					(SIOCIWFIRSTPRIV + 0x1F)	/* modified by Red@Ralink, 2009/09/30 */
+ 
+ #define RTPRIV_IOCTL_SHOW							(SIOCIWFIRSTPRIV + 0x11)
+@@ -101,6 +102,7 @@
+ #define RTPRIV_IOCTL_GSITESURVEY					(SIOCIWFIRSTPRIV + 0x0D)
+ #define RTPRIV_IOCTL_ADD_WPA_KEY                    (SIOCIWFIRSTPRIV + 0x0E)
+ #define RTPRIV_IOCTL_GET_MAC_TABLE					(SIOCIWFIRSTPRIV + 0x0F)
++#define RTPRIV_IOCTL_GET_ONLINE_CLIENT				(SIOCIWFIRSTPRIV + 0x1B)
+ #define RTPRIV_IOCTL_GET_MAC_TABLE_STRUCT	(SIOCIWFIRSTPRIV + 0x1F)	/* modified by Red@Ralink, 2009/09/30 */
+ #define RTPRIV_IOCTL_STATIC_WEP_COPY                (SIOCIWFIRSTPRIV + 0x10)
+ 
+Index: mt76x2e-3.0.4.0/rlt_wifi/include/rtmp_cmd.h
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/include/rtmp_cmd.h
++++ mt76x2e-3.0.4.0/rlt_wifi/include/rtmp_cmd.h
+@@ -129,6 +129,7 @@ typedef enum _CMD_RTPRIV_IOCTL_AP {
+ 	/* general */
+ 	CMD_RTPRIV_IOCTL_SET_WSCOOB = 0x0001,
+ 	CMD_RTPRIV_IOCTL_GET_MAC_TABLE,
++	CMD_RTPRIV_IOCTL_GET_ONLINE_CLIENT,
+ 	CMD_RTPRIV_IOCTL_GSITESURVEY,
+ 	CMD_RTPRIV_IOCTL_STATISTICS,
+ 	CMD_RTPRIV_IOCTL_QUERY_BATABLE,
+Index: mt76x2e-3.0.4.0/rlt_wifi/os/linux/ap_ioctl.c
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/os/linux/ap_ioctl.c
++++ mt76x2e-3.0.4.0/rlt_wifi/os/linux/ap_ioctl.c
+@@ -54,6 +54,9 @@ struct iw_priv_args ap_privtab[] = {
+ { RTPRIV_IOCTL_GET_MAC_TABLE,
+   IW_PRIV_TYPE_CHAR | 1024, IW_PRIV_TYPE_CHAR | 1024 ,
+   "get_mac_table"}, 
++{ RTPRIV_IOCTL_GET_ONLINE_CLIENT,
++  IW_PRIV_TYPE_CHAR | 1024, IW_PRIV_TYPE_CHAR | 1024 ,
++  "get_on_cli"},
+ { RTPRIV_IOCTL_E2P,
+   IW_PRIV_TYPE_CHAR | 1024, IW_PRIV_TYPE_CHAR | 1024,
+   "e2p"},
+@@ -365,6 +368,10 @@ INT rt28xx_ap_ioctl(struct net_device *n
+ 			RTMP_AP_IoctlHandle(pAd, wrq, CMD_RTPRIV_IOCTL_GET_MAC_TABLE, 0, NULL, 0);
+ 		    break;
+ 
++		case RTPRIV_IOCTL_GET_ONLINE_CLIENT:
++			RTMP_AP_IoctlHandle(pAd, wrq, CMD_RTPRIV_IOCTL_GET_ONLINE_CLIENT, 0, NULL, 0);
++		    break;
++
+ 		case RTPRIV_IOCTL_GET_MAC_TABLE_STRUCT:
+ 			RTMP_AP_IoctlHandle(pAd, wrq, CMD_RTPRIV_IOCTL_GET_MAC_TABLE_STRUCT, 0, NULL, 0);
+ 			break;
