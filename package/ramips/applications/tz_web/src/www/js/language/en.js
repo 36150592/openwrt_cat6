@@ -1333,6 +1333,7 @@ networkconfightml.form1.th5 = "Lease Time:";
 networkconfightml.form1.edit = "Edit";
 networkconfightml.form1.del = "Delete";
 networkconfightml.form1.title = "DHCP Setting";
+networkconfightml.form1.addMac = "Add Mac";
 networkconfightml.form2.btnSave = "OK";
 networkconfightml.form2.th1 = "MAC Address:";
 networkconfightml.form2.th2 = "IP:";

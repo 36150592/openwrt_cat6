@@ -17,7 +17,7 @@
         var showText = wirelessconfightml.prompt;
         var $lis = $("ul.tabs a");
         var $boxes = $("div.tab_boxes > div");
-
+        var flag;
         var usrInfos = [], macInfos = [], firstRequest = true;
 
         function createMacInfosTable(){
@@ -218,7 +218,6 @@
             Page.postJSON({
                 json: json,
                 success: function(data) {
-                    console.log(data);
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(5).click();
                 },
@@ -241,7 +240,6 @@
                     Page.postJSON({
                         json: { cmd: RequestCmd.WIFI_INFO },
                         success: function(datas) {
-                            console.log(datas);
                             var data = datas.data;
                             if(data.status == 0){
                                 $wifiOpen.prop('checked', true);
@@ -293,7 +291,6 @@
                     Page.postJSON({
                         json: { cmd: RequestCmd.SSIDLIST_INFO,wifiId: $wifiId.val() },
                         success: function(datas) {
-                            console.log(datas);
                             var data = datas.data;
                             for(var i = 1; i <= data.length; i++) {
                                 if(data[i].status == 0){
@@ -339,7 +336,6 @@
                             success: function(data) {
                                 usrInfos = data.userlist;
                                 macInfos = data.wifilist;
-                                console.log(macInfos);
                                 createMacInfosTable();
                                 firstRequest = false;
                             }
@@ -355,7 +351,6 @@
                             method: JSONMethod.GET
                         },
                         success: function(datas) {
-                            console.log(datas);
                             var data = datas.maclist;
                             InputUtil.setRadiosSelectedValue($policyType, data.policy);
                             if(data.macs == undefined){
@@ -374,7 +369,6 @@
 							method: JSONMethod.GET
                         },
                         success: function(datas) {
-                            console.log(datas);
 							 var data = datas.data;
                             if(data.status == 0){
                                 $('#wpsEnble').prop('checked', false);
@@ -483,11 +477,9 @@
             }
 
             json.cmd = RequestCmd.WIRELESS_CONFIG;
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
-                    console.log(data);
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(0).click();
                 },
@@ -564,11 +556,9 @@
 
             json.cmd = RequestCmd.SSIDLIST_CONFIG;;
             json.wifiId = $wifiId.val();
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
-                    console.log(data);
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(id).click();
                 },

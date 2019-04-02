@@ -2090,6 +2090,30 @@ function set_socket_at_app()
 	print(result_json)
 end
 
+function set_dhcp_ip_mac()
+	local ret 
+	local tz_answer = {}
+	local dataList = tz_req["dataList"]
+
+	if(nil ~= dataList)
+	then
+			ret = dhcp.dhcp_set_reserve_ip(dataList)
+			
+				if(not ret)
+			  	then
+			  			tz_answer["success"] = false
+		   		end
+	end
+
+	tz_answer["cmd"] = 206
+	tz_answer["success"] = true
+	print(dataList)
+	result_json = cjson.encode(tz_answer)
+
+	
+	print(result_json)
+end
+
 local switch = {
      [0] = get_sysinfo,
 	 [1] = get_systime,
@@ -2153,6 +2177,7 @@ local switch = {
 	 [203] = get_lan,
 	 [204] = get_socket_at_switch,
 	 [205] = set_socket_at_app,
+	 [206] = set_dhcp_ip_mac,
  }
  
 cmdid = uti.get_env_cmdId(envv)
@@ -2195,6 +2220,7 @@ else
 	      end
 		  
 	   else
+
 	   local f = switch[tz_req["cmd"]]
 		if(f) then
 		  f()

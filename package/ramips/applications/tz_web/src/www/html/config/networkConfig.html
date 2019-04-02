@@ -8,8 +8,10 @@
         TempUtil.render('networkform1-template1', 'form1', networkconfightml.form1);
         TempUtil.render('networkform1-template2', 'form2', networkconfightml.form1);
         TempUtil.render('networkipMacEdit-template', 'ipMacEdit', networkconfightml.ipMacEdit);
+        Page.render('#fwHead', '#fwHead_template');
+        Page.render('#fwBody', '#fwBody_template');
         var showText = networkconfightml.prompt;
-
+        var flag=0;
         var $lis = $("ul.tabs a");
         var $boxes = $("div.tab_boxes > div");
         var $btnSaveLan = $('input[id^=btnSaveLan]');
@@ -18,7 +20,8 @@
         var reserveIpMacs0 = [];
         var reserveIpMacs1 = [];
         var reserveIpMacs2 = [];
-
+        var editIndex=0;
+        var $box = $('#edit_box'),$mask = $('#mask'),$btnSaveMac = $('#btnSaveMac'),$btnEditMac = $('#btnEditMac'),$btnSaveControl = $('.btnSaveControl'),$btnAdd0 = $('#btnAdd0'),$btnAdd1 = $('#btnAdd1'),$btnAdd2 = $('#btnAdd2'),$btnClose = $('#btnClose');
         function createIpMacTable() {
 
             var length = ipMacs.length;
@@ -50,12 +53,10 @@
 
             for(var i = 0; i < reserveList.length; i++) {
                 if(reserveList[i] !== ""){
-                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit0">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
                 }
             }
-
             sb.append('</table>');
-
             $('#reserveLists0').html(sb.toString());
         }
 
@@ -64,17 +65,172 @@
 
             sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
                 networkconfightml.form1.edit, networkconfightml.form1.del));
-
             for(var i = 0; i < reserveList.length; i++) {
                 if(reserveList[i] !== ""){
-                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit1">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
                 }
             }
 
             sb.append('</table>');
-
             $('#reserveLists1').html(sb.toString());
         }
+
+         $(document).on('click','a[class="macDel"]',function(){
+            $(this).parent().parent().remove();
+        });
+
+        $(document).on('click','a[class="macEdit0"]',function(){
+            flag=1;
+            $box.show();
+            $mask.show();
+            $btnSaveMac.hide();
+            $btnEditMac.show();
+            $('#edit_title').text(DOC.table.edit + DOC.net.mac);
+            SysUtil.setBoxStyle1($box);
+            $('#macList').val($(this).parent().parent().children('td').eq(1).text());
+            editIndex = $('a[class="macEdit0"]').index(this);
+        });
+
+        $(document).on('click','a[class="macEdit1"]',function(){
+            flag=2;
+            $box.show();
+            $mask.show();
+            $btnSaveMac.hide();
+            $btnEditMac.show();
+            $('#edit_title').text(DOC.table.edit + DOC.net.mac);
+            SysUtil.setBoxStyle1($box);
+            $('#macList').val($(this).parent().parent().children('td').eq(1).text());
+            editIndex = $('a[class="macEdit1"]').index(this);
+        });
+
+        $(document).on('click','a[class="macEdit2"]',function(){
+            flag=3;
+            $box.show();
+            $mask.show();
+            $btnSaveMac.hide();
+            $btnEditMac.show();
+            $('#edit_title').text(DOC.table.edit + DOC.net.mac);
+            SysUtil.setBoxStyle1($box);
+            $('#macList').val($(this).parent().parent().children('td').eq(1).text());
+            editIndex = $('a[class="macEdit2"]').index(this);
+        });
+
+          $btnAdd0.click(function () {
+            flag=1;
+            $box.show();
+            $mask.show();
+            $btnSaveMac.show();
+            $btnEditMac.hide();
+            $('#edit_title').text(DOC.table.add + DOC.net.mac);
+            SysUtil.setBoxStyle1($box);
+        });
+           $btnAdd1.click(function () {
+            flag=2;
+            $box.show();
+            $mask.show();
+            $btnSaveMac.show();
+            $btnEditMac.hide();
+            $('#edit_title').text(DOC.table.add + DOC.net.mac);
+            SysUtil.setBoxStyle1($box);
+        });
+            $btnAdd2.click(function () {
+            flag=3;
+            $box.show();
+            $mask.show();
+            $btnSaveMac.show();
+            $btnEditMac.hide();
+            $('#edit_title').text(DOC.table.add + DOC.net.mac);
+            SysUtil.setBoxStyle1($box);
+        });
+
+        $btnClose.click(function() {
+            $box.hide();
+            $mask.hide();
+            $('#macList').val('');
+            $("#macListIp").val('');
+        });
+
+        $btnSaveMac.click(function () {
+            var mac = $('#macList').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
+            var ipaddr=$('#macListIp').val();
+            if (ipaddr == "") {
+                AlertUtil.alertMsg(CHECK.required.ip);
+                return false;
+            }
+            
+            if (!CheckUtil.checkIp(ipaddr)) {
+                AlertUtil.alertMsg(CHECK.format.ip);
+                return false;
+            }
+            if (mac == "") {
+                AlertUtil.alertMsg(CHECK.required.mac);
+                return false;
+            }
+            if (!CheckUtil.checkMac(mac)) {
+                AlertUtil.alertMsg(CHECK.format.mac);
+                return false;
+            }
+            var dhcp0_ip = $("#lanIp0").val();
+            var dhcp0_ip_pre = dhcp0_ip.substring(0, dhcp0_ip.lastIndexOf('.'));
+            var dhcp1_ip = $("#lanIp1").val();
+            var dhcp1_ip_pre = dhcp1_ip.substring(0, dhcp1_ip.lastIndexOf('.'));
+            var dhcp2_ip = $("#lanIp2").val();
+            var dhcp2_ip_pre = dhcp2_ip.substring(0, dhcp2_ip.lastIndexOf('.'));
+            var ipaddrList = ipaddr.substring(0,ipaddr.lastIndexOf('.'));
+            if(flag==1){
+                if(dhcp0_ip_pre != ipaddrList){
+                    AlertUtil.alertMsg(showText.ipCheckMsg2);
+                    return false;
+                }
+                var sb = String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit0">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',ipaddr,mac, showText.edit,showText.del);
+                 $("'"+sb+"'").appendTo($('#reserveLists0 table'));
+             }else if(flag==2){
+                if(dhcp1_ip_pre != ipaddrList){
+                    AlertUtil.alertMsg(showText.ipCheckMsg2);
+                    return false;
+                }
+                 var sb = String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit1">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',ipaddr,mac, showText.edit,showText.del);
+                 $("'"+sb+"'").appendTo($('#reserveLists1 table'));
+             }else if(flag==3){
+                if(dhcp2_ip_pre != ipaddrList){
+                    AlertUtil.alertMsg(showText.ipCheckMsg2);
+                    return false;
+                }
+                 var sb = String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit2">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',ipaddr,mac, showText.edit,showText.del);
+                 $("'"+sb+"'").appendTo($('#reserveLists2 table'));
+             }
+           
+
+            $box.hide();
+            $mask.hide();
+            $('#macList').val('');
+        });
+
+         $btnEditMac.click(function () {
+          
+            var mac = $('#macList').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
+            if (mac == "") {
+                AlertUtil.alertMsg(CHECK.required.mac);
+                return false;
+            }
+
+            if (!CheckUtil.checkMac(mac)) {
+                AlertUtil.alertMsg(CHECK.format.mac);
+                return false;
+            }
+            if(flag==1){
+                $('#reserveLists0 table tr').eq(editIndex+1).children('td').eq(1).text(mac);
+            }else if(flag==2){
+                $('#reserveLists1 table tr').eq(editIndex+1).children('td').eq(1).text(mac);
+            }else if(flag==3){
+                $('#reserveLists2 table tr').eq(editIndex+1).children('td').eq(1).text(mac);
+            }   
+            
+            $box.hide();
+            $mask.hide();
+            $('#macList').val('');
+
+        });
 
         function createIpListTable2(reserveList) {
             var sb = new StringBuilder();
@@ -84,7 +240,7 @@
 
             for(var i = 0; i < reserveList.length; i++) {
                 if(reserveList[i] !== ""){
-                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit2">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
                 }
             }
             
@@ -105,6 +261,53 @@
             }
         }
 		
+
+         $btnSaveControl.click(function () {
+            var  $tr0 = $('#reserveLists0 table tr');
+            var  $tr1 = $('#reserveLists1 table tr');
+            var  $tr2 = $('#reserveLists2 table tr');
+            var obj={},objArr={},objArr2={};
+            var macArr=[];
+            if($tr0.length > 1 ){
+                for (var i=1;i < $tr0.length;i++)
+                {   
+
+                obj={mac:$($tr0[i]).children('td').eq(1).text(),ip:$($tr0[i]).children('td').eq(0).text()};
+                macArr.push(obj);    
+                }
+            }
+            
+            if($tr1.length > 1 ){
+                for (var i=1;i < $tr1.length;i++)
+                {     
+                obj={mac:$($tr1[i]).children('td').eq(1).text(),ip:$($tr1[i]).children('td').eq(0).text()};
+                macArr.push(obj);
+                    
+                }
+            }
+            if($tr2.length > 1 ){
+                for (var i=1;i < $tr2.length;i++)
+                {   
+                obj={mac:$($tr2[i]).children('td').eq(1).text(),ip:$($tr2[i]).children('td').eq(0).text()};
+                macArr.push(obj);   
+                }
+            }
+            var json = {};
+            json.dataList = macArr;
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.SET_DHCP_IP_MAC;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $lis.eq(4).click();
+                },
+                complete: function(){
+                    $('.btnSaveControl').attr("disabled",false);
+                }
+            });
+        });
+
         $lis.click(function() {
             $lis.removeClass("current");
             $(this).addClass("current");
@@ -138,7 +341,6 @@
                                 Page.setFormFieldValue2("ipEnd"+i, data[i].end_ip);
                                 Page.setFormFieldValue2("expireTime"+i, data[i].leasetime);
                             }
-							
 							var dhcp0_ip = $("#lanIp0").val();
                             var dhcp0_ip_pre = dhcp0_ip.substring(0, dhcp0_ip.lastIndexOf('.'));
                             var dhcp1_ip = $("#lanIp1").val();
@@ -146,12 +348,9 @@
                             var dhcp2_ip = $("#lanIp2").val();
                             var dhcp2_ip_pre = dhcp2_ip.substring(0, dhcp2_ip.lastIndexOf('.'));
 
-
                             create_reserve_ip_mac_list_dhcp(dhcp_reserve_ip, dhcp0_ip_pre, reserveIpMacs0);
                             create_reserve_ip_mac_list_dhcp(dhcp_reserve_ip, dhcp1_ip_pre, reserveIpMacs1);
                             create_reserve_ip_mac_list_dhcp(dhcp_reserve_ip, dhcp2_ip_pre, reserveIpMacs2);
-
-
                             createIpListTable0(reserveIpMacs0);
                             createIpListTable1(reserveIpMacs1);
                             createIpListTable2(reserveIpMacs2);
@@ -420,10 +619,13 @@
                                 <td><input type="button" id="btnSaveLan0" value="<%- btnSave %>"/></td>
                             </tr>
                         </table>
+                        <div id="reserveLists0"></div>
+                          <div style="margin-top:10px;"> <input id="btnAdd0" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
                     </script>
                 </form>
 				
-                <div id="reserveLists0"></div>
+                
+              
                        
             </div>
             <div >
@@ -464,9 +666,11 @@
                                 <td><input type="button" id="btnSaveLan1" value="<%- btnSave %>"/></td>
                             </tr>
                         </table>
+                         <div id="reserveLists1"></div>
+                 <div style="margin-top:10px;"> <input id="btnAdd1" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
                     </script>
                 </form>
-                <div id="reserveLists1"></div>
+
             </div>
             <div >
                 <form id="form2">
@@ -506,9 +710,10 @@
                                 <td><input type="button" id="btnSaveLan2" value="<%- btnSave %>"/></td>
                             </tr>
                         </table>
+                         <div id="reserveLists2"></div>
+                 <div style="margin-top:10px;"> <input id="btnAdd2" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
                     </script>
                 </form>
-                <div id="reserveLists2"></div>
             </div>
             <div id="ipMacEdit">
                 <script type="text/template" id="networkipMacEdit-template">
@@ -522,5 +727,34 @@
     <div class="helper_box" style="display:none;winth:40%">
         <div id="helper"></div>
     </div>
+
+    <div id="edit_box" style="width: 400px;height: 200px" >
+    <div class="detail" id="fwHead">
+        <script type="text/template" id="fwHead_template">
+            <div id="edit_title"></div>
+            <div id="edit_close"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
+            <div style="clear:both;"></div>
+        </script>
+    </div>
+    <div id="fwBody">
+        <script type="text/template" id="fwBody_template">
+            <table class="detail" cellspacing="0">
+                <tr>
+                     <th><span><%- net.ip %></span></th>
+                      <td><input type="text" id="macListIp" name="macListIp" class="large" maxlength="30" /><span class="cmt"><%- lbl.example %><%- colon %>192.168.0.1</span></td>
+                </tr>
+                <th><span><%- net.mac %></span></th>
+                <td><input type="text" id="macList" name="macList" class="large" maxlength="30" /><span class="cmt"><%- lbl.example %><%- colon %>B8:AC:6F:BB:7E:3F</span></td>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td>
+                        <input type="button" id="btnSaveMac" value="<%- btn.save %>" />
+                        <input type="button" id="btnEditMac" value="<%- btn.save %>" />
+                    </td>
+                </tr>
+            </table>
+        </script>
+    </div>
+</div>
     <span style="clear:both"></span>
 </div>

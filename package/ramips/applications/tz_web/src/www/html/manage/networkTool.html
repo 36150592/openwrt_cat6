@@ -70,7 +70,6 @@ function readSize(){
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_TOOL;
             json.tool = 'ping_start'
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
@@ -93,7 +92,6 @@ function readSize(){
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_TOOL;
             json.tool = 'ping_stop'
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
@@ -116,7 +114,6 @@ function readSize(){
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_TOOL;
             json.tool = 'catch_pkg_start'
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
@@ -148,7 +145,6 @@ function readSize(){
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_TOOL;
             json.tool = 'catch_pkg_stop'
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
@@ -172,7 +168,6 @@ function readSize(){
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_TOOL;
             json.tool = 'trace_start'
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
@@ -194,7 +189,6 @@ function readSize(){
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_TOOL;
             json.tool = 'trace_stop'
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
@@ -216,7 +210,6 @@ function readSize(){
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_TOOL;
             json.tool = 'log_start'
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
@@ -239,7 +232,6 @@ function readSize(){
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_TOOL;
             json.tool = 'log_stop'
-            console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
@@ -257,7 +249,6 @@ function readSize(){
         var json = JSON.parmsToJSON($form5);
         json.method = JSONMethod.POST;
         json.cmd = RequestCmd.SOCKETAT_GET;
-        //console.log(json);
         Page.postJSON({
             json: json,
             success: function(data) {

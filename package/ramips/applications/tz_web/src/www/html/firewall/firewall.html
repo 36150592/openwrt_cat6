@@ -91,7 +91,6 @@
                     },
                     success: function(data) {
                         if (pannelIndex == 8) {
-                            console.log(data);
                             if (data.action) {
                                 InputUtil.setRadiosSelectedValue($acceptAlls,data.action);
                             }
@@ -366,7 +365,6 @@
                 if(data == undefined){
                     return;
                 }else {
-                   // console.log(data);
                     for(var name in data)
                     {
                         if($(String.format("input[name={0}]", name)).attr("type") == "radio"){
@@ -391,7 +389,6 @@
                         datas: datas
                     },
                     success: function(data) {
-                        //console.log(data);
                     }
                 });
             } else {
@@ -422,7 +419,6 @@
             sb.append(String.format('<input type="hidden" id="hddShiftIndex{0}" value="0" />', pannelIndex));
             sb.append(String.format('<span style="display:none"><input type="button" id="btnDelegate{0}" value="Delegate" /></span>', pannelIndex));
             sb.append('</th></tr>');
-            //console.log(datas);
             var length = datas.length;
             var selectedIndex = options.getSelectedIndex();
             if (selectedIndex >= length) {

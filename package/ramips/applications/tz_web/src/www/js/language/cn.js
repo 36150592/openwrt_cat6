@@ -1329,6 +1329,7 @@ networkconfightml.form1.th5 = "租期时间:";
 networkconfightml.form1.edit = "编辑";
 networkconfightml.form1.del = "删除";
 networkconfightml.form1.title = "DHCP配置";
+networkconfightml.form1.addMac = "添加mac";
 networkconfightml.form2.btnSave = "确 定";
 networkconfightml.form2.th1 = "MAC地址:";
 networkconfightml.form2.th2 = "IP地址:";
