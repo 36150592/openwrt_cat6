@@ -1,4 +1,5 @@
-software_version=0.02
-inline_soft_version=0.02
-hwversion=TZ7.821.176
-device=4G CPE
+software_version=w13_0.0.1
+inline_soft_version=w13_0.0.1
+hwversion=mt7628
+device=CPE_Outdoors_Machine
+config_version=w13c001

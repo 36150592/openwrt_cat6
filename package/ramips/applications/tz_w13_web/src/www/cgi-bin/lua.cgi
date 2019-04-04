@@ -11,6 +11,8 @@ local network = require "tz.network"
 local firewall = require "tz.firewall"
 local uti = require "tz.util"
 
+local W13_WIFI_DEVICE="ra0"
+local W13_WIFI_DEVICE_TYPE="rt2860v2"
 
 local WEB_PATH = "/tz_www"
 print("Contenttype:text/html\n")
@@ -194,18 +196,17 @@ function get_sysinfo()
 	local data_array = {}
 
     data_array["system"]  = system.system_get_status() or ''
-	data_array["modem"] = modem.modem_get_status() or ''
-	data_array["sim"] = sim.sim_get_status() or ''
-	data_array["network"] = network.network_get_wan_info() 
+	--[[data_array["network"] = network.network_get_wan_info() 
 	if nil == data_array["network"]
 	  then
 	    data_array["network"] = network.network_get_4g_net_info() or ''
-	end
+	end]]
     --data_array["lan"] = dhcp.dhcp_get_object_list()
 	local array = wifi.wifi_get_dev()
 	if next(array) ~= nil
 	then
-		local network = array[1]['network']
+		--local network = array[1]['network']
+		local network = "lan"
 		data_array["lan"] = dhcp.dhcp_get_object_by_network(network) or ''
 	else
 		data_array["lan"] = ''
@@ -222,7 +223,6 @@ end
 
 function get_diviceinfo()
 	local data_array = {}
-	data_array["sim"] = sim.sim_get_status() or ''
 	data_array["modem"] = modem.modem_get_info() or ''
 	--data_array["device"] = device.device_get_info() or ''
 	data_array["version"] = system.get_divice_version() or ''
@@ -237,30 +237,34 @@ end
 
 function get_wifi()
 	local array = wifi.wifi_get_dev()
-	local data_array
+	local data_array = {}
 	if next(array) ~= nil
 	then
 		
-		local id
-		for k,v in pairs(array) do
+		local id = 1
+		--[[for k,v in pairs(array) do
 			if(v["band"] == "2.4G")
 				then
 					data_array = v
 					id = v['wifi_id']				  
 			end
-		end
+		end]]
 		data_array['status'] = wifi.wifi_get_enable_status(id)
+		--uti.debug("--------------------data_array['status']=="..a)
 		data_array['hidden_ssid'] = wifi.wifi_get_hidden_ssid(id)
 		data_array['wmm'] = wifi.wifi_get_wmm(id)
-		--data_array['ssid'] = wifi.wifi_get_ssid(id)
-		--data_array['maxNum'] = wifi.wifi_get_connect_sta_number(id)
-		--data_array['encryption'] = wifi.wifi_get_encryption(id)
-		--data_array['pwd'] = wifi.wifi_get_password(id)
+		data_array['mode'] = wifi.wifi_get_mode(id)
+		data_array['ssid'] = wifi.wifi_get_ssid(id)
+		data_array['mac'] = array[1]['mac']
+		data_array['maxNum'] = wifi.wifi_get_connect_sta_number(id)
+		data_array['encryption'] = wifi.wifi_get_encryption(id)
+		data_array['channel'] = wifi.wifi_get_channel(id)
+		data_array['txpower'] = wifi.wifi_get_txpower(id)
+		data_array['pwd'] = wifi.wifi_get_password(id)
 		
 	else
 	    data_array = ''
 	end
-	
 		local tz_answer = {};
 		tz_answer["success"] = true;
 		tz_answer["cmd"] = 101;
@@ -1027,11 +1031,11 @@ end
 function get_sysstatus()
 	local data_array = {}
 	local data_wifi = {}
-	data_array["sim"] = sim.sim_get_status() or ''
-	data_array["modem"] = modem.modem_get_status() or ''
+	--data_array["sim"] = sim.sim_get_status() or ''
+	--data_array["modem"] = modem.modem_get_status() or ''
 	
 	local array = wifi.wifi_get_dev()
-	for k,v in pairs(array) do
+	--[[for k,v in pairs(array) do
 	   if(v["band"] == "2.4G")
 	     then
 		 data_wifi['status'] = wifi.wifi_get_enable_status(v['wifi_id'])	
@@ -1041,7 +1045,8 @@ function get_sysstatus()
 			data_wifi['status5'] = wifi.wifi_get_enable_status(v['wifi_id'])		   
 		end
 	end
-	
+	]]
+	data_wifi['status'] = wifi.wifi_get_enable_status("0")	
 	data_array["wifi"] = data_wifi
 	local tz_answer = {}
 	tz_answer["cmd"] = 113   

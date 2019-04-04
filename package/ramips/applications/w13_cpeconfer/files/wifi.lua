@@ -12,6 +12,9 @@ local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
 
+local W13_WIFI_DEVICE="ra0"
+local W13_WIFI_DEVICE_TYPE="rt2860v2"
+
 -- get section name (.name) by index 
 -- input:
 -- 		number:wifi_id --> wifi index get by wifi_get_dev
@@ -184,12 +187,63 @@ end
 --		dat_opton --> option in wifi drive dat file  e.g /etc/wireless/mt7603e/mt7603e.dat
 -- return 
 --		string value of option or nil if not found
+function getConfType(conf,type)
+   local curs=uci.cursor()
+   local ifce={}
+   curs:foreach(conf,type,function(s) ifce[s[".index"]]=s end)
+   return ifce
+end
 
+function w13_wireless_get_cfg_value(type, section, option, dat_option)--使用type，目前只适用type只有一个section的情况
+
+
+	local conf_type=nil
+
+	local wireless_uci=uci.cursor()
+	local w13_wireless_cfg_val=nil
+	if nil ~= type
+	then
+		conf_type=getConfType(WIFI_CONFIG_FILE,type)
+		for k,v in pairs(conf_type)
+		do
+			for key,val in pairs(v)
+			do
+				if(key == option)
+				then
+					w13_wireless_cfg_val = val
+					break;
+				end
+			end
+		end
+		--w13_wireless_cfg_val=wireless_uci:get(WIFI_CONFIG_FILE, conf_type[".name"], option)
+	elseif nil ~= section and "" ~= section and nil ~= option and "" ~= option
+	then
+		w13_wireless_cfg_val=wireless_uci:get(WIFI_CONFIG_FILE, section, option)
+	end
+	if nil == w13_wireless_cfg_val
+	then
+		if nil ~= dat_option and "" ~= dat_option
+		then
+			--debug(" is nil,get  from dat file ")
+			local cmd = string.format("grep ^%s %s/mt7628/mt7628.dat  | cut -d'=' -f 2", dat_option, WIFI_DRIVE_CONFIG_DIR)
+			--debug("cmd = ", cmd)
+			local t = io.popen(cmd)
+			local res = t:read("*all")
+			w13_wireless_cfg_val = string.gsub(res,"\n","")
+			io.close(t)
+		else
+			debug("w13_wireless_cfg_val = nil and dat_option = nil, can not get")
+			return nil
+		end
+	end
+	return w13_wireless_cfg_val
+	
+end
 
 local function common_config_get(wifi_id, option, dat_option)
 	assert(type(wifi_id) == "number", "wifi_id is not a number")
 
-	--debug("wifi_id = ", wifi_id)
+	debug("wifi_id = ", wifi_id)
 
 	if nil == option 
 	then
@@ -234,7 +288,7 @@ local function common_config_get(wifi_id, option, dat_option)
 		then
 		
 			--debug(" is nil,get  from dat file ")
-			local cmd = string.format("grep ^%s %s/%s/%s.dat  | cut -d'=' -f 2", dat_option, WIFI_DRIVE_CONFIG_DIR, dev_type, dev_type)
+			local cmd = string.format("grep ^%s %s/mt7628/mt7628.dat  | cut -d'=' -f 2", dat_option, WIFI_DRIVE_CONFIG_DIR)
 			debug("cmd = ", cmd)
 			local t = io.popen(cmd)
 			local res = t:read("*all")
@@ -253,7 +307,8 @@ end
 
 
 local function txpower_percent_to_dbm(txpower)
- 	if 100 >= txpower and 91 <= txpower
+	return txpower*23/100
+ 	--[[if 100 >= txpower and 91 <= txpower
     then
     	return 23
     elseif 90 >= txpower and 61 <= txpower
@@ -274,13 +329,13 @@ local function txpower_percent_to_dbm(txpower)
 	end
 
     return -1
-
+	]]
 end
 
 local function txpower_dbm_to_percent(txpower)
 	local value = 100
-
-	if 23 == txpower
+	return txpower*value/23
+	--[[if 23 == txpower
 	then
 		value = 100
 	elseif txpower >20 and txpower <=22
@@ -298,7 +353,7 @@ local function txpower_dbm_to_percent(txpower)
 	else
 		value = 5
 	end
-	return value
+	return value]]
 end
 
 local function get_wifi_mac(ifname)
@@ -406,22 +461,14 @@ function wifi_module.wifi_get_dev()
 		temp = Device:new(nil,nil)
 		for k,v in pairs(s) do
 			repeat
-				if (k == ".anonymous" 
-					or k == ".type" 
-					or k == "country" 
+				if (k == ".anonymous"  
 					or k == "vendor" 
 					or k == "aregion" 
 					or k == "autoch"
 					or k == "bw")
 				then
 					break
-				elseif (".name" == k )
-				then
-					temp["dev_name"] = v
-				elseif (k == ".index" )
-				then
-					temp["wifi_id"] = v
-				elseif k == "txpower"
+				elseif (k == "txpower")
 				then
 					temp["txpower"] = txpower_percent_to_dbm(tonumber(v))
 				else
@@ -430,7 +477,7 @@ function wifi_module.wifi_get_dev()
 			until true
 			
 		end
-		dev_array[var] = temp
+		dev_array[var] = temp --dev_array[1] == wireless.wifi-device
 		var = var+1
     end)
 
@@ -445,7 +492,7 @@ function wifi_module.wifi_get_dev()
 			
 			--print("device = ", s["device"])
 			--print("temp1_device = ", temp1["type"])
-			if (s["device"] == temp1["type"]) 
+			if (s["device"] == W13_WIFI_DEVICE) 
 			then
 				p_dev =dev_array[j]
 				break
@@ -460,12 +507,11 @@ function wifi_module.wifi_get_dev()
 			var = var +1
 		end
 		
-		for k,v in pairs(s) do
+		for k,v in pairs(s) do -- dev_array[2] == wireless.wifi-iface
 			repeat
 				if (k == ".anonymous" 
 					or k == ".type" 
 					or k == "mode" 
-					or k == "device" 
 					or k == "autoch"
 					or k == "bw"
 					or k == ".name"
@@ -475,7 +521,7 @@ function wifi_module.wifi_get_dev()
 				elseif "network" == k
 				then
 					p_dev["network"] = v
-				elseif ("ifname" == k )
+				elseif ("device" == k )
 				then
 					p_dev["interface_name"] = v
 					p_dev["mac"] = get_wifi_mac(v)
@@ -601,8 +647,8 @@ end
 --		0:enable
 --		nil:get fail
 function wifi_module.wifi_get_enable_status(wifi_id)
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-
+	local section_name = W13_WIFI_DEVICE
+	--local section_name = common_get_ifame_section_name_by_index(wifi_id)
 	if nil == section_name 
 	then
 		debug("error:can not get section name ")
@@ -616,7 +662,7 @@ function wifi_module.wifi_get_enable_status(wifi_id)
 		debug("ret is nil ,return default value")
 		return "0"
 	end
-
+	debug("ret is=="..ret)
 	return ret
 end
 
@@ -626,7 +672,7 @@ end
 -- return:string
 --		the wifi ssid
 function wifi_module.wifi_get_ssid(wifi_id)
-    return  common_config_get(wifi_id, "ssid", "SSID")
+    return  w13_wireless_get_cfg_value("wifi-iface",nil, "ssid", "SSID1")
 end
 
 --set ssid
@@ -651,7 +697,7 @@ end
 function wifi_module.wifi_get_password(wifi_id)
 
 	--when is wep encryption the dat_option is DefaultKeyID  ,and the key group(key1 key2 key3 key4) is also set 	
-    return  common_config_get(wifi_id, "key", "WPAPSK")
+    return  w13_wireless_get_cfg_value("wifi-iface",nil, "key", nil)
 end
 
 --set password
@@ -675,7 +721,7 @@ end
 -- return:string
 --		the wifi channel
 function wifi_module.wifi_get_channel(wifi_id)
-    return  common_config_get(wifi_id, "channel", "Channel")
+    return  w13_wireless_get_cfg_value(nil, W13_WIFI_DEVICE, "channel", "Channel")
 end
 
 --channel
@@ -721,7 +767,7 @@ end
 -- 		number
 --		the number of txpower in dbm
 function wifi_module.wifi_get_txpower(wifi_id)
-    local txpower =  common_config_get(wifi_id, "txpower", "TxPower")
+    local txpower =  w13_wireless_get_cfg_value(nil, W13_WIFI_DEVICE, "txpower", "TxPower")
     return txpower_percent_to_dbm(tonumber(txpower))
 end
 
@@ -783,7 +829,7 @@ end
 -- 		0:disable
 -- 		1:enable
 function wifi_module.wifi_get_hidden_ssid(wifi_id)
-	local str = common_config_get(wifi_id, "hidden", "HideSSID")
+	local str = w13_wireless_get_cfg_value("wifi-iface",nil, "hidden", "HideSSID")
 
 	-- mutil ssid has turn on and get from dat file
 	local ar = split(str, ";")
@@ -812,7 +858,7 @@ end
 --14: 11A/AN/AC mixed 5G band only (Only 11AC chipset support)
 --15: 11 AN/AC mixed 5G band only (Only 11AC chipset support)
 function wifi_module.wifi_get_mode(wifi_id)
-    return common_config_get(wifi_id, "mode", "WirelessMode")
+    return w13_wireless_get_cfg_value(nil, W13_WIFI_DEVICE, "mode", "WirelessMode")
 end
 
 --set wireless mode 802.11 n/g/bs
@@ -855,7 +901,7 @@ function wifi_module.wifi_get_bandwidth(wifi_id)
 
 	if "5G" == band
 	then
-		ret = common_config_get(wifi_id, "bw", "VHT_BW")
+		ret = w13_wireless_get_cfg_value("wifi-iface", nil, "bw", "VHT_BW")
 			if "1" == ret
 		   	then
 		   		return "40"
@@ -870,7 +916,7 @@ function wifi_module.wifi_get_bandwidth(wifi_id)
 		   	end
 	end
 
-   	ret =  common_config_get(wifi_id, "ht", "HT_BW")
+   	ret =  w13_wireless_get_cfg_value(nil,W13_WIFI_DEVICE, "ht", "HT_BW")
 
    	if "1" == ret
    	then
@@ -948,7 +994,7 @@ end
 --	option key3 '1234567890'
 --	option key4 '1234567890'
 function wifi_module.wifi_get_encryption(wifi_id)
-	local encry_all = common_config_get(wifi_id, "encryption", "AuthMode")
+	local encry_all = w13_wireless_get_cfg_value("wifi-iface", nil, "encryption", "AuthMode")
 
 	--debug("encry_all = ", encry_all)
 	local start, endp = string.find(encry_all, "+")
@@ -1006,7 +1052,7 @@ end
 --		none --> AUTO
 function wifi_module.wifi_get_encryption_type(wifi_id)
 	
-	local encry_all = common_config_get(wifi_id, "encryption", "EncrypType")
+	local encry_all = w13_wireless_get_cfg_value(nil, W13_WIFI_DEVICE, "encryption", "EncrypType")
 
 	local start, endp = string.find(encry_all, "+")
 
@@ -1064,7 +1110,7 @@ end
 --		wifi_id get by wifi_get_dev 
 -- return:number 
 function wifi_module.wifi_get_connect_sta_number(wifi_id)
-   local sta_number = common_config_get(wifi_id, "maxassoc", "MaxStaNum")
+   local sta_number = w13_wireless_get_cfg_value("wifi-iface", nil, "maxassoc", "MaxStaNum")
    return tonumber(sta_number)
 end
 
@@ -1121,7 +1167,7 @@ end
 -- return:number
 --		wmm 0 disable 1 enable
 function wifi_module.wifi_get_wmm(wifi_id)
-   local wmm = common_config_get(wifi_id, "wmm", "WmmCapable")
+   local wmm = w13_wireless_get_cfg_value("wifi-iface", nil, "wmm", "WmmCapable")
    return tonumber(wmm)
 end
 
@@ -1992,8 +2038,8 @@ end
 -- return:
 -- 		policy,ar: policy as above , ar --> the array of mac 
 function wifi_module.wifi_get_mac_access_control(wifi_id)
-	local policy = common_config_get(wifi_id, "macpolicy", "AccessPolicy0")
-	local str = common_config_get(wifi_id, "maclist", "AccessControlList0")
+	local policy = w13_wireless_get_cfg_value("wifi-iface", nil, "macpolicy", "AccessPolicy0")
+	local str = w13_wireless_get_cfg_value("wifi-iface", nil, "maclist", "AccessControlList0")
 
 	if nil == policy
 	then

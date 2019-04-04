@@ -10,7 +10,9 @@ function module.test_time(f)
 	--os.execute(string.format("logger test_time %s  %s", f, tostring(socket.gettime())))
 end
 
-function module.debug(...)
+function module.debug(str)
+	local f = io.popen("echo \'"..str.."\' >> /tmp/mylua.log")
+	local temp = f:read()
 	--[[arg = { ... } 
 	local log_str = ""
 	local info = DEBUG.getinfo( 2, "nSl")

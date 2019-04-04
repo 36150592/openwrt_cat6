@@ -2,7 +2,7 @@ require("uci")
 require("io")
 network_module = {}
 local util=require("tz.util")
-local x = uci.cursor()
+local x = uci.cursor() --init uci context
 local NETWORK_CONFIG_FILE="network"
 local NETWORK_DNS_MAIN_RESOLV_FILE="/etc/resolv.conf"
 local NETWORK_DNS_SECOND_RESOLV_FILE="/tmp/resolv.conf.auto"

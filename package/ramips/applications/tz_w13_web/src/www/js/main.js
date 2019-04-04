@@ -114,26 +114,14 @@ var MenuItem = {
 
     NETWORK_CONFIG: { cmd: RequestCmd.NETWORK_CONFIG, url: "html/config/networkConfig.html" },
     WIRELESS_CONFIG: { cmd: RequestCmd.WIRELESS_CONFIG, url: "html/config/wirelessConfig.html" },
-    WLAN_5G_CONFIG: { cmd: RequestCmd.WLAN_5G_CONFIG, url: "html/config/wlan5gConfig.html" },
-	ADVANCED_CONFIG: { cmd: RequestCmd.BASIC_CONFIG, url: "html/advance/advancedConfig.html" },
 	
     SYS_SET: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/sys/sysConfigIndex.html" },
     SYS_LOG: { cmd: RequestCmd.SYS_LOG, url: "html/manage/sysLog.html" },
     SYS_UPDATE:	{ cmd: RequestCmd.SYS_UPDATE, url: "html/update/sysUpdate.html" },
 	CONFIG_UPDATE:	{ cmd: RequestCmd.CONFIG_UPDATE, url: "html/update/configUpdate.html" },
-	SYS_AT: { cmd: RequestCmd.SYS_AT, url: "html/manage/sysAt.html" },
-	NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
 	SYS_TIME:{ cmd: RequestCmd.SYS_TIME, url: "html/sys/timeSetting.html" },
 	SYS_REBOOT: { cmd: RequestCmd.SYS_REBOOT, url: "" },
-	
-	FE_DEFAULT: { cmd: RequestCmd.DEFAULT_FILTER, url: "html/firewall/firewall.html" },
-	FW_RULE: { cmd: RequestCmd.PORT_FILTER, url: "html/firewall/firewall.html" },
-    FW_MAC_FILTER: { cmd: RequestCmd.MAC_FILTER, url: "html/firewall/firewall.html" },
-    FW_IP_MAC_BINDING: { cmd: RequestCmd.IP_MAC_BINDING, url: "html/firewall/firewall.html" },
-    FW_URL_FILTER: { cmd: RequestCmd.URL_FILTER, url: "html/firewall/firewall.html" },
-    FW_PORT_MAPPING: { cmd: RequestCmd.OTHER_FILTER, url: "html/firewall/firewall.html" },
-	FW_ACL_FILTER: { cmd: RequestCmd.ACL_FILTER, url: "html/firewall/firewall.html" },
-    FW_SPEED_LIMIT: { cmd: RequestCmd.SPEED_LIMIT, url: "html/firewall/firewall.html" }
+
     
 };
 
@@ -518,25 +506,8 @@ var StatusUtil = {
         if(isNaN(theSignalLevel) || theSignalLevel > 5 || theSignalLevel < 0){
             theSignalLevel = 0;
         }
-        var title = DOC.lte.signalLevel + DOC.colon + signals[theSignalLevel];
 
         return String.format("<div class=\"singal singal{0}\" title=\"{1}\">{2}</div>", (preCss || "") + theSignalLevel, title, content || "");
-    },
-    formatSimInfo: function(state) {
-        var theState = parseInt(state, 10);
-        var title, css;
-        if(theState == 0){
-            css = "invalid";
-            title = DOC.status.noSim;
-        } else if(theState >= 1) {
-            css = "normal";
-            title = DOC.status.existSim;
-        } else {
-            css = "invalid";
-            title = DOC.status.invalid;
-        }
-
-        return String.format("<div class=\"{0}\" title=\"{1}\">SIM</div>", css, title);
     },
     formatWiFiInfo: function(state) {
         var title, css;
@@ -553,26 +524,8 @@ var StatusUtil = {
         }
 
 
-        return String.format("<div class=\"{0}\" title=\"{1}\">2.4g-Wi-Fi</div>", css, title);
+        return String.format("<div class=\"{0}\" title=\"{1}\">Wi-Fi</div>", css, title);
     },
-    format5gWiFiInfo: function(state) {
-        var title, css;
-        //alet(state);
-        if(state == "1") {
-            css = "unnormal";
-            title = DOC.status.disabled;
-        } else if(state == "part") {
-            css = "partnormal";
-            title = DOC.status.wifiPartEnabled;
-        } else {
-            css = "normal";
-            title = DOC.status.enabled;
-        }
-
-
-        return String.format("<div class=\"{0}\" title=\"{1}\">5g-Wi-Fi</div>", css, title);
-    },
-
     getSysStatus: function() {
         var sysStatus = null;
         var $lan1 = $('#lan1'), $lan2 = $('#lan2'),
@@ -593,19 +546,8 @@ var StatusUtil = {
                 complete: function() {
 
                     var wifiStatus = sysStatus.wifi;
-                    var simStatus = sysStatus.sim;
                     var modemStatus = sysStatus.modem;
                     $('#wifiInfo').html(StatusUtil.formatWiFiInfo(wifiStatus.status));
-                    $('#wifiInfo5g').html(StatusUtil.format5gWiFiInfo(wifiStatus.status5));
-                    $('#simInfo').html(StatusUtil.formatSimInfo(simStatus.is_sim_exist));
-                    if(simStatus.card_status == 0)                    {
-                        var singalLevel = modemStatus.signal_lvl;
-                        var netInfo = StatusUtil.formatSingalLevel(singalLevel);
-                        $('#netInfo').html(netInfo);
-                    }else{
-                        var netInfo = StatusUtil.formatSingalLevel(0);
-                        $('#netInfo').html(netInfo);
-                    }
 
                 }
             });
@@ -1027,9 +969,7 @@ function getOpenInfo() {
     Page.isNULLToSpace = true;
 
     function createTable(routerInfo) {
-        var supportedLte = true;
-        var lte_info_id = '#lte_info';
-        var lte_info_advanced_id = '#lte_info_advanced';
+        var supportedLte = false;
         var wan_info_id = supportedLte ? '#wan_info' : '#wan_info2';
         var wlan_info_id = supportedLte ? '#wlan_info' : '#wlan_info2';
 
@@ -1092,13 +1032,9 @@ function getOpenInfo() {
 
             html = Page.createTable(DOC.title.lteInfoBasic, names, values, names.length, 1);
             $('#device_check').show();
-            $(lte_info_id).html(html);
-            //$(lte_info_id).css({ 'color': '#F18906' });
-            Page.setStripeTable(lte_info_id);
 
             html = Page.createTable(DOC.title.lteInfoAdvanced, names_advanced, values_advanced, names_advanced.length, 1);
-            $(lte_info_advanced_id).html(html);
-            Page.setStripeTable(lte_info_advanced_id);
+
         }
 
         names = [];
