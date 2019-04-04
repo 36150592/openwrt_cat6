@@ -891,31 +891,6 @@ end
 -- 80M   -->80M
 function wifi_module.wifi_get_bandwidth(wifi_id)
 
-	local section = common_get_section_name_by_index(wifi_id)
-	local band
-	local ret
-	if nil ~= section
-	then
-		band = x:get(WIFI_CONFIG_FILE, section, "band")
-	end
-
-	if "5G" == band
-	then
-		ret = w13_wireless_get_cfg_value("wifi-iface", nil, "bw", "VHT_BW")
-			if "1" == ret
-		   	then
-		   		return "40"
-		   	elseif "2"  == ret
-		   	then
-		   		return "80"
-		   	elseif "0" == ret
-		   	then
-		   		return "20"
-		   	else
-		   		return ret
-		   	end
-	end
-
    	ret =  w13_wireless_get_cfg_value(nil,W13_WIFI_DEVICE, "ht", "HT_BW")
 
    	if "1" == ret
@@ -995,7 +970,6 @@ end
 --	option key4 '1234567890'
 function wifi_module.wifi_get_encryption(wifi_id)
 	local encry_all = w13_wireless_get_cfg_value("wifi-iface", nil, "encryption", "AuthMode")
-
 	--debug("encry_all = ", encry_all)
 	local start, endp = string.find(encry_all, "+")
 
@@ -1008,9 +982,9 @@ function wifi_module.wifi_get_encryption(wifi_id)
 
 		local encry = string.sub(encry_all, 1, start-1)
 
-		debug("encry = ", encry)
+		debug("encry = "..encry_all)
 
-		return encry
+		return encry_all
    	end
 end
 

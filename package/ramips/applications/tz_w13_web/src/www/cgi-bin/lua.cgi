@@ -260,7 +260,10 @@ function get_wifi()
 		data_array['encryption'] = wifi.wifi_get_encryption(id)
 		data_array['channel'] = wifi.wifi_get_channel(id)
 		data_array['txpower'] = wifi.wifi_get_txpower(id)
-		data_array['pwd'] = wifi.wifi_get_password(id)
+		data_array['maxassoc'] = wifi.wifi_get_connect_sta_number(id)
+		data_array['channel'] = wifi.wifi_get_channel(id)
+		data_array['ht'] = wifi.wifi_get_bandwidth(id)
+		data_array['key'] = wifi.wifi_get_password(id)
 		
 	else
 	    data_array = ''
