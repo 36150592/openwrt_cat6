@@ -1,0 +1,227 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+		
+		var $btnSave = $('#btnSave').disable(),
+			  $pinTypes = $('input[name=radPins]').disable(),
+			  $pinStatus = $('#pinStatus');
+        var $btnSaveRoute = $("#btnSaveRoute"),$btnClose = $("#btnClose"),$btnSaveRoute2 = $("#btnSavePin");
+		$("#btnEdit").hide();  
+		var $box = $('#edit_box2'), $mask = $('#mask');
+
+		$('#btnClose').click(function() {
+            $box.hide();
+            $mask.hide();
+			$btnSave.enable();
+        });
+		
+		 $btnSaveRoute2.click(function () {
+            var target_interface = $("#networktoolhtml").val();
+            var destinationIp = $("#destinationIp").val();
+            var mask = $("#maskNet").val();
+            var gateway = $("#gateway").val();
+            var array =[target_interface,destinationIp,mask,gateway];
+            
+            var  $tr = $('#routeTh table tr');
+
+            var sb = new StringBuilder();
+            sb.append(String.format('<tr><td>{0}</td>',  $tr.length));
+            sb.append(String.format('<td id="target_interface{0}">{1}</td>', $tr.length-1, array[0]));
+            sb.append(String.format('<td id="arget_ip{0}">{1}</td>', $tr.length-1, array[1]));
+            sb.append(String.format('<td id="target_netmask{0}">{1}</td>', $tr.length-1, array[2]));
+            sb.append(String.format('<td id="next_ip{0}">{1}</td>', $tr.length-1, array[3]));
+            sb.append(String.format('<td><a href="javascript:;" class="macEdit2">{0}</a></td>', DOC.table.edit));
+            sb.append(String.format('<td><a href="javascript:;" class="routeDel">{0}</a></td></tr>',dialconfightml.lnsTable.del));
+            $("'"+sb+"'").appendTo($('#routeTh table'));
+                $box.hide();
+                $mask.hide();      
+        })
+         $("#btnSaveRoute2").on("click",function(){
+            var routeArr = new Array(),obj= new Object();
+            var $tr2=$('#routeTh table tr');
+            for(var i=0;i<$tr2.length-1;i++){
+                var target_interfaceVal = $tr2.eq(i+1).children("td").eq(1).text();
+                var destinationIpVal = $tr2.eq(i+1).children("td").eq(2).text();
+                var maskVal = $tr2.eq(i+1).children("td").eq(3).text();
+                var gatewayVal = $tr2.eq(i+1).children("td").eq(4).text();
+                obj={"target_ip":destinationIpVal,"target_netmask":maskVal,"next_ip":gatewayVal,"target_interface":target_interfaceVal};
+                routeArr.push(obj);
+
+            }
+            var json = {};
+            json.routeList = routeArr;
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.ROUTE_LIST_SETTING;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                   if(data.success == true){
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+                   }
+                },
+                complete: function(){
+                    $box.hide();
+                    $mask.hide();
+                    $('.btnSaveControl').attr("disabled",false);
+
+                }
+            });
+
+         })
+        function createTable(){
+             Page.postJSON({
+            json: { cmd: RequestCmd.ROUTE_LIST_GET},
+            success: function(datas){  
+            var ipMacs =datas.data.routeList;
+            var sb = new StringBuilder();
+            sb.append(String.format('<table class="list" cellspacing="0"  style="margin-top: 0px;"><tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3}</th><th>{4}</th><th>{5}</th><th>{6}</th></tr>',
+                DOC.table.rowNo,networktoolhtml.form2.th1, DOC.net.destinationIp,DOC.net.mask, DOC.net.gateway,DOC.table.edit,dialconfightml.lnsTable.del));
+            for (var i = 0; i < ipMacs.length; i++) {
+                var item = ipMacs[i];
+                sb.append(String.format('<tr><td>{0}</td>', i + 1));
+                sb.append(String.format('<td id="target_interface{0}">{1}</td>', i, item.target_interface));
+                sb.append(String.format('<td id="target_ip{0}">{1}</td>', i, item.target_ip));
+                sb.append(String.format('<td id="target_netmask{0}">{1}</td>', i, item.target_netmask));
+                sb.append(String.format('<td id="next_ip{0}">{1}</td>', i, item.next_ip));
+                sb.append(String.format('<td><a href="javascript:;" class="macEdit2">{0}</a></td>', DOC.table.edit));
+                sb.append(String.format('<td><a href="javascript:;" class="routeDel">{0}</a></td></tr>',dialconfightml.lnsTable.del));
+            }
+            sb.append('</table>');
+
+            $('#routeTh').html(sb.toString());
+
+                        }
+                    });
+            
+
+        }
+    createTable();
+
+    var editIndex;
+    $btnSaveRoute.on("click",function(){
+        $box.show();
+        $mask.show();
+        $("#networktoolhtml").val("");
+        $("#destinationIp").val("");
+        $("#maskNet").val("");
+        $("#gateway").val("");
+        $btnSaveRoute2.show();
+        $("#btnEdit").hide();
+        $('#edit_title').text(DOC.table.add + DOC.lbl.remoteIp);
+        SysUtil.setBoxStyle1($box);
+    })
+        $btnClose.click(function() {
+            $box.hide();
+            $mask.hide();
+        });
+       $(document).on('click','a[class="routeDel"]',function(){
+           $(this).parent().parent().remove();
+       })
+
+       $(document).on('click','a[class="macEdit2"]',function(){
+        $box.show();
+        $mask.show();
+        $btnSaveRoute2.hide();;
+        $('#edit_title').text(DOC.table.add + DOC.lbl.remoteIp);
+        $("#networktoolhtml").val($(this).parent().parent().children('td').eq(1).text());
+        $("#destinationIp").val($(this).parent().parent().children('td').eq(2).text());
+        $("#maskNet").val($(this).parent().parent().children('td').eq(3).text());
+        $("#gateway").val($(this).parent().parent().children('td').eq(4).text());
+        $("#btnEdit").show();
+        editIndex = $('a[class="macEdit2"]').index(this);
+        SysUtil.setBoxStyle1($box);
+       });
+      $("#btnEdit").on("click",function(){
+            $form = $("#form");
+            var target_interface = $("#networktoolhtml").val();
+            var destinationIp = $("#destinationIp").val();
+            var mask = $("#maskNet").val();
+            var gateway = $("#gateway").val();
+
+            if(destinationIp == ""){
+                 AlertUtil.alertMsg(CHECK.required.ip);
+                 return false;
+            }
+            if(mask == ""){
+                AlertUtil.alertMsg(CHECK.required.netmask);
+                return false;
+            }
+            if(gateway == ""){
+                AlertUtil.alertMsg(CHECK.required.gateway);
+                return false;
+            }
+            if (!CheckUtil.checkIp(destinationIp)) {
+                AlertUtil.alertMsg(CHECK.format.ip);
+                return false;
+            }
+
+            if (!CheckUtil.checkMask(mask)) {
+                console.log(1111);
+                AlertUtil.alertMsg(CHECK.format.netmask);
+                return false;
+            }
+
+            if (!CheckUtil.checkIp(gateway)) {
+                AlertUtil.alertMsg(CHECK.format.gateway);
+                return false;
+            }
+
+            $box.hide();
+            $mask.hide();
+            $("#routeTh table tr").eq(editIndex+1).children("td").eq(1).text(target_interface);
+            $("#routeTh table tr").eq(editIndex+1).children("td").eq(2).text(destinationIp);
+            $("#routeTh table tr").eq(editIndex+1).children("td").eq(3).text(mask);
+            $("#routeTh table tr").eq(editIndex+1).children("td").eq(4).text(gateway);
+
+      })
+    });
+</script>
+
+<div class="tab_boxes" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="form">
+    <div id="routeTh">
+    </div>
+    <div style="margin-top:40px;">
+       <input type="button" id="btnSaveRoute" value="<%- TAB.route.AddroutingTable %>" />
+    &nbsp;&nbsp;&nbsp;&nbsp;<input type="button" id="btnSaveRoute2" value="<%- networktoolhtml.form5.btnSetting %>" />
+    </div> 
+		<div id="edit_box2" style="width: 500px;height: 250px">
+            <div class="detail" id="fwHead">
+                <div id="edit_title"><%- lbl.pinCode %></div>
+                <div id="edit_close2"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
+                <div style="clear:both;"></div>
+            </div>
+            <div>
+            <table class="detail2" cellspacing="0">
+                <tr>
+                    <th><%-networktoolhtml.form2.th1%></th>
+                    <td><input type="text" id="networktoolhtml" name="networktoolhtml"></td>
+                </tr>
+                 <tr>
+                    <th><%-DOC.net.destinationIp%><%- colon %></th>
+                    <td><input type="text" id="destinationIp" name="destinationIp"></td>
+                </tr>
+                 <tr>
+                    <th><%-DOC.net.mask%><%- colon %></th>
+                    <td><input type="text" id="maskNet" name="maskNet"></td>
+                </tr>
+                 <tr>
+                    <th><%-DOC.net.gateway%><%- colon %></th>
+                    <td><input type="text" id="gateway" name="gateway"></td>
+                </tr>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td><input type="button" id="btnSavePin" value="<%- btn.savePinOk %>"/><input type="button" id="btnEdit" value="<%- btn.savePinOk %>"/></td>
+
+                </tr>
+                </table>
+            </div>
+        </div>
+    </form>
+    </script>
+</div>
+

@@ -112,7 +112,8 @@ var RequestCmd = {
     SYS_INFO_3:208,
     SYS_INFO_4:209,
     SYS_INFO_5:210,
-
+    ROUTE_LIST_GET:211,
+    ROUTE_LIST_SETTING:212,
 };
 
 var MenuItem = {
@@ -664,6 +665,10 @@ var CheckUtil = {
                 || /^([\da-f]{1,4}:){7}[\da-f]{1,4}\/\d{1,3}$/i.test(ip);
         }
 
+    },
+    checkMask:function(mask){
+        var exp=/^(254|252|248|240|224|192|128|0)\.0\.0\.0|255\.(254|252|248|240|224|192|128|0)\.0\.0|255\.255\.(254|252|248|240|224|192|128|0)\.0|255\.255\.255\.(254|252|248|240|224|192|128|0)$/; 
+        return exp.test(mask);
     },
 	checkMac: function(mac) {
         var reg = /^([0-9a-f]{2}[\:|\-]){5}[0-9a-f]{2}$/i;

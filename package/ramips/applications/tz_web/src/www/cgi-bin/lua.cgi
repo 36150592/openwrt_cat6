@@ -2165,6 +2165,42 @@ function set_dhcp_ip_mac()
 	print(result_json)
 end
 
+function route_list_get()
+	
+	local tz_answer = {}
+	tz_answer["cmd"] = 211
+	local data_array = {}
+	
+	data_array["routeList"] = firewall.firewall_get_static_route()
+	tz_answer["success"] = true
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function route_list_set()
+	
+	local ret 
+	local tz_answer = {}
+	local routeList = tz_req["routeList"]
+
+	if(nil ~= routeList)
+		then
+		ret = firewall.firewall_set_static_route(routeList)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 212
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 local switch = {
      [0] = get_sysinfo,
 	 [1] = get_systime,
@@ -2233,6 +2269,8 @@ local switch = {
 	 [208] = get_sysinfo_3,
 	 [209] = get_sysinfo_4,
 	 [210] = get_sysinfo_5,
+	 [211] = route_list_get,
+	 [212] = route_list_set,
  }
  
 cmdid = uti.get_env_cmdId(envv)
