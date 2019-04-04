@@ -1,8 +1,8 @@
 EXEC    = lanrecord
 
-OBJS    = main.o macrecord.o quota.o utility.o
+OBJS    = main.o macrecord.o quota.o utility.o iwlib.o
 CFLAGS += -g
-LDLIBS += -lpthread
+LDLIBS += -lpthread -lm -lip4tc -luci
 
 all: $(EXEC)
 

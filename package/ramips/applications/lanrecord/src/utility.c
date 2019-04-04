@@ -85,7 +85,7 @@ int ll_write_file_data(char *fl, void *data, int size)
 	}
 	else
 	{
-		print("[lan_list_read] %s File Open Error %d!\n", fl, fd);
+		log_info("[lan_list_read] %s File Open Error %d!\n", fl, fd);
 	}  
 
 	system("sync");
@@ -180,20 +180,36 @@ void util_strip_blank_of_string_end( char* str )
 void print_lan_list(char* table_name, LAN_LIST_T* lan_list)
 {
 #ifdef  DEBUG
-	printf("\n******************************  %s  ******************************\n", table_name);
+	log_info("\n******************************  %s  ******************************\n", table_name);
 	int i = 0;
 	for(i = 0; i < lan_list->cnt; i++)
 	{
-		printf("%s\t|\t", lan_list->list[i].mac);
-		printf("%s\t|\t", lan_list->list[i].ipaddr);
-		printf("%s\t|\t", lan_list->list[i].interface);
-		printf("%s\t|\t", lan_list->list[i].hostname);
-		printf("%s\t|\t", lan_list->list[i].expires);
-		printf("%d\t|\t", lan_list->list[i].flow);
-		printf("\n");
+		log_info("%s\t|\t", lan_list->list[i].mac);
+		log_info("%s\t|\t", lan_list->list[i].ipaddr);
+		log_info("%s\t|\t", lan_list->list[i].interface);
+		log_info("%s\t|\t", lan_list->list[i].hostname);
+		log_info("%s\t|\t", lan_list->list[i].expires);
+		log_info("%s\t|\t", lan_list->list[i].ssid);
+		log_info("%d\t|\t", lan_list->list[i].flow);
+		log_info("\n");
 	}
 #endif
 }
+
+void print_history_list(char* table_name, MAC_FLOW_LIST* lan_list)
+{
+#ifdef  DEBUG
+	log_info("\n******************************  %s  ******************************\n", table_name);
+	int i = 0;
+	for(i = 0; i < lan_list->cnt; i++)
+	{
+		log_info("%s\t|\t", lan_list->mac_flow_item[i].mac);
+		log_info("%d\t|\t", lan_list->mac_flow_item[i].flow);
+		log_info("\n");
+	}
+#endif
+}
+
 
 int cmd_file_exist(const char* file_name)
 {

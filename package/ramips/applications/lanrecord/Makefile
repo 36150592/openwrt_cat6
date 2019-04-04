@@ -20,7 +20,7 @@ include $(INCLUDE_DIR)/kernel.mk
 define Package/lanrecord
   SECTION:=MTK Properties
   CATEGORY:=MTK Properties
-  DEPENDS:=+libpthread
+  DEPENDS:=+libpthread +iptables +libuci
   TITLE:=lanrecord
   SUBMENU:=Applications
 endef

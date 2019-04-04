@@ -1,119 +1,99 @@
 #include "include.h"
-
-#define QUOTA_CHAIN "flow"
+#include <errno.h>
+#define QUOTA_CHAIN "forwarding_rule"
 
 MAC_IP_MAP_LIST mac_ip_list;
 MAC_FLOW_LIST history_record_mac_flow_list;
 
 void restore_quota()
 {
-	char shellcmd[256] = "";
-	char buffer[256]="";
-
+	log_info("restore_quota\n");
 	memset(&mac_ip_list, 0, sizeof(MAC_IP_MAP_LIST));
 	memset(&history_record_mac_flow_list, 0, sizeof(MAC_FLOW_LIST));
-	
-	sprintf(shellcmd, "iptables -S | grep %s | grep \"\\-N\"", QUOTA_CHAIN);
+	char *table = "filter";
+	struct xtc_handle *handle = NULL;
+	if (NULL == handle)
+			handle = iptc_init(table);
 
-	if (execute_cmd(shellcmd, buffer, sizeof(buffer)) != 0) {
-		return;
-	}
-
-	if(buffer[0])
+	if (NULL == handle)
 	{
-		print("iptables: %s is exist...", QUOTA_CHAIN);
+		fprintf(stderr,"libiptc:can't initialize iptables table `%s': %s",table, iptc_strerror(errno));
+		return ;
 	}
-	else
+			
+
+	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
 	{
-		print("iptables: %s is no exist...", QUOTA_CHAIN);
-		memset(shellcmd, 0, sizeof(shellcmd));
-		sprintf(shellcmd, "iptables -t filter -N %s", QUOTA_CHAIN);
-		system(shellcmd);
+		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		return ;
 	}
 
-	memset(shellcmd, 0, sizeof(shellcmd));
-	sprintf(shellcmd, "iptables -F %s", QUOTA_CHAIN);
-	system(shellcmd);
+	iptc_flush_entries(QUOTA_CHAIN, handle);
+	iptc_commit(handle);
 
-	memset(shellcmd, 0, sizeof(shellcmd));
-	sprintf(shellcmd, "iptables -D FORWARD -j %s", QUOTA_CHAIN);
-	system(shellcmd);
+	iptc_free(handle);
+	read_history_lan_list(&history_record_mac_flow_list);
+	print_lan_list("history lan list", &history_record_mac_flow_list);
 
-	memset(shellcmd, 0, sizeof(shellcmd));
-	sprintf(shellcmd, "iptables -A FORWARD -j %s", QUOTA_CHAIN);
-	system(shellcmd);
 }
 
 static int get_the_flow_depend_ip(char* ipaddr)
 {
-	int download_byte = 0;
-	int upload_byte = 0;
-	char shellcmd[256] = "";
-	char receive_buf[56] = "";
+	char *table = "filter";
+	struct xtc_handle *handle = NULL;
+	if (NULL == handle)
+			handle = iptc_init(table);
 
-	//get download byte
-	sprintf(shellcmd, "iptables -L -v | grep \"%s \" | awk '{if($7 == \"anywhere\"){print $2}}'", ipaddr);
-	if (execute_cmd(shellcmd, receive_buf, sizeof(receive_buf)) != 0) {
-		return 0;
+	if (NULL == handle)
+	{
+		fprintf(stderr,"libiptc:can't initialize iptables table `%s': %s",table, iptc_strerror(errno));
+		return ;
 	}
+			
+
+	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
+	{
+		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		return ;
+	}
+
+
+	if(NULL == ipaddr)
+	{
+		log_error("ipaddr is NULL !");
+		return -1;
+	}
+	int ret = 0,num=0;
 	
-	if(receive_buf[0])
+	const struct ipt_entry *temp = NULL;
+	long long upload_bytes = 0,download_bytes = 0;
+	temp = iptc_first_rule(QUOTA_CHAIN,handle);
+
+	while(temp != NULL)
 	{
-		char* p = NULL;
-		int multiple = 1;
-		p = strstr(receive_buf, "K");
-		if(p)
+		
+		if(temp->ip.src.s_addr == inet_addr(ipaddr) )
 		{
-			*p=0;
-			multiple = 1024;
+			upload_bytes = temp->counters.bcnt;
+			log_info("upload_bytes = %lld\n", upload_bytes);
 		}
-		else
+		else if (temp->ip.dst.s_addr == inet_addr(ipaddr))
 		{
-			p = strstr(receive_buf, "M");
-			if(p)
-			{
-				*p=0;
-				multiple = 1024*1024;
-			}
+			download_bytes = temp->counters.bcnt;
+			log_info("download_bytes = %lld\n", download_bytes);
 		}
-		download_byte = atoi(receive_buf) * multiple;
-	}
 
-	//get upload byte
-	memset(shellcmd, 0, sizeof(shellcmd));
-	memset(receive_buf, 0, sizeof(receive_buf));
-	sprintf(shellcmd, "iptables -L -v | grep \"%s \" | awk '{if($8 == \"anywhere\"){print $2}}'", ipaddr);
-	if (execute_cmd(shellcmd, receive_buf, sizeof(receive_buf)) != 0) {
-		return 0;
+		temp = iptc_next_rule(temp,handle);
+		num++;
 	}
+	iptc_free(handle);
+	return upload_bytes+download_bytes;
 
-	if(receive_buf[0])
-	{
-		char* p = NULL;
-		int multiple = 1;
-		p = strstr(receive_buf, "K");
-		if(p)
-		{
-			*p=0;
-			multiple = 1024;
-		}
-		else
-		{
-			p = strstr(receive_buf, "M");
-			if(p)
-			{
-				*p=0;
-				multiple = 1024*1024;
-			}
-		}
-		upload_byte = atoi(receive_buf) * multiple;
-	}
-
-	return (upload_byte+download_byte);
 }
 
 static void add_to_history_record(char* mac, int flow)
 {
+	log_info("add_to_history_record %s %d\n", mac, flow);
 	int i = 0;
 	for(i = 0; i < history_record_mac_flow_list.cnt; i++)
 	{
@@ -134,315 +114,295 @@ static void add_to_history_record(char* mac, int flow)
 	}
 }
 
-static void rm_quota_rule_depend_ip(char* ipaddr)
-{
-	char shellcmd[256] = "";
-	char receive_buf[56] = "";
 
-	// rm the -A flow -d 192.168.8.100/32
-	sprintf(shellcmd, "iptables -S | grep %s | grep \"%s/\" | awk '{if($3 == \"-d\"){print $0}}' | awk -F \"\\-A\" '{print $2}'", QUOTA_CHAIN, ipaddr);
-	if (execute_cmd(shellcmd, receive_buf, sizeof(receive_buf)) == 0) 
+
+
+static int check_quota_rule(const char * ipaddr)
+{
+	struct xtc_handle *handle = iptc_init("filter");
+	if (NULL == handle)
 	{
-		if(receive_buf[0])	
+		fprintf(stderr,"libiptc:can't initialize iptables table `filter': %s", iptc_strerror(errno));
+		return ;
+	}
+			
+	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
+	{
+		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		return ;
+	}
+
+	if(NULL == ipaddr)
+	{
+		log_error("ipaddr is NULL !");
+		return -1;
+	}
+	int ret = 0,num=0;
+	
+	const struct ipt_entry *temp = NULL;
+	temp = iptc_first_rule(QUOTA_CHAIN,handle);
+
+	while(temp != NULL)
+	{
+		if(temp->ip.src.s_addr == inet_addr(ipaddr) || 
+			temp->ip.dst.s_addr == inet_addr(ipaddr))
 		{
-			memset(shellcmd, 0, sizeof(shellcmd));
-			sprintf(shellcmd, "iptables -D %s", receive_buf);
-			system(shellcmd);
+			
+			iptc_free(handle);
+			return 1;
 		}
+
+		temp = iptc_next_rule(temp,handle);
+		num++;
+	}
+	iptc_free(handle);
+	return 0;
+
+}
+
+int check_item_exist(LAN_LIST_T* list, const char* ipaddr)
+{
+	int i =0;
+	for(i = 0; i < list->cnt; i++)
+	{
+		if(strcmp(list->list[i].ipaddr, ipaddr) == 0)
+			return 1;
 	}
 
-	memset(shellcmd, 0, sizeof(shellcmd));
-	memset(receive_buf, 0, sizeof(receive_buf));
-	
-	// rm the -A flow -s 192.168.8.100/32
-	sprintf(shellcmd, "iptables -S | grep %s | grep \"%s/\" | awk '{if($3 == \"-s\"){print $0}}' | awk -F \"\\-A\" '{print $2}'", QUOTA_CHAIN, ipaddr);
-	if (execute_cmd(shellcmd, receive_buf, sizeof(receive_buf)) == 0) 
+	return 0;
+
+}
+
+#define u32  unsigned long
+// add iptbales to forwarding_rule: iptables -s src_ip -j ACCEPT or iptables -d src_ip -j ACCEPT
+struct ipt_entry *get_iptc_entry(char* src_ip, char* dest_ip)
+{
+    struct ipt_entry *fw = NULL;
+    struct ipt_entry_target *target = NULL;
+    struct nf_nat_multi_range *mr = NULL;
+ 
+    u32 size1 = XT_ALIGN(sizeof(struct ipt_entry));
+    //u32 size2 = XT_ALIGN(sizeof(struct ipt_entry_match) + sizeof(struct ipt_tcp));
+    u32 size3 = XT_ALIGN(sizeof(struct ipt_entry_target) + sizeof(int));
+ 
+    fw = calloc(1, size1  + size3);
+    if ( !fw ) {
+        log_info("Malloc failure\n");
+        return NULL;
+    }
+ 
+    /* Offsets to the other bits */
+    fw->target_offset = size1 ;
+    fw->next_offset = size1 + size3;
+ 
+    /* Set up packet matching rules */
+
+	if(NULL != src_ip)
 	{
-		if(receive_buf[0])	
+		fw->ip.src.s_addr = inet_addr(src_ip); 
+    	fw->ip.smsk.s_addr = -1;
+	}
+
+	if(NULL != dest_ip)
+	{
+		fw->ip.dst.s_addr = inet_addr(dest_ip); 
+    	fw->ip.dmsk.s_addr = -1;
+	}
+    fw->ip.proto = 0;//all
+    /* And the target */
+    target = (struct ipt_entry_target *)(fw->elems);
+    target->u.target_size = size3;
+    strcpy(target->u.user.name, "ACCEPT");
+    return fw;
+}  
+
+
+static int add_quota_rule_depend_ip(char* ipaddr)
+{
+	char *table = "filter";
+	struct xtc_handle *handle = NULL;
+	if (NULL == handle)
+			handle = iptc_init(table);
+
+	if (NULL == handle)
+	{
+		fprintf(stderr,"libiptc:can't initialize iptables table `%s': %s",table, iptc_strerror(errno));
+		return ;
+	}
+			
+
+	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
+	{
+		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		return ;
+	}
+
+	if(NULL == ipaddr)
+	{
+		log_error("ipaddr is NULL !");
+		return -1;
+	}
+	int ret = 0;
+	struct ipt_entry *s_fw = get_iptc_entry(ipaddr,NULL);
+	struct ipt_entry *d_fw = get_iptc_entry(NULL, ipaddr);
+	int ret1 = iptc_append_entry(QUOTA_CHAIN, s_fw, handle);
+	int ret2 = iptc_append_entry(QUOTA_CHAIN, d_fw, handle);
+	if(ret1 & ret2)
+		ret = iptc_commit(handle);
+
+	iptc_free(handle);
+	free(s_fw);
+	free(d_fw);
+	return ret;
+}
+
+int delete_rule_by_num(int num)
+{
+	char *table = "filter";
+	struct xtc_handle *handle = NULL;
+	int ret = 0;
+	if (NULL == handle)
+			handle = iptc_init(table);
+
+	if (NULL == handle)
+	{
+		fprintf(stderr,"libiptc:can't initialize iptables table `%s': %s",table, iptc_strerror(errno));
+		return -1;
+	}
+			
+	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
+	{
+		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		return -1;
+	}
+
+	iptc_delete_num_entry(QUOTA_CHAIN,num,handle);
+	log_info("before commit\n");
+	ret = iptc_commit(handle);
+	iptc_free(handle);
+	return ret;
+
+}
+static int rm_quota_rule_depend_ip(char* ipaddr)
+{
+
+	char *table = "filter";
+	struct xtc_handle *handle = NULL;
+	if (NULL == handle)
+			handle = iptc_init(table);
+
+	if (NULL == handle)
+	{
+		fprintf(stderr,"libiptc:can't initialize iptables table `%s': %s",table, iptc_strerror(errno));
+		return ;
+	}
+			
+
+	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
+	{
+		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		return ;
+	}
+
+
+	if(NULL == ipaddr)
+	{
+		log_error("ipaddr is NULL !");
+		return -1;
+	}
+	int ret = 0,num=0;
+	
+	const struct ipt_entry *temp = NULL;
+	temp = iptc_first_rule(QUOTA_CHAIN,handle);
+
+	while(temp != NULL && num < 100)
+	{
+		if(temp->ip.src.s_addr == inet_addr(ipaddr) || 
+			temp->ip.dst.s_addr == inet_addr(ipaddr))
 		{
-			memset(shellcmd, 0, sizeof(shellcmd));
-			sprintf(shellcmd, "iptables -D %s", receive_buf);
-			system(shellcmd);
+			log_info("num = %d\n", num);
+			iptc_free(handle);
+			ret = delete_rule_by_num(num);
+			
+			handle = iptc_init(table);
+			temp = iptc_first_rule(QUOTA_CHAIN,handle);
+			num = 0;
+			continue;
 		}
+
+		temp = iptc_next_rule(temp,handle);
+		num++;
 	}
+	iptc_free(handle);
+	return ret;
 	
 }
 
-static void add_quota_rule_depend_ip(char* ipaddr)
-{
-	char shellcmd[256] = "";
-	sprintf(shellcmd, "iptables -A %s -d %s", QUOTA_CHAIN, ipaddr);
-	system(shellcmd);
 
-	memset(shellcmd, 0, sizeof(shellcmd));
-	sprintf(shellcmd, "iptables -A %s -s %s", QUOTA_CHAIN, ipaddr);
-	system(shellcmd);
-}
+void refresh_quota_rule(LAN_LIST_T* current_lan_list,MAC_FLOW_LIST* history_lan_list)
+{	
+	int ret = 0;
+	int i = 0, j = 0;
 
-static void check_quota_rule()
-{
-	char shellcmd[256] = "";
-	char buffer[256]="";
-
-	sprintf(shellcmd, "iptables -S | grep %s | grep \"FORWARD \\-j\"", QUOTA_CHAIN);
-
-	if (execute_cmd(shellcmd, buffer, sizeof(buffer)) != 0) {
-		return;
-	}
-	
-	
-	if(buffer[0] == '\0')
-	{
-		restore_quota();
-	}
-
-}
-
-void set_quota_rule(LAN_LIST_T* current_lan_list)
-{
-	MAC_IP_MAP_LIST rm_mac_ip_list;
-	MAC_IP_MAP_LIST new_mac_ip_list;
-	MAC_IP_MAP_LIST old_mac_ip_list;
-	
-	int i = 0;
-	int j = 0;
-	int k = 0;
-	int m = 0;
-
-	memset(&rm_mac_ip_list, 0, sizeof(MAC_IP_MAP_LIST));
-	memset(&new_mac_ip_list, 0, sizeof(MAC_IP_MAP_LIST));
-	memset(&old_mac_ip_list, 0, sizeof(MAC_IP_MAP_LIST));
-	
 	for(i = 0; i < current_lan_list->cnt; i++)
 	{
-		for(j = 0; j < mac_ip_list.cnt; j ++)
+		char *p = current_lan_list->list[i].ipaddr;
+		if(check_quota_rule(p))
 		{
-			//old mac
-			if( strcmp(current_lan_list->list[i].mac, mac_ip_list.mac_ip[j].mac) == 0)
-			{
-				//if mac and ip is same as old.
-				if( strcmp(current_lan_list->list[i].ipaddr, mac_ip_list.mac_ip[j].ip) == 0)
-				{
-					print("%s--%s is old mac, old ip 1", mac_ip_list.mac_ip[j].mac, mac_ip_list.mac_ip[j].ip);
-					break;
-				}
-				else //mac is old, but ip is no same as old, so delete the old mac-ip, and add new mac-ip
-				{
-					for(m = 0; m < rm_mac_ip_list.cnt; m++)
-					{
-						if(strcmp(rm_mac_ip_list.mac_ip[m].mac, current_lan_list->list[i].mac) == 0)
-						{
-							// the old mac-ip had in rm list.
-							break;
-						}
-					}
-					
-					if(m == rm_mac_ip_list.cnt)
-					{
-						strcpy(rm_mac_ip_list.mac_ip[rm_mac_ip_list.cnt].mac, mac_ip_list.mac_ip[j].mac);
-						strcpy(rm_mac_ip_list.mac_ip[rm_mac_ip_list.cnt].ip, mac_ip_list.mac_ip[j].ip);
-						rm_mac_ip_list.cnt++;
-					}
-
-					int t=0;
-					for(t = 0; t < new_mac_ip_list.cnt; t++)
-					{
-						if(strcmp(current_lan_list->list[i].mac, new_mac_ip_list.mac_ip[t].mac) == 0)
-							break;
-					}
-
-					//add new mac-ip to list
-					strcpy(new_mac_ip_list.mac_ip[new_mac_ip_list.cnt].mac, current_lan_list->list[i].mac);
-					strcpy(new_mac_ip_list.mac_ip[new_mac_ip_list.cnt].ip, current_lan_list->list[i].ipaddr);
-					new_mac_ip_list.cnt++;
-
-					//check if the ip had used
-					for(k = 0; k < mac_ip_list.cnt; k++)
-					{
-						if( strcmp(current_lan_list->list[i].ipaddr, mac_ip_list.mac_ip[k].ip ) == 0)
-							break;
-					}
-
-					//if ip is old
-					if(k != mac_ip_list.cnt)
-					{
-						for(m =0; m < rm_mac_ip_list.cnt; m++)
-						{
-							if(strcmp(rm_mac_ip_list.mac_ip[m].mac, mac_ip_list.mac_ip[k].mac) == 0)
-								break;	
-						}
-
-						//old ip's mac is not in rm list.
-						if(m == rm_mac_ip_list.cnt)
-						{
-							strcpy(rm_mac_ip_list.mac_ip[rm_mac_ip_list.cnt].mac, mac_ip_list.mac_ip[k].mac);
-							strcpy(rm_mac_ip_list.mac_ip[rm_mac_ip_list.cnt].ip, mac_ip_list.mac_ip[k].ip);
-							rm_mac_ip_list.cnt++;
-						}
-					}
-					break;
-				}
+			current_lan_list->list[i].flow = get_the_flow_depend_ip(p);
+		}
+		else // new devices
+		{
+			
+			ret = add_quota_rule_depend_ip(p);
 				
-			}
-			
-			
+			log_info("ret = %d\n", ret);
 		}
-
-		// if mac is new
-		if(j == mac_ip_list.cnt)
-		{
-			//add new mac-ip to list
-			strcpy(new_mac_ip_list.mac_ip[new_mac_ip_list.cnt].mac, current_lan_list->list[i].mac);
-			strcpy(new_mac_ip_list.mac_ip[new_mac_ip_list.cnt].ip, current_lan_list->list[i].ipaddr);
-			new_mac_ip_list.cnt++;
-			
-			//check if the ip had used
-			for(k = 0; k < mac_ip_list.cnt; k++)
-			{
-				if( strcmp(current_lan_list->list[i].ipaddr, mac_ip_list.mac_ip[k].ip ) == 0)
-					break;
-			}
-
-			// the ip is old, it had mac.so delete it
-			if(k != mac_ip_list.cnt)
-			{
-				for(m =0; m < rm_mac_ip_list.cnt; m++)
-				{
-					if(strcmp(rm_mac_ip_list.mac_ip[m].mac, mac_ip_list.mac_ip[k].mac) == 0)
-						break;	
-				}
-
-				//old ip's mac is not in rm list.
-				if(m == rm_mac_ip_list.cnt)
-				{
-					strcpy(rm_mac_ip_list.mac_ip[rm_mac_ip_list.cnt].mac, mac_ip_list.mac_ip[k].mac);
-					strcpy(rm_mac_ip_list.mac_ip[rm_mac_ip_list.cnt].ip, mac_ip_list.mac_ip[k].ip);
-					rm_mac_ip_list.cnt++;
-				}
-			}
-		}
-	}
-
-	// rm_mac_ip_list
-	for(i = 0; i < rm_mac_ip_list.cnt; i++)
-	{
-		//record the mac's flow
-		int item_flow = get_the_flow_depend_ip(rm_mac_ip_list.mac_ip[i].ip);
 		
-		//add to history record
-		add_to_history_record(rm_mac_ip_list.mac_ip[i].mac, item_flow);
-		
-		//rm the iptables rule, it depend on ip
-		print("will delete: %s--%s", rm_mac_ip_list.mac_ip[i].mac, rm_mac_ip_list.mac_ip[i].ip);
-		rm_quota_rule_depend_ip(rm_mac_ip_list.mac_ip[i].ip);
 	}
 
-	// new_mac_ip_list
-	for(i = 0; i < new_mac_ip_list.cnt; i++)
+	for(j = 0;j < mac_ip_list.cnt;j++)
 	{
-		print("will add: %s--%s", new_mac_ip_list.mac_ip[i].mac, new_mac_ip_list.mac_ip[i].ip);
-		add_quota_rule_depend_ip(new_mac_ip_list.mac_ip[i].ip);
-	}
+		char *ip = mac_ip_list.mac_ip[j].ip;
+		char *mac = mac_ip_list.mac_ip[j].mac;
+		long long flow = get_the_flow_depend_ip(ip);
 
-	// update map_ip_list
-	for(i = 0; i < mac_ip_list.cnt; i++)
-	{
-		for(j = 0; j <  new_mac_ip_list.cnt; j++)
+		log_info("mac_ip_list mac = %s, flow = %d\n", mac, flow);
+		if(check_item_exist(current_lan_list, ip))
 		{
-			if(strcmp(new_mac_ip_list.mac_ip[j].mac, mac_ip_list.mac_ip[i].mac) == 0)
-				break;
-		}
-
-		for(k = 0; k < rm_mac_ip_list.cnt; k++)
-		{
-			if(strcmp(rm_mac_ip_list.mac_ip[k].mac, mac_ip_list.mac_ip[i].mac) == 0)
-				break;
-		}
-
-		if( (j == new_mac_ip_list.cnt) && (k == rm_mac_ip_list.cnt) )
-		{
-			for(k = 0; k < old_mac_ip_list.cnt; k++)
-			{
-				if(strcmp(old_mac_ip_list.mac_ip[k].mac, mac_ip_list.mac_ip[i].mac) == 0)
-					break;
-			}
 			
-			if(k == old_mac_ip_list.cnt)
-			{
-				print(">>>>old: %s--%s", mac_ip_list.mac_ip[i].mac, mac_ip_list.mac_ip[i].ip);
-				strcpy(old_mac_ip_list.mac_ip[old_mac_ip_list.cnt].mac, mac_ip_list.mac_ip[i].mac);
-				strcpy(old_mac_ip_list.mac_ip[old_mac_ip_list.cnt].ip, mac_ip_list.mac_ip[i].ip);
-				old_mac_ip_list.cnt++;
-			}
-			
+			add_to_history_record(mac,flow);
+			continue;
 		}
+
+		ret = rm_quota_rule_depend_ip(ip);
+		log_info("rm ret = %d\n", ret);
+		add_to_history_record(mac,flow);
 	}
 
-	for(i = 0; i < old_mac_ip_list.cnt; i++)
+	mac_ip_list.cnt = 0;
+	for(i = 0; i < current_lan_list->cnt; i++)
 	{
-		strcpy(new_mac_ip_list.mac_ip[new_mac_ip_list.cnt].mac, old_mac_ip_list.mac_ip[i].mac);
-		strcpy(new_mac_ip_list.mac_ip[new_mac_ip_list.cnt].ip, old_mac_ip_list.mac_ip[i].ip);
-		new_mac_ip_list.cnt++;
+		char *p = current_lan_list->list[i].ipaddr;
+		char *mac =  current_lan_list->list[i].mac;
+		int flow =   current_lan_list->list[i].flow;
+
+
+		log_info("add to mac_ip_list ip = %s\n", p);
+		log_info("add to mac_ip_list mac = %s\n", mac);
+		strcpy(mac_ip_list.mac_ip[i].ip, p);  
+		strcpy(mac_ip_list.mac_ip[i].mac, mac);
+		mac_ip_list.mac_ip[i].flow = flow;
+		mac_ip_list.cnt++;
 	}
 
-	memset(&mac_ip_list, 0, sizeof(mac_ip_list));
-	memcpy(&mac_ip_list, &new_mac_ip_list, sizeof(new_mac_ip_list));
-
-	check_quota_rule();
-}
-
-
-static void get_mac_ip_list_flow()
-{
-	int i = 0;
-	int j = 0;
+	history_lan_list->cnt = 0;
+	for(j = 0; j < history_record_mac_flow_list.cnt; j++)
+	{		
+		strcpy(history_lan_list->mac_flow_item[j].mac, history_record_mac_flow_list.mac_flow_item[j].mac);
+		history_lan_list->mac_flow_item[j].flow = history_record_mac_flow_list.mac_flow_item[j].flow;
+		history_lan_list->cnt++;
+	}
 	
-	for(i = 0; i < mac_ip_list.cnt; i++)
-	{
-		mac_ip_list.mac_ip[i].flow = 0;
-		mac_ip_list.mac_ip[i].flow = get_the_flow_depend_ip(mac_ip_list.mac_ip[i].ip);
-		
-		for(j = 0; j < history_record_mac_flow_list.cnt; j++)
-		{
-			if(strcmp(mac_ip_list.mac_ip[i].mac, history_record_mac_flow_list.mac_flow_item[j].mac) == 0)
-			{
-				mac_ip_list.mac_ip[i].flow += history_record_mac_flow_list.mac_flow_item[j].flow;
-				break;
-			}
-		}
-		
-	}
-
 }
-
-static void fill_lan_list_flow(LAN_LIST_T* lan_list)
-{
-	int i = 0; 
-	int j = 0;
-	for(i = 0; i < lan_list->cnt; i++)
-	{
-		for(j = 0; j < mac_ip_list.cnt; j++)
-		{
-			if(strcmp(lan_list->list[i].mac, mac_ip_list.mac_ip[j].mac) == 0)
-			{
-				lan_list->list[i].flow = mac_ip_list.mac_ip[j].flow;
-			}
-		}
-	}
-}
-
-
-void get_quota_value(LAN_LIST_T* current_lan_list, LAN_LIST_T* history_lan_list)
-{
-	 
-	//get the mac_ip_list's flow.
-	get_mac_ip_list_flow();
-	
-	//fill current_lan_list's flow
-	fill_lan_list_flow(current_lan_list);
-
-	//fill history_lan_list's flow
-	fill_lan_list_flow(history_lan_list);
-}
-
 

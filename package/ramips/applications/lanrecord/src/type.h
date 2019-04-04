@@ -2,7 +2,7 @@
 #define __TYPE_H_
 
 #include <stdio.h>
-
+#include <syslog.h>
 #define NORMAL_FIELD_LEN 64
 #define NORMAL_ARRAY_SIZE 100
 #define MINI_ARRAY_SIZE 50
@@ -22,14 +22,15 @@ typedef struct
 {
 	char mac[NORMAL_FIELD_LEN];
 	char ip[NORMAL_FIELD_LEN];
-}MAC_IP_ITEM;
+	char ifname[NORMAL_FIELD_LEN];
+}IPNEIGH_ITEM;
 
 
 typedef struct
 {
 	int cnt;
-	MAC_IP_ITEM mac_ip_item[MINI_ARRAY_SIZE];
-}MAC_IP_LIST;
+	IPNEIGH_ITEM list[MINI_ARRAY_SIZE];
+}IPNEIGH_ITEM_LIST;
 
 
 typedef struct udhcpd_lease
@@ -54,6 +55,7 @@ typedef struct lan_item_t
 	char interface[NORMAL_FIELD_LEN];
 	char hostname[NORMAL_FIELD_LEN];
 	char expires[NORMAL_FIELD_LEN];
+	char ssid[NORMAL_FIELD_LEN];
 	int flow;
 }LAN_ITEM_T;
 
@@ -131,12 +133,14 @@ typedef struct double_mac_ip_list
 	DOUBLE_MAC_IP double_mac_ip_item[MINI_ARRAY_SIZE];
 }DOUBLE_MAC_IP_LIST;
 
-//#define DEBUG
+#define DEBUG
 
-#ifdef DEBUG
-	#define print(format,...)  printf("%s--%d: ",__FUNCTION__,__LINE__), printf(format,##__VA_ARGS__), printf("\n")
+#ifndef DEBUG
+#define log_error(...) syslog(LOG_ERR,__VA_ARGS__)
+#define log_info(...) syslog(LOG_INFO,__VA_ARGS__)
 #else
-	#define print(format,...)
+#define log_error(...) printf(__VA_ARGS__)
+#define log_info(...) printf(__VA_ARGS__)
 #endif
 
 #endif
