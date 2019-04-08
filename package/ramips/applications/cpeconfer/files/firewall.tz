@@ -187,6 +187,26 @@ set_user_static_route(){
         local network
         local table_name
         local i=1
+
+        ip rule del pref 100
+        while [ `echo $?` == "0"  ]
+        do
+           ip rule del pref 100  2> /dev/null
+        done
+
+
+        local table_num=10
+        [ `cat /etc/iproute2/rt_tables | grep "user_static_route" | wc -l` == "0" ] && {
+
+            while [ `cat /etc/iproute2/rt_tables | grep "^$table_num    " | wc -l` != 0 ]
+            do
+                table_num=$(($table_num+1))
+            done                
+            echo "$table_num    user_static_route" >> /etc/iproute2/rt_tables 
+        }
+
+        ip route flush table user_static_route
+
         while [ $i -le $rows ]
         do
                 item=`cat /etc/config/tozed | grep TZ_STATIC_ROUTE | sed -n ${i}p | sed  s/\'//g `
@@ -196,25 +216,11 @@ set_user_static_route(){
                 local target_netmask=`echo $item | awk '{print $5}'`
                 local next_ip=`echo $item | awk '{print $6}'`  
 
-                #echo $ifname $target_ip $target_netmask $next_ip
-                if [ $ifname'' != '' ];then
-                        ip=`ifconfig $ifname | grep 'inet addr.*Mask'  | awk -F ':' '{print $2}' | awk '{print $1}'`
-                        netmask=`ifconfig $ifname | grep 'inet addr.*Mask'  | awk -F 'Mask:' '{print $2}'`
-                fi
-                if [ $ip'' == '' ];then
-                        ip route add ${target_ip}/${target_netmask} via $next_ip dev $ifname 
-                        continue
-                fi
 
-                network=`ipcalc.sh  $ip $netmask |grep NETWORK | awk -F '=' '{print $2}'`
-                table_name=`ip rule list  | grep $network | grep to | awk '{print $7}'`
 
-                echo $table_name
-                if [ $table_name'' == '' ];then
-                        ip route add ${target_ip}/${target_netmask} via $next_ip dev $ifname
-                else
-                        ip route add ${target_ip}/${target_netmask} table $table_name via $next_ip dev $ifname 
-                fi 
+
+                ip route add ${target_ip}/${target_netmask} table user_static_route via $next_ip dev $ifname 
+                ip rule add  to  ${target_ip}/${target_netmask} table user_static_route pref 100
 
         done 
 
