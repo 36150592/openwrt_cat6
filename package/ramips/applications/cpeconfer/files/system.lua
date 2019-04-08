@@ -8,6 +8,8 @@ local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
 local SYSTEM_CONFIG_FILE="system"
+local LANRECORD_CURRENT_FILE="/tmp/.current_lan_list"
+local LANRECORD_HISTORY_FILE="/etc/history_lan_list"
 local MEM_INFO_FILE="/proc/meminfo"
 local CPU_AVG_FILE="/proc/loadavg"
 local DEVICE_VERSION="/version"
@@ -1060,6 +1062,118 @@ function system_module.system_ntp_set_date(date_string)
 
 	return os.execute(string.format("date -s '%s' > /dev/null", date_string))
 end
+
+
+system_module.lanrecord_history_info = {
+		
+		["mac"] = nil,   -- string  the user mac
+		["flow"] = nil, -- number   the total flow which this mac use  in byte
+}
+
+
+function system_module.lanrecord_history_info:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+		
+	self["mac"] = obj["mac"] or nil
+	self["flow"] = obj["flow"] or nil
+end
+
+system_module.lanrecord_current_info = {
+		
+		["mac"] = nil,   -- string  the user mac
+		["flow"] = nil, -- number   the total flow which this mac use  in byte
+		["ipaddr"] = nil, -- string the ip address which the user is assign now
+		["host_name"] = nil, -- string device name
+		["interface"] = nil, -- string the access interface
+		["ssid"] = nil , -- string the access ssid , '*'' if access by land(eth0.1)
+		["lease_time"] = nil, -- number the dhcp lease time in second(s)
+
+}
+
+
+function system_module.lanrecord_current_info:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+		
+	self["mac"] = obj["mac"] or nil
+	self["flow"] = obj["flow"] or nil
+	self["ipaddr"] = obj["ipaddr"] or nil
+	self["host_name"] = obj["host_name"] or nil
+	self["interface"] = obj["interface"] or nil
+	self["ssid"] = obj["ssid"] or nil
+	self["lease_time"] = obj["lease_time"] or nil
+end
+
+
+-- get the current client flow  detail
+-- input:none
+-- return:the array of the struct of lanrecord_current_info
+function system_module.system_lanrecord_get_current_info()
+	 local f = io.open(LANRECORD_CURRENT_FILE)
+	 local list = {}
+	 local count = 1
+	 local arr = nil
+	 local info = {}
+	 res = f:read()
+	 
+	 while nil ~= res
+	do
+		local info = system_module.lanrecord_current_info:new(nil,nil)
+		arr = split(res,' |')
+		info["mac"] = arr[1]
+		info["ipaddr"] = arr[2]
+		info["host_name"] = arr[3]
+		info["interface"] = arr[4]
+		info["ssid"] = arr[5]
+		info["lease_time"] = tonumber(arr[6])
+		info["flow"] = tonumber(arr[7])
+		list[count] = info
+		count = count + 1
+ 		res = f:read()
+	end
+	
+
+	io.close(f)
+	return list
+end
+
+-- get the histroy login client flow  detail
+-- input:none
+-- return:the array of the struct of lanrecord_history_info
+function system_module.system_lanrecord_get_history_info()
+	 local f = io.open(LANRECORD_HISTORY_FILE)
+	 local list = {}
+	 local count = 1
+	 local arr = nil
+	 local info = {}
+	 res = f:read()
+	 
+	 while nil ~= res
+	do
+		local info = system_module.lanrecord_history_info:new(nil,nil)
+		arr = split(res,' |')
+		info["mac"] = arr[1]
+		info["flow"] = tonumber(arr[2])
+		list[count] = info
+		count = count + 1
+ 		res = f:read()
+	end
+	
+
+	io.close(f)
+	return list
+end
+
+
 
 return system_module
 

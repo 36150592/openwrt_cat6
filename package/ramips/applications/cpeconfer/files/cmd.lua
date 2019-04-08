@@ -589,6 +589,47 @@ function device_get_info()
 
 end
 
+function system_lanrecord_get_current_info()
+	local list = system.system_lanrecord_get_current_info()
+
+	if nil ~= list
+	then
+		for key,value in pairs(list)
+		do
+			for k,v in pairs(value)
+			do
+				print(k .. " = " .. v)
+
+			end
+
+			print("<------------------------------>")
+		end
+	end
+
+end
+
+
+
+function system_lanrecord_get_history_info()
+	local list = system.system_lanrecord_get_history_info()
+
+	if nil ~= list
+	then
+		for key,value in pairs(list)
+		do
+			for k,v in pairs(value)
+			do
+				print(k .. " = " .. v)
+
+			end
+
+			print("<------------------------------>")
+		end
+	end
+
+end
+
+
 function system_ntp_enable()
 	local ret = system.system_ntp_enable()
 
@@ -2288,6 +2329,8 @@ local api_func = {
 	["system_ntp_get_server_address"] = system_ntp_get_server_address,
 	["system_ntp_set_server_address"] = system_ntp_set_server_address,
 	["system_ntp_set_date"] = system_ntp_set_date,
+	["system_lanrecord_get_history_info"] = system_lanrecord_get_history_info,
+	["system_lanrecord_get_current_info"] = system_lanrecord_get_current_info,
 
  	--device
 	["device_get_info"] = device_get_info,
