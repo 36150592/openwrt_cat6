@@ -1082,7 +1082,7 @@ function getOpenInfo() {
             names_advanced.push(lteNames.enodeB);
            // names_advanced.push(lteNames.volteRegisterStatus);
             names_advanced.push(TAB.advance.roaming);
-            names_advanced.push(DOC.device.imei);
+            // names_advanced.push(DOC.device.imei);
             //values_advanced.push(lteInfo.tm ? FormatUtil.formatField('tm ' + lteInfo.tm) : loading);
             values_advanced.push(status.earfcn ||loading);
             values_advanced.push(status.rsrq ? FormatUtil.formatField(status.rsrq, 'dB') : loading);
@@ -1098,7 +1098,7 @@ function getOpenInfo() {
                 }
             }
             values_advanced.push(roam);
-            values_advanced.push(divice.imei || loading);
+            // values_advanced.push(divice.imei || loading);
             html = Page.createTable(DOC.title.lteInfoBasic, names, values, names.length, 1);
             $('#device_check').show();
             $(lte_info_id).html(html);
