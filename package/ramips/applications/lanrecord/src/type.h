@@ -133,7 +133,7 @@ typedef struct double_mac_ip_list
 	DOUBLE_MAC_IP double_mac_ip_item[MINI_ARRAY_SIZE];
 }DOUBLE_MAC_IP_LIST;
 
-#define DEBUG
+//#define DEBUG
 
 #ifndef DEBUG
 #define log_error(...) syslog(LOG_ERR,__VA_ARGS__)

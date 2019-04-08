@@ -17,15 +17,19 @@ void restore_quota()
 
 	if (NULL == handle)
 	{
-		fprintf(stderr,"libiptc:can't initialize iptables table `%s': %s",table, iptc_strerror(errno));
+		log_error("libiptc:can't initialize iptables table `%s': %s\n",table, iptc_strerror(errno));
 		return ;
 	}
 			
 
 	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
 	{
-		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
-		return ;
+		if(!iptc_create_chain(QUOTA_CHAIN, handle))
+		{
+			log_error("Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+			return ;
+		}
+
 	}
 
 	iptc_flush_entries(QUOTA_CHAIN, handle);
@@ -33,7 +37,7 @@ void restore_quota()
 
 	iptc_free(handle);
 	read_history_lan_list(&history_record_mac_flow_list);
-	print_lan_list("history lan list", &history_record_mac_flow_list);
+	print_history_list("history lan list", &history_record_mac_flow_list);
 
 }
 
@@ -46,14 +50,14 @@ static int get_the_flow_depend_ip(char* ipaddr)
 
 	if (NULL == handle)
 	{
-		fprintf(stderr,"libiptc:can't initialize iptables table `%s': %s",table, iptc_strerror(errno));
+		log_error("libiptc:can't initialize iptables table `%s': %s\n",table, iptc_strerror(errno));
 		return ;
 	}
 			
 
 	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
 	{
-		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		log_error("Warning: using chain %s, not extension\n",QUOTA_CHAIN);
 		return ;
 	}
 
@@ -122,19 +126,19 @@ static int check_quota_rule(const char * ipaddr)
 	struct xtc_handle *handle = iptc_init("filter");
 	if (NULL == handle)
 	{
-		fprintf(stderr,"libiptc:can't initialize iptables table `filter': %s", iptc_strerror(errno));
+		log_error("libiptc:can't initialize iptables table `filter': %s\n", iptc_strerror(errno));
 		return ;
 	}
 			
 	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
 	{
-		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		log_error("Warning: using chain %s, not extension\n",QUOTA_CHAIN);
 		return ;
 	}
 
 	if(NULL == ipaddr)
 	{
-		log_error("ipaddr is NULL !");
+		log_error("ipaddr is NULL !\n");
 		return -1;
 	}
 	int ret = 0,num=0;
@@ -226,14 +230,14 @@ static int add_quota_rule_depend_ip(char* ipaddr)
 
 	if (NULL == handle)
 	{
-		fprintf(stderr,"libiptc:can't initialize iptables table `%s': %s",table, iptc_strerror(errno));
+		log_error("libiptc:can't initialize iptables table `%s': %s\n",table, iptc_strerror(errno));
 		return ;
 	}
 			
 
 	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
 	{
-		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		log_error("Warning: using chain %s, not extension\n",QUOTA_CHAIN);
 		return ;
 	}
 
@@ -266,18 +270,18 @@ int delete_rule_by_num(int num)
 
 	if (NULL == handle)
 	{
-		fprintf(stderr,"libiptc:can't initialize iptables table `%s': %s",table, iptc_strerror(errno));
+		log_error("libiptc:can't initialize iptables table `%s': %s\n",table, iptc_strerror(errno));
 		return -1;
 	}
 			
 	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
 	{
-		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		log_error("Warning: using chain %s, not extension\n",QUOTA_CHAIN);
 		return -1;
 	}
 
 	iptc_delete_num_entry(QUOTA_CHAIN,num,handle);
-	log_info("before commit\n");
+	//log_info("before commit\n");
 	ret = iptc_commit(handle);
 	iptc_free(handle);
 	return ret;
@@ -293,14 +297,14 @@ static int rm_quota_rule_depend_ip(char* ipaddr)
 
 	if (NULL == handle)
 	{
-		fprintf(stderr,"libiptc:can't initialize iptables table `%s': %s",table, iptc_strerror(errno));
+		log_error("libiptc:can't initialize iptables table `%s': %s\n",table, iptc_strerror(errno));
 		return ;
 	}
 			
 
 	if (!iptc_is_chain(QUOTA_CHAIN, handle)) 
 	{
-		fprintf(stderr,"Warning: using chain %s, not extension\n",QUOTA_CHAIN);
+		log_error("Warning: using chain %s, not extension\n",QUOTA_CHAIN);
 		return ;
 	}
 

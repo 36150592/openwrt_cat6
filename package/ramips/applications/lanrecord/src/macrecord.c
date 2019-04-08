@@ -100,8 +100,7 @@ set_private_cmd(int		skfd,		/* Socket */
   if(priv_num <= 0)
     {
       /* Should I skip this message ? */
-      fprintf(stderr, "%-8.16s  no private ioctls.\n\n",
-	      ifname);
+      log_error("%-8.16s  no private ioctls.\n\n",ifname);
       if(priv)
 	free(priv);
       return(-1);
@@ -115,7 +114,7 @@ set_private_cmd(int		skfd,		/* Socket */
 	/* If not found... */
 	if(k == priv_num)
 	{
-		fprintf(stderr, "Invalid command : get_on_cli cannot find!\n");
+		log_error("Invalid command : get_on_cli cannot find!\n");
 		return(-1);
 	}
 	  
@@ -132,7 +131,7 @@ set_private_cmd(int		skfd,		/* Socket */
 	    /* If not found... */
 		if(j == priv_num)
 		{
-		  fprintf(stderr, "Invalid private ioctl definition for : get_on_cli\n");
+		  log_error("Invalid private ioctl definition for : get_on_cli\n");
 		  return(-1);
 		}
 
@@ -163,7 +162,7 @@ set_private_cmd(int		skfd,		/* Socket */
 			} 
 			break;
 			default:
-				fprintf(stderr, "Not implemented...\n");
+				log_error("Not implemented...\n");
 				return(-1);
 		}
 	  
@@ -213,7 +212,7 @@ set_private_cmd(int		skfd,		/* Socket */
   /* Perform the private ioctl */
   if(ioctl(skfd, priv[k].cmd, &wrq) < 0)
     {
-      fprintf(stderr, "Interface doesn't accept private ioctl...\n");
+      log_error("Interface doesn't accept private ioctl...\n");
       return(-1);
     }
 
@@ -259,7 +258,7 @@ set_private_cmd(int		skfd,		/* Socket */
 			}
 			break;
 			default:
-			  fprintf(stderr, "Not yet implemented...\n");
+			  log_error("Not yet implemented...\n");
 			  return(-1);
 		}
     }	/* if args to set */

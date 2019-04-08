@@ -44,6 +44,9 @@ define Package/lanrecord/install
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lanrecord $(1)/bin
 
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/lanrecord.init $(1)/etc/init.d/lanrecord
+
 endef
 
 

@@ -1,0 +1,12 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2007-2012 OpenWrt.org
+
+START=100
+STOP=85
+start(){
+    /bin/lanrecord &
+}
+
+stop(){
+    killall -9 lanrecord
+}
