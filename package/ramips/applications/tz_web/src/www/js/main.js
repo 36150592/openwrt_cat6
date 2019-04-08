@@ -1081,7 +1081,7 @@ function getOpenInfo() {
             names_advanced.push(lteNames.globalCellId);
             names_advanced.push(lteNames.enodeB);
            // names_advanced.push(lteNames.volteRegisterStatus);
-            names_advanced.push(TAB.advance.roaming);
+            // names_advanced.push(TAB.advance.roaming);
             // names_advanced.push(DOC.device.imei);
             //values_advanced.push(lteInfo.tm ? FormatUtil.formatField('tm ' + lteInfo.tm) : loading);
             values_advanced.push(status.earfcn ||loading);
@@ -1097,7 +1097,7 @@ function getOpenInfo() {
                     roam = DOC.status.roam;
                 }
             }
-            values_advanced.push(roam);
+            // values_advanced.push(roam);
             // values_advanced.push(divice.imei || loading);
             html = Page.createTable(DOC.title.lteInfoBasic, names, values, names.length, 1);
             $('#device_check').show();
