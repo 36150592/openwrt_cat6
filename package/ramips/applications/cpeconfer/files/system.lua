@@ -331,6 +331,199 @@ function system_module.set_socket_at_app(isOpen)
 end
 
 
+system_module.tr069_info = {
+		
+		["tr069_app_enable"] = nil,   --string
+		["tr069_ServerURL"] = nil, --string
+		["tr069_PeriodicInformEnable"] = nil,  --string
+		["tr069_PeriodicInformInterval"] = nil, --string
+		["tr069_ACS_auth"] = nil,  --string
+		["tr069_ServerUsername"] = nil,  --string
+		["tr069_ServerPassword"] = nil,  --string
+		["tr069_CPE_auth"] = nil,  --string
+		["tr069_ConnectionRequestUname"] = nil,  --string
+		["tr069_ConnectionRequestPassword"] = nil  --string
+}
+
+
+function system_module.tr069_info:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+		
+	self["tr069_app_enable"] = obj["tr069_app_enable"] or nil
+	self["tr069_ServerURL"] = obj["tr069_ServerURL"] or nil
+	self["tr069_PeriodicInformEnable"] = obj["tr069_PeriodicInformEnable"] or nil
+	self["tr069_PeriodicInformInterval"] = obj["tr069_PeriodicInformInterval"] or nil
+	self["tr069_ACS_auth"] = obj["tr069_ACS_auth"] or nil
+	self["tr069_ServerUsername"] = obj["tr069_ServerUsername"] or nil
+	self["tr069_ServerPassword"] = obj["tr069_ServerPassword"] or nil
+	self["tr069_CPE_auth"] = obj["tr069_CPE_auth"] or nil
+	self["tr069_ConnectionRequestUname"] = obj["tr069_ConnectionRequestUname"] or nil
+	self["tr069_ConnectionRequestPassword"] = obj["tr069_ConnectionRequestPassword"] or nil
+end
+
+function system_module.system_get_tr069_info()
+
+		local info = system_module.tr069_info:new(nil,nil)
+
+		info["tr069_app_enable"] =  x:get("tozed","cfg","tr069_app_enable")
+		info["tr069_ServerURL"] =  x:get("tozed","cfg","tr069_ServerURL") or ""
+		info["tr069_PeriodicInformEnable"] =  x:get("tozed","cfg","tr069_PeriodicInformEnable")
+		info["tr069_PeriodicInformInterval"] =  x:get("tozed","cfg","tr069_PeriodicInformInterval") or ""
+		info["tr069_ACS_auth"] =  x:get("tozed","cfg","tr069_ACS_auth")
+		info["tr069_ServerUsername"] =  x:get("tozed","cfg","tr069_ServerUsername") or ""
+		info["tr069_ServerPassword"] =  x:get("tozed","cfg","tr069_ServerPassword") or ""
+		info["tr069_CPE_auth"] =  x:get("tozed","cfg","tr069_CPE_auth")
+		info["tr069_ConnectionRequestUname"] =  x:get("tozed","cfg","tr069_ConnectionRequestUname") or ""
+		info["tr069_ConnectionRequestPassword"] =  x:get("tozed","cfg","tr069_ConnectionRequestPassword") or ""
+
+		return info
+end
+
+function system_module.system_set_tr069_app_enable(app_switch)
+
+	if(nil ~= app_switch)
+	then
+		if("y" == app_switch)
+		then
+			x:set("tozed","cfg","tr069_app_enable","y")
+		else
+			x:set("tozed","cfg","tr069_app_enable","n")
+		end
+		x:commit("tozed")
+		return 0
+	end
+
+	return -1
+end
+
+function system_module.system_set_tr069_ServerURL(url)
+
+	if(nil ~= url)
+	then
+		x:set("tozed","cfg","tr069_app_enable",url)
+		x:commit("tozed")
+		return 0
+	end
+
+	return -1
+end
+
+function system_module.system_set_tr069_PeriodicInformEnable(isOpen)
+
+	if(nil ~= isOpen)
+	then
+		if("y" == isOpen)
+		then
+			x:set("tozed","cfg","tr069_PeriodicInformEnable","y")
+		else
+			x:set("tozed","cfg","tr069_PeriodicInformEnable","n")
+		end
+		x:commit("tozed")
+		return 0
+	end
+
+	return -1
+end
+
+function system_module.system_set_tr069_PeriodicInformInterval(seconds)
+
+	if(nil ~= seconds)
+	then
+		x:set("tozed","cfg","tr069_PeriodicInformInterval",seconds)
+		x:commit("tozed")
+		return 0
+	end
+
+	return -1
+end
+
+function system_module.system_set_tr069_tr069_ACS_auth(isOpen)
+
+	if(nil ~= isOpen)
+	then
+		if("y" == isOpen)
+		then
+			x:set("tozed","cfg","tr069_ACS_auth","y")
+		else
+			x:set("tozed","cfg","tr069_ACS_auth","n")
+		end
+		x:commit("tozed")
+		return 0
+	end
+
+	return -1
+end
+
+function system_module.system_set_tr069_ServerUsername(name)
+
+	if(nil ~= name)
+	then
+		x:set("tozed","cfg","tr069_ServerUsername",name)
+		x:commit("tozed")
+		return 0
+	end
+
+	return -1
+end
+
+function system_module.system_set_tr069_ServerPassword(pwd)
+
+	if(nil ~= pwd)
+	then
+		x:set("tozed","cfg","tr069_ServerPassword",pwd)
+		x:commit("tozed")
+		return 0
+	end
+
+	return -1
+end
+
+function system_module.system_set_tr069_tr069_tr069_CPE_auth(isOpen)
+
+	if(nil ~= isOpen)
+	then
+		if("y" == isOpen)
+		then
+			x:set("tozed","cfg","tr069_CPE_auth","y")
+		else
+			x:set("tozed","cfg","tr069_CPE_auth","n")
+		end
+		x:commit("tozed")
+		return 0
+	end
+
+	return -1
+end
+
+function system_module.system_set_tr069_ConnectionRequestUname(name)
+
+	if(nil ~= name)
+	then
+		x:set("tozed","cfg","tr069_ConnectionRequestUname",name)
+		x:commit("tozed")
+		return 0
+	end
+
+	return -1
+end
+
+function system_module.system_set_tr069_ConnectionRequestPassword(pwd)
+
+	if(nil ~= pwd)
+	then
+		x:set("tozed","cfg","tr069_ConnectionRequestPassword",pwd)
+		x:commit("tozed")
+		return 0
+	end
+
+	return -1
+end
+
 local timezone_location = {
 	["Africa/Abidjan"]= "GMT0",
 	["Africa/Accra"]= "GMT0",

@@ -2126,6 +2126,32 @@ function dhcp_get_client_list()
 	end
 end
 
+function tozed_get_tr069_config()
+	print("tozed_get_tr069_config")
+	local ret = system.system_get_tr069_info()
+
+	for key, value in pairs(ret)
+	do
+		print(key,"=",value)
+	end
+end
+
+function tozed_set_tr069_config()
+	print("tozed_get_tr069_config")
+
+	system.system_set_tr069_app_enable("n")
+	system.system_set_tr069_ServerURL("http://113.98.195.202:7547/")
+	system.system_set_tr069_PeriodicInformEnable("y")
+	system.system_set_tr069_PeriodicInformInterval("1800")
+	system.system_set_tr069_tr069_ACS_auth("n")
+	system.system_set_tr069_ServerUsername("acs_user")
+	system.system_set_tr069_ServerPassword("acs_pwd")
+	system.system_set_tr069_tr069_tr069_CPE_auth("n")
+	system.system_set_tr069_ConnectionRequestUname("cpe_user")
+	system.system_set_tr069_ConnectionRequestPassword("cpe_pwd")
+
+end
+
 local api_func = {
 	["wifi_secondary_get_ssid_list"] = wifi_secondary_get_ssid_list,
 	["wifi_secondary_get_hidden"]=wifi_secondary_get_hidden,
@@ -2314,7 +2340,11 @@ local api_func = {
 	["led_set_wps"] = led_set_wps,
 	["led_set_signal"] = led_set_signal,
 	["led_all_off"] = led.led_all_off,
-	["led_all_on"] = led.led_all_on
+	["led_all_on"] = led.led_all_on,
+
+	--tr069
+	["tozed_get_tr069_config"] = tozed_get_tr069_config,
+	["tozed_set_tr069_config"] = tozed_set_tr069_config
 }
 
 
