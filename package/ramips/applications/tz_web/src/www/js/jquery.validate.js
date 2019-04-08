@@ -1280,7 +1280,7 @@ $.validator.addMethod("reallength",
 );
 $.validator.addMethod("ssidRules",
 	function(value, element) {
-		var reg = /^[0-9A-Za-z_\-]{1}[0-9A-Za-z_\-\s]{2,30}[0-9A-Za-z_\-]{1}$/;
+		var reg = /^[0-9a-zA-Z!*#:\(\)\+\-\.\/%=\?@\^_\{|\}~\x20]{1,32}$/;
 		return this.optional(element) || reg.test(value);
 	}, "ssid rules errors"
 );
