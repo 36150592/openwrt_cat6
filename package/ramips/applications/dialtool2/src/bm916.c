@@ -2573,7 +2573,7 @@ void bm916_deamon(int* Dial_proc_state)
 							ptr_tmp3[0]='\0';
 						}
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
-						strncpy(global_dial_vars.msc,ptr_tmp3,strlen(ptr_tmp3));
+						strncpy(global_dial_vars.mcs,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
 					

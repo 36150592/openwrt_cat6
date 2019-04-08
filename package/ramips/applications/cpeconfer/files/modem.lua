@@ -88,7 +88,7 @@ modem_module.modem_status= {
 	["operator"]=nil, 				--string                                               
 	["plmn"]=nil,   				--string like 46001
 	["cqi"]=nil,					--string
-	["msc"]=nil                     --string
+	["mcs"]=nil                     --string
 }
 
 modem_module.modem_device = {
@@ -142,7 +142,7 @@ function modem_module.modem_status:new(o,obj)
 	self["operator"] = obj["operator"] or  nil                                      
 	self["plmn"] = obj["plmn"] or  nil
 	self["cqi"] = obj["cqi"] or  nil                                      
-	self["msc"] = obj["msc"] or  nil
+	self["mcs"] = obj["mcs"] or  nil
    return o
 end
 
@@ -198,7 +198,7 @@ local status_keys = {
 	"operator",                                                
 	"plmn", 
 	"cqi",
-	"msc",
+	"mcs",
 }
 
 local device_keys = {"type","manufacturer","hardware","softver","imei"}

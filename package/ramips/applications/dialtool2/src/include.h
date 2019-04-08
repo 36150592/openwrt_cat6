@@ -110,7 +110,7 @@ typedef struct  GLOBAL_DIAL_VARIABLES
 	int service_status;
 	int ps_cs_region;
 	char cqi[8];
-	char msc[8];
+	char mcs[8];
 	
 	char gw_all_band[64];
 	char lte_all_band[64];
