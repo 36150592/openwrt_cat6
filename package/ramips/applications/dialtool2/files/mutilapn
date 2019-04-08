@@ -335,6 +335,17 @@ add_able_default_route()
 	ping -w 3 8.8.8.8 -I $1
 
 	if [ $? == "0" ];then
+
+		local ret=`route | grep default | awk '{print $8}'`
+		if [ $ret"" != "" ];then
+		
+			for target in `ip route | grep $ret | awk '{print $1}'`
+			do
+				ip route del $target
+			done
+		fi 
+
+
 		local count=`ip route list table $1 | wc -l`
 
 		while [ $count -gt 0 ]
@@ -395,17 +406,6 @@ check_route()
 		if [ $primary_apn_if"" == "" ];then
 			config_get primary_apn_if '4g' ifname
 		fi
-
-		local ret=`route | grep default | awk '{print $8}'`
-		if [ $ret"" != "" ];then
-		
-			for target in `ip route | grep $ret | awk '{print $1}'`
-			do
-				ip route del $target
-			done
-			
-			
-		fi 
 
 		ret=""
 		add_able_default_route $land_wan_if
