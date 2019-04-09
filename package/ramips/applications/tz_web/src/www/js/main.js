@@ -675,6 +675,18 @@ var CheckUtil = {
         var reg = /^([0-9a-f]{2}[\:|\-]){5}[0-9a-f]{2}$/i;
         return reg.test(mac);
     },
+    checkProfile: function(profile) {
+        var reg = /^[0-9a-zA-Z\.!#\(\)\*\+%\-=\?@\[\]\^_\{\}\|~:, ]{1,30}$/;
+        return reg.test(profile);
+    },
+    checkApnName: function(username) {
+        var reg = /^[0-9a-zA-Z!#$&()*\+,\-\.\/%:;<=>?@\[\]^_\{|\}~ ]*$/;
+        return reg.test(username);
+    },
+    checkApnPassword: function(password) {
+        var reg = /^[0-9a-zA-Z!#$&()*\+,\-\.\/%:;<=>?@\[\]^_\{|\}~ ]*$/;
+        return reg.test(password);
+    },
 	checkPort: function(port) {
         var thePort = parseInt(port, 10);
         if (isNaN(thePort) || thePort < 0 || thePort > 65535) return { isValid : false };

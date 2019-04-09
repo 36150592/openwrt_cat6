@@ -30,7 +30,6 @@
         }
       getData();
 
-
       $("#btnSave").on("click",function(){
         var apnEnable,selectType,apn_profile,selectAuthentication,apn_user_name,apn_user_password;
             if($("#apnEnable").is(":checked")){
@@ -44,6 +43,30 @@
             apn_user_name =  $("#apn_user_name").val();
             apn_user_password =  $("#apn_user_password").val();
           $form = $("#form");
+          if(apn_profile == ""){
+                AlertUtil.alertMsg(CHECK.format.profileName2);
+                return false;
+          }
+           if(apn_user_name == ""){
+                AlertUtil.alertMsg(CHECK.format.apnUserName2);
+                return false;
+          }
+          if(apn_user_password == ""){
+                AlertUtil.alertMsg(CHECK.format.apnPassword2);
+                return false;
+          }
+          if(!CheckUtil.checkApnName(apn_profile)) {
+                AlertUtil.alertMsg(CHECK.format.profileName);
+                return false;
+            }
+            if(!CheckUtil.checkApnName(apn_user_name)) {
+                AlertUtil.alertMsg(CHECK.format.apnUserName);
+                return false;
+            }
+         if(!CheckUtil.checkApnPassword(apn_user_password)) {
+                AlertUtil.alertMsg(CHECK.format.apnPassword);
+                return false;
+            }
           var json={},json2= new Object();
           json.enable = parseInt(apnEnable,10);
           json.ip_stack = selectType;
@@ -71,21 +94,22 @@
 </script>
 
 <div class="tab_boxes" id="child_container">
+  <% -
     <script type="text/template" id="child_template">
     <form id="form" style="width:60%;">
          <table class="detail" cellspacing="0" id="apn_box">
             <tr id="apn_enable">
                 <th>
-                    <label>APN 开关:</label> 
+                    <label><%-DOC.apn.swich %><%- colon %></label> 
                 </th>
                 <td>
-                    <input type="radio" name="apnEnable" value="1" id="apnEnable"><span>开启 APN</span> &nbsp;&nbsp;&nbsp;&nbsp;
-                    <input type="radio" name="apnEnable" value="0" id="apnDisable"><span>关闭 APN</span>
+                    <input type="radio" name="apnEnable" value="1" id="apnEnable"><span><%-DOC.apn.open %></span> &nbsp;&nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="apnEnable" value="0" id="apnDisable"><span><%-DOC.apn.close %></span>
                 </td>
             </tr>
             <tr id="apn_type">
                 <th>
-                    PDP Type
+                    <%-DOC.apn.type %><%- colon %>
                 </th>
                 <td>
                <select style="width:150px;" id="selectType">
@@ -98,14 +122,14 @@
             </tr>
             <tr>
                 <th>
-                    Profile Name
+                   <%-DOC.apn.profile %><%- colon %>
                 </th>
                 <td>
                     <input type="text" name="profile" id="apn_profile">
                 </td>
             </tr>
             <tr id="apn_authentication">
-                <th>Authentication</th>
+                <th><%-DOC.apn.authentication %><%- colon %></th>
                 <td>
                     <select style="width:150px;" id="selectAuthentication">
                         <option value="0">NONE</option>
@@ -116,20 +140,20 @@
                 </td>
             </tr>
             <tr>
-                <th>User Name</th>
+                <th><%-DOC.apn.user %><%- colon %></th>
                 <td>
                     <input type="text" name="apnUserName" id="apn_user_name">
                 </td>
             </tr>
             <tr >
-                <th>User Password</th>
+                <th><%-DOC.apn.password %><%- colon %></th>
                 <td>
                     <input type="password" name="apnUserPassword" id="apn_user_password">
                 </td>
             </tr>
             <tr>
                  <th></th>
-                 <td><input type="button" name="buttom" value="保存" id="btnSave"/></td>
+                 <td><input type="button" name="buttom" value="<%- networktoolhtml.form5.btnSetting %>" id="btnSave"/></td>
             </tr>
      
    </table>

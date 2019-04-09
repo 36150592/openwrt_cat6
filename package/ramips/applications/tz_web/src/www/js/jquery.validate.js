@@ -1222,6 +1222,22 @@ $.validator.addMethod("ipnozero", function(value, element) {
     return this.optional(element) || (reg.test(value) && (RegExp.$1 < 256 && RegExp.$2 < 256 && RegExp.$3 < 256 && RegExp.$4 < 256));
 }, "IP地址格式错误");
 
+$.validator.addMethod("profileName", function(value, element) {
+    var reg = /^[0-9a-zA-Z\.!#\(\)\*\+%\-=\?@\[\]\^_\{\}\|~:, ]{1,30}$/;
+    return this.optional(element) || (reg.test(value) && (RegExp.$1 < 256 && RegExp.$2 < 256 && RegExp.$3 < 256 && RegExp.$4 < 256));
+}, "配置文件名称格式错误");
+
+$.validator.addMethod("apnUser", function(value, element) {
+    var reg = /^[0-9a-zA-Z!#$&()*\+,\-\.\/%:;<=>?@\[\]^_\{|\}~ ]*$/;
+    return this.optional(element) || (reg.test(value) && (RegExp.$1 < 256 && RegExp.$2 < 256 && RegExp.$3 < 256 && RegExp.$4 < 256));
+}, "APN用户名格式错误");
+
+$.validator.addMethod("apnPassword", function(value, element) {
+    var reg = /^[0-9a-zA-Z!#$&()*\+,\-\.\/%:;<=>?@\[\]^_\{|\}~ ]*$/;
+    return this.optional(element) || (reg.test(value) && (RegExp.$1 < 256 && RegExp.$2 < 256 && RegExp.$3 < 256 && RegExp.$4 < 256));
+}, "APN密码格式错误");
+
+
 $.validator.addMethod("ipsubnet", function(value, element) {
     var reg = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/?([1-9]|[1-2][0-9]|3[0-2]|)$/;
     return this.optional(element) || (reg.test(value) && (RegExp.$1 < 256 && RegExp.$2 < 256 && RegExp.$3 < 256 && RegExp.$4 < 256));
