@@ -1012,132 +1012,104 @@ static void GobiNetDriverUnbind(
    kfree( pGobiDev );
    pGobiDev = NULL;
 }
-
-/*===========================================================================
-METHOD:
-   GobiNetDriverTxFixup (Public Method)
-
-DESCRIPTION:
-   Handling data format mode on transmit path
-
-PARAMETERS
-   pDev           [ I ] - Pointer to usbnet device
-   pSKB           [ I ] - Pointer to transmit packet buffer
-   flags          [ I ] - os flags
-
-RETURN VALUE:
-   None
-===========================================================================*/
-struct sk_buff *GobiNetDriverTxFixup(
-   struct usbnet  *pDev, 
-   struct sk_buff *pSKB,
-   gfp_t flags)
+static inline void *bm_skb_put_data(struct sk_buff *skb, const void *data,
+                                 unsigned int len)
 {
-   struct sGobiUSBNet * pGobiDev;
-   DBG( "\n" );
-   pGobiDev = (sGobiUSBNet *)pDev->data[0];
-   if (pGobiDev == NULL)
-   {
-      DBG( "failed to get QMIDevice\n" );
-      return NULL;
-   }
-   #ifdef CONFIG_PM
-   if(bIsSuspend(pGobiDev))
-   {
-      DBG("Suspended\n");
-      UsbAutopmGetInterface( pGobiDev->mpIntf );
-      gobi_usb_autopm_put_interface( pGobiDev->mpIntf );
-   }
-   #else
-   DBG( "\n" );
-   #endif
-   if(pGobiDev->iStoppingNetDev==1)
-   {
-      DBG( "Device Disconnecting\n" );
-      dev_kfree_skb_any(pSKB);
-      return NULL;
-   }
-   if((pGobiDev->iQMUXEnable!=0)&&(pGobiDev->iIPAlias==0)&&iIsValidQmuxSKB(pSKB))
-   {
-     if((pSKB->data[0]==00)
-         &&(pSKB->data[1]&0x8F))
-      {
-         DBG( "QMUX For sending to device");
-         //PrintHex (pSKB->data, pSKB->len);
-         return pSKB;
-      }
-   }
-   else if(pGobiDev->iQMUXEnable!=0)
-   {
-      struct gobi_qmimux_hdr *hdr;
-      unsigned int len = 0;
-      unsigned short muxId;
+        void *tmp = skb_put(skb, len);
+        memcpy(tmp, data, len);
+        return tmp;
+}
+static int qmimux_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
+{
+	unsigned int len, offset = sizeof(struct gobi_qmimux_hdr);
+	struct gobi_qmimux_hdr *hdr;
+	struct net_device *net;
+	struct sk_buff *skbn;
+	sGobiUSBNet  *pGobiDev;
+	int result = -1;
+	
+	NETDBG(".................\n");
+	NetHex(skb->data,skb->len);
+	pGobiDev = (sGobiUSBNet *)dev->data[0];
+	while (offset < skb->len) {
+		hdr = (struct gobi_qmimux_hdr *)skb->data;
+		len = be16_to_cpu(hdr->pkt_len);
 
-      skb_pull(pSKB, ETH_HLEN);
-      skb_reset_mac_header(pSKB);
-      skb_reset_network_header(pSKB);
-      skb_reset_transport_header(pSKB);
-      if((pGobiDev->iIPAlias!=0)&&(pSKB->len > ETH_HLEN))
-      {
-         muxId = retrieveMuxID(pSKB, pGobiDev);
-         hdr = (struct gobi_qmimux_hdr *)skb_push(pSKB, sizeof(struct gobi_qmimux_hdr));
-         len = pSKB->len - sizeof(struct gobi_qmimux_hdr);
-         hdr->pad = 0;
-         hdr->mux_id = muxId;
-         hdr->pkt_len = cpu_to_be16(len);
-         NETDBG( "QMUX ETH 0x%02x\n", muxId);
-         NetHex (pSKB->data, pSKB->len);
-         return pSKB;
-      }
-      else if((pGobiDev->iIPAlias==0)&&(pSKB->len > ETH_HLEN))
-      {
-         muxId = 0;
-         hdr = (struct gobi_qmimux_hdr *)skb_push(pSKB, sizeof(struct gobi_qmimux_hdr));
-         len = pSKB->len - sizeof(struct gobi_qmimux_hdr);
-         hdr->pad = 0;
-         hdr->mux_id = muxId;
-         hdr->pkt_len = cpu_to_be16(len);
-         NETDBG( "QMUX ETH 0x%02x\n", muxId);
-         NetHex (pSKB->data, pSKB->len);
-         return pSKB;
-      }
-   }
-   if((pGobiDev->iNetLinkStatus!=eNetDeviceLink_Connected)&&(pGobiDev->iQMUXEnable==0))
-   {
-      DBG( "Dropped Packet : Not Connected\n" );
-      dev_kfree_skb_any(pSKB);
-      return NULL;
-   }
-   if(pGobiDev->iDataMode != eDataMode_RAWIP)
-   {
-      return pSKB;
-   }
-   if (pSKB->len > ETH_HLEN)
-   {
+		/* drop the packet, bogus length */
+		if (offset + len > skb->len)
+			return 0;
 
-      // Skip Ethernet header from message
-      if (skb_pull(pSKB, ETH_HLEN))
-      {
-         DBG( "For sending to device modified: ");
-         skb_reset_mac_header(pSKB);
-         skb_reset_network_header(pSKB);
-         skb_reset_transport_header(pSKB);
-    //     PrintHex (pSKB->data, pSKB->len);
-         return pSKB;
-      }
-      else
-      {
-         DBG( "Packet Dropped ");
-      }
-   }
-   else
-   {
-      DBG( "Packet Dropped Length");
-   }
+		/* control packet, we do not know what to do */
+		if (hdr->pad & 0x80)
+			goto skip;
 
-   // Filter the packet out, release it
-   dev_kfree_skb_any(pSKB);
-   return NULL;
+		net = skb->dev = pGobiDev->pNetDevice[hdr->mux_id-MUX_ID_START];
+	//	net = qmimux_find_dev(dev, hdr->mux_id);
+		if (!net)
+			goto skip;
+		skbn = netdev_alloc_skb(net, len);
+		if (!skbn)
+			return 0;
+		skbn->dev = net;
+
+		switch (skb->data[offset] & 0xf0) {
+		case 0x40:
+			skbn->protocol = htons(ETH_P_IP);
+			break;
+		case 0x60:
+			skbn->protocol = htons(ETH_P_IPV6);
+			break;
+		default:
+			/* not ip - do not know what to do */
+			goto skip;
+		}
+
+		bm_skb_put_data(skbn, skb->data + offset, len);
+		           /* Copy data section to a temporary buffer */
+		
+		gobi_skb_push(skbn,ETH_HLEN);
+
+		if (((*(u8 *)(skbn->data + ETH_HLEN)) & 0xF0) == 0x40)
+		{
+		   ResetEthHeader(dev,skbn,1,hdr->mux_id);
+		}
+		else if(((*(u8 *)(skbn->data + ETH_HLEN)) & 0xF0) == 0x60)
+		{
+		   ResetEthHeader(dev,skbn,0,hdr->mux_id);
+		}
+		else
+		{
+		   skb_reset_mac_header(skbn);
+		   skb_reset_network_header(skbn);
+		   skb_reset_transport_header(skbn);
+		}
+		DBG( "Remove MuxID From Modem modified: ");
+			NETDBG(".................\n");
+	     NetHex(skbn->data,skbn->len);
+		if(pGobiDev->iIPAlias==0)
+		{
+		   result = gobi_dev_forward_skb(net,skbn);
+		   if ( result != NET_RX_SUCCESS)
+		   {
+			  NETDBG("!netif_rx NET_RX_SUCCESS: %d\n",result);
+		   }
+		   else
+		   {
+			  NETDBG( "netif_rx NET_RX_SUCCESS\n" );
+		   }
+		}
+		else
+		{
+		   usbnet_skb_return(dev,skbn);
+		}
+		
+		//if (netif_rx(skbn) != NET_RX_SUCCESS)
+		//	return 0;
+
+skip:
+		offset += len + sizeof(struct gobi_qmimux_hdr);
+	}
+	return 1;
 }
 
 /*===========================================================================
@@ -1341,153 +1313,25 @@ static int GobiNetDriverRxFixup(
       gobi_usb_autopm_put_interface( pGobiDev->mpIntf );
     }
     #endif
+#if 0    
    if(pGobiDev->iQMUXEnable!=0)
    {
       int iPackets = iNumberOfQmuxPacket(pSKB,1);
       NETDBG("RX:%d , Packets:%d\n",pSKB->len,iPackets);
       NetHex(pSKB->data,pSKB->len);
-      if(pGobiDev->iPacketInComplete==0)
+   //   if(pGobiDev->iPacketInComplete==0)
       {      
          if(iPackets>0)
          {
             PrintQmuxPacket(pSKB);
             GobiNetDriverRxQMAPFixup(pDev,pSKB);
-         }
-         else
-         {
-            if((iIsZeroQMAPHeaderInSKBData(pSKB,0)!=1))
-            {
-               if(iIsCMDQMAPHeaderInSKBData(pSKB,0)!=1)
-               {
-                  printk("iPackets :0\n");
-                  ErrHex(pSKB->data,pSKB->len);
-               }
-               else
-               {
-                  //Handle Command;
-               }
-            }      
-         }
-      }
-      else if(pGobiDev->iPacketInComplete==1)
-      {
-         struct sk_buff *skb = NULL;
-         unsigned int offset = 0;
-         u32 length = 0;
-         u32 newlength = 0;
-         length = u32GetSKBQMAPPacketLength(pGobiDev->pLastSKB,0);
-         offset = pGobiDev->pLastSKB->len;
-         NETDBG("\nLast SKB Len:%d, MUX Length:%d\n",pGobiDev->pLastSKB->len, length);
-         newlength = pGobiDev->pLastSKB->len + pSKB->len;
-         if(((length+QMUX_HEADER_LENGTH)<=newlength)&&(length>0))
-         {
-             
-             skb =  skb_copy(pSKB,GFP_ATOMIC);
-             gobi_skb_push(pSKB,pGobiDev->pLastSKB->len);
-             memcpy(skb->data,pGobiDev->pLastSKB->data, pGobiDev->pLastSKB->len);
-             pGobiDev->iPacketInComplete = 0;
-             pGobiDev->pLastSKB->len=0;
-             NETDBG("\nResume length:%d/Last SKB Len:%d/Rx SKB Len%d\n",length,skb->len,pSKB->len);
-             PrintQmuxPacket(skb);
-             NetHex (skb->data, skb->len);
-             GobiNetDriverRxQMAPFixup(pDev,skb);
-             dev_kfree_skb_any(skb);
-         }
-         else
-         {
-            memcpy(pGobiDev->pLastSKB->data+offset,pSKB->data, pSKB->len);
-            pGobiDev->pLastSKB->len = pGobiDev->pLastSKB->len + pSKB->len;
-            NETDBG("\nAppend length:%d/Last SKB Len:%d/Rx SKB Len%d\n",length,skb->len,pSKB->len);
-            NetHex (skb->data, skb->len);
-            pGobiDev->iPacketInComplete = 1;
-            pGobiDev->pLastSKB->dev = pDev->net;
-            PrintQmuxPacket(pGobiDev->pLastSKB);
-         }
-      }
-      else
-      {
-         if(iIsZeroQMAPHeaderInSKBData(pSKB,0)!=1)
-         {
-            if(iIsCMDQMAPHeaderInSKBData(pSKB,0)!=1)
-            {
-               NETDBG("QMAP CMD:");
-               NetHex (pSKB->data, pSKB->len);
-            }
-            else
-            {
-               printk("Unknown packet:\n");
-               ErrHex(pSKB->data,pSKB->len);
-               printk("\n");
-            }
-         }
-      }
+         }        
+      }     
       return 1;
    }
-   else if(pGobiDev->iNetLinkStatus!=eNetDeviceLink_Connected)
-   {
-      DBG( "Dropped Packet : Not Connected\n" );
-      return 0;
-   }
-
-    DBG( "RX From Device: ");
- //   PrintHex (pSKB->data, pSKB->len);
-   
-   if(pSKB->truesize < ETH_HLEN+pSKB->len)
-   {
-      DBG( "DROP PACKET %d < %d\n",pSKB->truesize,ETH_HLEN+pSKB->len );
-      return 0;
-   }
-    /* Copy data section to a temporary buffer */
-    gobi_skb_push(pSKB,ETH_HLEN);
-    
-    if (((*(u8 *)(pSKB->data + ETH_HLEN)) & 0xF0) == 0x40)
-    {
-       ResetEthHeader(pDev,pSKB,1,0);
-       return 1;
-    }
-    else if(((*(u8 *)(pSKB->data + ETH_HLEN)) & 0xF0) == 0x60)
-    {
-       ResetEthHeader(pDev,pSKB,0,0);
-       return 1;
-    }
-    else
-    {
-       skb_reset_mac_header(pSKB);
-       skb_reset_network_header(pSKB);
-       skb_reset_transport_header(pSKB);
-    }
-
-
-    pSKB->dev = pDev->net;
-
-    /* If the packet is IPv4 then add corresponding Ethernet header */
-    if (((*(u8 *)(pSKB->data + ETH_HLEN)) & 0xF0) == 0x40)
-    {
-        /* IPV4 packet  */
-        memcpy(pSKB->data, pGobiDev->eth_hdr_tmpl_ipv4, ETH_HLEN);
-        pSKB->protocol = cpu_to_be16(ETH_P_IP);
-        DBG( "IPv4 header added: ");
-    }
-   else if (((*(u8 *)(pSKB->data + ETH_HLEN)) & 0xF0) == 0x60)
-    {
-        memcpy(pSKB->data, pGobiDev->eth_hdr_tmpl_ipv6, ETH_HLEN);
-        pSKB->protocol = cpu_to_be16(ETH_P_IPV6);
-        DBG( "IPv6 header added: ");
-    }
-
-    pIp = (struct iphdr *)((char *)pSKB->data + ETH_HLEN);
-    if(pIp->version == 6) 
-    {
-        pEth = (struct ethhdr *)pSKB->data;
-        pEth->h_proto = cpu_to_be16(ETH_P_IPV6);
-    }
-
-    else if(pIp->version == 4) 
-    {
-        pEth = (struct ethhdr *)pSKB->data;
-        pEth->h_proto = cpu_to_be16(ETH_P_IP);
-    }
-
+#else
+	qmimux_rx_fixup(pDev,pSKB);
+#endif  
  //   PrintHex (pSKB->data, pSKB->len + ETH_HLEN);
 
     return 1;
@@ -2328,81 +2172,12 @@ static int GobiNetDriverLteRxFixup(struct usbnet *dev, struct sk_buff *skb)
       //via usbnet_skb_return after fixup
       return 0;
    }
-   else if(pGobiDev->iNetLinkStatus!=eNetDeviceLink_Connected)
+   else //if(pGobiDev->iNetLinkStatus!=eNetDeviceLink_Connected)
    {
       DBG( "Dropped Packet : Not Connected\n" );
       return 0;
    }
-   if(pGobiDev->iDataMode==eDataMode_RAWIP)
-   {
-      return GobiNetDriverRxFixup(dev,skb);
-   }
-   if (skb->len < dev->net->hard_header_len)
-   {
-      printk( "Packet Dropped \n" );
-      return 0;
-   }
-   DBG( "From Modem: ");
-//   PrintHex (skb->data, skb->len);
 
-    /* special handling for corrupted Ethernet header packet if any */
-   if ((skb->data[ETH_HLEN] & 0xF0) == 0x40)
-   {
-       /* check if need to correct the IPV4 Ethernet header or not */
-       if (FixEthFrame(dev, skb, 1))
-       {
-          /* pass through */
-          return 1;
-       }
-   }
-   else if ((skb->data[ETH_HLEN] & 0xF0) == 0x60)
-   {
-       /* check if need to correct the IPV6 Ethernet header or not */
-       if (FixEthFrame(dev, skb, 0))
-       {
-          /* pass through */
-          return 1;
-       }
-   }
-
-    /* usbnet rx_complete guarantees that skb->len is at least
-     * hard_header_len, so we can inspect the dest address without
-     * checking skb->len
-     */
-    switch (skb->data[0] & 0xf0) {
-        case 0x40:
-            proto = htons(ETH_P_IP);
-            break;
-        case 0x60:
-            proto = htons(ETH_P_IPV6);
-            break;
-        case 0x00:
-            if (is_multicast_ether_addr(skb->data))
-                return 1;
-            /* possibly bogus destination - rewrite just in case */
-            skb_reset_mac_header(skb);
-            skb_reset_network_header(skb);
-            skb_reset_transport_header(skb);
-            goto fix_dest;
-        default:
-        {
-            /* pass along other packets without modifications */
-            return 1;
-        }
-    }
-    if (skb_headroom(skb) < ETH_HLEN)
-        return 0;
-    skb_push(skb, ETH_HLEN);
-    skb_reset_mac_header(skb);
-    skb_reset_network_header(skb);
-    skb_reset_transport_header(skb);
-    eth_hdr(skb)->h_proto = proto;
-    memset(eth_hdr(skb)->h_source, 0, ETH_ALEN);
-fix_dest:
-    memcpy(eth_hdr(skb)->h_dest, dev->net->dev_addr, ETH_ALEN);
-    DBG( "To IP Stack: ");
- //   PrintHex (skb->data, skb->len);
-    return 1;
 }
 
 /*=========================================================================*/
@@ -2415,7 +2190,7 @@ static const struct driver_info GobiNetInfo_qmi = {
    .unbind        = GobiNetDriverUnbind,
 //FIXME refactor below fixup handling at cases below
    .rx_fixup      = GobiNetDriverLteRxFixup,
-   .tx_fixup      = GobiNetDriverTxFixup,
+//   .tx_fixup      = GobiNetDriverTxFixup,
    .data          = BIT(8) | BIT(19) |
                      BIT(10), /* MDM9x15 PDNs */
 #ifdef CONFIG_PM
@@ -2431,7 +2206,7 @@ static const struct driver_info GobiNetInfo_gobi = {
    .bind          = GobiNetDriverBind,
    .unbind        = GobiNetDriverUnbind,
    .rx_fixup      = GobiNetDriverLteRxFixup,
-   .tx_fixup      = GobiNetDriverTxFixup,
+//   .tx_fixup      = GobiNetDriverTxFixup,
    .data          = BIT(2) |  BIT(BIT_9X15),
 #ifdef CONFIG_PM
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 3,8,0 ))
@@ -2446,7 +2221,7 @@ static const struct driver_info GobiNetInfo_9x15 = {
    .bind          = GobiNetDriverBind,
    .unbind        = GobiNetDriverUnbind,
    .rx_fixup      = GobiNetDriverLteRxFixup,
-   .tx_fixup      = GobiNetDriverTxFixup,
+ //  .tx_fixup      = GobiNetDriverTxFixup,
    .data          = BIT(4) | BIT(BIT_9X15),
 #ifdef CONFIG_PM
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 3,8,0 ))

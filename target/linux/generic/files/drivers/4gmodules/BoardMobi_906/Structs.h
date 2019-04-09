@@ -118,6 +118,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #define MUX_ID_END   MUX_ID_START + MAX_MUX_NUMBER_SUPPORTED
 #define RMNET_QMAP_STRING "rmnet-qmap-"
 
+#define DEBUG_MODE  0
+
 // Used in recursion, defined later below
 struct sGobiUSBNet;
 

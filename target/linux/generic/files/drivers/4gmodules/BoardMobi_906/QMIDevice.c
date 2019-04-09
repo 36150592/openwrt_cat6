@@ -388,6 +388,7 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
    struct gobi_qmimux_hdr *hdr;
 
    skb->dev = priv->real_dev;
+  
    if(dev->type == ARPHRD_ETHER)
    {
       NETDBG("Remove ETH Header\n");
@@ -398,24 +399,14 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
    }
    else
    {
-      hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));
+	   NETDBG("raw ip mode.\n");
+       hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));
+       NetHex (skb->data, skb->len);
    }
    hdr->pad = 0;
    hdr->mux_id = priv->mux_id;
    hdr->pkt_len = cpu_to_be16(len);
-   skb->dev = priv->real_dev;
    NETDBG("mux_id:0x%x\n",priv->mux_id);
-   if(iIsValidQmuxSKB(skb)==0)
-   {
-      NETDBG( "Invalid Packet\n" );
-      return NETDEV_TX_BUSY;
-   }
-   skb = GobiNetDriverQmuxTxFixup( skb, GFP_ATOMIC,priv->mux_id);
-   if (skb == NULL)
-   {
-      NETDBG( "unable to tx_fixup skb\n" );
-      return NETDEV_TX_BUSY;
-   }
    dev->stats.tx_packets++;
    dev->stats.tx_bytes += skb->len;
    #if (LINUX_VERSION_CODE < KERNEL_VERSION( 4,7,0 ))
@@ -8399,6 +8390,7 @@ struct net_device* gobi_qmimux_register_device(struct net_device *real_dev,int i
                           szName, ether_setup);
    #endif
    new_dev->netdev_ops = &gobi_qmimux_netdev_ops;
+ //  new_dev->type            = ARPHRD_NONE;
    new_dev->flags           = IFF_NOARP | IFF_MULTICAST;
    random_ether_addr(new_dev->dev_addr);
    if (!new_dev)
