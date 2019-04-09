@@ -1,0 +1,138 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+        var ApnList= new Array();
+        function getData() {
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.GET_APN_CONFIG
+                },
+                success: function(datas) {
+                   var apnData = datas.data[0];
+                   $("input[name='apnEnable']").val(apnData.enable);
+                   if(apnData.enable == "1"){
+                        $("#apnEnable").attr("checked",true);
+                   }else{
+                        $("#apnDisable").attr("checked",true);
+                   }
+                   $("#selectType").val(apnData.ip_stack);
+                   $("#apn_profile").val(apnData.profile_name);
+                   $("#selectAuthentication").val(apnData.auth_type);
+                   $("#apn_user_name").val(apnData.username);
+                   $("#apn_user_password").val(apnData.password);
+                   ApnList = datas.data;
+                }
+            });
+        }
+      getData();
+
+
+      $("#btnSave").on("click",function(){
+        var apnEnable,selectType,apn_profile,selectAuthentication,apn_user_name,apn_user_password;
+            if($("#apnEnable").is(":checked")){
+                apnEnable = 1;
+            }else{
+                apnEnable = 0;
+            }
+            selectType =  $("#selectType").val();
+            apn_profile =  $("#apn_profile").val();
+            selectAuthentication =  $("#selectAuthentication").val();
+            apn_user_name =  $("#apn_user_name").val();
+            apn_user_password =  $("#apn_user_password").val();
+          $form = $("#form");
+          var json={},json2= new Object();
+          json.enable = parseInt(apnEnable,10);
+          json.ip_stack = selectType;
+          json.profile_name = apn_profile;
+          json.auth_type = parseInt(selectAuthentication,10);
+          json.username = apn_user_name;
+          json.mtu = 1500;
+          json.password = apn_user_password;
+          ApnList.splice(0,1,json);
+
+          json2.apnList = ApnList;
+          json2.method = JSONMethod.POST;
+          json2.cmd = RequestCmd.SET_APN_CONFIG;
+            Page.postJSON({
+                     json: json2,
+                     success:function(data){
+                        if(data.success == true){
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+                        }
+                     }
+                 })
+      })
+
+    });
+</script>
+
+<div class="tab_boxes" id="child_container">
+    <script type="text/template" id="child_template">
+    <form id="form" style="width:60%;">
+         <table class="detail" cellspacing="0" id="apn_box">
+            <tr id="apn_enable">
+                <th>
+                    <label>APN 开关:</label> 
+                </th>
+                <td>
+                    <input type="radio" name="apnEnable" value="1" id="apnEnable"><span>开启 APN</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="apnEnable" value="0" id="apnDisable"><span>关闭 APN</span>
+                </td>
+            </tr>
+            <tr id="apn_type">
+                <th>
+                    PDP Type
+                </th>
+                <td>
+               <select style="width:150px;" id="selectType">
+                    <option value="IP">IP</option>
+                    <option value="IPV4">IPV4</option>
+                    <option value="IPV6">IPV6</option>
+                    <option value="IPV4V6">IPV4V6</option>
+               </select>
+               </td>
+            </tr>
+            <tr>
+                <th>
+                    Profile Name
+                </th>
+                <td>
+                    <input type="text" name="profile" id="apn_profile">
+                </td>
+            </tr>
+            <tr id="apn_authentication">
+                <th>Authentication</th>
+                <td>
+                    <select style="width:150px;" id="selectAuthentication">
+                        <option value="0">NONE</option>
+                        <option value="1">PAP</option>
+                        <option value="2">CHAP</option>
+                        <option value="3">PAP&CHAP</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>User Name</th>
+                <td>
+                    <input type="text" name="apnUserName" id="apn_user_name">
+                </td>
+            </tr>
+            <tr >
+                <th>User Password</th>
+                <td>
+                    <input type="password" name="apnUserPassword" id="apn_user_password">
+                </td>
+            </tr>
+            <tr>
+                 <th></th>
+                 <td><input type="button" name="buttom" value="保存" id="btnSave"/></td>
+            </tr>
+     
+   </table>
+    </form>
+     </script>
+</div>
+

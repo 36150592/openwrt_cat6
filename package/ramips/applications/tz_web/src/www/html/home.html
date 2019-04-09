@@ -36,6 +36,9 @@
 			if(parseInt(Settingauth.charAt(4),10)){
 				settingMenu.push(new MenuBody("ADVANCED_CONFIG", MENU.setting.advanced));
 			}
+            if(parseInt(Settingauth.charAt(4),10)){
+                settingMenu.push(new MenuBody("APN_CONFIG", DOC.apn.setting));
+            }
             menus.push(settingMenu);
         }
 		

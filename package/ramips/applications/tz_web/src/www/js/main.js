@@ -114,6 +114,8 @@ var RequestCmd = {
     SYS_INFO_5:210,
     ROUTE_LIST_GET:211,
     ROUTE_LIST_SETTING:212,
+    GET_APN_CONFIG:213,
+    SET_APN_CONFIG:214,
 };
 
 var MenuItem = {
@@ -123,7 +125,8 @@ var MenuItem = {
     NETWORK_CONFIG: { cmd: RequestCmd.NETWORK_CONFIG, url: "html/config/networkConfig.html" },
     WIRELESS_CONFIG: { cmd: RequestCmd.WIRELESS_CONFIG, url: "html/config/wirelessConfig.html" },
     WLAN_5G_CONFIG: { cmd: RequestCmd.WLAN_5G_CONFIG, url: "html/config/wlan5gConfig.html" },
-	ADVANCED_CONFIG: { cmd: RequestCmd.BASIC_CONFIG, url: "html/advance/advancedConfig.html" },
+    ADVANCED_CONFIG: { cmd: RequestCmd.BASIC_CONFIG, url: "html/advance/advancedConfig.html" },
+	APN_CONFIG: { cmd: RequestCmd.GET_APN_CONFIG, url: "html/config/apnConfig.html" },
 	
     SYS_SET: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/sys/sysConfigIndex.html" },
     SYS_LOG: { cmd: RequestCmd.SYS_LOG, url: "html/manage/sysLog.html" },
@@ -590,9 +593,7 @@ var StatusUtil = {
         function loop() {
             Page.postJSON({
                 json: {
-                    cmd: RequestCmd.GET_SYS_STATUS,
-                    method: JSONMethod.GET,
-                    sessionId: ""
+                    cmd: RequestCmd.GET_SYS_STATUS
                 },
                 success: function(datas) {
                     sysStatus = datas.data;

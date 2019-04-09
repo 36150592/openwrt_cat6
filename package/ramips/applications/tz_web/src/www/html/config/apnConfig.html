@@ -1,0 +1,27 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var tabs = DOC.apn;
+
+        var items = [];
+        
+        items.push({title: tabs.setting_apn, url: 'html/config/setting_apn.html'});
+        items.push({title: tabs.setting_apn1, url: 'html/config/setting_apn1.html'});
+        items.push({title: tabs.setting_apn2, url: "html/config/setting_apn2.html"});
+       
+
+        $('#detail_container').pannel({
+            items: items,
+            init: function($lis) {
+                $lis.eq(0).click();
+            }
+        });
+    });
+</script>
+
+<div class="detail_box" id="detail_container"></div>
+

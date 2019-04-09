@@ -2201,6 +2201,41 @@ function route_list_set()
 
 end
 
+function get_apn_data()
+	
+	local tz_answer = {}
+	tz_answer["cmd"] = 213
+	local data_array = {}
+	
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = modem.modem_get_mutilapn_config()
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+
+function set_apn_data()
+	
+	local ret 
+	local tz_answer = {}
+	local apnList = tz_req["apnList"]
+	if(nil ~= apnList)
+		then
+		ret = modem.modem_set_mutilapn_config(apnList)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 214
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 local switch = {
      [0] = get_sysinfo,
 	 [1] = get_systime,
@@ -2271,6 +2306,9 @@ local switch = {
 	 [210] = get_sysinfo_5,
 	 [211] = route_list_get,
 	 [212] = route_list_set,
+	 [213] = get_apn_data,
+	 [214] = set_apn_data,
+
  }
  
 cmdid = uti.get_env_cmdId(envv)
