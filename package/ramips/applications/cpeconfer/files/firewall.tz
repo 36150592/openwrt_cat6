@@ -198,11 +198,11 @@ set_user_static_route(){
         local table_num=10
         [ `cat /etc/iproute2/rt_tables | grep "user_static_route" | wc -l` == "0" ] && {
 
-            while [ `cat /etc/iproute2/rt_tables | grep "^$table_num    " | wc -l` != 0 ]
+            while [ `cat /etc/iproute2/rt_tables | grep "^$table_num	" | wc -l` != 0 ]
             do
                 table_num=$(($table_num+1))
             done                
-            echo "$table_num    user_static_route" >> /etc/iproute2/rt_tables 
+            echo "$table_num	user_static_route" >> /etc/iproute2/rt_tables 
         }
 
         ip route flush table user_static_route
