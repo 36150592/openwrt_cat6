@@ -157,7 +157,7 @@ function system_module.system_get_status()
 		return status
 end
 
-local TMP_NETWORK_TOOL_LOG_FILE="/tmp/log_tar/network_tool_log"
+local TMP_NETWORK_TOOL_LOG_FILE="/tmp/log_zip/network_tool_log"
 local TMP_TCPDUMP_FILE="/tmp/web_upload/tcpdump"
 local TMP_PKG_DOWNLOAD_FILE="/tz_www/html/manage/network_tool_log.tcpdump"
 local TMP_LOG_DOWNLOAD_FILE="/tz_www/html/manage/network_tool_log.tar"
@@ -225,15 +225,15 @@ function system_module.system_network_tool(tz_req)
 		os.execute("ps | grep 'traceroute' | grep -v grep | awk '{print $1}' | xargs kill -9")
 	elseif "log_start" == tz_req["tool"]
 	then
+		os.execute("rm -rf /tmp/log_zip;mkdir /tmp/log_zip;")
 		os.execute(string.format("softlimit -f %d logread -f > %s &",LOG_FILE_LIMIT, TMP_NETWORK_TOOL_LOG_FILE))
 	elseif "log_stop" == tz_req["tool"]
 	then
 		os.execute("ps | grep 'logread' | grep -v grep | awk '{print $1}' | xargs kill -9")
-		os.execute("rm -rf /tmp/log_tar;mkdir /tmp/log_tar ; iptables -S > /tmp/log_tar/iptables;iptables -S -t nat >> /tmp/log_tar/iptables;")
-		os.execute("iwconfig  > /tmp/log_tar/iwconifg;ifconfig -a > /tmp/log_tar/ifconfig;ip route > /tmp/log_tar/ip_route ;ip rule list > /tmp/log_tar/ip_rule")
-		os.execute("ps > /tmp/log_tar/ps ;cat /proc/meminfo  > /tmp/log_tar/meminfo;dmesg > /tmp/log_tar/dmesg")
-		os.execute("tar cvf /tmp/log.tar /tmp/log_tar/* ")
-		os.execute(string.format("ln -sf %s %s ", "/tmp/log.tar", TMP_LOG_DOWNLOAD_FILE))
+		os.execute("sh /usr/lib/lua/tz/pack_debug_info.sh")
+		-- uncompress cmd :dd if=filename.des3 |openssl des3 -d -k password | tar zxf -
+		os.execute("tar -zcf  - /tmp/log_zip/* |openssl des3 -salt -k tz18c6 | dd of=/tmp/log_zip/log.tar.tz")
+		os.execute(string.format("ln -sf %s %s ", "/tmp/log_zip/log.tar.tz", TMP_LOG_DOWNLOAD_FILE))
 	end
 
 	return tz_answer

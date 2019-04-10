@@ -45,6 +45,7 @@ define Package/cpeconfer/install
 	$(INSTALL_BIN) ./files/cmd.lua $(1)/bin/cpeconfer
 	$(INSTALL_DIR) $(1)/usr/lib/lua/tz
 	$(INSTALL_DATA) ./files/*.lua $(1)/usr/lib/lua/tz
+	$(INSTALL_DATA) ./files/*.sh $(1)/usr/lib/lua/tz
 	$(INSTALL_DATA) ./files/firewall.tz $(1)/etc
 	$(INSTALL_DIR) $(1)/usr/lib/lua
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/luatzlib.so $(1)/usr/lib/lua
