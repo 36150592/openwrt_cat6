@@ -264,6 +264,7 @@ function get_wifi()
 		data_array['channel'] = wifi.wifi_get_channel(id)
 		data_array['ht'] = wifi.wifi_get_bandwidth(id)
 		data_array['key'] = wifi.wifi_get_password(id)
+		data_array['encryp'],data_array['encrypType'] = wifi.w13_get_wifi_security()
 		
 	else
 	    data_array = ''
@@ -555,14 +556,13 @@ function set_wifi()
     local ret 
 	local array = wifi.wifi_get_dev()
 	
-	local id
-	for k,v in pairs(array) do
+	local id=1
+	--[[for k,v in pairs(array) do
 	   if(v["band"] == "2.4G")
 	     then
 		   id = v['wifi_id']				  
 		end
-	end
-	
+	end]]
 	local wifiOpen = tonumber(tz_req["wifiOpen"])
 	local broadcast = tonumber(tz_req["broadcast"])
 	local wmm = tonumber(tz_req["wmm"])
@@ -575,7 +575,6 @@ function set_wifi()
 	local authenticationType = tz_req["authenticationType"]
 	local encryptAlgorithm = tz_req["encryptAlgorithm"]
 	local key = tz_req["key"]
-	
 	if(nil ~= wifiOpen)
 	then
 		if(0 == wifiOpen)
@@ -594,7 +593,6 @@ function set_wifi()
               end
 	   end
 	end
-	
 	if(nil ~= broadcast)
 	then
 		if(0 == broadcast)
@@ -613,7 +611,6 @@ function set_wifi()
               end
 	   end
 	end
-	
 	if(nil ~= wmm)
 	then
 		if(0 == wmm)
@@ -650,7 +647,6 @@ function set_wifi()
 				tz_answer["setTxpower"] = false
 			end
 	end  
-	
 	if(nil ~= maxStation)
 	 then
 		ret = wifi.wifi_set_connect_sta_number(id, maxStation)	
@@ -668,7 +664,6 @@ function set_wifi()
 				tz_answer["setChannel"] = false
 			end
 	end  
-	
 	if(nil ~= mode)
 	 then
 		ret = wifi.wifi_set_mode(id, mode)	
@@ -687,32 +682,13 @@ function set_wifi()
 			end
 	end
 	
-	
-	if(nil ~= authenticationType)
-	 then
-		ret = wifi.wifi_set_encryption(id, authenticationType)	
-			if(not ret)
-				then
-				tz_answer["setEncryption"] = false
-			end	    
-	end 
-	
-	if(nil ~= encryptAlgorithm)
-	 then
-		ret = wifi.wifi_set_encryption_type(id, encryptAlgorithm)	
-			if(not ret)
-				then
-				tz_answer["setEncryptionType"] = false
-			end	    
-	end 
-	
-	if(nil ~= key)
-	 then
-		ret = wifi.wifi_set_password(id, key)	
-			if(not ret)
-				then
-				tz_answer["setPassword"] = false
-			end
+	if(nil ~= authenticationType or nil ~= encryptAlgorithm or nil ~= key)
+	then
+	 	ret = wifi.w13_set_wifi_security(authenticationType, encryptAlgorithm, key)	
+		if(not ret)
+		then
+			tz_answer["setSecurity"] = false
+		end	    
 	end 
 
 	wifi.wifi_restart(id)

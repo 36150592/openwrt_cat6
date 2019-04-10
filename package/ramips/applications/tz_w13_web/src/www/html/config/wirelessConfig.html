@@ -276,12 +276,25 @@
                             Page.setFormFieldValue2("ssid", data.ssid);
                             Page.setFormFieldValue2("wifiWorkMode", data.mode);
                             Page.setFormFieldValue2("ht", data.ht);
-                            var encryp = data.encryption.split("+")[0];
-                            var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
+                            //var encryp = data.encryption.split("+")[0];
+                            //var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
+                            var encryp = data.encryp;
+                            var encrypType = data.encrypType;
+                            console.log("encryp=="+encryp);
+                            console.log("encrypType=="+encrypType);
                             Page.setFormFieldValue2("authenticationType", encryp);
-                            $("#encryptAlgorithm >input[value=" + encrypType +"]").attr("checked",true);
+                            if(encrypType == "tkip+ccmp")
+                            {
+                                $("#encryptAlgorithm >input[value=\'tkip+ccmp\']").attr("checked",true);
+                            }
+                            else
+                            {
+                                $("#encryptAlgorithm >input[value=\'" + encrypType +"\']").attr("checked",true);
+                                //这种方式+号会不识别
+                            }
+                            //$("#encryptAlgorithm >input[value=" + encrypType +"]").attr("checked",true);
                             $('#encryptAlgorithm').attr('old',data.encryption.substring(encryp.length +1));
-                            Page.setFormFieldValue2("key", data.key);
+                            Page.setFormFieldValue2("key", data.key);         
 
                         }
                     });
@@ -599,11 +612,11 @@
         <ul class="tabs" id="tabsitems">
             <script type="text/template" id="tabsitems-template">
                 <li id="walnInfo" ><a href="javascript:;"><%- item1 %></a></li>
-                <li id="walnInfo1" ><a href="javascript:;"><%- item3 %></a></li>
-                <li id="walnInfo2" ><a href="javascript:;"><%- item4 %></a></li>
-                <li ><a href="javascript:;"><%- connectedList %></a></li>
-                <li ><a href="javascript:;"><%- macControl %></a></li>
-				<li ><a href="javascript:;"><%- wps %></a></li>
+                <li id="walnInfo1"  style = "display:none><a href="javascript:;"></a></li>
+                <li id="walnInfo2"  style = "display:none><a href="javascript:;"></a></li>
+                <li style = "display:none><a href="javascript:;"></a></li>
+                <li style = "display:none><a href="javascript:;"></a></li>
+                <li style = "display:none><a href="javascript:;"></a></li>
             </script>
         </ul>
     </div>
@@ -735,10 +748,10 @@
                                 <th><%- authenticationType %></th>
                                 <td>
                                     <select name="authenticationType" id="authenticationType">
-                                        <option value="none"><%- openSys %></option>
+                                        <option value="wep-open"><%- openSys %></option>
                                         <option value="psk"><%- wpa_psk %></option>
                                         <option value="psk2"><%- wpa2_psk %></option>
-                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                        <option value="psk+psk2"><%- wpa_wpa2_psk %></option>
                                     </select>
                                 </td>
                             </tr>
@@ -746,13 +759,13 @@
                                 <th><%- encryptAlgorithmTh %></th>
                                 <td>
                                     <label id="encryptAlgorithm">
-                                        <input type="radio" value="none" name="encryptAlgorithm"/>
+                                        <input type="radio" value="auto" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- auto %></span>
                                         <input type="radio" value="tkip" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- tkip %></span>
                                         <input type="radio" value="ccmp" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- aes %></span>
-                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                        <input type="radio" value="tkip+ccmp" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- tkip_aes %></span>
                                     </label>
                                 </td>
@@ -811,10 +824,10 @@
                                 <th><%- authenticationType %></th>
                                 <td>
                                     <select name="authenticationType" id="authenticationType1">
-                                        <option value="none"><%- openSys %></option>
+                                        <option value="wep-open"><%- openSys %></option>
                                         <option value="psk"><%- wpa_psk %></option>
                                         <option value="psk2"><%- wpa2_psk %></option>
-                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                        <option value="psk+psk2"><%- wpa_wpa2_psk %></option>
                                     </select>
                                 </td>
                             </tr>
@@ -822,13 +835,13 @@
                                 <th><%- encryptAlgorithmTh %></th>
                                 <td>
                                     <label id="encryptAlgorithm1">
-                                        <input type="radio" value="none" name="encryptAlgorithm"/>
+                                        <input type="radio" value="auto" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- auto %></span>
                                         <input type="radio" value="tkip" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- tkip %></span>
                                         <input type="radio" value="ccmp" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- aes %></span>
-                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                        <input type="radio" value="tkip+ccmp" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- tkip_aes %></span>
                                     </label>
                                 </td>
@@ -886,10 +899,10 @@
                                 <th><%- authenticationType %></th>
                                 <td>
                                     <select name="authenticationType" id="authenticationType2">
-                                        <option value="none"><%- openSys %></option>
+                                        <option value="wep-open"><%- openSys %></option>
                                         <option value="psk"><%- wpa_psk %></option>
                                         <option value="psk2"><%- wpa2_psk %></option>
-                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                        <option value="psk+psk2"><%- wpa_wpa2_psk %></option>
                                     </select>
                                 </td>
                             </tr>
@@ -897,13 +910,13 @@
                                 <th><%- encryptAlgorithmTh %></th>
                                 <td>
                                     <label id="encryptAlgorithm2">
-                                        <input type="radio" value="none" name="encryptAlgorithm"/>
+                                        <input type="radio" value="auto" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- auto %></span>
                                         <input type="radio" value="tkip" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- tkip %></span>
                                         <input type="radio" value="ccmp" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- aes %></span>
-                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                        <input type="radio" value="tkip+ccmp" name="encryptAlgorithm"/>
                                         &nbsp;<span><%- tkip_aes %></span>
                                     </label>
                                 </td>

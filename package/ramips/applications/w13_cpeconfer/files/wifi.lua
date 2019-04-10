@@ -1,5 +1,6 @@
 require("uci")
 require("io")
+require("math")
 wifi_module = {}
 local util=require("tz.util")
 local x = uci.cursor()
@@ -194,6 +195,42 @@ function getConfType(conf,type)
    return ifce
 end
 
+function w13_wireless_set_cfg_value(type, section, option, dat_option, value)--使用type，目前只适用type只有一个section的情况
+
+
+	local conf_type=nil
+
+	local wireless_uci=uci.cursor()
+	local ret_val=nil
+	if nil ~= type and nil ~= option
+	then
+		conf_type=getConfType(WIFI_CONFIG_FILE,type)
+		ret_val=wireless_uci:set(WIFI_CONFIG_FILE, conf_type[1][".name"], option, value)
+	elseif nil ~= section and "" ~= section and nil ~= option and "" ~= option
+	then
+		ret_val=wireless_uci:set(WIFI_CONFIG_FILE, section, option, value)
+	end
+
+	if ret_val
+	then
+		wireless_uci:commit(WIFI_CONFIG_FILE)
+	elseif nil~= dat_option
+	then
+			debug("cannot set section.", option, " -->set the dat file ")
+			local cmd = string.format("sed -i s/%s=.*/%s=%s/g %s/mt7628/mt7628.dat", dat_option, dat_option, value,WIFI_DRIVE_CONFIG_DIR)
+			debug("cmd = ", cmd)
+			local t = io.popen(cmd)
+			local res = t:read("*all")
+			io.close(t)
+			return true		
+	end
+
+	return ret_val
+	
+end
+
+
+
 function w13_wireless_get_cfg_value(type, section, option, dat_option)--使用type，目前只适用type只有一个section的情况
 
 
@@ -307,7 +344,7 @@ end
 
 
 local function txpower_percent_to_dbm(txpower)
-	return txpower*23/100
+	return math.floor(txpower*23/100)
  	--[[if 100 >= txpower and 91 <= txpower
     then
     	return 23
@@ -334,7 +371,8 @@ end
 
 local function txpower_dbm_to_percent(txpower)
 	local value = 100
-	return txpower*value/23
+	local tmp = math.floor(txpower*value/23)
+	return tmp-(tmp%10)
 	--[[if 23 == txpower
 	then
 		value = 100
@@ -543,13 +581,13 @@ end
 
 -- wifi must be enable status when use this interface
 function wifi_module.wifi_start(wifi_id)
-	local section_name = common_get_section_name_by_index(wifi_id)
+	--[[local section_name = common_get_section_name_by_index(wifi_id)
 	local dev_type = x:get(WIFI_CONFIG_FILE, section_name,"type")
 	if nil == dev_type
 	then
 		debug("start fail for dev_type unknown")
-	end
-    return os.execute("wifi start " .. dev_type .. " 2>/dev/null 1>/dev/null &")
+	end]]
+    return os.execute("wifi start " .. " 2>/dev/null 1>/dev/null &")
 end
 
 -- wifi must be enable status when use this interface
@@ -559,13 +597,13 @@ end
 
 -- wifi must be enable status when use this interface
 function wifi_module.wifi_restart(wifi_id)
-	local section_name = common_get_section_name_by_index(wifi_id)
+	--[[local section_name = common_get_section_name_by_index(wifi_id)
 	local dev_type = x:get(WIFI_CONFIG_FILE, section_name,"type")
 	if nil == dev_type
 	then
 		debug("start fail for dev_type unknown")
-	end
-    return os.execute("wifi down " .. dev_type .. " 2>/dev/null 1>/dev/null  && " .. "wifi start " .. dev_type .. " 2>/dev/null 1>/dev/null &")
+	end]]
+    return os.execute("wifi down " .. " 2>/dev/null 1>/dev/null  && " .. "wifi start " .. " 2>/dev/null 1>/dev/null &")
 end
 
 function wifi_module.wifi_restart_all()
@@ -573,13 +611,13 @@ function wifi_module.wifi_restart_all()
 end
 
 function wifi_module.wifi_stop(wifi_id)
-    local section_name = common_get_section_name_by_index(wifi_id)
+    --[[local section_name = common_get_section_name_by_index(wifi_id)
 	local dev_type = x:get(WIFI_CONFIG_FILE, section_name,"type")
 	if nil == dev_type
 	then
 		debug("start fail for dev_type unknown")
-	end
-    return os.execute("wifi down " .. dev_type .. " 2>/dev/null 1>/dev/null  &")
+	end]]
+    return os.execute("wifi down " .. " 2>/dev/null 1>/dev/null  &")
 end
 
 function wifi_module.wifi_stop_all()
@@ -592,8 +630,9 @@ end
 function wifi_module.wifi_enable(wifi_id)
 	debug("set wifi self start at boot")
     -- set the ifame section
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-	return common_config_set(section_name, "disabled", "", 0)
+	-- local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	-- return common_config_set(section_name, "disabled", "", 0)
+	return w13_wireless_set_cfg_value(nil, W13_WIFI_DEVICE, "disabled", nil, "0")
 end
 
 -- is the wifi start of stop
@@ -602,8 +641,8 @@ end
 function wifi_module.wifi_is_start(wifi_id)
 
 	--debug("wifi_is_start")
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-    local ifname = x:get(WIFI_CONFIG_FILE, section_name, "ifname")
+	--local section_name = common_get_ifame_section_name_by_index(wifi_id)
+    local ifname = W13_WIFI_DEVICE--x:get(WIFI_CONFIG_FILE, section_name, "ifname")
 	local f = io.popen(string.format("iwconfig %s | grep ESSID | wc -l", ifname))
 	local res = f:read()
 	io.close(f)
@@ -622,7 +661,7 @@ end
 function wifi_module.wifi_disable(wifi_id)
 	--debug("disable wifi self start at boot")
     -- set the ifame section
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	--[[local section_name = common_get_ifame_section_name_by_index(wifi_id)
 	if nil ~= section_name
 	then
 		local wifi_type = x:get(WIFI_CONFIG_FILE, section_name, "type")
@@ -637,7 +676,8 @@ function wifi_module.wifi_disable(wifi_id)
 		return common_config_set(section_name, "disabled", "", 1)
 	else
 		return false
-	end
+	end]]
+	return w13_wireless_set_cfg_value(nil, W13_WIFI_DEVICE, "disabled", nil, "1")
 end
 
 -- get wifi self boot config
@@ -662,7 +702,6 @@ function wifi_module.wifi_get_enable_status(wifi_id)
 		debug("ret is nil ,return default value")
 		return "0"
 	end
-	debug("ret is=="..ret)
 	return ret
 end
 
@@ -684,8 +723,9 @@ end
 function wifi_module.wifi_set_ssid(wifi_id,ssid)
      debug("set ssid")
     -- set the ifame section
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-	return common_config_set(section_name, "ssid", "SSID", ssid)
+	--local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	--return common_config_set(section_name, "ssid", "SSID", ssid)
+	return w13_wireless_set_cfg_value("wifi-iface", nil, "ssid", "SSID", ssid)
 end
 
 
@@ -709,9 +749,10 @@ end
 function wifi_module.wifi_set_password(wifi_id,password)
    debug("set password")
     -- set the ifame section
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	--local section_name = common_get_ifame_section_name_by_index(wifi_id)
 	--when is wep encryption the dat_option is DefaultKeyID  ,and the key group(key1 key2 key3 key4) is also set 
-	return common_config_set(section_name, "key", "WPAPSK", password)
+	--return common_config_set(section_name, "key", "WPAPSK", password)
+	return w13_wireless_set_cfg_value("wifi-iface", nil, "key", "WPAPSK", password)
 end
 
 --channel
@@ -732,7 +773,7 @@ end
 --		true if success  false if fail
 function wifi_module.wifi_set_channel(wifi_id,channel)
 
-	local section_name = common_get_section_name_by_index(wifi_id)
+	--[[local section_name = common_get_section_name_by_index(wifi_id)
 	local band = x:get(WIFI_CONFIG_FILE, section_name, "band")
 	if '2.4G' == band
 	then 
@@ -756,7 +797,8 @@ function wifi_module.wifi_set_channel(wifi_id,channel)
 	end
 
     debug("input error: 2.4G [auto 0-13] 5.8G [36 40 44 48 52 56 60 64 149 153 157 161 165]")
-	return false
+	return false]]
+	return w13_wireless_set_cfg_value(nil, W13_WIFI_DEVICE, "channel", "Channel", channel)
 end
 
 
@@ -791,7 +833,8 @@ function wifi_module.wifi_set_txpower(wifi_id,txpower)
 	end
 	local value = txpower_dbm_to_percent(txpower)
 
-    return common_config_set(wifi_id, "txpower", "TxPower", value)
+    -- return common_config_set(wifi_id, "txpower", "TxPower", value)
+    return w13_wireless_set_cfg_value(nil, W13_WIFI_DEVICE, "txpower", "TxPower", value)
 end
 
 --hidden ssid
@@ -803,8 +846,9 @@ end
 function wifi_module.wifi_enable_hidden_ssid(wifi_id)
 	debug("enable hidden ssid")
 	-- hidden ssid , set the ifame section
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-	return common_config_set(section_name, "hidden", "HideSSID", 1)
+	--local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	--return common_config_set(section_name, "hidden", "HideSSID", 1)
+	return w13_wireless_set_cfg_value("wifi-iface", nil, "hidden", "HideSSID", "1")
 end
 
 --hidden ssid
@@ -816,8 +860,9 @@ end
 function wifi_module.wifi_disable_hidden_ssid(wifi_id)
 	debug("disable hidden ssid")
     -- hidden ssid , set the ifame section
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-	return common_config_set(section_name, "hidden", "HideSSID", 0)
+	--local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	--return common_config_set(section_name, "hidden", "HideSSID", 0)
+	return w13_wireless_set_cfg_value("wifi-iface", nil, "hidden", "HideSSID", "0")
 end
 
 
@@ -877,7 +922,8 @@ function wifi_module.wifi_set_mode(wifi_id,mode)
    then 
 		debug("input error: mode must [0,15]")
    end
-   return common_config_set(wifi_id, "mode", "WirelessMode", mode)
+   --return common_config_set(wifi_id, "mode", "WirelessMode", mode)
+   return w13_wireless_set_cfg_value(nil, W13_WIFI_DEVICE, "mode", "WirelessMode", mode)
 end
 
 --get bandwidth
@@ -916,36 +962,12 @@ end
 -- return:
 --		boolean true if success false if fail
 function wifi_module.wifi_set_bandwidth(wifi_id,mode)
-	if "20" == mode or "20+40" ==mode or "80" == mode
+	if "20" == mode or "20+40" ==mode
 	then
-		local section = common_get_section_name_by_index(wifi_id)
-		local band
-		local ret
-		if nil ~= section
-		then
-			band = x:get(WIFI_CONFIG_FILE, section, "band")
-		end
-		if "5G" == band
-		then
-			if "20" == mode
-			then
-				mode = "0"
-			elseif "20+40" == mode
-			then
-				mode = "1"
-			elseif "80" == mode
-			then
-				mode = "2"
-			else
-				return false
-			end
-			return common_config_set(wifi_id, "bw", "VHT_BW", mode)
-		end
-
-
-	    return common_config_set(wifi_id, "ht", "HT_BW", mode)
+		return w13_wireless_set_cfg_value(nil, W13_WIFI_DEVICE, "ht", "HT_BW", mode)
+	    --return common_config_set(wifi_id, "ht", "HT_BW", mode)
 	else
-		debug("input error: must be [20 20+40 80]")
+		debug("input error: must be [20 20+40]")
 		return false
 	end
 end
@@ -988,6 +1010,114 @@ function wifi_module.wifi_get_encryption(wifi_id)
    	end
 end
 
+--返回认证方式,加密算法
+function wifi_module.w13_get_wifi_security()
+	local encryption=w13_wireless_get_cfg_value("wifi-iface", nil,  "encryption", "EncrypType")
+	if encryption == "wep-open"
+	then
+		return "wep-open","auto"
+	elseif encryption == "psk"
+	then
+		return "psk","auto"
+	elseif encryption == "psk2"
+	then
+		return "psk2","auto"
+	elseif encryption == "psk+psk2"
+	then
+		return "psk+psk2","auto"
+	elseif encryption == "psk+tkip"
+	then
+		return "psk","tkip"
+	elseif encryption == "psk2+tkip"
+	then
+		return "psk2","tkip"
+	elseif encryption == "psk+psk2+tkip"
+	then
+		return "psk+psk2","tkip"
+	elseif encryption == "psk+ccmp"
+	then
+		return "psk","ccmp"
+	elseif encryption == "psk2+ccmp"
+	then
+		return "psk2","ccmp"
+	elseif encryption == "psk+psk2+ccmp"
+	then
+		return "psk+psk2","ccmp"
+	elseif encryption == "psk+tkip+ccmp"
+	then
+		return "psk","tkip+ccmp"
+	elseif encryption == "psk2+tkip+ccmp"
+	then
+		return "psk2","tkip+ccmp"
+	elseif encryption == "psk+psk2+tkip+ccmp"
+	then
+		return "psk+psk2","tkip+ccmp"
+	else
+		return "","auto"  --no pwd
+	end
+end
+
+
+--原有接口太多，wifi安全相关统一为一个接口，包括认证方式、加密算法、秘钥
+function wifi_module.w13_set_wifi_security(auth_mode, encryptAlgorithm, psk_key)
+	local encryption=""
+	local old_AuthMode,old_EncrypyAlgorithm=wifi_module.w13_get_wifi_security()
+	local new_AuthMode,new_EncrypyAlgorithm="","" --最终设置的值
+	if psk_key ~= nil
+	then
+		debug("set key to "..psk_key.."..")
+		local ret=w13_wireless_set_cfg_value("wifi-iface", nil, "key", "WPAPSK", psk_key)
+		if auth_mode == nil and encryptAlgorithm == nil --only set key
+		then
+			return ret
+		end
+	end
+	if(auth_mode == nil)
+	then
+		new_AuthMode=old_AuthMode
+	else
+		new_AuthMode=auth_mode
+	end
+	if(encryptAlgorithm == nil)
+	then
+		new_EncrypyAlgorithm=old_EncrypyAlgorithm
+	else
+		new_EncrypyAlgorithm=encryptAlgorithm
+	end
+
+	if type(new_AuthMode) ~= "string" or type(new_EncrypyAlgorithm) ~= "string" 
+	then 
+		debug("new_AuthMode or new_EncrypyAlgorithm not string,input error")
+		return false
+	end
+
+	if ("wep-open" == new_AuthMode or "psk" == new_AuthMode or "psk2" == new_AuthMode or "psk+psk2" == new_AuthMode) and
+		("auto" == new_EncrypyAlgorithm or "tkip" == new_EncrypyAlgorithm or "ccmp" == new_EncrypyAlgorithm or "tkip+ccmp" == new_EncrypyAlgorithm)
+	then
+		if new_AuthMode == "wep-open" --没有密码
+		then
+			--[[local wireless_uci = uci.cursor()-- delete key option
+			local cfg_type=getConfType(WIFI_CONFIG_FILE,"wifi-iface")
+			wireless_uci:delete(WIFI_CONFIG_FILE, cfg_type[1][".name"], "key")
+			wireless_uci:commit(WIFI_CONFIG_FILE)]]
+			return w13_wireless_set_cfg_value("wifi-iface", nil, "encryption", "AuthMode", "")--没有密码
+		elseif new_EncrypyAlgorithm == "auto" -- (auto) --> ""
+		then
+			encryption=new_AuthMode
+		else
+			encryption=new_AuthMode.."+"..new_EncrypyAlgorithm
+		end	
+
+		debug("set encryption to "..encryption.."..")
+		return  w13_wireless_set_cfg_value("wifi-iface", nil, "encryption", "AuthMode", encryption)
+	else
+		debug("input error:AuthMode must be [wep-open psk psk2 psk+psk2], EncrypyAlgorithm must be [auto tkip ccmp tkip+ccmp]")
+		return false
+	end
+end
+
+
+
 --set encryption
 -- input:
 --		wifi_id get by wifi_get_dev
@@ -1002,16 +1132,17 @@ function wifi_module.wifi_set_encryption(wifi_id,encryption)
 	end
 
 	if "none" == encryption or "wep" == encryption or "psk" == encryption or
-		"psk2" == encryption or "mixed" == encryption 
+		"psk2" == encryption or "psk+psk2" == encryption 
 	then
 
 	debug("set encryption")
     -- set the ifame section
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-	return common_config_set(section_name, "encryption", "AuthMode", encryption)
+	--local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	--return common_config_set(section_name, "encryption", "AuthMode", encryption)
 
+	return w13_wireless_set_cfg_value("wifi-iface", nil, "encryption", "AuthMode", encryption)
 	else
-		debug("input error:must be [none wep psk psk2 mixed]")
+		debug("input error:must be [none wep psk psk2 psk+psk2]")
 		return false
 	end
 end
@@ -1025,8 +1156,7 @@ end
 --		tkip -->TKIP
 --		none --> AUTO
 function wifi_module.wifi_get_encryption_type(wifi_id)
-	
-	local encry_all = w13_wireless_get_cfg_value(nil, W13_WIFI_DEVICE, "encryption", "EncrypType")
+	local encry_all = w13_wireless_get_cfg_value("wifi-iface", nil,  "encryption", "EncrypType")
 
 	local start, endp = string.find(encry_all, "+")
 
@@ -1064,12 +1194,12 @@ function wifi_module.wifi_set_encryption_type(wifi_id,encry_algorithms)
 		or "ccmp" == encry_algorithms or "tkip" == encry_algorithms 
 	then
 	    --  set the ifame section
-		local encry = wifi_module.wifi_get_encryption(wifi_id)
-		encry_algorithms = encry .. "+" .. encry_algorithms 
+		-- local encry = wifi_module.wifi_get_encryption(wifi_id)
+		-- encry_algorithms = encry .. "+" .. encry_algorithms 
 	    
-		local section_name = common_get_ifame_section_name_by_index(wifi_id)
-
-		return common_config_set(section_name, "encryption", "EncrypType", encry_algorithms)
+		-- local section_name = common_get_ifame_section_name_by_index(wifi_id)
+		return w13_wireless_set_cfg_value("wifi-iface", nil, "encryption", "EncrypType", encry_algorithms)
+		--return common_config_set(section_name, "encryption", "EncrypType", encry_algorithms)
 	else
 		debug("input error:must be [none ccmp+tkip ccmp tkip]")
 		return false
@@ -1104,9 +1234,10 @@ function wifi_module.wifi_set_connect_sta_number(wifi_id,number)
 	
     --  set the ifame section
     
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	--local section_name = common_get_ifame_section_name_by_index(wifi_id)
 
-	return common_config_set(section_name, "maxassoc", "MaxStaNum", number)
+	--return common_config_set(section_name, "maxassoc", "MaxStaNum", number)
+	return w13_wireless_set_cfg_value("wifi-iface", nil, "maxassoc", "MaxStaNum", number)
 
 end
 
@@ -1119,8 +1250,9 @@ end
 function wifi_module.wifi_enable_wmm(wifi_id)
     debug("enable wmm")
 	-- set the ifame section
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-	return common_config_set(section_name, "wmm", "WmmCapable", 1)
+	--local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	--return common_config_set(section_name, "wmm", "WmmCapable", 1)
+	return w13_wireless_set_cfg_value("wifi-iface", nil, "wmm", "WmmCapable", "1")
 end
 
 -- disable wmm
@@ -1131,8 +1263,8 @@ end
 function wifi_module.wifi_disable_wmm(wifi_id)
      debug("disable wmm")
 	-- set the ifame section
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-	return common_config_set(section_name, "wmm", "WmmCapable", 0)
+	--local section_name = common_get_ifame_section_name_by_index(wifi_id)
+	return w13_wireless_set_cfg_value("wifi-iface", nil, "wmm", "WmmCapable", "0")
 end
 
 -- get wmm setting
@@ -1574,7 +1706,7 @@ end
 -- return:
 --		boolean true if success false if fail
 function wifi_module.wifi_secondary_enable_wmm(wifi_secondary_id)
-	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+	--[[local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
 
 	if nil == section
 	then
@@ -1582,7 +1714,8 @@ function wifi_module.wifi_secondary_enable_wmm(wifi_secondary_id)
 		return false
 	end
 	x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "wmm", 1)
-	return x:commit(WIFI_MUTILSSID_CONFIG_FILE) 
+	return x:commit(WIFI_MUTILSSID_CONFIG_FILE) ]]
+	return w13_wireless_set_cfg_value("wifi-iface", nil, "wmm", "WmmCapable", "1")
 end
 
 -- disable wmm
@@ -1591,7 +1724,7 @@ end
 -- return:
 --		boolean true if success false if fail
 function wifi_module.wifi_secondary_disable_wmm(wifi_secondary_id)
-	local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
+	--[[local section = common_secondary_get_section_name_by_index(wifi_secondary_id)
 
 	if nil == section
 	then
@@ -1599,7 +1732,8 @@ function wifi_module.wifi_secondary_disable_wmm(wifi_secondary_id)
 		return false
 	end
 	x:set(WIFI_MUTILSSID_CONFIG_FILE, section, "wmm", 0)
-	return x:commit(WIFI_MUTILSSID_CONFIG_FILE) 
+	return x:commit(WIFI_MUTILSSID_CONFIG_FILE) ]]
+	return w13_wireless_set_cfg_value("wifi-iface", nil, "wmm", "WmmCapable", "0")
 end
 
 -- get secondary wifi wmm config
@@ -1960,7 +2094,7 @@ end
 --		true if success   false if fail
 function wifi_module.wifi_set_mac_access_control(wifi_id, policy, mac_list)
 
-	local section_name = common_get_section_name_by_index(wifi_id)
+	--local section_name = common_get_section_name_by_index(wifi_id)
 	local ret1 = false
 	local ret2 = false
 
@@ -1973,13 +2107,16 @@ function wifi_module.wifi_set_mac_access_control(wifi_id, policy, mac_list)
 	if 0 == policy
 	then
 		--AccessPolicy0 AccessPolicy1 AccessPolicy2
-		ret1 = common_config_set(section_name, "macpolicy", "AccessPolicy0", "disable")
+		--ret1 = common_config_set(section_name, "macpolicy", "AccessPolicy0", "disable")
+		ret1 = w13_wireless_set_cfg_value("wifi-iface", nil, "macpolicy", "AccessPolicy0", "disable")
 	elseif 1 == policy
 	then
-		ret1 = common_config_set(section_name, "macpolicy", "AccessPolicy0", "allow")
+		--ret1 = common_config_set(section_name, "macpolicy", "AccessPolicy0", "allow")
+		ret1 = w13_wireless_set_cfg_value("wifi-iface", nil, "macpolicy", "AccessPolicy0", "allow")
 	elseif 2 == policy
 	then
-		ret1 = common_config_set(section_name, "macpolicy", "AccessPolicy0", "deny")
+		--ret1 = common_config_set(section_name, "macpolicy", "AccessPolicy0", "deny")
+		ret1 = w13_wireless_set_cfg_value("wifi-iface", nil, "macpolicy", "AccessPolicy0", "deny")
 	else
 		debug("policy input error")
 		return false
@@ -1989,7 +2126,7 @@ function wifi_module.wifi_set_mac_access_control(wifi_id, policy, mac_list)
 	if table.maxn(mac_list) == 0
 	then
 		debug("mac_List = 0")
-		x:set(WIFI_CONFIG_FILE,section_name,"maclist", "")
+		--x:set(WIFI_CONFIG_FILE,section_name,"maclist", "")
 		ret2 = x:commit(WIFI_CONFIG_FILE)
 		return ret1  and ret2
 	end
@@ -2001,7 +2138,7 @@ function wifi_module.wifi_set_mac_access_control(wifi_id, policy, mac_list)
 	end
 
 	-- AccessControlList0 AccessControlList1 AccessControlList2 AccessControlList3
-	ret2 = common_config_set(section_name, "maclist", "AccessControlList0", string.sub(str, 2, string.len(str)))
+	ret2 = w13_wireless_set_cfg_value("wifi-iface", nil, "maclist", "AccessControlList0", string.sub(str, 2, string.len(str)))
 
 	return ret1 and ret2
 end
