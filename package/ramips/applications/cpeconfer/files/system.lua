@@ -8,6 +8,7 @@ local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
 local SYSTEM_CONFIG_FILE="system"
+local TOZED_CONFIG_FILE="tozed"
 local LANRECORD_CURRENT_FILE="/tmp/.current_lan_list"
 local LANRECORD_HISTORY_FILE="/etc/history_lan_list"
 local MEM_INFO_FILE="/proc/meminfo"
@@ -293,6 +294,63 @@ function system_module.update_config(file_path)
 	return -2
 	
 
+end
+
+-- import config /etc/config
+-- input:file_path :the absolute path of the import config package
+-- return:true if success , false if fail
+function system_module.system_import_config(file_path)
+	if true ~= util.is_file_exist(file_path)
+	then
+		debug(file_path," does not exist")
+		return false
+	end
+
+	local super_user = x:get(TOZED_CONFIG_FILE,"cfg","TZ_SUPER_USERNAME")
+	local super_passwd = x:get(TOZED_CONFIG_FILE,"cfg","TZ_SUPER_PASSWD")
+	local test_user = x:get(TOZED_CONFIG_FILE, "cfg", "TZ_TEST_USERNAME")
+	local test_passwd = x:get(TOZED_CONFIG_FILE,"cfg","TZ_TEST_PASSWD")
+	local pci = x:get(TOZED_CONFIG_FILE,"modem","TZ_DIALTOOL2_LTE_PCI_LOCK")
+	local earfcn = x:get(TOZED_CONFIG_FILE,"modem","TZ_DIALTOOL2_LTE_EARFCN_LOCK")
+	local ret = os.execute("dd if="..file_path.." |openssl des3 -d -k tz18c6 | tar zxf - -C /")
+	x = uci.cursor()
+	if nil ~= super_user
+	then
+		x:set(TOZED_CONFIG_FILE, "cfg","TZ_SUPER_USERNAME", super_user)
+		x:set(TOZED_CONFIG_FILE, "cfg","TZ_SUPER_PASSWD", super_passwd)
+	else
+		x:delete(TOZED_CONFIG_FILE,"cfg","TZ_SUPER_USERNAME")	
+		x:delete(TOZED_CONFIG_FILE,"cfg","TZ_SUPER_PASSWD")
+	end
+
+	if nil ~= test_user
+	then
+		x:set(TOZED_CONFIG_FILE, "cfg","TZ_TEST_USERNAME", test_user)
+		x:set(TOZED_CONFIG_FILE, "cfg","TZ_TEST_PASSWD", test_passwd)
+	else
+		x:delete(TOZED_CONFIG_FILE,"cfg","TZ_TEST_USERNAME")	
+		x:delete(TOZED_CONFIG_FILE,"cfg","TZ_TEST_PASSWD")
+	end
+
+
+	if nil ~= pci
+	then
+		x:set(TOZED_CONFIG_FILE, "modem","TZ_DIALTOOL2_LTE_PCI_LOCK", pci)
+		x:set(TOZED_CONFIG_FILE, "modem","TZ_DIALTOOL2_LTE_EARFCN_LOCK", earfcn)
+	else
+		x:delete(TOZED_CONFIG_FILE,"modem","TZ_DIALTOOL2_LTE_PCI_LOCK")	
+		x:delete(TOZED_CONFIG_FILE,"modem","TZ_DIALTOOL2_LTE_EARFCN_LOCK")
+	end
+
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
+
+-- export config 
+-- input:file_path :the absolute path of the package which you want to export
+-- return:true if success , false if fail
+function system_module.system_export_config(file_path)
+	return 0 == os.execute("tar -zcf  - /etc/config/* |openssl des3 -salt -k tz18c6 | dd of="..file_path)
 end
 
 

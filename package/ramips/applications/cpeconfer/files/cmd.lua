@@ -2167,6 +2167,20 @@ function dhcp_get_client_list()
 	end
 end
 
+function system_import_config()
+
+	local ret = system.system_import_config(arg[2])
+
+	print(ret)
+end
+
+function system_export_config()
+	local ret = system.system_export_config(arg[2])
+
+	print(ret)
+
+end
+
 function tozed_get_tr069_config()
 	print("tozed_get_tr069_config")
 	local ret = system.system_get_tr069_info()
@@ -2331,6 +2345,8 @@ local api_func = {
 	["system_ntp_set_date"] = system_ntp_set_date,
 	["system_lanrecord_get_history_info"] = system_lanrecord_get_history_info,
 	["system_lanrecord_get_current_info"] = system_lanrecord_get_current_info,
+	["system_export_config"] = system_export_config,
+	["system_import_config"] = system_import_config,
 
  	--device
 	["device_get_info"] = device_get_info,
