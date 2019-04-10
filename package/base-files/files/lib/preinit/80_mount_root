@@ -3,6 +3,8 @@
 # Copyright (C) 2010 Vertical Communications
 
 do_mount_root() {
+
+    echo "80_mount_root mount_root" >> /tmp/PREINIT
 	mount_root
 	boot_run_hook preinit_mount_root
 	[ -f /sysupgrade.tgz ] && {
@@ -12,4 +14,6 @@ do_mount_root() {
 	}
 }
 
+
+echo "80_mount_root ready to do_mount_root" >> /tmp/PREINIT
 [ "$INITRAMFS" = "1" ] || boot_hook_add preinit_main do_mount_root

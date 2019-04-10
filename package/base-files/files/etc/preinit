@@ -2,8 +2,10 @@
 # Copyright (C) 2006 OpenWrt.org
 # Copyright (C) 2010 Vertical Communications
 
+echo $PREINIT >> /tmp/PREINIT
 [ -z "$PREINIT" ] && exec /sbin/init
 
+echo "preinit before export PATH" >> /tmp/PREINIT
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 pi_ifname=

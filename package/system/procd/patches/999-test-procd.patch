@@ -1,0 +1,48 @@
+Index: procd-2015-10-29/initd/preinit.c
+===================================================================
+--- procd-2015-10-29.orig/initd/preinit.c
++++ procd-2015-10-29/initd/preinit.c
+@@ -64,6 +64,9 @@ spawn_procd(struct uloop_process *proc,
+ 
+ 	unsetenv("INITRAMFS");
+ 	unsetenv("PREINIT");
++	LOG("unsetenv INITRAMFS \n");
++	LOG("unsetenv PREINIT \n");
++	LOG("Exec to real procd now\n");
+ 	DEBUG(2, "Exec to real procd now\n");
+ 	if (wdt_fd)
+ 		setenv("WDTFD", wdt_fd, 1);
+@@ -93,27 +96,32 @@ preinit(void)
+ 	plugd_proc.cb = plugd_proc_cb;
+ 	plugd_proc.pid = fork();
+ 	if (!plugd_proc.pid) {
++	    LOG("- preinit execvp procd-\n");
+ 		execvp(plug[0], plug);
+ 		ERROR("Failed to start plugd\n");
+ 		exit(-1);
+ 	}
+ 	if (plugd_proc.pid <= 0) {
+ 		ERROR("Failed to start new plugd instance\n");
++	    LOG("- Failed to start new plugd instance -\n");
+ 		return;
+ 	}
+ 	uloop_process_add(&plugd_proc);
+-
++    
++    LOG("setenv PREINIT\n");
+ 	setenv("PREINIT", "1", 1);
+ 
+ 	preinit_proc.cb = spawn_procd;
+ 	preinit_proc.pid = fork();
+ 	if (!preinit_proc.pid) {
++		LOG("Failed to start preinit\n");
+ 		execvp(init[0], init);
+ 		ERROR("Failed to start preinit\n");
+ 		exit(-1);
+ 	}
+ 	if (preinit_proc.pid <= 0) {
+ 		ERROR("Failed to start new preinit instance\n");
++		LOG("Failed to start new preinit instance\n");
+ 		return;
+ 	}
+ 	uloop_process_add(&preinit_proc);
