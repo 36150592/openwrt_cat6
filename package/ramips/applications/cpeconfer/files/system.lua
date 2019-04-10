@@ -200,7 +200,7 @@ function system_module.system_network_tool(tz_req)
 		if (util.is_file_exist(TMP_TCPDUMP_FILE) == true)
 		then
 			os.execute(string.format("chmod 755 %s", TMP_TCPDUMP_FILE))
-			os.execute(string.format("softlimit -f %d %s -i %s -w %s &", LOG_FILE_LIMIT, TMP_TCPDUMP_FILE, tz_req["catchPackageIfname"],TMP_NETWORK_TOOL_LOG_FILE))
+			os.execute(string.format("softlimit -f %d %s -i %s -w %s 2>/dev/null > /dev/null &", LOG_FILE_LIMIT, TMP_TCPDUMP_FILE, tz_req["catchPackageIfname"],TMP_NETWORK_TOOL_LOG_FILE))
 		else
 			tz_answer["data"] = "NOTCPDUMP"
 		end
