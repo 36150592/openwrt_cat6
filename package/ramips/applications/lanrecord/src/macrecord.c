@@ -381,12 +381,13 @@ static void add_interface_to_lan_list(LAN_LIST_T* target_lan_list, TZ_UDHCPD_LEA
 #include <uci.h>
 
 
-static void get_wireless_info_by_lannet(const char *network, char *interface, char* ssid)
+static void get_wireless_info_by_lannet(const char *network,const char *type, char *interface, char* ssid)
 {
 	 struct uci_context * uci_ctx;
 	 struct uci_package * uci_wireless;
 	 struct uci_package * uci_mutilssid;
 	 struct uci_element *e   = NULL;
+	 char device[64] ={0};
 	 if (!uci_ctx)
     {
         uci_ctx = uci_alloc_context();
@@ -418,12 +419,26 @@ static void get_wireless_info_by_lannet(const char *network, char *interface, ch
     /* scan wireless network interfaces ! */
     uci_foreach_element(&uci_wireless->sections, e)
     {
-        struct uci_section *s = uci_to_section(e);
+		struct uci_section *s = uci_to_section(e);
+		char *value = NULL;
+		if(0 == strcmp(s->type, "wifi-device"))
+		{
+			value = uci_lookup_option_string(uci_ctx, s, "band");
+			log_info("band = %s, type = %s", value, type);
+			if(NULL != value && strcmp(value,type) == 0)
+			{
+				value = uci_lookup_option_string(uci_ctx, s, "type");
+				if(NULL != value)
+					strcpy(device,value);
+			}
+		}
+		
         if(0 == strcmp(s->type, "wifi-iface"))
         {
-			char *value = NULL;
 			value = uci_lookup_option_string(uci_ctx, s, "device");
 			log_info("wireless device = %s\n", value);
+			if(NULL != value && strcmp(value,device) != 0)
+				continue;
 			const char* disabled = uci_lookup_option_string(uci_ctx, s, "disabled");
 			if (NULL != disabled && 0 == strncmp("1", disabled, strlen("1")))
 			{
@@ -461,7 +476,8 @@ static void get_wireless_info_by_lannet(const char *network, char *interface, ch
 			char *value = NULL;
 			value = uci_lookup_option_string(uci_ctx, s, "device");
 			log_info("mutilssid device = %s\n", value);
-
+			if(NULL != value && strcmp(value,device) != 0)
+				continue;
 			const char* disabled = uci_lookup_option_string(uci_ctx, s, "disabled");
 			if (NULL != disabled && 0 == strncmp("1", disabled, strlen("1")))
 			{
@@ -504,11 +520,15 @@ static int check_mac_exist(MAC_LIST* list, const char* mac)
 }
 
 static void fill_current_lan_list(LAN_LIST_T* target_lan_list, TZ_UDHCPD_LEASE_T* all_udhcpd_lease, 
-	IPNEIGH_ITEM_LIST* ip_neigh_list, MAC_LIST* wireless_list)
+	IPNEIGH_ITEM_LIST* ip_neigh_list)
 {
 	int i = 0; 
 	int j = 0;
 	int k = 0;
+	MAC_LIST mac_2g_list,mac_5g_list;
+	//get wireless mac list
+	get_wireless_mac_list(&mac_2g_list, &mac_5g_list);
+
 	
 	for(i = 0; i < ip_neigh_list->cnt; i++)
 	{
@@ -516,9 +536,17 @@ static void fill_current_lan_list(LAN_LIST_T* target_lan_list, TZ_UDHCPD_LEASE_T
 		char *ip = ip_neigh_list->list[i].ip;
 		char *ifname = ip_neigh_list->list[i].ifname;
 		char *network = strstr(ifname, "br-");
-		if(check_mac_exist(wireless_list, mac) && network)
+		char type[6] = {0};
+		if(check_mac_exist(&mac_2g_list, mac) && network)
 		{
 			network+=3;
+			strcpy(type,"2.4G");
+			log_info("network = %s\n", network);
+		}
+		else if( check_mac_exist(&mac_5g_list, mac) && network)
+		{
+			network+=3;
+			strcpy(type,"5G");
 			log_info("network = %s\n", network);
 		}
 		else
@@ -541,7 +569,7 @@ static void fill_current_lan_list(LAN_LIST_T* target_lan_list, TZ_UDHCPD_LEASE_T
 			{
 				char* tmp_inter = target_lan_list->list[target_lan_list->cnt].interface;
 				char* tmp_ssid = target_lan_list->list[target_lan_list->cnt].ssid;
-				get_wireless_info_by_lannet(network,tmp_inter,tmp_ssid);
+				get_wireless_info_by_lannet(network,type,tmp_inter,tmp_ssid);
 				log_info("tmp_inter = %s tmp_ssid = %s\n", tmp_inter, tmp_ssid);
 			}
 			else
@@ -569,7 +597,7 @@ static void fill_current_lan_list(LAN_LIST_T* target_lan_list, TZ_UDHCPD_LEASE_T
 				{
 					char* tmp_inter = target_lan_list->list[target_lan_list->cnt].interface;
 					char* tmp_ssid = target_lan_list->list[target_lan_list->cnt].ssid;
-					get_wireless_info_by_lannet(network,tmp_inter,tmp_ssid);
+					get_wireless_info_by_lannet(network,type,tmp_inter,tmp_ssid);
 					log_info("tmp_inter = %s tmp_ssid = %s\n", tmp_inter, tmp_ssid);
 				}
 				else
@@ -589,7 +617,6 @@ static void fill_current_lan_list(LAN_LIST_T* target_lan_list, TZ_UDHCPD_LEASE_T
 void get_current_lan_list(LAN_LIST_T* current_lan_list )
 {
 	TZ_UDHCPD_LEASE_T tz_dhcp_lease;
-	MAC_LIST wireless_list;
 	MAC_LIST eth_mac_list;
 	IPNEIGH_ITEM_LIST ip_neigh_list;
 	int i = 0;
@@ -600,9 +627,6 @@ void get_current_lan_list(LAN_LIST_T* current_lan_list )
 	//get ip_neigh_list
 	get_ip_neigh_list(&ip_neigh_list);
 	
-	//get wireless mac list
-	get_wireless_mac_list(&wireless_list, &wireless_list);
-
 	for(i = 0; i < ip_neigh_list.cnt; i++)
 	{
 		log_info("ip_neigh_list(%d): %s--%s--%s\n", i, 
@@ -613,7 +637,7 @@ void get_current_lan_list(LAN_LIST_T* current_lan_list )
 	
 	//form the current_lan_list
 	memset(current_lan_list, 0, sizeof(LAN_LIST_T));
-	fill_current_lan_list(current_lan_list, &tz_dhcp_lease, &ip_neigh_list, &wireless_list);
+	fill_current_lan_list(current_lan_list, &tz_dhcp_lease, &ip_neigh_list);
 	//fill_current_lan_list(current_lan_list, &tz_dhcp_lease, &ip_neigh_list, &wireless_5g_mac_list, WIRELESS_5G_IFNAME);	
 	//fill_current_lan_list(current_lan_list, &tz_dhcp_lease, &ip_neigh_list, &eth_mac_list, LAN_INTERFACE);	
 }
