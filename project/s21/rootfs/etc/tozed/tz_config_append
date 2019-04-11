@@ -1,0 +1,79 @@
+#!/bin/sh
+
+UPDATE_CONFIG_STATUS_SUCCESS=/tmp/.update_config_success
+UPDATE_CONFIG_STATUS_FAIL=/tmp/.update_config_fail
+UPDATE_CONFIG_STATUS_ING=/tmp/.update_config_ing
+
+
+#解压.conf文件
+
+append_config_file="$1"
+
+tozed_tool -a ${1}
+
+config_go_exit()
+{
+		rm ${UPDATE_CONFIG_STATUS_ING} -f
+        if [ "$1" = "success" ]; then
+                rm ${UPDATE_CONFIG_STATUS_FAIL} -f
+                touch ${UPDATE_CONFIG_STATUS_SUCCESS}
+        else
+                rm ${UPDATE_CONFIG_STATUS_SUCCESS} -f
+                touch ${UPDATE_CONFIG_STATUS_FAIL}
+				if [ "$2" != "" ]; then
+					echo "$2" > ${UPDATE_CONFIG_STATUS_FAIL}
+				fi
+        fi
+        rm ${append_config_file}
+        exit
+}
+
+toolret=`cat /tmp/.tozed_tool_ret | awk '{print $1}'`
+if [ "${toolret}" != "success" ]; then
+	config_go_exit "fail" "tozed_tool decript conf fail"
+fi
+
+if [ ! -f /tmp/config_param_file ]; then
+	config_go_exit "fail" " the /tmp/config_param_file is not exist"
+fi
+
+
+#把追加的内容更新到 /etc/tozed_param
+while read line
+do
+        name=`echo $line | awk -F "=" '{print$1}'`                                                                           
+        linenumber_in_target_file=`grep -rn "${name}"= /etc/tozed_param | awk -F ':' '{print $1}'`
+        if [ -n "${linenumber_in_target_file}" ]; then 
+                sed -i "${linenumber_in_target_file}d" /etc/tozed_param
+        fi
+        echo ${linenumber_in_target_file}
+        echo ${line} >> /etc/tozed_param
+done < /tmp/config_param_file
+
+
+#一句解析数来的追加内容，更新 /etc/config/下的配置
+
+
+#/etc/config/dropbear
+
+#/etc/config/firewall
+
+#/etc/config/igmpproxy
+
+#/etc/config/wireless
+
+#/etc/config/mutilssid
+
+#/etc/config/network
+
+#/etc/config/rpcd
+
+#/etc/config/system
+
+#/etc/config/tozed
+
+
+
+#删掉.conf文件
+
+

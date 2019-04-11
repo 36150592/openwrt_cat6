@@ -1,0 +1,24 @@
+#!/bin/sh
+
+abc="\n
+TZTR069_app_enable="tr069_app_enable"\n
+TZTR069_SOAP_ENV="tr069_SOAP_ENV"\n
+TZTR069_SOAP_ENC="tr069_SOAP_ENC"\n
+TZTR069_SERVER_URL="tr069_ServerURL"\n
+TZTR069_PeriodicInformEnable="tr069_PeriodicInformEnable"\n
+TZTR069_PeriodicInformInterval="tr069_PeriodicInformInterval"\n
+TZTR069_ACS_auth="tr069_ACS_auth"\n
+TZTR069_ServerUsername="tr069_ServerUsername"\n
+TZTR069_ServerPassword="tr069_ServerPassword"\n
+TZTR069_CPE_auth="tr069_CPE_auth"\n
+TZTR069_ConnectionRequestUname="tr069_ConnectionRequestUname"\n
+TZTR069_ConnectionRequestPassword="tr069_ConnectionRequestPassword"\n
+TZTR069_ModelName="tr069_ModelName"\n
+TZTR069_ProductClass="tr069_ProductClass"\n
+TZTR069_DeviceSummary="tr069_DeviceSummary"\n
+TZTR069_Description="tr069_Description"\n
+TZTR069_Manufacturer="tr069_Manufacturer"\n
+TZTR069_DATA_MODEL="TZ_TR069_DATA_MODEL"\n
+"
+                      
+echo -e $abc

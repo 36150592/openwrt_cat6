@@ -73,6 +73,11 @@ boot() {
 	
 	rm -rf /etc/.flag_factory_config
 
+
+	if [ -e /etc/tzconfig/updateconfig.conf ]; then
+		/etc/tozed/tz_config_append
+	fi
+
 	# temporary hack until configd exists
 	/sbin/reload_config
 
