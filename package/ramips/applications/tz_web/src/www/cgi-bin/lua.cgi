@@ -1030,18 +1030,9 @@ function get_wifiClient()
 	local tz_answer = {}
 	tz_answer["cmd"] = 117   
 
-	local array = wifi.wifi_get_dev()
-	local id
-	for k,v in pairs(array) do
-	   if(v["band"] == "2.4G")
-	     then
-		   id = v['wifi_id']				  
-		end
-	end
-
 	local data_array = dhcp.dhcp_get_client_list()
 	
-	local data_array2 = wifi.wifi_get_connect_sta_list(id)
+	local data_array2 = wifi.wifi_get_connect_sta_by_dev("2.4G")
 	tz_answer["success"] = true
 	tz_answer["userlist"] = data_array
 	tz_answer["wifilist"] = data_array2
@@ -1054,19 +1045,9 @@ function get_wifi5Client()
 
 	local tz_answer = {}
 	tz_answer["cmd"] = 118  
-
-	local array = wifi.wifi_get_dev()
-	local id
-	for k,v in pairs(array) do
-	   if(v["band"] == "5G")
-	     then
-		   id = v['wifi_id']				  
-		end
-	end
-
 	local data_array = dhcp.dhcp_get_client_list()
 	
-	local data_array2 = wifi.wifi_get_connect_sta_list(id)
+	local data_array2 = wifi.wifi_get_connect_sta_by_dev("5G")
 	tz_answer["success"] = true
 	tz_answer["userlist"] = data_array
 	tz_answer["wifilist"] = data_array2

@@ -40,7 +40,7 @@
                 var ipaddr = "-",name = "-";
                 for( var j = 0; j < usrInfos.length; j++)
                 {
-                    if(usrInfos[j].mac.toUpperCase() == item.mac){
+                    if(usrInfos[j].mac.toUpperCase() == item.mac.toUpperCase()){
                         name = usrInfos[j].name;
                         ipaddr = usrInfos[j].ipaddr;
                         break;

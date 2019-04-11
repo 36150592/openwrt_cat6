@@ -8,6 +8,7 @@ local WIFI_OPTION_DEVICE="wifi-device"
 local WIFI_OPTION_INTERFACE="wifi-iface"
 local WIFI_DRIVE_CONFIG_DIR="/etc/wireless"
 local WIFI_MUTILSSID_CONFIG_FILE="mutilssid"
+local NETWORK_CONFIG_FILE="network"
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
@@ -1721,22 +1722,39 @@ end
 
 local Station=wifi_module.station
 
+local function check_lan_network(network1, network2, netmask)
 
-local function get_sta_mac_table(ifname)
+	local f1 = io.popen("ipcalc.sh ".. network1 .. " ".. netmask .." | grep NETWORK")
+	local ret1 = f1:read()
+	io.close(f1)
+	local f2 = io.popen("ipcalc.sh ".. network2 .. " ".. netmask .. "| grep NETWORK")
+	local ret2 = f2:read() 
+	io.close(f2)
+	if ret1 == ret2
+	then 
+		return true
+	end
+
+	return false
+
+end
+
+local function get_lan_network_by_mac(mac)
+
+	local f1 = io.popen("cat /tmp/dhcp.leases | grep ".. mac .. " | awk '{print $3}'")
+	local res = f1:read()
+	io.close(f1)
+	return res
+end
+
+local function get_sta_mac_table(ifname, network, netmask)
 
 	local cmd = nil
 	local t = nil
 	local res = nil
-	cmd = string.format("iwpriv %s show stainfo ;dmesg > /tmp/.iwpriv_stainfo; cat /tmp/.iwpriv_stainfo | sed -n -e '/MAC.*QosMap/=' | tail -n 1 ", ifname)
+	cmd = string.format(" iwpriv %s get_on_cli | grep -v MAC | grep -v get_on_cli | grep -v ^$", ifname)
 	--debug("cmd1 = ", cmd)
-	
-	t = io.popen(cmd)
-	res = t:read()
 
-	io.close(t)
-	--sleep(1)
-	cmd = string.format(" cat /tmp/.iwpriv_stainfo  | sed -n '%d,$p'", tonumber(res))
-	--debug("cmd2 = ", cmd)
 	t = io.popen(cmd)
 	
 	local sta_list = nil
@@ -1745,42 +1763,38 @@ local function get_sta_mac_table(ifname)
 	
 	while(res ~= nil)
 	do
-		
 		--print(res)
-		if string.match(res,"%x%x:%x%x:%x%x:%x%x:%x%x:%x%x") ~= nil
+		local s_array = split(res,'\t')
+
+		if string.len(s_array[1]) == 17 
 		then
-			res = string.gsub(res, '                ','#')
-			res = string.gsub(res, '         ', '#')
-			res = string.gsub(res, '        ', '#')
-			res = string.gsub(res, '       ', '#')
-			res = string.gsub(res, '      ', '#')
-			res = string.gsub(res, '     ', '#')
-			res = string.gsub(res, '    ', '#')
-			res = string.gsub(res, '   ', '#')
-			res = string.gsub(res, '  ', '#')
-			res = string.gsub(res, ' ', '#')
-			--print(res)
-			local s_array = split(res,'#')
+			--MAC	AID	CTxRate	BW	RSSI0/1/2	TxBytes	RxBytes	TxPackets	RxPackets
+			debug("MAC = ",s_array[1])
+			debug("AID = ",s_array[2])
+			debug("CTxRate = ",s_array[3])
+			debug("BW = ",s_array[4])
+			debug("RSSI0/1/2 = ",s_array[5])
+			debug("TxBytes = ",s_array[6])
+			debug("RxBytes = ",s_array[7])
+			debug("TxPackets = ",s_array[8])
+			debug("RxPackets = ",s_array[9])
 
-			--[[for v,k in pairs(s_array)
-			do
-				print(v,"=",k)
-			end]]--
-			
-			--print("MAC = ", s_array[3])
-			--debug("RSSI = ", s_array[7])
-			--debug("RATE = ", s_array[14])
-
-			if string.len(s_array[3]) == 17 and string.find(s_array[3], ':') > 0
+			local network1 = get_lan_network_by_mac(s_array[1])
+			if check_lan_network(network,network1,netmask)
 			then
-				
-					--print("flag = false ,new Station")
-					local temp_sta = Station:new(nil,nil)
-					temp_sta["mac"] = s_array[3]
-					temp_sta["rate"] = s_array[16]
-					sta_list[table.maxn(sta_list)+1] = temp_sta
-
+				local temp_sta = Station:new(nil,nil)
+				temp_sta["mac"] = s_array[1]
+				temp_sta["rate"] = s_array[3]
+				temp_sta["bandwidth"]	 = 	s_array[4]
+				temp_sta["tx_packets"] = s_array[8]
+				temp_sta["rx_packets"] = s_array[9]
+				temp_sta["tx_bytes"] = s_array[6]
+				temp_sta["rx_bytes"] = s_array[7]
+				sta_list[table.maxn(sta_list)+1] = temp_sta
 			end
+
+
+
 		end
 
 		res = t:read()
@@ -1790,132 +1804,43 @@ local function get_sta_mac_table(ifname)
 	return sta_list
 end
 
-local function get_sta_count_info(ifname,sta_list)
-
-	
-	local cmd = nil
-	local t = nil
-	local res = nil
-	cmd = string.format("iwpriv %s show stacountinfo;dmesg > /tmp/.iwpriv_stacountinfo; cat /tmp/.iwpriv_stacountinfo | sed -n -e  '/MAC.*RxBytes/=' | tail -n 1", ifname)
-	--debug("cmd1 = ", cmd)
-	t = io.popen(cmd)
-	res = t:read()
-	io.close(t)
-	--sleep(1)
-	
-	cmd = string.format("cat /tmp/.iwpriv_stacountinfo  |  sed -n '%d,$p'", tonumber(res))
-	--debug("cmd2 = ", cmd)
-	t = io.popen(cmd)
-	
-
-	res = t:read()
-	while( res ~= nil)
-	do
-		local start,endp =string.find(res,"MAC.+TxPackets   RxPackets   TxBytes     RxBytes")
-		
-		if nil ~= start
-		then
-			
-			--debug("get sta count table at", start)
-			while(res ~= nil)
-			do
-				res = t:read()
-				if nil == res
-				then
-					break
-				end
-
-				res = string.sub(res,start)
-				if string.match(res,"%x%x:%x%x:%x%x:%x%x:%x%x:%x%x") == nil
-				then
-					break
-				end
-				
-				res = string.gsub(res, '                ','#')
-				res = string.gsub(res, '         ', '#')
-				res = string.gsub(res, '        ', '#')
-				res = string.gsub(res, '       ', '#')
-				res = string.gsub(res, '      ', '#')
-				res = string.gsub(res, '     ', '#')
-				res = string.gsub(res, '    ', '#')
-				res = string.gsub(res, '   ', '#')
-				res = string.gsub(res, '  ', '#')
-				res = string.gsub(res, ' ', '#')
-
-				local s_array = split(res,'#')
-				--debug(res)
-				--[[for k,v in pairs(s_array)
-				do
-					print(k,"=",v)
-				end]]--
-				
-				--debug("tx packets = ", s_array[3])
-				--debug("rx packets = ", s_array[4])
-				--debug("tx bytes= ", s_array[5])
-				--debug("rx bytes= ", s_array[6])
-
-				if string.len(s_array[1]) == 17
-				then
-					
-					local flag = false
-					for key,value in pairs(sta_list)
-					do
-						if value["mac"] == s_array[1]
-						then
-							value["tx_packets"]=s_array[3]
-							value["rx_packets"]=s_array[4]
-							value["tx_bytes"]=s_array[5]
-							value["rx_bytes"]=s_array[6]
-							flag = true
-							break
-						end
-					end
-					
-					--[[if flag == false
-					then
-						local temp_sta = Station:new(nil,nil)
-						temp_sta["mac"] = s_array[1]
-						temp_sta["tx_packets"] = s_array[3]
-						temp_sta["rx_packets"] = s_array[4]
-						temp_sta["tx_bytes"] = s_array[5]
-						temp_sta["rx_bytes"] = s_array[6]
-						sta_list[table.maxn(sta_list)] = temp_sta
-					end]]--
-				end
-			
-			end
-			
-			
-		
-
-		end
-		res = t:read()
-	end
-	io.close(t)
-end
-
 --connect sta list
 function wifi_module.wifi_get_connect_sta_list(wifi_id)
 	--debug("wifi_get_connect_sta_list")
     local section_name = common_get_ifame_section_name_by_index(wifi_id)
-    local ifname = x:get(WIFI_CONFIG_FILE, section_name, "ifname")
-	local dev_name = x:get(WIFI_CONFIG_FILE, section_name, "device")
-	local ssid = x:get(WIFI_CONFIG_FILE, section_name, "ssid")
-	
-	local redo_count = 3
+    local ifname,dev_name,ssid,lan_net,network,netmask
+    if nil == section_name
+    then
+    	section_name = common_secondary_get_section_name_by_index(wifi_id)
+		ifname = x:get(WIFI_MUTILSSID_CONFIG_FILE, section_name, "ifname")
+		dev_name = x:get(WIFI_MUTILSSID_CONFIG_FILE, section_name, "device")
+		ssid = x:get(WIFI_MUTILSSID_CONFIG_FILE, section_name, "ssid")
+		lan_net = x:get(WIFI_MUTILSSID_CONFIG_FILE,section_name,"network")
+
+	else
+		ifname = x:get(WIFI_CONFIG_FILE, section_name, "ifname")
+		dev_name = x:get(WIFI_CONFIG_FILE, section_name, "device")
+		ssid = x:get(WIFI_CONFIG_FILE, section_name, "ssid")
+		lan_net = x:get(WIFI_CONFIG_FILE,section_name,"network")
+
+	end
+
 	if nil == ifname
 	then 
 		debug("cannot get ifname")
 		return nil
 	end
 	
-  	station_list = get_sta_mac_table(ifname)
-	
-	--print(table.maxn(station_list))
+	x:foreach(NETWORK_CONFIG_FILE, 'interface', function(s)
+		if 'bridge' == s["type"] and lan_net == s['.name']
+		then 
+			network = s["ipaddr"]
+			netmask = s["netmask"]
+		end
 
-	get_sta_count_info(ifname, station_list)
+	end)
 
-	--print(table.maxn(station_list))
+  	station_list = get_sta_mac_table(ifname, network, netmask)
 
 	for k,v in pairs(station_list)
 	do
@@ -1928,6 +1853,52 @@ function wifi_module.wifi_get_connect_sta_list(wifi_id)
 	
 end
  
+function wifi_module.wifi_get_connect_sta_by_dev(dev)
+
+	local device = nil
+	local wifi_ids = {}
+	local list = {}
+	if '5G' ~= dev and '2.4G' ~= dev
+	then
+		debug("input error")
+		return nil
+	end
+
+
+	x:foreach(WIFI_CONFIG_FILE, WIFI_OPTION_DEVICE, function(s)
+		if dev == s["band"] 
+		then 
+			device = s["type"]
+			wifi_ids[table.maxn(wifi_ids)+1]= s[".index"]
+		end
+	end)
+
+	x:foreach(WIFI_MUTILSSID_CONFIG_FILE, WIFI_OPTION_INTERFACE, function(s)
+		if device == s["device"]
+		then
+			wifi_ids[table.maxn(wifi_ids)+1]= s[".index"]
+		end
+
+	end)
+
+
+	for k,v in pairs(wifi_ids)
+	do
+		local ret = wifi_module.wifi_get_connect_sta_list(tonumber(v))
+
+		if nil ~= ret
+		then
+			for key,value in pairs(ret)
+			do
+				table.insert(list, value)
+			end
+		end
+	end
+
+	
+	return list
+end
+
 -- set wifi mac access control list
 -- input:
 --		wifi_id(number):wifi index get by wifi_get_dev

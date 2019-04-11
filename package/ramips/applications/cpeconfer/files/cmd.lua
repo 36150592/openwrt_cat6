@@ -1879,7 +1879,23 @@ function wifi_get_connect_sta_list()
 		do
 			print(k,"=",v)
 		end
+		print("<-------------------------------->")
+	end
+end
+
+function wifi_get_connect_sta_by_dev()
+	print("wifi_get_connect_sta_by_dev")
+	local ret = wifi.wifi_get_connect_sta_by_dev(tostring(arg[2]))
+	print("wifi_get_connect_sta_by_dev")
+	
+	for key, value in pairs(ret)
+	do
 		
+		for k,v in pairs(value)
+		do
+			print(k,"=",v)
+		end
+		print("<-------------------------------->")
 	end
 end
 
@@ -2266,6 +2282,7 @@ local api_func = {
 	["wifi_get_connect_sta_number"] = wifi_get_connect_sta_number,
 	["wifi_set_connect_sta_number"] = wifi_set_connect_sta_number,
 	["wifi_get_connect_sta_list"]=wifi_get_connect_sta_list,
+	["wifi_get_connect_sta_by_dev"]=wifi_get_connect_sta_by_dev,
 	["wifi_get_mac_access_control"] = wifi_get_mac_access_control,
 	["wifi_set_mac_access_control"] = wifi_set_mac_access_control,
 	["wifi_get_wps_pin"] = wifi_get_wps_pin,
