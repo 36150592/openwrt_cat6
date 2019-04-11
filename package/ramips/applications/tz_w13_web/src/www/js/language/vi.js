@@ -1000,6 +1000,7 @@ PROMPT.status.updating = "Nâng cấp";
 PROMPT.status.updatingAvailable = "Có sẵn phần mềm mới. Nhấp OK để tiếp tục cập nhật";
 PROMPT.status.uploadSuccess = "Tải lên thành công!";
 PROMPT.status.uploading = "Tải tệp lên";
+PROMPT.status.uploadFailed = "Tải lên thất bại, xin hãy thử lại lần nữa!";
 PROMPT.tips.backupFirewall = "THÔNG BÁO: Nếu bạn muốn khôi phục cài đặt tường lửa, trước tiên hãy tải lên tệp sao lưu (firewallbackup.tar).";
 PROMPT.tips.closeInternet1 = "CẢNH BÁO: Thiết bị của bạn không ở trong các ô dịch vụ, do đó dịch vụ internet bị đóng.";
 PROMPT.tips.closeInternet2 = "CẢNH BÁO: Dịch vụ internet đã đóng, vui lòng sử dụng thẻ SIM đã chỉ định của ISP.";

@@ -1000,6 +1000,7 @@ PROMPT.status.updating = "Atualizando";
 PROMPT.status.updatingAvailable = "Novo firmware disponível. Clique em Ok para prosseguir com a atualização";
 PROMPT.status.uploadSuccess = "Upload bem sucedido!";
 PROMPT.status.uploading = "Upload de arquivos";
+PROMPT.status.uploadFailed = "Não envio, tente novamente por favor!";
 PROMPT.tips.backupFirewall = "AVISO: Se você quiser restaurar as configurações do firewall, faça o upload do arquivo de backup (firewallbackup.tar) primeiro.";
 PROMPT.tips.closeInternet1 = "AVISO: O seu dispositivo não está nas células de serviço, pelo que o serviço de Internet está encerrado.";
 PROMPT.tips.closeInternet2 = "AVISO: O serviço de Internet está fechado, por favor use o cartão SIM especificado do ISP.";

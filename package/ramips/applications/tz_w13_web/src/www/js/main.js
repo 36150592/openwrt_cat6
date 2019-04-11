@@ -444,7 +444,7 @@ var SysUtil = {
         loop();
     },
     upload: function($form, $file, command, callback) {
-        var url = String.format("{0}?cmd={1}&method=POST",  '/cgi-bin/lua.cgi', RequestCmd.SYS_UPDATE);
+        var url = String.format("{0}?cmd={1}&sessionId={2}&method=POST",  '/cgi-bin/lua.cgi', RequestCmd.SYS_UPDATE, Page.sessionId);
         
 		var datas = null;
         $form.ajaxSubmit({
@@ -472,7 +472,7 @@ var SysUtil = {
 					      if (datas.success) {
                             AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
                           } else {
-                    	    SysUtil.processMsg(datas.message);
+                    	    AlertUtil.alertMsg(PROMPT.status.uploadFailed);
                           }
                           if ($.isFunction(callback)) {
                                 callback(updateFileName);
@@ -541,7 +541,7 @@ var StatusUtil = {
                 },
                 success: function(datas) {
                     sysStatus = datas.data;
-                    console.log(data);
+                    //console.log(data);
                 },
                 complete: function() {
 
@@ -586,7 +586,6 @@ var CheckUtil = {
         return asciiReg.test(pwd) || hexReg.test(pwd);
     },
 	checkIp: function(ip, isIpv6) {
-		//console.log(ip);
         if(isIpv6 != "IPV6"){
             var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
             return reg.test(ip);
@@ -1135,7 +1134,6 @@ function getOpenInfo() {
         Page.postJSON({
             json: { cmd: RequestCmd.ROUTER_INFO },
             success: function(datas) {
-                console.log(datas);
                 theRouterInfo = datas.data;
 
                 //	getLteInfo(routerInfo);

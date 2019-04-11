@@ -1100,6 +1100,7 @@ PROMPT.status.updating = "Upgrading";
 PROMPT.status.updatingAvailable = "New firmware available. Click OK to proceed with update";
 PROMPT.status.uploadSuccess = "Upload successful!";
 PROMPT.status.uploading = "Uploading file";
+PROMPT.status.uploadFailed "Upload failed! please check and try again!";
 PROMPT.tips.backupFirewall = "NOTICE: If you want to restore firewall settings, please upload backup file(firewallbackup.tar) first.";
 PROMPT.tips.closeInternet1 = "WARNING:Your device is not in the service cells, so the internet service is closed.";
 PROMPT.tips.closeInternet2 = "WARNING:The internet service is closed, please use the specified SIM card of ISP.";

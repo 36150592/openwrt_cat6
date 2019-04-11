@@ -2122,7 +2122,8 @@ then
 	    then
 		    local t_tz_answer = {};
 			t_tz_answer["cmd"] = cmdid;
-			t_tz_answer["success"] = false
+			t_tz_answer["success"] = false;
+			t_tz_answer["message"] = "upload error! please check and try again!";
 			local t_result_json = cjson.encode(t_tz_answer);
 			print(t_result_json);
 			return
@@ -2134,37 +2135,34 @@ else
 	tz_req = cjson.decode(data1)
 	local cmd = tz_req["cmd"]
 	if(cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 113 )
-	  then
-	     local fileName = string.format("/tmp/sessionsave/.%s",tz_req["sessionId"])
-	      if (uti.is_file_exist(fileName) ~= true)
-		    then
-			    local tz_answer = {};
-				tz_answer["cmd"] = tz_req["cmd"];
-				tz_answer["success"] = false
-				result_json = cjson.encode(tz_answer);
-				print(result_json);
-				return
-		  
-		  else
-
-		      local f = switch[tz_req["cmd"]]
-			   if(f) then
+	then
+		local fileName = string.format("/tmp/sessionsave/.%s",tz_req["sessionId"])
+		if (uti.is_file_exist(fileName) ~= true) then
+			local tz_answer = {};
+			tz_answer["cmd"] = tz_req["cmd"];
+			tz_answer["success"] = false
+			result_json = cjson.encode(tz_answer);
+			print(result_json);
+			return  
+		else
+			local f = switch[tz_req["cmd"]]
+			if(f) then
 				f()
-			   end
-			  if(tz_req["cmd"] ~= 99) then
+			end
+			if(tz_req["cmd"] ~= 99) then
 				local logintime = os.time()    
 				local file = io.open(fileName,"w")
 				io.input(file)
 				file:write("updateTime:"..logintime)
 				io.close(file)
-			  end
-	      end
-		  
-	   else
-	   local f = switch[tz_req["cmd"]]
+			end
+		end
+		
+	else
+		local f = switch[tz_req["cmd"]]
 		if(f) then
-		  f()
-	    end
+			f()
+		end
 	end
 	
 end

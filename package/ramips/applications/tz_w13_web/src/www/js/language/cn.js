@@ -1096,6 +1096,7 @@ PROMPT.status.updating = "正在进行升级, 请勿关闭设备";
 PROMPT.status.updatingAvailable = "您的CPE有新固件， 单击“确定”开始升级";
 PROMPT.status.uploadSuccess = "文件上传成功！";
 PROMPT.status.uploading = "正在上传文件";
+PROMPT.status.uploadFailed = "上传文件失败，请检查后重试！";
 PROMPT.tips.backupFirewall = "提示：还原防火墙时，请先上传备份文件(firewallbackup.tar)。";
 PROMPT.tips.closeInternet1 = "提示：您不在服务小区之内，已被禁止上网!";
 PROMPT.tips.closeInternet2 = "提示：您已被禁止上网，请使用指定 SIM卡。";

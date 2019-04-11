@@ -218,7 +218,7 @@
             Page.postJSON({
                 json: json,
                 success: function(data) {
-                    console.log(data);
+                    //console.log(data);
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(5).click();
                 },
@@ -241,7 +241,7 @@
                     Page.postJSON({
                         json: { cmd: RequestCmd.WIFI_INFO },
                         success: function(datas) {
-                            console.log(datas);
+                            //console.log(datas);
                             var data = datas.data;
                             if(data.status == 0){
                                 $wifiOpen.prop('checked', true);
@@ -280,8 +280,6 @@
                             //var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
                             var encryp = data.encryp;
                             var encrypType = data.encrypType;
-                            console.log("encryp=="+encryp);
-                            console.log("encrypType=="+encrypType);
                             Page.setFormFieldValue2("authenticationType", encryp);
                             if(encrypType == "tkip+ccmp")
                             {
@@ -306,7 +304,7 @@
                     Page.postJSON({
                         json: { cmd: RequestCmd.SSIDLIST_INFO,wifiId: $wifiId.val() },
                         success: function(datas) {
-                            console.log(datas);
+                            //console.log(datas);
                             var data = datas.data;
                             for(var i = 1; i <= data.length; i++) {
                                 if(data[i].status == 0){
@@ -352,7 +350,7 @@
                             success: function(data) {
                                 usrInfos = data.userlist;
                                 macInfos = data.wifilist;
-                                console.log(macInfos);
+                                //console.log(macInfos);
                                 createMacInfosTable();
                                 firstRequest = false;
                             }
@@ -368,7 +366,7 @@
                             method: JSONMethod.GET
                         },
                         success: function(datas) {
-                            console.log(datas);
+                            //console.log(datas);
                             var data = datas.maclist;
                             InputUtil.setRadiosSelectedValue($policyType, data.policy);
                             if(data.macs == undefined){
@@ -387,7 +385,7 @@
 							method: JSONMethod.GET
                         },
                         success: function(datas) {
-                            console.log(datas);
+                            //console.log(datas);
 							 var data = datas.data;
                             if(data.status == 0){
                                 $('#wpsEnble').prop('checked', false);
@@ -496,11 +494,11 @@
             }
 
             json.cmd = RequestCmd.WIRELESS_CONFIG;
-            console.log(json);
+            //console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
-                    console.log(data);
+                    //console.log(data);
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(0).click();
                 },
@@ -577,11 +575,11 @@
 
             json.cmd = RequestCmd.SSIDLIST_CONFIG;;
             json.wifiId = $wifiId.val();
-            console.log(json);
+            //console.log(json);
             Page.postJSON({
                 json: json,
                 success: function(data) {
-                    console.log(data);
+                    //console.log(data);
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(id).click();
                 },

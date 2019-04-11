@@ -999,6 +999,7 @@ PROMPT.status.updating = "La actualización";
 PROMPT.status.updatingAvailable = "Nuevo firmware disponible. Haga clic en Aceptar para continuar con la actualización";
 PROMPT.status.uploadSuccess = "Sube éxito!";
 PROMPT.status.uploading = "Carga de archivos";
+PROMPT.status.uploadFailed = "Por favor,intente de nuevo!";
 PROMPT.tips.backupFirewall = "AVISO: Si desea restaurar la configuración del cortafuegos, por favor subir el archivo de copia de seguridad (firewallbackup.tar) en primer lugar.";
 PROMPT.tips.closeInternet1 = "ADVERTENCIA: El dispositivo no se encuentra en las células de servicio, por lo que el servicio de Internet está cerrada.";
 PROMPT.tips.closeInternet2 = "ADVERTENCIA: El servicio de Internet está cerrada, por favor utilice la tarjeta SIM especificado de ISP.";

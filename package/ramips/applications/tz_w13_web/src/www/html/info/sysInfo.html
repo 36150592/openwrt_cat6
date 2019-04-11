@@ -45,7 +45,7 @@
                 json: { cmd: RequestCmd.SYS_INFO },
                 success: function(datas) {
                     var data2 = datas.data;
-                    console.log(data2);
+                    //console.log(data2);
 					
                     var data_system = data2.system;
                     var data_lan = data2.lan;
@@ -190,8 +190,7 @@
             Page.postJSON({
                 json: {cmd: RequestCmd.WIFI_INFO},
                 success: function (datas) {
-                    console.log("loadWlanPage Request success!");
-                    console.log(datas);
+                    //console.log(datas);
                     var data = {"mode":"Master","message":"WLAN未开启"};
                     var wirelessHtml = "";
                     if (data.mode.trim() == "NULL") {
