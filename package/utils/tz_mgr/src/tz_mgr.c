@@ -103,7 +103,7 @@ pthread_t tid_recv,tid_heartbeat;//接收和发送的tid
 pthread_rwlock_t send_sock_rwlock;//套接字的读写锁
 char TZ_FOTA_UPGRADE_IP[16];     //temp ip
 char TZ_FOTA_UPGRADE_IP_BACKUP[16];//temp ip backup
-
+void tz_get_if_ip(char* ip_buf,int buf_len);//获取当前接口的ip
 
 
 //copy form miao
@@ -807,17 +807,19 @@ int util_decode_field_info(unsigned char* p_ethernet_frame,int frame_len)
 			case CMD_INFO_TZ_FOTA_UPGRADE_IP:
 				strcpy(TZ_FOTA_UPGRADE_IP,( const char* )p_ethernet_frame);
 				if( strlen( TZ_FOTA_UPGRADE_IP ) )
-				{
+				{	
+					tz_get_if_ip(TZ_FOTA_UPGRADE_IP_BACKUP,sizeof(TZ_FOTA_UPGRADE_IP_BACKUP));
 					if( strcmp( TZ_FOTA_UPGRADE_IP,TZ_FOTA_UPGRADE_IP_BACKUP ) )
 					{
 						print("set ip to %s for upgrade ...",TZ_FOTA_UPGRADE_IP);
 						util_config_ipv4_addr(network_dev_name,TZ_FOTA_UPGRADE_IP);
-						shell_recv(NULL,0,"%s","/etc/init.d/network restart");
-						strcpy(TZ_FOTA_UPGRADE_IP_BACKUP,TZ_FOTA_UPGRADE_IP);
+						shell_recv(NULL,0,"ifconfig %s down && ifconfig %s up", network_dev_name ,network_dev_name);//
+						shell_recv(NULL,0,"%s stop",SCRIPT_HTTPD);
+						//strcpy(TZ_FOTA_UPGRADE_IP_BACKUP,TZ_FOTA_UPGRADE_IP);
 						memset( TZ_FOTA_UPGRADE_IP,0,sizeof( TZ_FOTA_UPGRADE_IP ) );
 						print("restart web\r\n");
 						sleep(2);
-						shell_recv(NULL,0,"%s restart",SCRIPT_HTTPD);
+						shell_recv(NULL,0,"%s start",SCRIPT_HTTPD);
 						shell_recv(NULL,0,"rm -f %s",UPLINK_CONNECTION_IS_OK_TMP_FILE);
 						raise(SIGQUIT);//restart self
 					}
@@ -2288,5 +2290,29 @@ void w13_config_led_according2dial_status(int dial_status)
 		print("unkown dial_status value:%d!",dial_status);
 	}
 	return;
+}
+
+
+void tz_get_if_ip(char* ip_buf,int buf_len)
+{
+	int sockfd;
+	struct ifreq ifr;
+	struct sockaddr_in sin;
+	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	{
+		print("socket error");
+		return -1;
+	}
+	strcpy(ifr.ifr_name,network_dev_name);
+	if(ioctl(sockfd, SIOCGIFADDR, &ifr) < 0)//直接获取IP地址
+	{
+		print("ioctl error");
+		return -1;
+	}
+	memcpy(&sin, &ifr.ifr_dstaddr, sizeof(sin));
+	memset(ip_buf,0,buf_len);
+	snprintf(ip_buf,buf_len,"%s",inet_ntoa(sin.sin_addr));
+	print("%s ip is %s", network_dev_name, inet_ntoa(sin.sin_addr));
+
 }
 
