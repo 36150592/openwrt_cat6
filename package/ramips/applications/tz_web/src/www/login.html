@@ -34,7 +34,8 @@
                 $languageSelect.html(Page.getLanguageList(Page.language)).change(function () {
                     Page.changeLanguage($languageSelect);
                 });
-
+                $languageSelect.hide();
+                $(".tr_language").hide();
                 var $username = $('#username').focus(),
                     $passwd = $('#passwd'),
                     $btnLogin = $('#btnLogin');
