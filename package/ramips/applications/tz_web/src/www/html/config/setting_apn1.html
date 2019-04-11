@@ -24,6 +24,11 @@
                    $("#selectAuthentication").val(apnData.auth_type);
                    $("#apn_user_name").val(apnData.username);
                    $("#apn_user_password").val(apnData.password);
+                   if(apnData.apn_name == undefined || apnData.apn_name == ""){
+                        $("#apn_name").val("");
+                   }else{
+                        $("#apn_name").val(apnData.apn_name);
+                   }
                    ApnList = datas.data;
                 }
             });
@@ -31,7 +36,7 @@
       getData();
 
       $("#btnSave").on("click",function(){
-        var apnEnable,selectType,apn_profile,selectAuthentication,apn_user_name,apn_user_password;
+        var apnEnable,selectType,apn_profile,selectAuthentication,apn_user_name,apn_user_password,apn_name;
             if($("#apnEnable").is(":checked")){
                 apnEnable = 1;
             }else{
@@ -42,6 +47,7 @@
             selectAuthentication =  $("#selectAuthentication").val();
             apn_user_name =  $("#apn_user_name").val();
             apn_user_password =  $("#apn_user_password").val();
+            apn_name =  $("#apn_name").val();
           $form = $("#form");
           if(apn_profile == ""){
                 AlertUtil.alertMsg(CHECK.format.profileName2);
@@ -75,6 +81,7 @@
           json.username = apn_user_name;
           json.mtu = 1500;
           json.password = apn_user_password;
+          json.apn_name = apn_name;
           ApnList.splice(1,1,json);
 
           json2.apnList = ApnList;
@@ -84,7 +91,7 @@
                      json: json2,
                      success:function(data){
                         if(data.success == true){
-                        AlertUtil.alertMsg(PROMPT.saving.success);
+                       SysUtil.rebootDevice(PROMPT.tips.rebootMessage);
                         }
                      }
                  })
@@ -137,6 +144,12 @@
                         <option value="2">CHAP</option>
                         <option value="3">PAP&CHAP</option>
                     </select>
+                </td>
+            </tr>
+             <tr>
+                <th><%-TAB.basic.apn %><%- colon %></th>
+                <td>
+                    <input type="text" name="apnName" id="apn_name">
                 </td>
             </tr>
             <tr>
