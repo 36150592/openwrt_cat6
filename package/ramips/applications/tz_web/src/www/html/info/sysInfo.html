@@ -46,7 +46,7 @@
             loadPage();
             loadPage2();
             loadPage3();
-            loadPage4();
+            // loadPage4();
             loadPage5();
             loadWlanPage();
             loadWlan5gPage();
@@ -449,13 +449,13 @@
                     secMode = "11AGN mixed";
                     break;
                 case 11 :
-                    secMode = "11N ";
+                    secMode = "11A";
                     break;
                 case 14 :
-                    secMode = "11A/AN/AC";
+                    secMode = "11NA";
                     break;
                 case 15 :
-                    secMode = "11 AN/AC";
+                    secMode = "11AC";
                     break;
                 default :
                     secMode = "ap";
@@ -531,6 +531,7 @@
             Page.postJSON({
                 json: {cmd: RequestCmd.WIFI5_INFO},
                 success: function (datas) {
+                    console.log(datas);
                     var data = {"mode":"Master","message":"WLAN未开启"};
                     var wlan5gHtml = "";
                     if (data.mode.trim() == "NULL") {
