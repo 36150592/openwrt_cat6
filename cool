@@ -202,7 +202,11 @@ if [ -f ${TOPDIR}/project/${project}/key-message ]; then
 	GIT_COMMIT_SHA1=`git rev-parse --verify HEAD`
 	BUILD_TIME=`date +%F_%H:%M`
 	cp ${TOPDIR}/project/${project}/key-message ${TOPDIR}/project/${project}/rootfs/version
-	echo "type=${project}" >> ${TOPDIR}/project/${project}/rootfs/version
+	if [ ${project} = "w13" ]; then
+		echo "type=P11IDU" >> ${TOPDIR}/project/${project}/rootfs/version
+	else
+		echo "type=${project}" >> ${TOPDIR}/project/${project}/rootfs/version
+	fi
 	echo "branch=${TZ_BRANCH_NAME}" >> ${TOPDIR}/project/${project}/rootfs/version
 	echo "os=${TZ_RELEASE_NAME}" >> ${TOPDIR}/project/${project}/rootfs/version
 	echo "sha1=${GIT_COMMIT_SHA1}" >> ${TOPDIR}/project/${project}/rootfs/version

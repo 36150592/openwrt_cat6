@@ -1,5 +1,5 @@
-software_version=w13_0.0.1
-inline_soft_version=w13_0.0.1
-hwversion=mt7628
-device=CPE_Outdoors_Machine
-config_version=w13c001
+software_version=V1.0
+inline_soft_version=w13+_V1.0
+hwversion=P11IDU_V1.0
+device=CPE_Indoors_Machine
+config_version=SL_Dialog_V1.0
