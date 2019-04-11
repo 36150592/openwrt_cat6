@@ -101,7 +101,8 @@ int g_send_sock_fd = 0;//发送至服务端的套接字
 int g_receive_sock_fd = 0;
 pthread_t tid_recv,tid_heartbeat;//接收和发送的tid
 pthread_rwlock_t send_sock_rwlock;//套接字的读写锁
-
+char TZ_FOTA_UPGRADE_IP[16];     //temp ip
+char TZ_FOTA_UPGRADE_IP_BACKUP[16];//temp ip backup
 
 
 
@@ -192,6 +193,9 @@ int main(int argc, char * const argv[])
 		}
 	}
 	pthread_rwlock_init(&send_sock_rwlock, NULL);//初始化读写锁
+	memset(TZ_FOTA_UPGRADE_IP, 0, sizeof(TZ_FOTA_UPGRADE_IP));
+	memset(TZ_FOTA_UPGRADE_IP_BACKUP, 0, sizeof(TZ_FOTA_UPGRADE_IP_BACKUP));
+	memset( &server_wifi_info,0,sizeof( server_wifi_info ) );
 	//因系统信号退出时做好善后
 	signal(SIGINT, signal_handle_func);
 	signal(SIGQUIT, signal_handle_func);
@@ -800,6 +804,25 @@ int util_decode_field_info(unsigned char* p_ethernet_frame,int frame_len)
 				print("CMD_INFO_TZ_WIFI_40M_ENABLE:%s", ( const char* )p_ethernet_frame);
 				strcpy(server_wifi_info.TZ_WIFI_40M_ENABLE,( const char* )p_ethernet_frame);
 				break;		
+			case CMD_INFO_TZ_FOTA_UPGRADE_IP:
+				strcpy(TZ_FOTA_UPGRADE_IP,( const char* )p_ethernet_frame);
+				if( strlen( TZ_FOTA_UPGRADE_IP ) )
+				{
+					if( strcmp( TZ_FOTA_UPGRADE_IP,TZ_FOTA_UPGRADE_IP_BACKUP ) )
+					{
+						print("set ip to %s for upgrade ...",TZ_FOTA_UPGRADE_IP);
+						util_config_ipv4_addr(network_dev_name,TZ_FOTA_UPGRADE_IP);
+						shell_recv(NULL,0,"%s","/etc/init.d/network restart");
+						strcpy(TZ_FOTA_UPGRADE_IP_BACKUP,TZ_FOTA_UPGRADE_IP);
+						memset( TZ_FOTA_UPGRADE_IP,0,sizeof( TZ_FOTA_UPGRADE_IP ) );
+						print("restart web\r\n");
+						sleep(2);
+						shell_recv(NULL,0,"%s restart",SCRIPT_HTTPD);
+						shell_recv(NULL,0,"rm -f %s",UPLINK_CONNECTION_IS_OK_TMP_FILE);
+						raise(SIGQUIT);//restart self
+					}
+				}
+				break;
 				/*if( !strcmp(server_wifi_info.TZ_ENABLE_WATCHDOG,"no") )
 				{
 					system("dwatchdog");
@@ -1882,7 +1905,6 @@ void process_1s_signal(void)
 			print("%s","---------------server connected --------------------");
 			shell_recv(NULL,0,"%s stop",SCRIPT_DHCPD);
 			shell_recv(NULL,0,"%s stop",SCRIPT_DNSMAQ);
-			shell_recv(NULL,0,"%s stop",SCRIPT_HTTPD);
 			//设置当前设备的IP地址
 			//util_config_ipv4_addr(network_dev_name,"0.0.0.0");
 			//system("/etc/rc.d/rc.uplink.connected");
@@ -1927,7 +1949,6 @@ void process_1s_signal(void)
 			util_config_ipv4_addr(network_dev_name,server_wifi_info.AP_IPADDR);
 			shell_recv(NULL,0,"%s start",SCRIPT_DHCPD);
 			shell_recv(NULL,0,"%s start",SCRIPT_DNSMAQ);
-			shell_recv(NULL,0,"%s start",SCRIPT_HTTPD);
 
 			//system("/etc/rc.d/rc.uplink.disconnected");
 			shell_recv(NULL,0,"rm -f %s",UPLINK_CONNECTION_IS_OK_TMP_FILE);
