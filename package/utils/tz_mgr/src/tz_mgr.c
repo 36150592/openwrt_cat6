@@ -49,6 +49,10 @@
 #define SCRIPT_DNSMAQ		"/etc/init.d/dnsmasq"
 #define SCRIPT_HTTPD		"/etc/init.d/mini_httpd"
 #define TZ_FACTORY_FLAG_FILE "/etc/.flag_factory_config"
+#define TZ_VERSION_FILE		"/version"
+#define TZ_FIRMWARE_VERSION "software_version"
+#define TZ_FIRMWARE_INLINE_VERSION "inline_soft_version"
+#define TZ_CONFIG_VERSION 	"config_version"
 
 #define APP_NAME	"tz_mgr"  //程序名字,必须与配置文件及脚本一致！
 
@@ -1689,6 +1693,18 @@ int util_send_search_server_frame(void)
 	{
 		util_add_field_to_frame(CMD_INFO_AP_PRIMARY_CH,server_wifi_info.AP_PRIMARY_CH,strlen(server_wifi_info.AP_PRIMARY_CH)+1);
 	}
+	if( strlen( server_wifi_info.TZ_WIFI_40M_ENABLE ) )
+	{
+		util_add_field_to_frame(CMD_INFO_TZ_WIFI_40M_ENABLE,server_wifi_info.TZ_WIFI_40M_ENABLE,strlen(server_wifi_info.TZ_WIFI_40M_ENABLE)+1);
+	}
+	if( strlen( server_wifi_info.TZ_IDU_FIRMWARE_VERSION_INFO ) )
+	{
+		util_add_field_to_frame(CMD_INFO_TZ_IDU_FIRMWARE_VERSION,server_wifi_info.TZ_IDU_FIRMWARE_VERSION_INFO,strlen(server_wifi_info.TZ_IDU_FIRMWARE_VERSION_INFO)+1);
+	}
+	if( strlen( server_wifi_info.TZ_IDU_CONFIG_VERSION_INFO ) )
+	{
+		util_add_field_to_frame(CMD_INFO_IDU_CONFIG_FILE_VERSION,server_wifi_info.TZ_IDU_CONFIG_VERSION_INFO,strlen(server_wifi_info.TZ_IDU_CONFIG_VERSION_INFO)+1);
+	}
 	if( strlen( server_wifi_info.TXPOWER ) )
 	{
 		util_add_field_to_frame(CMD_INFO_TXPOWER,server_wifi_info.TXPOWER,strlen(server_wifi_info.TXPOWER)+1);
@@ -2151,6 +2167,19 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	tmp = config_get_string("main", "TZ_WIFI_40M_ENABLE", "no");
 	strncpy(server_wifi_info->TZ_WIFI_40M_ENABLE, tmp,strlen(tmp));
 	print("TZ_WIFI_40M_ENABLE=%s",tmp);
+
+	//get firmware version /config version
+	char tmp_buf[32];
+	memset(tmp_buf,0,sizeof(tmp_buf));
+	shell_recv(tmp_buf,sizeof(tmp_buf),"cat %s | grep '%s' | sed  's/%s=//g'", TZ_VERSION_FILE, TZ_FIRMWARE_INLINE_VERSION, TZ_FIRMWARE_INLINE_VERSION);
+	strncpy(server_wifi_info->TZ_IDU_FIRMWARE_VERSION_INFO, tmp_buf,strlen(tmp_buf));
+	print("TZ_IDU_FIRMWARE_VERSION_INFO=%s",tmp_buf);
+
+	memset(tmp_buf,0,sizeof(tmp_buf));
+	shell_recv(tmp_buf,sizeof(tmp_buf),"cat %s | grep '%s' | sed  's/%s=//g'", TZ_VERSION_FILE, TZ_CONFIG_VERSION, TZ_CONFIG_VERSION);
+	strncpy(server_wifi_info->TZ_IDU_CONFIG_VERSION_INFO, tmp_buf,strlen(tmp_buf));
+	print("TZ_IDU_CONFIG_VERSION_INFO=%s",tmp_buf);
+
 
 	memcpy(&server_wifi_info_backup,server_wifi_info,sizeof(InfoStruct));
 	config_deinit();//释放uci上下文

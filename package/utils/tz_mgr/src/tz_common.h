@@ -125,9 +125,9 @@ typedef unsigned char *  u_caddr_t;
 #define CMD_INFO_TZ_WIFI_40M_ENABLE			0xA7
 #define CMD_INFO_TZ_FOTA_UPGRADE_IP			0xA9
 #define CMD_INFO_SIGNAL_QUALITY_COLOR		0xAA
-#define CMD_INFO_IDU_VERSION					0xAB
+#define CMD_INFO_TZ_IDU_FIRMWARE_VERSION	0xAB
 #define CMD_INFO_RESEND_SEARCH_SERVER		0xAC
-
+#define CMD_INFO_IDU_CONFIG_FILE_VERSION    0xAD
 
 
 //data_len&0x01 to make sure the data length is even
@@ -439,7 +439,9 @@ typedef struct
 	char WEP_RADIO_NUM0_KEY_3[32];
 	char WEP_RADIO_NUM0_KEY_4[32];
 
-	char TZ_IDU_VERSION_INFO[32];
+	char TZ_IDU_FIRMWARE_VERSION_INFO[32];
+	char TZ_IDU_CONFIG_VERSION_INFO[32];
+
 
 	char TZ_ISOLATE_WLAN_CLIENTS[8];
 	char TZ_WIFI_40M_ENABLE[8];
