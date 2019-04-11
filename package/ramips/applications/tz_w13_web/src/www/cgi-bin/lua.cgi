@@ -2116,6 +2116,17 @@ then
 	uti.web_log(cmdid)
 	if "5" == cmdid
 	then
+		local sessionid = uti.get_env_sessionId(envv)
+		local t_fileName = string.format("/tmp/sessionsave/.%s",sessionid)
+	    if (uti.is_file_exist(t_fileName) ~= true)
+	    then
+		    local t_tz_answer = {};
+			t_tz_answer["cmd"] = cmdid;
+			t_tz_answer["success"] = false
+			local t_result_json = cjson.encode(t_tz_answer);
+			print(t_result_json);
+			return
+	    end	
 		upload_file()
 	end
 else

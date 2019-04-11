@@ -90,6 +90,20 @@ function module.get_env_cmdId(env)
 	return nil
 end
 
+function module.get_env_sessionId(env)
+	local lines = string.match(env,'sessionId=%x+')
+	if nil ~= lines
+	then
+		local n_start,n_end =string.find(lines, "sessionId=") 
+		local sessionId = string.sub(lines,n_end+1,string.len(lines))
+		if nil ~= sessionId 
+		then
+			return sessionId
+		end
+	end
+	return nil
+end
+
 function module.get_env_boundary(env)
         local lines = string.match(env,'boundary=[-%d%u%l]*')
         if nil ~= lines
