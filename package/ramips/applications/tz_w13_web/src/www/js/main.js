@@ -1099,6 +1099,7 @@ function TZ_info_getOpenInfo() {
         names = [];
         names.push(DOC.lbl.runtime);
         names.push(DOC.device.firmwareVersion);
+        names.push(DOC.device.configVersion);
         names.push(DOC.device.modemVersion);
         names.push(DOC.net.mac);
         
@@ -1110,6 +1111,7 @@ function TZ_info_getOpenInfo() {
         values.push(runtime);
         //values.push(FormatUtil.formatField(Page.getDeviceVersion(routerInfo.name, routerInfo.version) || loading));certificationVer
         values.push(divice.software_version|| loading);
+        values.push(divice.config_version|| loading);
         values.push(divice.type || loading);
         values.push(wifi.mac || loading);//wifi mac与设备mac相同
         html = Page.createTable(DOC.title.router, names, values, names.length, 1);
