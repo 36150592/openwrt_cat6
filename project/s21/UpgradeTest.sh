@@ -3,12 +3,12 @@
 
 UPDATE_FILE_PATH=./
 #echo $UPDATE_FILE_PATH
-UPDATE_FILE_NAME="s21_v0.01.bin"
+UPDATE_FILE_NAME="s21_v0.05.bin"
 #echo $filename
 TARGET_IP=192.168.2.1
 count=1
 
-session_id="1e14f311e3d3fe3e0a1cee2e18b1506e0e178f8fc110d8d159b652003166a1c2"
+session_id="eca8df00588997f4d8b04c60270140b15550569951555057118"
 password="21232f297a57a5a743894a0e4a801fc3"
 login_name="admin"
 method="POST"
@@ -21,6 +21,8 @@ while [ 1 ]
 	echo "@@@@@@  start login"
 	login_result1=`curl -H "Content-Type:application/json" -X POST --data "{\"cmd\":$cmd,\"username\":\"$login_name\",\"passwd\":\"$password\",\"sessionId\":\"${session_id}\"}" http://192.168.2.1/cgi-bin/lua.cgi 2>/dev/null`
     echo $login_result1	
+    session_id=`echo $login_result1 | awk -F ',' '{print $3}' | sed s/\"//g  | cut -d':' -f 2`
+    echo "session_id = $session_id"
 	login_result2=`echo $login_result1 | grep "success" | wc -l`
 
 	login_result3=`echo $login_result1 | grep "true" | wc -l`
@@ -39,7 +41,9 @@ while [ 1 ]
 	#上传文件
 	cmd="5"
 	echo "@@@@@@  start upload"
-	upload_result1=`curl -F "fp=@${UPDATE_FILE_PATH}/${UPDATE_FILE_NAME}" "http://${TARGET_IP}/cgi-bin/lua.cgi?cmd=${cmd}&method=${method}&language=EN&username=${login_name}&passwd=${password}&sessionId=${session_id}" 2>/dev/null`
+	#upload_result1=`curl -F "fp=@${UPDATE_FILE_PATH}/${UPDATE_FILE_NAME}" "http://${TARGET_IP}/cgi-bin/lua.cgi?cmd=${cmd}&method=${method}&language=EN&username=${login_name}&passwd=${password}&sessionId=${session_id}" 2>/dev/null`
+    upload_result1=`curl -F "fp=@${UPDATE_FILE_PATH}/${UPDATE_FILE_NAME}" "http://${TARGET_IP}/cgi-bin/lua.cgi?cmd=${cmd}&method=${method}&language=EN&username=${login_name}&passwd=${password}"`
+    
     echo $upload_result1
 	result2=`echo $upload_result1 | grep "success" | wc -l`
 
