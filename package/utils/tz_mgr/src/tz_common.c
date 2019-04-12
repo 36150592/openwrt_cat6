@@ -112,10 +112,10 @@ int file_exists(const char *file)
 	struct stat s;
 	int r = stat(file, &s);
 	if (!r && S_ISREG(s.st_mode)) {
-		return 0;
+		return 1;
 	} 
 	
-	return -1;
+	return 0;
 }
 
 

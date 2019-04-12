@@ -59,7 +59,7 @@ config dhcp 'lan'
         option leasetime '${DHCP_MAIN_DHCPLEASE}'
         option dhcpv6 'server'
         option ra 'server'
-
+        option ignore '1'
 
 config dhcp 'wan'
         option interface 'wan'

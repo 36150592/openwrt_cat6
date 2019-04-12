@@ -53,6 +53,9 @@
 #define TZ_FIRMWARE_VERSION "software_version"
 #define TZ_FIRMWARE_INLINE_VERSION "inline_soft_version"
 #define TZ_CONFIG_VERSION 	"config_version"
+#define TZ_MGR_RESTART_COUNT_FILE "/tmp/.tz_mgr_restart_count"//记录程序的重启次数，从而计算连接不上室外机的时间
+#define TZ_MGR_ENABLE_DHCP_FLAG_FILE "/tmp/.tz_mgr_dhcp_enable"//如果存在此文件，则启动dhcp服务
+#define TZ_DHCP_SERVER_ALIVE_FLAG_FILE "/tmp/.tz_mgr_dhcp_alive"//记录dhcp启动状态，防止重复启动
 
 #define APP_NAME	"tz_mgr"  //程序名字,必须与配置文件及脚本一致！
 
@@ -104,7 +107,7 @@ pthread_rwlock_t send_sock_rwlock;//套接字的读写锁
 char TZ_FOTA_UPGRADE_IP[16];     //temp ip
 char TZ_FOTA_UPGRADE_IP_BACKUP[16];//temp ip backup
 void tz_get_if_ip(char* ip_buf,int buf_len);//获取当前接口的ip
-
+void tz_check_restart_count(void);//获取重启次数，目前每5秒启动一次，超过1分钟没连接则启动dhcp server，否则关掉它
 
 //copy form miao
 static volatile int is_connected_to_server=FALSE;
@@ -171,7 +174,7 @@ void signal_handle_func(int sig)//退出
 //室内机
 int main(int argc, char * const argv[])
 {
-	
+	tz_check_restart_count();
 	const char *optstr = "i:D";
 	int ch;
 	if( argc == 1 )
@@ -1905,8 +1908,6 @@ void process_1s_signal(void)
 			first_disconnected=TRUE;
 			//turn off telnet,http,dns,dhcp server
 			print("%s","---------------server connected --------------------");
-			shell_recv(NULL,0,"%s stop",SCRIPT_DHCPD);
-			shell_recv(NULL,0,"%s stop",SCRIPT_DNSMAQ);
 			//设置当前设备的IP地址
 			//util_config_ipv4_addr(network_dev_name,"0.0.0.0");
 			//system("/etc/rc.d/rc.uplink.connected");
@@ -1944,13 +1945,11 @@ void process_1s_signal(void)
 			first_disconnected=FALSE;
 			first_connected=TRUE;
 			//start telnet,http,dns,dhcp server
-			print("%s","---------------no response from server start telnet,http,dns,dhcp server--------------------");
+			print("%s","---------------no response from server--------------------");
 			is_connected_to_server=FALSE;
 			//设置当前设备的IP地址
 			print("set the %s ip to %s   (ipv4)", network_dev_name, server_wifi_info.AP_IPADDR)
 			util_config_ipv4_addr(network_dev_name,server_wifi_info.AP_IPADDR);
-			shell_recv(NULL,0,"%s start",SCRIPT_DHCPD);
-			shell_recv(NULL,0,"%s start",SCRIPT_DNSMAQ);
 
 			//system("/etc/rc.d/rc.uplink.disconnected");
 			shell_recv(NULL,0,"rm -f %s",UPLINK_CONNECTION_IS_OK_TMP_FILE);
@@ -1962,7 +1961,7 @@ void process_1s_signal(void)
 	}
 
 	//need to reboot
-	if( !file_exists( NEED_TO_REBOOT_TEMP_FILE ) )
+	if( file_exists( NEED_TO_REBOOT_TEMP_FILE ) )
 	{
 		reboot_timer_started=TRUE;
 		restore_settings_timer_started=FALSE;
@@ -1974,7 +1973,7 @@ void process_1s_signal(void)
 	}
 
 	//need to restore settings
-	if( !file_exists( NEED_TO_RESTORE_SETTINGS_TEMP_FILE ) )
+	if( file_exists( NEED_TO_RESTORE_SETTINGS_TEMP_FILE ) )
 	{
 		reboot_timer_started=FALSE;
 		restore_settings_timer_started=TRUE;
@@ -2314,5 +2313,60 @@ void tz_get_if_ip(char* ip_buf,int buf_len)
 	snprintf(ip_buf,buf_len,"%s",inet_ntoa(sin.sin_addr));
 	print("%s ip is %s", network_dev_name, inet_ntoa(sin.sin_addr));
 
+}
+
+
+void tz_check_restart_count(void)
+{
+	char restart_count[32];
+	memset(restart_count, '\0',sizeof(restart_count));
+	shell_recv(restart_count, sizeof(restart_count),"touch %s && cat %s", TZ_MGR_RESTART_COUNT_FILE,TZ_MGR_RESTART_COUNT_FILE);
+	if(strlen(restart_count) != 0)
+	{
+		int count = -1;
+		count = atoi(restart_count);
+		if(count <= 0)
+		{
+			print("Can not transform string %s",restart_count);
+			shell_recv(NULL,0,"echo 1 > %s", TZ_MGR_RESTART_COUNT_FILE);
+		}
+		else if(count > 0 && count < 13)
+		{
+			count++;
+			shell_recv(NULL,0,"echo %d > %s && rm -f %s", count, TZ_MGR_RESTART_COUNT_FILE, TZ_MGR_ENABLE_DHCP_FLAG_FILE);
+		}
+		else if(count >=13 && count < 65534)
+		{
+			shell_recv(NULL,0,"touch %s", TZ_MGR_ENABLE_DHCP_FLAG_FILE);
+		}
+		else//重置计数
+		{
+			shell_recv(NULL,0,"echo 13 > %s", TZ_MGR_RESTART_COUNT_FILE);
+		}
+	}
+	else
+	{
+		print("Start counting..");
+		shell_recv(NULL,0,"echo 1 > %s", TZ_MGR_RESTART_COUNT_FILE);
+	}
+	if( file_exists( TZ_MGR_ENABLE_DHCP_FLAG_FILE ) )
+	{
+		if(!file_exists( TZ_DHCP_SERVER_ALIVE_FLAG_FILE ))//file no found
+		{
+			//run dhcp
+			shell_recv(NULL,0,"uci set dhcp.lan.ignore=0");
+			sleep(1);
+			shell_recv(NULL,0,"uci commit");
+			shell_recv(NULL,0,"%s start",SCRIPT_DHCPD);
+			shell_recv(NULL,0,"%s start",SCRIPT_DNSMAQ);
+			shell_recv(NULL,0,"touch %s",TZ_DHCP_SERVER_ALIVE_FLAG_FILE);
+		}
+	}
+	else
+	{
+		shell_recv(NULL,0,"%s stop",SCRIPT_DHCPD);
+		shell_recv(NULL,0,"%s stop",SCRIPT_DNSMAQ);
+		shell_recv(NULL,0,"rm -f %s",TZ_DHCP_SERVER_ALIVE_FLAG_FILE);
+	}
 }
 
