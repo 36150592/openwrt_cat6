@@ -321,6 +321,20 @@ function dhcp_module.dhcp_set_server_ip(name,ip)
 	
 	debug("interface = ", interface)
 
+	local origin_ip = x:get(NETWORK_CONFIG_FILE,interface, "ipaddr")
+	local dhcp_option = x:get(DHCP_CONFIG_FILE, name,"dhcp_option")
+
+	for k,v in pairs(dhcp_option)
+	do
+		if 'option:dns-server,'..origin_ip == v
+		then
+			dhcp_option[k] = 'option:dns-server,'..ip
+		end
+	end
+	x:set(DHCP_CONFIG_FILE, name, "dhcp_option", dhcp_option)
+	x:commit(DHCP_CONFIG_FILE)
+
+
 	if x:set(NETWORK_CONFIG_FILE,interface, "ipaddr",ip)
 	then
 		return x:commit(NETWORK_CONFIG_FILE)	
