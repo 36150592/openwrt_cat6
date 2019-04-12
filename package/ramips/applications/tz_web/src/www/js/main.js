@@ -116,6 +116,8 @@ var RequestCmd = {
     ROUTE_LIST_SETTING:212,
     GET_APN_CONFIG:213,
     SET_APN_CONFIG:214,
+    SET_PING_LIST:215,
+    GET_PING_LIST:216,
 };
 
 var MenuItem = {

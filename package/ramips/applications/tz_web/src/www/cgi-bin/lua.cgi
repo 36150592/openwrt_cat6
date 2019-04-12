@@ -2217,6 +2217,53 @@ function set_apn_data()
 
 end
 
+function set_ping_list()
+	
+	local ret 
+	local tz_answer = {}
+	local dataList = tz_req["dataList"]
+	local pingFlag = tonumber(tz_req["pingFlag"])
+	if(nil ~= dataList)
+		then
+		ret = firewall.firewall_remote_set_ping_list(dataList)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+	if(nil ~= pingFlag)
+		then
+		ret = firewall.firewall_remote_set_ping(pingFlag)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 215
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function get_ping_list()
+	
+	local tz_answer = {}
+	tz_answer["cmd"] = 216
+	local data_array = {}
+	data_array["pingList"] = firewall.firewall_remote_get_ping_list()
+	data_array["dataFlag"] = firewall.firewall_remote_get_ping()
+
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+
 local switch = {
      [0] = get_sysinfo,
 	 [1] = get_systime,
@@ -2289,6 +2336,8 @@ local switch = {
 	 [212] = route_list_set,
 	 [213] = get_apn_data,
 	 [214] = set_apn_data,
+	 [215] = set_ping_list,
+	 [216] = get_ping_list,
 
  }
  

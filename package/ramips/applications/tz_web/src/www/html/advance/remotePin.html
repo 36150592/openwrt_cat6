@@ -7,11 +7,21 @@
         Page.render('#fwHead', '#fwHead_template');
         Page.render('#fwBody', '#fwBody_template');
         var showText = wirelessconfightml.prompt;
-
         var $btnAdd = $('#btnAdd'),$btnClose = $('#btnClose'),
             $btnSaveIp = $('#btnSaveIp'),$btnEditIp = $('#btnEditIp'),$box = $('#edit_box'), $mask = $('#mask');
 
         var editIndex = 0;
+          Page.postJSON({
+                        json: { cmd: RequestCmd.GET_PING_LIST },
+                        success: function(datas) {
+                            if(datas.data.dataFlag == true){
+                                $("#enableRemoteLogin").prop("checked",true);
+                            }else{
+                                $("#enableRemoteLogin").prop("checked",false);
+                            }
+                          createIpListTable(datas.data.pingList);
+                        }
+                    })
 
         $btnAdd.click(function () {
             $box.show();
@@ -45,6 +55,37 @@
             $box.hide();
             $mask.hide();
             $('#ipList').val('');
+        });
+        var $enableRemoteLogin=0;
+        $("#btnSave").on("click",function(){
+            $('#btnSave').attr("disabled",true);
+            var ipArray = new Array();
+        var $tr=$("#ipLists table tr");
+        for(var i=1;i<$tr.length;i++){
+            ipArray.push($($tr[i]).children("td").eq(0).text());
+            
+        }
+        if($("#enableRemoteLogin").prop("checked")){
+            enableRemoteLogin = 1;
+        }else{
+            enableRemoteLogin = 0;
+        }
+        var json = {};
+            json.dataList = ipArray;
+            json.pingFlag = enableRemoteLogin;
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.SET_PING_LIST;
+             Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                },
+                complete: function(){
+                    $('#btnSave').attr("disabled",false);
+                }
+            });
+
+
         });
 
 
@@ -100,22 +141,6 @@
 
             $('#ipLists').html(sb.toString());
         }
-
-
-
-        function getInfo() {
-            Page.postJSON({
-                json: {
-                    cmd: RequestCmd.REMOTE_PIN_GET
-                },
-                success: function(datas) {
-                    createIpListTable('');
-                }
-            });
-        }
-
-        getInfo();
-
     });
 </script>
 
