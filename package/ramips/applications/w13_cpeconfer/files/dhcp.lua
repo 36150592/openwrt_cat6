@@ -6,6 +6,7 @@ local DHCP_CONFIG_FILE="dhcp"
 local DHCP_CONFIG_TYPE="dnsmasq"
 local DHCP_STATIC_IP_SECTION="host"
 local NETWORK_CONFIG_FILE="network"
+local TZMGR_CONFIG_FILE="tz_mgr"
 local DNSMASQ_CONFIG_PATH="/var/etc/dnsmasq.conf"
 local debug=util.debug
 local split=util.split
@@ -323,7 +324,12 @@ function dhcp_module.dhcp_set_server_ip(name,ip)
 
 	if x:set(NETWORK_CONFIG_FILE,interface, "ipaddr",ip)
 	then
-		return x:commit(NETWORK_CONFIG_FILE)	
+		x:commit(NETWORK_CONFIG_FILE)
+		local tzmgr_uci=uci.cursor()
+		tzmgr_uci:set(TZMGR_CONFIG_FILE, "main", "AP_GATEWAY", ip)
+		tzmgr_uci:set(TZMGR_CONFIG_FILE, "main", "AP_IPADDR", ip)
+
+		return 	tzmgr_uci:commit(TZMGR_CONFIG_FILE)
 	end
 
 	return false
