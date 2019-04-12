@@ -203,6 +203,7 @@ enable_ralink_wifi() {
     fi
 
     # bring up vifs
+    local vif_num=0
     for vif in $vifs; do
         config_get ifname $vif ifname
         config_get disabled $vif disabled
@@ -210,12 +211,23 @@ enable_ralink_wifi() {
 
         # here's the tricky part. we need at least 1 vif to trigger
         # the creation of all other vifs.
-        ifconfig $ifname up
+       
         echo "ifconfig $ifname up" >> /tmp/wifi.log
         if [ "$disabled" == "1" ]; then
             echo "$ifname sets to disabled." >> /tmp/wifi.log
             ifconfig $ifname down
+            continue
         fi
+        
+
+        ifname=rai$vif_num
+        ifconfig $ifname up
+        uci set mutilssid.$vif.ifname=$ifname
+        #uci set wireless.$vif.ifname=$ifname
+        uci commit mutilssid
+        #uci commit wireless
+
+        let vif_num=$vif_num+1
         #Radio On/Off only support iwpriv command but dat file
         [ "$radio" == "0" ] && iwpriv $ifname set RadioOn=0
         local net_cfg bridge
@@ -227,6 +239,7 @@ enable_ralink_wifi() {
             brctl addif $bridge $ifname
         }
         set_wifi_up "$vif" "$ifname"
+        ifconfig $ifname up
     done
     chk8021x $device
     setsmp.sh

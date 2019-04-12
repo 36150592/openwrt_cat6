@@ -681,11 +681,15 @@ enable_mt7603e() {
 
 		#排除如果设置为sta wds
 		[ "$mode" != "sta" ] && [ "$mode" != "wds" ] && {
-		let if_num+=1
-		debug "if_num=$if_num"
+			let if_num+=1
+			debug "if_num=$if_num"
 		
-		#根据ifname数量配置多SSID
-		ifname="ra$if_num"
+			#根据ifname数量配置多SSID
+			ifname="ra$if_num"
+			uci set mutilssid.$vif.ifname=$ifname
+			#uci set wireless.$vif.ifname=$ifname
+			uci commit mutilssid
+			#uci commit wireless
 		}
 		
 		#STA APClient配置
