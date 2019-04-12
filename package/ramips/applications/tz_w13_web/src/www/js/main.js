@@ -968,115 +968,40 @@ function getOpenInfo() {
     Page.isNULLToSpace = true;
 
     function createTable(routerInfo) {
-        var supportedLte = false;
-        var wan_info_id = supportedLte ? '#wan_info' : '#wan_info2';
-        var wlan_info_id = supportedLte ? '#wlan_info' : '#wlan_info2';
+        var wlan_info_id = '#wlan_info';
 
         var names = [], values = [];
-        var names_advanced = [], values_advanced = [];
         var lteNames = DOC.lte,
             netNames = DOC.net,
             wlanNames = DOC.wlan;
 
+
+        var system=routerInfo['system'];
+        var divice=routerInfo['divice'];
+        var wifi=routerInfo['wifi'];
+
         var html;
-        if (supportedLte) {
-            var status = routerInfo.status;
-            var divice = routerInfo.divice;
-            var system = routerInfo.system;
-            var wifidate = routerInfo.wifi;
-            var network = routerInfo.network;
-
-            //names.push(DOC.device.imsi);
-            names.push(DOC.lte.plmn);
-            names.push(lteNames.phyCellId);
-            names.push(lteNames.sinr);
-            names.push(lteNames.rsrp);
-            names.push(lteNames.rssi);
-
-
-            //values.push(status.imsi || loading);
-            values.push(status.plmn || loading);
-            values.push(status.pci || loading);
-
-            values.push(status.sinr ? FormatUtil.formatField(status.sinr, 'dB') : loading);
-            values.push(status.rsrp ? FormatUtil.formatField(status.rsrp, 'dBm') : loading);
-            values.push(status.rssi ? FormatUtil.formatField(status.rssi, 'dBm') : loading);
-            //values.push(lteInfo.txpower ? FormatUtil.formatField(lteInfo.txpower, 'dBm') : loading);
-
-            //names_advanced.push(lteNames.tm);
-            names_advanced.push(lteNames.freqPoint);
-            names_advanced.push(lteNames.rsrq);
-            names_advanced.push(lteNames.globalCellId);
-            names_advanced.push(lteNames.enodeB);
-           // names_advanced.push(lteNames.volteRegisterStatus);
-            names_advanced.push(TAB.advance.roaming);
-            names_advanced.push(DOC.device.imei);
-
-            //values_advanced.push(lteInfo.tm ? FormatUtil.formatField('tm ' + lteInfo.tm) : loading);
-            values_advanced.push(status.earfcn ||loading);
-            values_advanced.push(status.rsrq ? FormatUtil.formatField(status.rsrq, 'dB') : loading);
-            values_advanced.push(status.cell_id ||loading);
-            values_advanced.push(status.enodebid || loading);
-         //   values_advanced.push(loading);
-            var roam = loading;
-            if(status.roam_status){
-                if(status.roam_status == 0){
-                    roam = DOC.status.noroam;
-                }else if(status.roam_status == 1){
-                    roam = DOC.status.roam;
-                }
-            }
-            values_advanced.push(roam);
-            values_advanced.push(divice.imei || loading);
-
-            html = Page.createTable(DOC.title.lteInfoBasic, names, values, names.length, 1);
-            $('#device_check').show();
-
-            html = Page.createTable(DOC.title.lteInfoAdvanced, names_advanced, values_advanced, names_advanced.length, 1);
-
-        }
-
         names = [];
         names.push(DOC.lbl.runtime);
         names.push(DOC.device.firmwareVersion);
         names.push(DOC.device.modemVersion);
+        names.push(DOC.net.mac);
+        
 
         values = [];
+        
         var runtime = ConvertUtil.timeStamp(system.runtime || 0);
-        values.push(runtime);
-        //values.push(FormatUtil.formatField(Page.getDeviceVersion(routerInfo.name, routerInfo.version) || loading));certificationVer
-        values.push(divice.hardware|| loading);
-        values.push(divice.type || loading);
 
+        values.push(runtime);
+        console.log("runtime=="+runtime);
+        //values.push(FormatUtil.formatField(Page.getDeviceVersion(routerInfo.name, routerInfo.version) || loading));certificationVer
+        values.push(divice.software_version|| loading);
+        values.push(divice.type || loading);
+        values.push(wifi.mac || loading);//wifi mac与设备mac相同
         html = Page.createTable(DOC.title.router, names, values, names.length, 1);
         $('#router_info').html(html);
         Page.setStripeTable('#router_info');
 
-        names = [];
-        names.push(netNames.ip);
-        names.push(netNames.mask);
-        names.push(netNames.dns1);
-        names.push(netNames.dns2);
-        //names.push(netNames.gateway);
-        //names.push(netNames.ipv6);
-        //names.push(netNames.gatewayv6);
-        //names.push(netNames.dns3);
-        //names.push(netNames.dns4);
-
-        values = [];
-        values.push(network.ipaddr || loading);
-        values.push(network.netmask || loading);
-        values.push(network.first_dns || loading);
-        values.push(network.second_dns || loading);
-        //values.push(FormatUtil.formatField(routerInfo.wanGateway || loading));
-        //values.push(FormatUtil.formatField(network.wanIpv6 || loading));
-        //values.push(FormatUtil.formatField(routerInfo.wanGatewayIpv6 || loading));
-        //values.push(FormatUtil.formatField(routerInfo.wanDNS_3 || loading));
-        //values.push(FormatUtil.formatField(routerInfo.wanDNS_4 || loading));
-
-        html = Page.createTable(DOC.title.wan, names, values, names.length, 1);
-        $(wan_info_id).html(html);
-        Page.setStripeTable(wan_info_id);
 
         // names = [];
         // names.push(netNames.ip);
@@ -1097,17 +1022,16 @@ function getOpenInfo() {
         if (1) {
             names = [];
             names.push(wlanNames.ssid);
+            names.push(wlanNames.key);
             names.push(wlanNames.channel);
-            names.push(wlanNames.wifi);
+            
             // names.push(DOC.lbl.connectedDevicesViaWiFi);
             //names.push(wlanNames.secMode);
-
             values = [];
-            values.push(wifidate.ssid || loading);
-            values.push(wifidate.channel || loading);
+            values.push(wifi.ssid || loading);
+            values.push(wifi.channel || loading);
             //values.push(FormatUtil.formatField(ConvertUtil.frequencyToChannel(routerInfo.frequency) || loading));
-
-            var wifiOpen = wifidate.status;
+            var wifiOpen = wifi.status;
             if(wifiOpen == "0") {
                 values.push(DOC.status.opened);
             } else if(wifiOpen == "1") {
@@ -1127,6 +1051,7 @@ function getOpenInfo() {
             html = Page.createTable(DOC.title.wlan, names, values, names.length, 1);
             $(wlan_info_id).html(html);
             Page.setStripeTable(wlan_info_id);
+            $('#device_check').show();
         }
     }
 
@@ -1151,6 +1076,126 @@ function getOpenInfo() {
     getRouterInfo();
 
 }
+
+
+function TZ_info_getOpenInfo() {
+    var loading = '-';
+    var theRouterInfo = {};
+    Page.isNULLToSpace = true;
+
+    function createTable(routerInfo) {
+        var wlan_info_id = '#wlan_info';
+
+        var names = [], values = [];
+        var lteNames = DOC.lte,
+            netNames = DOC.net,
+            wlanNames = DOC.wlan;
+
+
+        var system=routerInfo['system'];
+        var divice=routerInfo['divice'];
+        var wifi=routerInfo['wifi'];
+
+        var html;
+        names = [];
+        names.push(DOC.lbl.runtime);
+        names.push(DOC.device.firmwareVersion);
+        names.push(DOC.device.modemVersion);
+        names.push(DOC.net.mac);
+        
+
+        values = [];
+        
+        var runtime = ConvertUtil.timeStamp(system.runtime || 0);
+
+        values.push(runtime);
+        console.log("runtime=="+runtime);
+        //values.push(FormatUtil.formatField(Page.getDeviceVersion(routerInfo.name, routerInfo.version) || loading));certificationVer
+        values.push(divice.software_version|| loading);
+        values.push(divice.type || loading);
+        values.push(wifi.mac || loading);//wifi mac与设备mac相同
+        html = Page.createTable(DOC.title.router, names, values, names.length, 1);
+        $('#router_info').html(html);
+        Page.setStripeTable('#router_info');
+
+
+        // names = [];
+        // names.push(netNames.ip);
+        // names.push(netNames.mask);
+        // names.push(netNames.ipBegin);
+        // names.push(netNames.ipEnd);
+        //
+        // values = [];
+        // values.push(FormatUtil.formatField(routerInfo.lanIp || loading));
+        // values.push(FormatUtil.formatField(routerInfo.lanMaskIp || loading));
+        // values.push(FormatUtil.formatField(routerInfo.ipBegin || loading));
+        // values.push(FormatUtil.formatField(routerInfo.ipEnd || loading));
+
+        //html = Page.createTable(DOC.title.lan, names, values, names.length, 1);
+        //$(lan_info_id).html(html);
+        //Page.setStripeTable(lan_info_id);
+
+        if (1) {
+            names = [];
+            names.push(wlanNames.ssid);
+            names.push(wlanNames.key);
+            names.push(wlanNames.channel);
+            names.push(wlanNames.wifi);
+            
+            // names.push(DOC.lbl.connectedDevicesViaWiFi);
+            //names.push(wlanNames.secMode);
+            values = [];
+            values.push(wifi.ssid || loading);
+            values.push(wifi.key || loading);
+            values.push(wifi.channel || loading);
+            //values.push(FormatUtil.formatField(ConvertUtil.frequencyToChannel(routerInfo.frequency) || loading));
+            var wifiOpen = wifi.status;
+            if(wifiOpen == "0") {
+                values.push(DOC.status.opened);
+            } else if(wifiOpen == "1") {
+                values.push(DOC.status.closed);
+            } else {
+                values.push(loading);
+            }
+            //values.push(String.format('<span id="spanWiFiCount">{0}</span>', Page.wifiUserCount == null ? '' : Page.wifiUserCount.toString()));
+            //values.push(FormatUtil.formatField(routerInfo.sta_count || loading));
+            /*var securityType = SecurityJSON.getSecurityType(routerInfo);
+             if (routerInfo.secMode) {
+             values.push(securityType);
+             } else {
+             values.push(loading);
+             }*/
+
+            html = Page.createTable(DOC.title.wlan, names, values, names.length, 1);
+            $(wlan_info_id).html(html);
+            Page.setStripeTable(wlan_info_id);
+            $('#device_check').show();
+        }
+    }
+
+    function getRouterInfo() {
+        Page.postJSON({
+            json: { cmd: RequestCmd.ROUTER_INFO },
+            success: function(datas) {
+                theRouterInfo = datas.data;
+
+                //  getLteInfo(routerInfo);
+                createTable(theRouterInfo);
+            },
+            fail: function() {
+                createTable(theRouterInfo);
+            },
+            error: function() {
+                createTable(theRouterInfo);
+            }
+        });
+    }
+
+    getRouterInfo();
+
+}
+
+
 
 var MasterPage = {
     defaultSettings: {

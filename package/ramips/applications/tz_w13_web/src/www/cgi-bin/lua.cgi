@@ -1042,7 +1042,7 @@ function get_routerinfo()
 	tz_answer["cmd"] = 133   
 	local data_array = {}
 	data_array["status"] = modem.modem_get_status() or ''
-	data_array["divice"] = modem.modem_get_info() or ''
+	data_array["divice"] = system.get_divice_version() or ''
 	data_array["system"]  = system.system_get_status() or ''
 	data_array["network"] = network.network_get_wan_info()
 	if nil == data_array["network"]

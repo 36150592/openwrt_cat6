@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+<title>Router</title>
+<link rel="stylesheet" type="text/css" href="css/main.css?t=000000">
+
+<script type="text/javascript" src="js/json2.js"></script>
+<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="js/jquery.form.js"></script>
+<script type="text/javascript" src="js/jquery.validate.js"></script>
+<script type="text/javascript" src="js/jquery.accordion.js"></script>
+<script type="text/javascript" src="js/underscore-min.js"></script>
+<script type="text/javascript" src="js/language_list.js?t=000000"></script>
+<script type="text/javascript" src="js/language.js?t=000000"></script>
+<script type="text/javascript" src="js/language/cn.js?t=000000"></script>
+<script type="text/javascript" src="js/helper.js?t=000000"></script>
+<script type="text/javascript" src="js/main.js?t=000000"></script>
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+  
+  
+    function index() {
+		var auth = sessionStorage['auth'];
+		var level = sessionStorage['level'];
+		var sessionId = sessionStorage['sessionId'];
+        var loginName = sessionStorage['loginName'];
+        if(loginName && sessionId){
+            Page.sessionId = sessionId;
+			Page.AUTH = auth;
+			Page.Level = level;
+            $('#container').load('html/home.html');
+        }else {
+            location.href = Page.getUrl(Url.LOGIN);
+        }
+		
+		
+    }
+
+    Page.postJSON({
+        json: { cmd: RequestCmd.INIT_PAGE },
+        success: function(data) {
+            var ReturnData = data.data;
+            Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue(ReturnData.languageList) || "3E");
+            Page.language = ReturnData.language.toUpperCase();
+            index();
+        }
+    });
+
+
+
+});
+
+function closeBox() {
+    $('#btnClose').click();
+}
+</script>
+</head>
+<body >
+<a id="top" style="display:none;">TOP</a>
+<div id="container" style="display:none;"></div>
+
+</body>
+</html>
