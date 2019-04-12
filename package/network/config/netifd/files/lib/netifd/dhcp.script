@@ -58,7 +58,7 @@ load_interface() {
 
 setup_ip_rules () {
 	flag=0
-	load_interface
+
 	for inter in $wan_interfaces; do
 		echo "inter = $inter interface = $interface"
 		echo "ip = $ip router = $router subnet=$subnet"
@@ -139,10 +139,11 @@ setup_interface () {
 	proto_init_update "*" 1
 
 	proto_add_ipv4_address "$ip" "${subnet:-255.255.255.0}"
-    ifconfig $interface $ip ${subnet:-255.255.255.0}
-	setup_ip_rules
+    	#ifconfig $interface $ip ${subnet:-255.255.255.0}
+
 	# TODO: apply $broadcast
 
+	load_interface
 	local land_wan_if
 	local primary_apn_if
 	local primary_apn_section
@@ -193,6 +194,7 @@ setup_interface () {
 				done
 
 				proto_send_update "$INTERFACE"
+				setup_ip_rules
 				return 0
 			fi
 		else
@@ -216,6 +218,7 @@ setup_interface () {
 		done
 
 		proto_send_update "$INTERFACE"
+		setup_ip_rules
 		return 0
 	fi
 
@@ -256,6 +259,7 @@ setup_interface () {
 
 	proto_send_update "$INTERFACE"
 
+	setup_ip_rules
 
 	if [ "$IFACE6RD" != 0 -a -n "$ip6rd" ]; then
 		local v4mask="${ip6rd%% *}"
