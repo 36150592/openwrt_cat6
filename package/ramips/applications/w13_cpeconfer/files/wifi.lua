@@ -1594,7 +1594,6 @@ function wifi_module.wifi_secondary_get_encryption(wifi_secondary_id)
 
 		local encry = string.sub(encry_all, 1, start-1)
 
-		debug("encry = ", encry)
 
 		return encry
    	end

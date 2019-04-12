@@ -993,7 +993,6 @@ function getOpenInfo() {
         var runtime = ConvertUtil.timeStamp(system.runtime || 0);
 
         values.push(runtime);
-        console.log("runtime=="+runtime);
         //values.push(FormatUtil.formatField(Page.getDeviceVersion(routerInfo.name, routerInfo.version) || loading));certificationVer
         values.push(divice.software_version|| loading);
         values.push(divice.type || loading);
@@ -1109,7 +1108,6 @@ function TZ_info_getOpenInfo() {
         var runtime = ConvertUtil.timeStamp(system.runtime || 0);
 
         values.push(runtime);
-        console.log("runtime=="+runtime);
         //values.push(FormatUtil.formatField(Page.getDeviceVersion(routerInfo.name, routerInfo.version) || loading));certificationVer
         values.push(divice.software_version|| loading);
         values.push(divice.type || loading);
