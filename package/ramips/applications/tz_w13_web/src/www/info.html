@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <title>Router</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css?t=000000">
+
+    <script type="text/javascript" src="js/json2.js"></script>
+    <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.form.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.js"></script>
+    <script type="text/javascript" src="js/underscore-min.js"></script>
+    <script type="text/javascript" src="js/language_list.js?t=000000"></script>
+    <script type="text/javascript" src="js/language.js?t=000000"></script>
+    <script type="text/javascript" src="js/language/cn.js?t=000000"></script>
+    <script type="text/javascript" src="js/helper.js?t=000000"></script>
+    <script type="text/javascript" src="js/main.js?t=000000"></script>
+
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+            function init() {
+                Page.render('#login_container', '#login_template', DOC);
+                Page.initPage(true);
+                $(window).resize(function () {
+                    Page.initPage(true);
+                });
+
+                var $languageSelect = $('#languageSelect');
+                $languageSelect.html(Page.getLanguageList(Page.language)).change(function () {
+                    Page.changeLanguage($languageSelect);
+                });
+
+                var $username = $('#username').focus(),
+                    $passwd = $('#passwd'),
+                    $btnLogin = $('#btnLogin');
+                var MaxFailNum = 2;
+                sessionStorage['loginFail'] = sessionStorage['loginFail'] ? sessionStorage['loginFail'] : 0;
+                sessionStorage['failTime'] = sessionStorage['loginFail'] ? sessionStorage['loginFail'] : "";
+                // var loginText = $btnLogin.val();
+                $btnLogin.click(function () {
+                    var timestamp = (new Date()).getTime();
+                    if(sessionStorage['failTime'] != ""){
+                        var second  = parseInt((timestamp - parseInt(sessionStorage['failTime']))/1000);
+                        if(second < 60){
+                            var lockMsg = PROMPT.status.lockFailTimes;
+                            AlertUtil.alertMsg(lockMsg.format(60-second));
+                            return;
+                        }
+                        sessionStorage['failTime'] = "";
+                    }
+                    var username = $username.val(), passwd = $passwd.val();
+                    if (username == "") {
+                        AlertUtil.alertMsg(CHECK.required.username);
+                        $username.focus();
+                        return false;
+                    }
+
+                    if (passwd == "") {
+                        AlertUtil.alertMsg(CHECK.required.passwd);
+                        $passwd.focus();
+                        return false;
+                    }
+
+                    //     $btnLogin.disable();
+                    var loginSuccess = false;
+                    var sessionId = getSessionId();
+
+
+                    Page.postJSON({
+                        json: {
+                            cmd: RequestCmd.LOGIN,
+                            method: JSONMethod.POST,
+                            sessionId: sessionId,
+                            username: username,
+                            passwd: Md5.md5(passwd)
+                        },
+                        success: function(data) {
+                            loginSuccess = data.success;
+                            sessionStorage['sessionId'] = data.sessionId;
+                            sessionStorage['loginName'] = username;
+                            sessionStorage['auth'] = data.auth;
+							sessionStorage['level'] = data.level;
+                            sessionStorage['loginFail'] = 0;
+                            sessionStorage['failTime'] = "";
+                            location.href = Page.getUrl("index.html");
+                        },
+                        fail: function(data) {
+                               var failMsg = PROMPT.status.loginFail;
+                               AlertUtil.alertMsg(failMsg.format(3-parseInt(sessionStorage['loginFail'])));
+
+                               if(MaxFailNum >= parseInt(sessionStorage['loginFail'])){
+                                   sessionStorage['loginFail'] = parseInt(sessionStorage['loginFail']) + 1;
+                               }else {
+                                   sessionStorage['failTime'] = timestamp;
+                                   sessionStorage['loginFail'] = 0;
+                               }
+
+                                //AlertUtil.alertMsg(PROMPT.status.loginFail);
+
+
+                        },
+                        complete: function() {
+                            //  if (!loginSuccess) {
+                            //      $btnLogin.enable();
+                            //  }
+                        }
+                    });
+                });
+
+                $username.keydown(function (e) {
+                    if (e.which == 13) {
+                        $passwd.focus();
+                    }
+                });
+
+                $passwd.keydown(function (e) {
+                    if (e.which == 13) {
+                        if (!$btnLogin.attr("disabled")) {
+                            $btnLogin.click();
+                        }
+                    }
+                });
+
+                function getSessionId() {
+                    return Md5.md5(Math.random().toString());
+                }
+
+                TZ_info_getOpenInfo();
+                StatusUtil.getSysStatus();
+            }
+
+            Page.postJSON({
+                json: { cmd: RequestCmd.INIT_PAGE },
+                success: function(data) {
+                    var ReturnData = data.data;
+                    Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue(ReturnData.languageList) || "3E");
+                    Page.language = ReturnData.language.toUpperCase();
+                    init();
+                }
+            });
+        });
+		
+		function noImage(img){ 
+				img.style.display="none"; 
+		}
+    </script>
+</head>
+
+<body>
+<div id="header">
+	<div id="logoDiv"><img src="images/customer.gif" onerror="noImage(this)"></div>
+    <div id="siginfo">
+        <table cellpadding="0" cellspacing="4">
+            <tr>
+                <td id="netInfo"></td>
+                <td id="wifiInfo"></td>
+                <td id="lan1" style="display:none;"></td>
+                <td id="lan2" style="display:none;"></td>
+                <td id="lan3" style="display:none;"></td>
+                <td id="lan4" style="display:none;"></td>
+                <td id="wan1" style="display:none;"></td>
+                <td id="smsInfo"></td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+<div id="main">
+    <div id="left">
+        <div id="left_t"><img src=""></div>
+        <div id="left_m">
+            <div id="login_container">
+                <script type="text/template" id="login_template">
+                    <table>
+                        <tr class="tr_login tr_language">
+                            <th><%- login.language %><%- colon %></th>
+                        </tr>
+                        <tr class="tr_login tr_language">
+                            <td><select id="languageSelect" name="languageSelect" class="ddl"></select></td>
+                        </tr>
+
+                        <tr class="tr_login">
+                            <th><%- login.username %><%- colon %></th>
+                        </tr>
+                        <tr class="tr_login">
+                            <td><input type="text" id="username" name="username" class="txt" maxlength="20" /></td>
+                        </tr>
+
+                        <tr class="tr_login">
+                            <th><%- login.passwd %><%- colon %></th>
+                        </tr>
+                        <tr class="tr_login">
+                            <td><input type="password" id="passwd" name="passwd" class="txt" maxlength="20" /></td>
+                        </tr>
+                        <tr class="tr_login">
+                            <td style="padding-top:5px"><input type="button" id="btnLogin" class="btn" value="<%- btn.login %>" /></td>
+                        </tr>
+                    </table>
+                </script>
+            </div>
+            <div id="offical_site_box" style="display:none;"></div>
+            <div id="simple_wifi_box" style="display:none;"></div>
+        </div>
+        <div id="left_b"></div>
+    </div>
+
+    <div id="right" style="overflow:hidden;">
+        <div id="device_check" style="display:none;overflow-y:auto;overflow-x:hidden;">
+
+            <table cellspacing="0" cellpadding="0">
+                <tr><td>
+                    <div id="check_box_left">
+                        <div id="router_info" class="check_info"></div>
+                        <div id="wlan_info" class="check_info"></div>
+                    </div>
+                    <span style="clear:both"></span>
+                </td></tr>
+                <tr><td>
+                    <div id="client_info"></div><br />
+                    <div id="client_info_hidden" style="display:none;"></div>
+                </td></tr></table>
+
+        </div>
+
+        <div id="art_check" style="display:none;"></div>
+    </div>
+
+</div>
+
+<div id="footer">
+    <script type="text/template" id="footer_template">
+        <span id="spanFooter"><%- copyright %></span>
+    </script>
+</div>
+
+<div id="mask"></div>
+<div id="progress_box">
+    <div id="progress_info"></div>
+    <div id="progress_bar">
+        <div id="progress_status"></div>
+    </div>
+</div>
+<div id="edit_box"></div>
+
+</body>
+</html>
