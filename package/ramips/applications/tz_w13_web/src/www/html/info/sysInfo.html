@@ -8,7 +8,7 @@
 
         function loop() {
             loadPage();
-            loadWlanPage();
+            //loadWlanPage();
         }
 
 
@@ -49,11 +49,12 @@
 					
                     var data_system = data2.system;
                     var data_lan = data2.lan;
+                    var data_wifi = data2.wifi;
 
                     Page.isNULLToSpace = true;
 
-                    var names_run = [], names_net = [], names_lan = [], names_lte = [];
-                    var values_run = [], values_net = [], values_lan = [], values_lte = [];
+                    var names_run = [], names_lan = [], names_wifi = [];
+                    var values_run = [], values_lan = [], values_wifi = [];
                     names_run.push(DOC.lbl.runtime);
                     names_run.push(DOC.lbl.loadAvg);
 //                    names_run.push(run_text.currentSys);
@@ -99,6 +100,58 @@
 
                     $('#run_info').html(run_html);
                     $('#lan_info').html(lan_html);
+
+
+
+                    names_wifi.push(DOC.wlan.currentMode);
+                    var mode = getWlanMode(parseInt(data_wifi.mode));
+                    values_wifi.push(mode);
+
+                    names_wifi.push(DOC.wlan.wifi);
+                    if(data_wifi.status == "0"){
+                        values_wifi.push(DOC.status.opened);
+                    } else {
+                        values_wifi.push(DOC.status.closed);
+                    }
+
+                    names_wifi.push(DOC.wlan.ssid);
+                    values_wifi.push(data_wifi.ssid || loading);
+
+                    names_wifi.push(DOC.net.mac);
+                    values_wifi.push(data_wifi.mac || loading);
+
+                    names_wifi.push(DOC.wlan.ssidBroadcast);
+                    if(data_wifi.hidden_ssid == "0"){
+                        values_wifi.push(DOC.status.opened);
+                    } else {
+                        values_wifi.push(DOC.status.closed);
+                    }
+
+                    names_wifi.push(DOC.wlan.secMode);
+                    if(data_wifi.encryption){
+                        var encryp = data_wifi.encryption.split("+")[0];
+                        values_wifi.push(getWlanSecMode(encryp));
+                    }else{
+                        values_wifi.push(loading);
+                    }
+
+
+                    names_wifi.push(DOC.wlan.channel);
+                    values_wifi.push(data_wifi.channel || loading);
+
+                    names_wifi.push(DOC.wlan.txPower);
+                    values_wifi.push(data_wifi.txpower ? FormatUtil.formatField(data_wifi.txpower, "dBm") : loading);
+
+
+                    wirelessHtml = Page.createTable(DOC.title.wlan2g, names_wifi, values_wifi, names_wifi.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+
+                    $('#wlan_info').html(wirelessHtml);
+                    Page.setStripeTable("#wlan_info");
+
+
+
+
+
 
                    // Page.setStripeTable();
                     Page.isNULLToSpace = false;

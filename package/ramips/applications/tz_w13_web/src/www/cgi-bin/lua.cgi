@@ -196,7 +196,7 @@ end
 
 function get_sysinfo()
 	local data_array = {}
-
+	local data_wifi_array={}
     data_array["system"]  = system.system_get_status() or ''
 	--[[data_array["network"] = network.network_get_wan_info() 
 	if nil == data_array["network"]
@@ -207,7 +207,25 @@ function get_sysinfo()
 	local array = wifi.wifi_get_dev()
 	if next(array) ~= nil
 	then
-		--local network = array[1]['network']
+
+		local id = 1
+		data_wifi_array['status'] = wifi.wifi_get_enable_status(id)
+		data_wifi_array['hidden_ssid'] = wifi.wifi_get_hidden_ssid(id)
+		data_wifi_array['wmm'] = wifi.wifi_get_wmm(id)
+		data_wifi_array['mode'] = wifi.wifi_get_mode(id)
+		data_wifi_array['ssid'] = wifi.wifi_get_ssid(id)
+		data_wifi_array['mac'] = array[1]['mac']
+		data_wifi_array['maxNum'] = wifi.wifi_get_connect_sta_number(id)
+		data_wifi_array['encryption'] = wifi.wifi_get_encryption(id)
+		data_wifi_array['channel'] = wifi.wifi_get_channel(id)
+		data_wifi_array['txpower'] = wifi.wifi_get_txpower(id)
+		data_wifi_array['maxassoc'] = wifi.wifi_get_connect_sta_number(id)
+		data_wifi_array['channel'] = wifi.wifi_get_channel(id)
+		data_wifi_array['ht'] = wifi.wifi_get_bandwidth(id)
+		data_wifi_array['key'] = wifi.wifi_get_password(id)
+		data_wifi_array['encryp'],data_array['encrypType'] = wifi.w13_get_wifi_security()
+
+		data_array["wifi"] = data_wifi_array
 		local network = "lan"
 		data_array["lan"] = dhcp.dhcp_get_object_by_network(network) or ''
 	else
