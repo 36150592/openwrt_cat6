@@ -42,16 +42,6 @@ config interface 'lan'
 	option netmask '${DHCP_MAIN_MASK}'
 	option ip6assign '60'
 
-config interface 'wan'
-	option ifname 'eth0.2'
-	option force_link '1'
-	option macaddr '${WIRED_WAN_MAC}'
-	option proto 'dhcp'
-
-config interface 'wan6'
-	option ifname 'eth0.2'
-	option proto 'dhcpv6'
-
 
 config switch
 	option name 'switch0'
