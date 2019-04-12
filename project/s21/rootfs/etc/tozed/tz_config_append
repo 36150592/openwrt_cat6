@@ -51,8 +51,10 @@ do
 done < /tmp/config_param_file
 
 
-#一句解析数来的追加内容，更新 /etc/config/下的配置
+#依据解析出来的追加内容，更新 /etc/config/下的配置
 
+#/etc/config/tozed
+/etc/tozed/tz_append_tozed_tr069 /tmp/config_param_file
 
 #/etc/config/dropbear
 
@@ -70,7 +72,7 @@ done < /tmp/config_param_file
 
 #/etc/config/system
 
-#/etc/config/tozed
+
 
 
 

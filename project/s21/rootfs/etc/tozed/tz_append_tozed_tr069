@@ -1,6 +1,6 @@
 #!/bin/sh
 
-abc="\n
+tr069_param_list="\n
 TZTR069_app_enable="tr069_app_enable"\n
 TZTR069_SOAP_ENV="tr069_SOAP_ENV"\n
 TZTR069_SOAP_ENC="tr069_SOAP_ENC"\n
@@ -20,5 +20,28 @@ TZTR069_Description="tr069_Description"\n
 TZTR069_Manufacturer="tr069_Manufacturer"\n
 TZTR069_DATA_MODEL="TZ_TR069_DATA_MODEL"\n
 "
-                      
-echo -e $abc
+
+param_file_tr069=/tmp/.param_file_tr069
+extern_file=$1
+
+if [ ! -e "${extern_file}" ]; then
+	exit
+fi
+
+cat $extern_file | grep TZTR069 > ${param_file_tr069}
+
+
+#
+while read line
+do
+        name=`echo $line | awk -F "=" '{print$1}' | awk '{print $2}'`
+        value=`echo $line | awk -F "=" '{print$2}'`
+
+        name_in_tr069_param=`echo -e ${tr069_param_list} | grep ${name} | awk -F "=" '{print $2}'`
+        if [ -n "${name_in_tr069_param}" ]; then
+        	cfg -a "${name_in_tr069_param}=${value}"
+        fi
+
+done < ${param_file_tr069}
+
+cfg -c
