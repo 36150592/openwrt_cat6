@@ -29,11 +29,21 @@
                    }else{
                         $("#apn_name").val(apnData.apn_name);
                    }
+                   if($("#selectAuthentication").val() == "0"){
+                      $(".hideNone").hide();
+                   }
                    ApnList = datas.data;
                 }
             });
         }
       getData();
+        $("#selectAuthentication").change(function(){
+        if($("#selectAuthentication").val() == "0"){
+            $(".hideNone").hide();
+        }else{
+           $(".hideNone").show();
+        }
+      });
 
       $("#btnSave").on("click",function(){
         var apnEnable,selectType,apn_profile,selectAuthentication,apn_user_name,apn_user_password,apn_name;
@@ -49,7 +59,11 @@
             apn_user_password =  $("#apn_user_password").val();
             apn_name =  $("#apn_name").val();
           $form = $("#form");
-          // if(apn_profile == ""){
+           if(selectAuthentication == "0"){
+              apn_user_name = "";
+              apn_user_password = "";
+           }else{
+            // if(apn_profile == ""){
           //       AlertUtil.alertMsg(CHECK.format.profileName2);
           //       return false;
           // }
@@ -73,6 +87,8 @@
                 AlertUtil.alertMsg(CHECK.format.apnPassword);
                 return false;
             }
+           }
+          
           var json={},json2= new Object();
           json.enable = parseInt(apnEnable,10);
           json.ip_stack = selectType;
@@ -144,13 +160,13 @@
                     <input type="text" name="apnName" id="apn_name">
                 </td>
             </tr>
-            <tr>
+            <tr  class="hideNone">
                 <th><%-DOC.apn.user %><%- colon %></th>
                 <td>
                     <input type="text" name="apnUserName" id="apn_user_name">
                 </td>
             </tr>
-            <tr >
+            <tr  class="hideNone">
                 <th><%-DOC.apn.password %><%- colon %></th>
                 <td>
                     <input type="password" name="apnUserPassword" id="apn_user_password">
