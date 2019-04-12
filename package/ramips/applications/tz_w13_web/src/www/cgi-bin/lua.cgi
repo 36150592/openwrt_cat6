@@ -178,11 +178,13 @@ function change_language()
 	shellcmd = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/login.html",oldLanguage,newLanguage,WEB_PATH)
 	shellcmd1 = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/index.html",oldLanguage,newLanguage,WEB_PATH)
 	shellcmd2 = string.format("sed -i 's/\"Language\":\"%s\"/\"Language\":\"%s\"/g' %s/config.json",oldLanguage,newLanguage,WEB_PATH)
-	
+	shellcmd3 = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/info.html",oldLanguage,newLanguage,WEB_PATH)
+
 	os.execute(shellcmd)
 	os.execute(shellcmd1)
 	os.execute(shellcmd2)
-	
+	os.execute(shellcmd3)
+
     local tz_answer = {};
 	tz_answer["success"] = true;
 	tz_answer["cmd"] = 97;

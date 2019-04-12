@@ -625,7 +625,7 @@ var Page = {
     isNULLToSpace: false,
     currentId: 0,
     sessionId: "",
-    language: DOC.language || "CN",
+    language: DOC.language || "EN",
     allLanguage: "",
     languageList: "110",
     getLanguageList: function(language) {
