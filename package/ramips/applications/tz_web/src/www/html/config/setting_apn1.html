@@ -20,7 +20,7 @@
                         $("#apnDisable").attr("checked",true);
                    }
                    $("#selectType").val(apnData.ip_stack);
-                   $("#apn_profile").val(apnData.profile_name);
+                   // $("#apn_profile").val(apnData.profile_name);
                    $("#selectAuthentication").val(apnData.auth_type);
                    $("#apn_user_name").val(apnData.username);
                    $("#apn_user_password").val(apnData.password);
@@ -43,16 +43,16 @@
                 apnEnable = 0;
             }
             selectType =  $("#selectType").val();
-            apn_profile =  $("#apn_profile").val();
+            // apn_profile =  $("#apn_profile").val();
             selectAuthentication =  $("#selectAuthentication").val();
             apn_user_name =  $("#apn_user_name").val();
             apn_user_password =  $("#apn_user_password").val();
             apn_name =  $("#apn_name").val();
           $form = $("#form");
-          if(apn_profile == ""){
-                AlertUtil.alertMsg(CHECK.format.profileName2);
-                return false;
-          }
+          // if(apn_profile == ""){
+          //       AlertUtil.alertMsg(CHECK.format.profileName2);
+          //       return false;
+          // }
            if(apn_user_name == ""){
                 AlertUtil.alertMsg(CHECK.format.apnUserName2);
                 return false;
@@ -61,10 +61,10 @@
                 AlertUtil.alertMsg(CHECK.format.apnPassword2);
                 return false;
           }
-          if(!CheckUtil.checkApnName(apn_profile)) {
-                AlertUtil.alertMsg(CHECK.format.profileName);
-                return false;
-            }
+          // if(!CheckUtil.checkApnName(apn_profile)) {
+          //       AlertUtil.alertMsg(CHECK.format.profileName);
+          //       return false;
+          //   }
             if(!CheckUtil.checkApnName(apn_user_name)) {
                 AlertUtil.alertMsg(CHECK.format.apnUserName);
                 return false;
@@ -76,7 +76,7 @@
           var json={},json2= new Object();
           json.enable = parseInt(apnEnable,10);
           json.ip_stack = selectType;
-          json.profile_name = apn_profile;
+          json.profile_name = "";
           json.auth_type = parseInt(selectAuthentication,10);
           json.username = apn_user_name;
           json.mtu = 1500;
@@ -126,14 +126,6 @@
                     <option value="IPV4V6">IPV4V6</option>
                </select>
                </td>
-            </tr>
-            <tr>
-                <th>
-                   <%-DOC.apn.profile %><%- colon %>
-                </th>
-                <td>
-                    <input type="text" name="profile" id="apn_profile">
-                </td>
             </tr>
             <tr id="apn_authentication">
                 <th><%-DOC.apn.authentication %><%- colon %></th>
