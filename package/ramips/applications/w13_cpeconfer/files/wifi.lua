@@ -962,12 +962,12 @@ end
 -- return:
 --		boolean true if success false if fail
 function wifi_module.wifi_set_bandwidth(wifi_id,mode)
-	if "20" == mode or "20+40" ==mode
+	if "20" == mode or "40"==mode or "20+40" ==mode
 	then
 		return w13_wireless_set_cfg_value(nil, W13_WIFI_DEVICE, "ht", "HT_BW", mode)
 	    --return common_config_set(wifi_id, "ht", "HT_BW", mode)
 	else
-		debug("input error: must be [20 20+40]")
+		debug("input error: must be [20 40 20+40]")
 		return false
 	end
 end
@@ -1004,7 +1004,7 @@ function wifi_module.wifi_get_encryption(wifi_id)
 
 		local encry = string.sub(encry_all, 1, start-1)
 
-		debug("encry = "..encry_all)
+		--debug("encry = "..encry_all)
 
 		return encry_all
    	end
