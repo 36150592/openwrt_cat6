@@ -23,7 +23,8 @@ cp -f project/s21/bin/old-all.bin image/${project}/
 
 mkdir -p image/${project}/update/ModemUpdate
 mkdir -p image/${project}/update/ConfigUpdateAll
-mkdir -p image/${project}/update/ConfigUpdateSome
+mkdir -p image/${project}/update/ConfigUpdateAppend
+mkdir -p image/${project}/update/LOGO
 
 #new uboot new firmware
 rm -f image/${project}/new_firmware_factory.bin

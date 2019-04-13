@@ -37,9 +37,14 @@ rm -rf ${WORK_STATION}/*
 #解压到升级目录
 unzip -P ${zip_pwd} ${TARGET_PACKAGE} -d ${WORK_STATION}
 
-#check configDir
-
-##config update
+#追加配置处理
+cd ${WORK_STATION}
+append_config_file_exist=`ls ConfigUpdateAppend/*.conf | wc -l`
+if [ "${append_config_file_exist}" = "1" ]; then
+	mkdir -p /etc/config_update_file
+	cp ConfigUpdateAppend/*.conf /etc/config_update_file/updateconfig.conf
+	sync
+fi
 
 
 #check modem update
@@ -82,7 +87,6 @@ if [ "${modem_update_result}" == "1" ]; then
 else
 	echo "modem update fail"
 fi
-
 
 #check firmware md5sum
 cd ${WORK_STATION}
