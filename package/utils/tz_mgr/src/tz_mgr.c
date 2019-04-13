@@ -1908,6 +1908,17 @@ void process_1s_signal(void)
 			first_disconnected=TRUE;
 			//turn off telnet,http,dns,dhcp server
 			print("%s","---------------server connected --------------------");
+
+			if(file_exists( TZ_DHCP_SERVER_ALIVE_FLAG_FILE ))//如果开启了dhcp，则要关掉
+			{
+				shell_recv(NULL,0,"%s stop",SCRIPT_DHCPD);
+				shell_recv(NULL,0,"%s stop",SCRIPT_DNSMAQ);//关闭dhco
+				shell_recv(NULL,0,"uci set dhcp.lan.ignore=1");
+				sleep(1);
+				shell_recv(NULL,0,"uci commit");
+				shell_recv(NULL,0,"echo 1 > %s", TZ_MGR_RESTART_COUNT_FILE);//重置重连次数
+				shell_recv(NULL,0,"rm -f %s",TZ_DHCP_SERVER_ALIVE_FLAG_FILE);//删除dhcp启动标志文件
+			}
 			//设置当前设备的IP地址
 			//util_config_ipv4_addr(network_dev_name,"0.0.0.0");
 			//system("/etc/rc.d/rc.uplink.connected");
