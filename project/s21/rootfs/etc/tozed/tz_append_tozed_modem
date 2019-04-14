@@ -28,8 +28,6 @@ TZMODEM_APN2_MTU="TZ_MUTILAPN2_MTU"\n
 TZMODEM_APN2_ENABLE="TZ_MUTILAPN2_ENABLE"\n
 "
 
-UCI_SECTION=modem
-
 param_file_modem=/tmp/.param_file_modem
 extern_file=$1
 
@@ -44,11 +42,11 @@ cat $extern_file | grep TZMODEM > ${param_file_modem}
 while read line
 do
         name=`echo $line | awk -F "=" '{print$1}' | awk '{print $2}'`
-        value=`echo $line | awk -F "=" '{print$2}'`
+        value=`echo $line | awk -F "=" '{print$2}' | awk -F '"' '{print $2}'`
 
         name_in_modem_param=`echo -e ${modem_param_list} | grep ${name} | awk -F "=" '{print $2}'`
         if [ -n "${name_in_modem_param}" ]; then
-        	cfg -a ${name_in_modem_param}=${value} --section $UCI_SECTION
+        	uci set tozed.modem.${name_in_modem_param}="${value}"
         fi
 
 done < ${param_file_modem}

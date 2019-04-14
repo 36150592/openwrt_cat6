@@ -35,11 +35,11 @@ cat $extern_file | grep TZTR069 > ${param_file_tr069}
 while read line
 do
         name=`echo $line | awk -F "=" '{print$1}' | awk '{print $2}'`
-        value=`echo $line | awk -F "=" '{print$2}'`
+        value=`echo $line | awk -F "=" '{print$2}' | awk -F '"' '{print $2}'`
 
         name_in_tr069_param=`echo -e ${tr069_param_list} | grep ${name} | awk -F "=" '{print $2}'`
         if [ -n "${name_in_tr069_param}" ]; then
-        	cfg -a "${name_in_tr069_param}=${value}"
+        	uci set tozed.cfg.${name_in_tr069_param}="${value}"
         fi
 
 done < ${param_file_tr069}

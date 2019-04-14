@@ -5,8 +5,6 @@ TZSYSTEM_REMOTE_LOGIN="TZ_REMOTE_LOGIN"\n
 TZSYSTEM_REMOTE_PING="TZ_REMOTE_PING"\n
 "
 
-UCI_SECTION=remote_control
-
 param_file_remote=/tmp/.param_file_remote
 extern_file=$1
 
@@ -21,11 +19,11 @@ cat $extern_file | grep TZSYSTEM_REMOTE > ${param_file_remote}
 while read line
 do
         name=`echo $line | awk -F "=" '{print$1}' | awk '{print $2}'`
-        value=`echo $line | awk -F "=" '{print$2}'`
+        value=`echo $line | awk -F "=" '{print$2}' | awk -F '"' '{print $2}'`
 
         name_in_remote_param=`echo -e ${remote_param_list} | grep ${name} | awk -F "=" '{print $2}'`
         if [ -n "${name_in_remote_param}" ]; then
-        	cfg -a ${name_in_remote_param}=${value} --section $UCI_SECTION
+        	uci set tozed.remote_control.${name_in_remote_param}="${value}"
         fi
 
 done < ${param_file_remote}
