@@ -46,6 +46,13 @@ if [ "${append_config_file_exist}" = "1" ]; then
 	sync
 fi
 
+#LOGO处理
+cd ${WORK_STATION}
+logo_exist=`ls LOGO/*.gif | wc -l`
+if [ "${logo_exist}" = "1" ]; then
+	cp LOGO/*.gif /tz_www/images/customer.gif -rf
+	sync
+fi
 
 #check modem update
 cd ${WORK_STATION}
