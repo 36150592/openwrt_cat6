@@ -37,18 +37,18 @@ bitcomposite表示使用位进行组合的配置字段
         	<default value="8" />
 	</config>
 
-	<config name="TZSYSTEM_REMOTE_LOGIN" type="text" description="远程登录开关" detail="远程EWB登录开关" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
+	<config name="TZSYSTEM_REMOTE_LOGIN" type="select" description="远程登录开关" detail="远程EWB登录开关" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
         	<option value="1" description="开启" />
 		<option value="0" description="关闭" />
 		<default value="0"/>
 	</config>
-	<config name="TZSYSTEM_REMOTE_PING" type="text" description="远程登录PING开关" detail="远程PING开关" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
+	<config name="TZSYSTEM_REMOTE_PING" type="select" description="远程登录PING开关" detail="远程PING开关" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
         	<option value="1" description="开启" />
 		<option value="0" description="关闭" />
 		<default value="0"/>
 	</config>
 
-	<config name="TZSYSTEM_REMOTE_DEFAULT_LIST" type="select" description="远程登录内置IP列表" detail="远程登录内置IP列表 空格分隔" maxlength="128" class_name="SYSTEM_CONFIG_FIELD"  >
+	<config name="TZSYSTEM_REMOTE_DEFAULT_LIST" type="text" description="远程登录内置IP列表" detail="远程登录内置IP列表 空格分隔" maxlength="128" class_name="SYSTEM_CONFIG_FIELD"  >
         	<default value="0" />
 	</config>
 
@@ -970,7 +970,7 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="3" description="CHAP and PAP"/>
 	  	<default value="3"/>
 	 </config>
-	<config name="TZMODEM_APN0_IP_STACK" type="text"  description="主apn 协议类型" detail="主apn 协议类型" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN0_IP_STACK" type="select"  description="主apn 协议类型" detail="主apn 协议类型" class_name="MODEM_CONFIG_FIELD">
 	 	<option value="IP" description="IPv4"/>
 		<option value="IPV6" description="IPV6"/>
 		<option value="IPV4V6" description="IPV4 and IPV6"/>
@@ -1001,7 +1001,7 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="3" description="CHAP and PAP"/>
 	  	<default value="3"/>
 	 </config>
-	<config name="TZMODEM_APN1_IP_STACK" type="text"  description="副apn1 协议类型" detail="副apn1 协议类型" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN1_IP_STACK" type="select"  description="副apn1 协议类型" detail="副apn1 协议类型" class_name="MODEM_CONFIG_FIELD">
 	 	<option value="IP" description="IPv4"/>
 		<option value="IPV6" description="IPV6"/>
 		<option value="IPV4V6" description="IPV4 and IPV6"/>
@@ -1010,7 +1010,7 @@ class_name="MODEM_CONFIG_FIELD">
 	<config name="TZMODEM_APN1_MTU" type="text"  description="副apn1 MTU" detail="副apn1 MTU" class_name="MODEM_CONFIG_FIELD">
 	  <default value="1500"/>
 	 </config>
-	<config name="TZMODEM_APN1_ENABLE" type="text"  description="副apn1 开关" detail="副apn1 开关" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN1_ENABLE" type="select"  description="副apn1 开关" detail="副apn1 开关" class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="关闭"/>
 		<option value="1" description="开启"/>
 	 	<default value="0"/>
@@ -1036,7 +1036,7 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="3" description="CHAP and PAP"/>
 	  	<default value="3"/>
 	 </config>
-	<config name="TZMODEM_APN2_IP_STACK" type="text"  description="副apn2  协议类型" detail="副apn2  协议类型" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN2_IP_STACK" type="select"  description="副apn2  协议类型" detail="副apn2  协议类型" class_name="MODEM_CONFIG_FIELD">
 	 	<option value="IP" description="IPv4"/>
 		<option value="IPV6" description="IPV6"/>
 		<option value="IPV4V6" description="IPV4 and IPV6"/>
@@ -1045,7 +1045,7 @@ class_name="MODEM_CONFIG_FIELD">
 	<config name="TZMODEM_APN2_MTU" type="text"  description="副apn2  MTU" detail="副apn2  MTU" class_name="MODEM_CONFIG_FIELD">
 	  <default value="1500"/>
 	 </config>
-	<config name="TZMODEM_APN2_ENABLE" type="text"  description="副apn2 开关" detail="副apn2  开关" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN2_ENABLE" type="select"  description="副apn2 开关" detail="副apn2  开关" class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="关闭"/>
 		<option value="1" description="开启"/>
 	 	<default value="0"/>
