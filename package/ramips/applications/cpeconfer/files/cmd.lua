@@ -2239,6 +2239,16 @@ function tozed_set_tr069_config()
 
 end
 
+function tozed_get_web_config()
+	print("tozed_get_web_config")
+	local ret = system.system_get_web_info()
+
+	for key, value in pairs(ret)
+	do
+		print(key,"=",value)
+	end
+end
+
 local api_func = {
 	["wifi_secondary_get_ssid_list"] = wifi_secondary_get_ssid_list,
 	["wifi_secondary_get_hidden"]=wifi_secondary_get_hidden,
@@ -2437,7 +2447,9 @@ local api_func = {
 
 	--tr069
 	["tozed_get_tr069_config"] = tozed_get_tr069_config,
-	["tozed_set_tr069_config"] = tozed_set_tr069_config
+	["tozed_set_tr069_config"] = tozed_set_tr069_config,
+
+	["tozed_get_web_config"] = tozed_get_web_config
 }
 
 

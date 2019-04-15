@@ -20,6 +20,7 @@ bitcomposite表示使用位进行组合的配置字段
  	<class name="WIFI_CONFIG_FIELD" description="WIFI配置"  />
 	<class name="DHCP_CONFIG_FIELD" description="DHCP配置"/>
 	<class name="TR069_CONFIG_FIELD" description="TR069配置"/>
+	<class name="WEB_CONFIG_FIELD" description="WEB配置"/>
 	
 	<!--能够识别的字段,使用逗号进行分割-->
 	<recognizedfields list="MANRATE,MANRETRIES,RATECTL,AP_CHMODE,PUREG,PUREN,WIFIWORKMODE,AP_SECFILE,AP_WPA_GROUP_REKEY,AP_WPA_GMK_REKEY,AP_CYPHER,AP_WPA,AP_SEC_DEBUG,AP_SECMODE,PSK_KEY" />
@@ -1055,6 +1056,12 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="1" description="开启"/>
 	 	<default value="0"/>
 	 </config>
+
+	<config name="TZWEB_SHOW_LANGUAGE_SELECT" type="select" description="网页显示语言选择框" detail="网页显示语言选择框，默认显示" class_name="WEB_CONFIG_FIELD"  >
+		<option value="1" description="显示" />
+		<option value="0" description="隐藏" />
+		<default value="1"/>
+	</config>
 	
 </project>
 

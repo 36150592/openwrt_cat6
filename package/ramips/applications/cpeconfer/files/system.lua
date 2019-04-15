@@ -587,6 +587,34 @@ function system_module.system_set_tr069_ConnectionRequestPassword(pwd)
 	return -1
 end
 
+
+system_module.web_info = {
+		
+		["web_language_select_enable"] = nil   --string
+}
+
+
+function system_module.web_info:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+		
+	self["web_language_select_enable"] = obj["web_language_select_enable"] or nil
+end
+
+
+function system_module.system_get_web_info()
+
+		local info = system_module.tr069_info:new(nil,nil)
+
+		info["web_language_select_enable"] =  x:get("tozed","web","TZ_WEB_LANGUAGE_SELECT")
+
+		return info
+end
+
 local timezone_location = {
 	["Africa/Abidjan"]= "GMT0",
 	["Africa/Accra"]= "GMT0",

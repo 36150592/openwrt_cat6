@@ -51,3 +51,6 @@ config value 'remote_control'
     list TZ_REMOTE_LOGIN_LIST ''
     option TZ_REMOTE_PING '0'
     list TZ_REMOTE_PING_LIST ''
+
+config value 'web'
+
