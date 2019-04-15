@@ -168,6 +168,7 @@ function system_module.system_network_tool(tz_req)
 	local tz_answer = {}
 	if "ping_start" == tz_req["tool"]
 	then
+		os.execute("rm -rf /tmp/log_zip;mkdir /tmp/log_zip;")
 		if "" ~= tz_req["pingUrl"]  
 		then
 			if "1" == tz_req["pingLoop"]
@@ -193,6 +194,7 @@ function system_module.system_network_tool(tz_req)
 		io.close(f)
 	elseif "catch_pkg_start" == tz_req["tool"]
 	then
+		os.execute("rm -rf /tmp/log_zip;mkdir /tmp/log_zip;")
 		if "" == tz_req["catchPackageIfname"]
 		then
 			tz_req["catchPackageIfname"] = x:get("network","wan","ifname")
@@ -217,6 +219,7 @@ function system_module.system_network_tool(tz_req)
 		io.close(f)
 	elseif "trace_start" == tz_req["tool"]
 	then
+		os.execute("rm -rf /tmp/log_zip;mkdir /tmp/log_zip;")
 		if "" ~= tz_req["traceUrl"] 
 		then
 				os.execute(string.format("softlimit -f %d traceroute %s %s > %s &",LOG_FILE_LIMIT, tz_req["traceUrl"], tz_req["tracePort"],TMP_NETWORK_TOOL_LOG_FILE))
