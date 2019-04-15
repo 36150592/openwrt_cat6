@@ -54,6 +54,16 @@
 				};
 
 			};
+			
+			spidev@1 {
+				compatible = "rohm,dh2228fv";
+				reg = <1 0>;
+				linux,modalias = "spidev";
+				spi-cpha;
+				spi-cpol;
+				status = "okay";
+				spi-max-frequency = <2048000>;
+			};
 		};
 
 		i2c@900 {
