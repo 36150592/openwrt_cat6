@@ -590,7 +590,8 @@ end
 
 system_module.web_info = {
 		
-		["web_language_select_enable"] = nil   --string
+		["web_language_select_enable"] = nil,   --string
+		["web_language"] = nil   --string
 }
 
 
@@ -603,6 +604,7 @@ function system_module.web_info:new(o,obj)
 	end
 		
 	self["web_language_select_enable"] = obj["web_language_select_enable"] or nil
+	self["web_language"] = obj["web_language"] or nil
 end
 
 
@@ -610,7 +612,8 @@ function system_module.system_get_web_info()
 
 		local info = system_module.tr069_info:new(nil,nil)
 
-		info["web_language_select_enable"] =  x:get("tozed","web","TZ_WEB_LANGUAGE_SELECT")
+		info["web_language_select_enable"] =  x:get("tozed","web","TZ_WEB_SHOW_LANGUAGE_SELECT")
+		info["web_language"] =  x:get("tozed","web","TZ_WEB_LANGUAGE")
 
 		return info
 end

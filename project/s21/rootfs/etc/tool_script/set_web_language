@@ -1,0 +1,21 @@
+#!/bin/sh
+
+langs="cn en"
+
+target_language=$1
+
+WEB_DIR=/tz_www
+
+if [ "${target_language}" = "" ]; then
+        target_language=en
+fi
+
+#echo "target_language= ${target_language}"
+
+for item in ${langs}
+do
+       if [ "${item}" != "${target_language}" ]; then
+                sed -i "s/language\/${item}/language\/${target_language}/g" ${WEB_DIR}/login.html
+                sed -i "s/language\/${item}/language\/${target_language}/g" ${WEB_DIR}/index.html
+       fi
+done

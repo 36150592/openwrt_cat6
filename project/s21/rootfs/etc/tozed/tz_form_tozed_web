@@ -7,17 +7,26 @@ WEB_CONFIG_LOAD_FILE=${FORM_CONFIG_STATION}/web
 mkdir -p ${FORM_CONFIG_STATION}
 
 #export param
-cat ${FACTORY_CONFIG_FILE} | grep TZSYSTEM_ > ${WEB_CONFIG_LOAD_FILE}
+cat ${FACTORY_CONFIG_FILE} | grep TZWEB_ > ${WEB_CONFIG_LOAD_FILE}
 chmod 777 ${WEB_CONFIG_LOAD_FILE}
 . ${WEB_CONFIG_LOAD_FILE}
 
 
 
 if [ "${TZWEB_SHOW_LANGUAGE_SELECT}" = "0" ]; then
-	cfg -a TZ_WEB_LANGUAGE_SELECT="0" --section web
+	cfg -a TZ_WEB_SHOW_LANGUAGE_SELECT="0" --section web
 else
-	cfg -a TZ_WEB_LANGUAGE_SELECT="1" --section web
+	cfg -a TZ_WEB_SHOW_LANGUAGE_SELECT="1" --section web
 fi
+
+if [ "${TZWEB_SHOW_LANGUAGE_SELECT}" = "" ]; then
+	cfg -a TZ_WEB_LANGUAGE="en" --section web
+	/etc/tool_script/set_web_language en
+else
+	cfg -a TZ_WEB_LANGUAGE="${TZWEB_SHOW_LANGUAGE_SELECT}" --section web
+	/etc/tool_script/set_web_language ${TZWEB_SHOW_LANGUAGE_SELECT}
+fi
+
 
 cfg -c
 

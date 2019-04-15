@@ -33,12 +33,6 @@ bitcomposite表示使用位进行组合的配置字段
         	<default value="" />
 	</config>
 
-	<config name="TZSYSTEM_PREFERRED_LANGUAGE" type="select" critical_config="yes" description="默认语言" detail="默认语言" class_name="SYSTEM_CONFIG_FIELD"  >
-		<option value="zh-cn" description="中文"/>
-		<option value="en" description="English"/>
-        	<default value="en"/>
-	</config>
-
 	<config name="TZSYSTEM_SNTP_TIMEZONE" type="text" description="时区" detail="时区(-12~12, 如5.5、-4.5、8)" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
         	<default value="8" />
 	</config>
@@ -1061,6 +1055,12 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="1" description="显示" />
 		<option value="0" description="隐藏" />
 		<default value="1"/>
+	</config>
+	
+	<config name="TZWEB_PREFERRED_LANGUAGE" type="select" critical_config="yes" description="默认语言" detail="默认语言" class_name="WEB_CONFIG_FIELD"  >
+		<option value="cn" description="中文"/>
+		<option value="en" description="English"/>
+        	<default value="en"/>
 	</config>
 	
 </project>
