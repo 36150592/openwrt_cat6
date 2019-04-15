@@ -326,25 +326,29 @@ function network_module.network_get_interface_up_down_status()
 	while nil ~= res
 	do
 		local index = 0
+	
 		if string.find(res,"link: port:0")	~= nil
 		then
-			index = 0
+			index = 1
 		elseif string.find(res,"link: port:1") ~= nil
 		then 
-			index = 1
+			index = 2
 		elseif string.find(res,"link: port:2") ~= nil
 		then 
-			index = 2
+			index = 3
 		elseif string.find(res,"link: port:4") ~= nil
 		then 
-			index = 3
+			index = 4
 		end
 
-		if string.find(res,"link:up") ~= nil
+		if index > 0
 		then
-			ar[index] = 1
-		else
-			ar[index] = 0
+			if string.find(res,"link:up") ~= nil
+			then
+				ar[index] = 1
+			else
+				ar[index] = 0
+			end
 		end
 
 		res = f:read()
