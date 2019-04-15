@@ -17,6 +17,26 @@ config_cb() {
 }
 config_load "${cfgfile:-wireless}"
 
+check_device_connect() {
+
+      echo timer > /sys/class/leds/blue:wps/trigger
+      echo 200 > /sys/class/leds/blue:wps/delay_on 
+      echo 200 > /sys/class/leds/blue:wps/delay_off
+	
+      local count=120
+      local on_cli=0
+      while [ $count -gt 0 -a $on_cli -le $1 ]
+	do
+		let count=$count-1
+		on_cli=`iwpriv $2 get_on_cli | grep -v $2 | grep -v MAC| grep -v ^$ | wc -l`
+		sleep 1
+	done
+
+	echo none > /sys/class/leds/blue:wps/trigger
+	echo 0 > /sys/class/leds/blue:wps/brightness
+}
+
+
 for section in $inter_sections
 do
         config_get wps $section wps
@@ -30,10 +50,12 @@ do
         if [ $wps'' == 'pbc' ];then
                 echo $wps
                 echo $ifname
+		local cur_cli=`iwpriv $ifname get_on_cli | grep -v $ifname | grep -v MAC | grep -v ^$ | wc -l`
                 iwpriv $ifname set WscStop=1
                 iwpriv $ifname set WscConfMode=7
                 iwpriv $ifname set WscMode=2
                 iwpriv $ifname set WscGetConf=1
+		check_device_connect  $cur_cli  $ifname
         elif [ $wps'' == "pin" ];then
                 config_get pin $section pin
                 if [ $pin'' == "" ];then
