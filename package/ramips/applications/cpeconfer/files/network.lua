@@ -311,4 +311,49 @@ function network_module.network_get_4g2_net_info()
 	return info
 end
 
+-- get the Ethernet interface up down status
+-- input:none
+-- return:an array of the the status
+-- 			element 1 respresend port 0 
+--			element 2 respresend port 1 
+--			element 3 respresend port 2
+--			element 4 respresend port 4(wan interface) 
+function network_module.network_get_interface_up_down_status()
+
+	local f = io.popen("swconfig dev mt7530 show | grep port")
+	local res = f:read()
+	local ar = {}
+	while nil ~= res
+	do
+		local index = 0
+		if string.find(res,"link: port:0")	~= nil
+		then
+			index = 0
+		elseif string.find(res,"link: port:1") ~= nil
+		then 
+			index = 1
+		elseif string.find(res,"link: port:2") ~= nil
+		then 
+			index = 2
+		elseif string.find(res,"link: port:4") ~= nil
+		then 
+			index = 3
+		end
+
+		if string.find(res,"link:up") ~= nil
+		then
+			ar[index] = 1
+		else
+			ar[index] = 0
+		end
+
+		res = f:read()
+
+	end
+
+	io.close(f)
+	return ar
+end
+
+
 return network_module

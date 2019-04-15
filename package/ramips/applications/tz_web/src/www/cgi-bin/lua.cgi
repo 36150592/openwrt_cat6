@@ -1061,7 +1061,7 @@ function get_sysstatus()
 	local data_wifi = {}
 	data_array["sim"] = sim.sim_get_status() or ''
 	data_array["modem"] = modem.modem_get_status() or ''
-	
+	data_array["ethInter"] = network.network_get_interface_up_down_status() or ''
 	local array = wifi.wifi_get_dev()
 	for k,v in pairs(array) do
 	   if(v["band"] == "2.4G")

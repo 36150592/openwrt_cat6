@@ -844,6 +844,22 @@ function sim_pin_unlock()
 	print("pin unlock fail")
 end
 
+function network_get_interface_up_down_status()
+	print("network_get_interface_up_down_status")
+	local info = network.network_get_interface_up_down_status()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			print(k,"=", v)
+	end
+
+end
+
 function network_get_wan_info()
 
 	print("in network_get_wan_info")
@@ -2340,6 +2356,7 @@ local api_func = {
 	["network_get_4g_net_info"] = network_get_4g_net_info,
 	["network_get_4g1_net_info"] = network_get_4g1_net_info,
 	["network_get_4g2_net_info"] = network_get_4g2_net_info,
+	["network_get_interface_up_down_status"] = network_get_interface_up_down_status,
 	--sim
 	["sim_get_status"] = sim_get_status,
 	["sim_pin_lock_enable"] = sim_pin_lock_enable,

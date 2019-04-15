@@ -246,11 +246,11 @@ div#check_box_right {
     width: 55px;
 }
 #wifiInfo {
-    width: 105px;
+    width: 115px;
 }
 
 #wifiInfo5g {
-	width: 105px;
+	width: 115px;
 }
 
 #lteUsbInfo {
@@ -323,15 +323,15 @@ div#check_box_right {
 	background: url("../images/anhui/status.gif") no-repeat 0 -50px;
 }
 #lan1, #lan2, #lan3, #lan4, #wan1 {
+	width: 35px;
 }
 #lan1 div.link, #lan2 div.link, #lan3 div.link, #lan4 div.link, #wan1 div.link {
-    width: 55px;
-    padding-left: 20px;
+	padding-left: 28px;
 	background: url("../images/anhui/status.gif") no-repeat;
 }
 #lan1 div.unlink, #lan2 div.unlink, #lan3 div.unlink, #lan4 div.unlink, #wan1 div.unlink {
-    /*padding-left: 20px;*/
-    display: none;
+    padding-left: 28px;
+    /*display: none;*/
 	background: url("../images/anhui/status.gif") no-repeat 0 -75px;
 }
 #main {

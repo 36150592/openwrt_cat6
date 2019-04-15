@@ -551,6 +551,22 @@ var StatusUtil = {
 
         return String.format("<div class=\"{0}\" title=\"{1}\">SIM</div>", css, title);
     },
+    formatNetInterfaceInfo: function(state,name) {
+        var theState = parseInt(state, 10);
+        var title, css;
+        if(theState == 0){
+            css = "unlink";
+            title = DOC.status.interDown;
+        } else if(theState >= 1) {
+            css = "link";
+            title = DOC.status.interUp;
+        } else {
+            css = "unlink";
+            title = DOC.status.interDown;
+        }
+
+        return String.format("<div class=\"{0}\" title=\"{1}\">{2}</div>", css, title, name);
+    },
     formatWiFiInfo: function(state) {
         var title, css;
         //alet(state);
@@ -605,9 +621,14 @@ var StatusUtil = {
                     var wifiStatus = sysStatus.wifi;
                     var simStatus = sysStatus.sim;
                     var modemStatus = sysStatus.modem;
+                    var interStatus = sysStatus.ethInter;
                     $('#wifiInfo').html(StatusUtil.formatWiFiInfo(wifiStatus.status));
                     $('#wifiInfo5g').html(StatusUtil.format5gWiFiInfo(wifiStatus.status5));
                     $('#simInfo').html(StatusUtil.formatSimInfo(simStatus.is_sim_exist));
+                    $('#lan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[0], "Lan1"));
+                    $('#lan2').html(StatusUtil.formatNetInterfaceInfo(interStatus[1], "Lan2"));
+                    $('#lan3').html(StatusUtil.formatNetInterfaceInfo(interStatus[2], "Lan3"));
+                    $('#wan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[3], "Wan"));
                     if(simStatus.card_status == 0)                    {
                         var singalLevel = modemStatus.signal_lvl;
                         var netInfo = StatusUtil.formatSingalLevel(singalLevel);
