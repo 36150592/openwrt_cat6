@@ -198,7 +198,7 @@ uint16         offtime)
  * It also starts the "alarmHandle" function to be called at a periodic rate.
  */
 
-#define TM_SYS_INTERVAL 				100  					// 10MS
+#define TM_SYS_INTERVAL 				10  					// 10MS
 #define SYS_TICK_OF_1S 					(1000/TM_SYS_INTERVAL)
 #define MAX_CHECK_FEEDBACK_INTERVAL 	(SYS_TICK_OF_1S*5)		// 5S	
 
@@ -583,12 +583,12 @@ void alarmHandle(int val)
 				if(event.eventData & VP_DIG_SENSE_MAKE)
 				{
 					vp_set_pcm_rxonly(true);
-					//QS_DEBUG("	key %d	UP\n", event.eventData&0x0f);
+					QS_DEBUG("	key %d	UP\n", event.eventData&0x0f);
 				}
 				else
 				{
 					vp_set_pcm_rxonly(false);
-					//QS_DEBUG("	key %d	Down\n", event.eventData&0x0f);
+					QS_DEBUG("	key %d	Down\n", event.eventData&0x0f);
 
 					int keycode;
 					
