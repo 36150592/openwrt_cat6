@@ -2264,6 +2264,65 @@ function get_ping_list()
 end
 
 
+
+function get_web_list()
+	
+	local tz_answer = {}
+	tz_answer["cmd"] = 217
+	local data_array = {}
+	data_array["defultList"] = firewall.firewall_remote_get_default_list()
+	data_array["webList"] = firewall.firewall_remote_get_web_login_list()
+	data_array["webFlag"] = firewall.firewall_remote_get_web_login()
+
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+
+function set_web_list()
+	local ret 
+	local tz_answer = {}
+	local dataList1 = tz_req["dataList1"]
+	local dataList2 = tz_req["dataList2"]
+	local pingFlag = tonumber(tz_req["pingFlag"])
+	if(nil ~= dataList1)
+		then
+		ret = firewall.firewall_remote_set_web_login_list(dataList1)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+	if(nil ~= pingFlag)
+		then
+		ret = firewall.firewall_remote_set_web_login(pingFlag)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+	if(nil ~= dataList2)
+		then
+		ret = firewall.firewall_remote_set_default_list(dataList2)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 218
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+
+
 local switch = {
      [0] = get_sysinfo,
 	 [1] = get_systime,
@@ -2338,6 +2397,8 @@ local switch = {
 	 [214] = set_apn_data,
 	 [215] = set_ping_list,
 	 [216] = get_ping_list,
+	 [217] = get_web_list,
+	 [218] = set_web_list,
 
  }
  
