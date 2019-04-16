@@ -229,9 +229,9 @@
             var h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
             var m = (date.getMinutes() <10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
             var s = (date.getSeconds() <10 ? '0' + date.getSeconds() : date.getSeconds()) + ' ';
-			var a = new Array(DOC.week.item, DOC.week.item1, DOC.week.item2, DOC.week.item3, DOC.week.item4, DOC.week.item5, DOC.week.item6);
-            var w = a[date.getDay()];
-            return Y+M+D+h+m+s+w;
+			// var a = new Array(DOC.week.item, DOC.week.item1, DOC.week.item2, DOC.week.item3, DOC.week.item4, DOC.week.item5, DOC.week.item6);
+   //          var w = a[date.getDay()];
+            return Y+M+D+h+m+s;
         }
 		
 
