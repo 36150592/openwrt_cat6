@@ -64,13 +64,14 @@
             }
         }
 
-        $(document).on('click','input[name="allcheck"]',function(){
-            var $check = $(this).parent().next('label').find(':checkbox');
-            $check.prop('checked', $(this).prop('checked'));
-        });
-
-
-
+        $('input[name="allcheck"]').change(function(){
+            if($('input[name="allcheck"]').prop("checked")){
+                $('input[type="checkbox"]').prop("checked",true);
+            }else{
+                 $('input[type="checkbox"]').prop("checked",false);
+            }
+            
+        })
         $btnSave.click(function() {
             $(this).attr("disabled",true);
             var check = new Array() ;
@@ -128,7 +129,7 @@
             </tr>
 
             <tr id="tdsTr">
-                <th>LTE<%- colon %></th>
+                <th style = "font-size:18px;">LTE<%- colon %></th>
                 <td>
                     <div style="padding-left: 8px;font-size:18px"><input type="checkbox" name="allcheck">全部</div>
                     <div id="tdsDiv" class="bandDiv"></div>
