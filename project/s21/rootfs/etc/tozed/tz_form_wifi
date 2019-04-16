@@ -52,6 +52,12 @@ if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
 		TZ_24G_WIFI_MAIN_CHANNEL="${TZWIFI_24G_MAIN_WIFI_CHANNEL}"
 	fi
 
+	if [ "${TZWIFI_24G_MAIN_WIFI_AUTO_CHANNEL_SET}" = "y" ];then
+		TZ_24G_WIFI_MAIN_CHANNEL_START=$TZWIFI_24G_MAIN_WIFI_AUTO_CHANNEL_SET_START
+		TZ_24G_WIFI_MAIN_CHANNEL_END=$TZWIFI_24G_MAIN_WIFI_AUTO_CHANNEL_SET_END
+	fi
+
+
 	if [ "${TZWIFI_24G_MAIN_WIFI_MAX_STATION_NUM}" = "" ]; then
 		TZ_24G_WIFI_MAIN_MAX_STATION_NUM=32
 	else
@@ -191,6 +197,8 @@ config wifi-device  mt7603e
 	option mode 	7
 	option channel  '${TZ_24G_WIFI_MAIN_CHANNEL}'
 	option txpower '${TZ_24G_WIFI_MAIN_TX_POWER}'
+	option auto_channel_start '${TZ_24G_WIFI_MAIN_CHANNEL_START}'
+	option auto_channel_end '${TZ_24G_WIFI_MAIN_CHANNEL_END}'
 	option ht 	20
 	option country CN
 	option band 2.4G	
@@ -249,7 +257,7 @@ config wifi-iface
 	option maxassoc '20'     
 	option ifname 'ra1'
 	option disabled '${TZ_24G_WIFI_VICE_1_DISABLE}'
-                                     
+
 config wifi-iface
 	option device 'mt7603e'
 	option network 'lan2'

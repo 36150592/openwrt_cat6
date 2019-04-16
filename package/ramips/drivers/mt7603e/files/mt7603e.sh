@@ -96,6 +96,8 @@ mt7603e_prepare_config() {
 
 #获取当前的无线频道
 	config_get channel $device channel
+	config_get auto_channel_start $device auto_channel_start
+	config_get auto_channel_end $device auto_channel_end
 
 #获取当前的802.11无线模式
 	config_get hwmode $device mode
@@ -222,6 +224,19 @@ done
     [ "$channel" == "auto" ] && {
         channel=11
         AutoChannelSelect=2 #增强型自动频道选择
+	
+	[ $auto_channel_start"" != "" -a $auto_channel_end"" != "" -a $auto_channel_start -lt $auto_channel_end ] && {
+		AutoChannelSkipList=""
+		local temp=1
+		while [ $temp -le 13 ]
+		do
+			if [ $temp -lt $auto_channel_start -o $temp -gt $auto_channel_end ];then
+				AutoChannelSkipList=${AutoChannelSkipList}${temp}";"
+			fi
+			let temp=$temp+1	
+		done
+	}
+
     }
 
 #开始判断WiFi的MAC过滤方式.
@@ -319,6 +334,7 @@ NoForwardingBTNBSSID=0
 HideSSID=${hidessid:-0}
 ShortSlot=1
 AutoChannelSelect=${AutoChannelSelect:-0}
+AutoChannelSkipList=${AutoChannelSkipList}
 IEEE8021X=0
 IEEE80211H=1
 CarrierDetect=0

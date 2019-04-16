@@ -139,6 +139,46 @@ bitcomposite表示使用位进行组合的配置字段
 		<default value="y"/>
 	</config>
 	
+	<config name="TZWIFI_24G_MAIN_WIFI_AUTO_CHANNEL_SET" type="select" description="2.4G wifi 自动信道配置 开关" detail="2.4G wifi 自动信道配置，默认关闭" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_24G_MAIN_WIFI_AUTO_CHANNEL_SET_START" type="select" description="2.4G wifi 自动信道选择范围开始信道" detail="2.4G wifi 自动信道选择范围开始信道" class_name="WIFI_CONFIG_FIELD"  >
+		<option value="1" description="信道1" />
+		<option value="2" description="信道2" />
+		<option value="3" description="信道3" />
+		<option value="4" description="信道4" />
+		<option value="5" description="信道5" />
+		<option value="6" description="信道6" />
+		<option value="7" description="信道7" />
+		<option value="8" description="信道8" />
+		<option value="9" description="信道9" />
+		<option value="10" description="信道10" />
+		<option value="11" description="信道11" />
+		<option value="12" description="信道12" />
+		<option value="13" description="信道13" />
+		<default value="1"/>
+	</config>
+	
+	<config name="TZWIFI_24G_MAIN_WIFI_AUTO_CHANNEL_SET_END" type="select" description="2.4G wifi 自动信道选择范围结束信道" detail="2.4G wifi 自动信道选择范围结束信道" class_name="WIFI_CONFIG_FIELD"  >
+		<option value="1" description="信道1" />
+		<option value="2" description="信道2" />
+		<option value="3" description="信道3" />
+		<option value="4" description="信道4" />
+		<option value="5" description="信道5" />
+		<option value="6" description="信道6" />
+		<option value="7" description="信道7" />
+		<option value="8" description="信道8" />
+		<option value="9" description="信道9" />
+		<option value="10" description="信道10" />
+		<option value="11" description="信道11" />
+		<option value="12" description="信道12" />
+		<option value="13" description="信道13" />
+		<default value="13"/>
+	</config>
+	
 	<config name="TZWIFI_24G_MAIN_WIFI_SSID" type="text" description="2.4G 主wifi 固定SSID名称" detail="2.4G 主wifi 固定SSID名称，默认为ZLT S21_XXXX" class_name="WIFI_CONFIG_FIELD"  >
         	<default value="ZLT S21_XXXX" />
 	</config>
