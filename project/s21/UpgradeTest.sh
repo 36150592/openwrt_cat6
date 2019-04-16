@@ -4,6 +4,11 @@
 UPDATE_FILE_PATH=./
 #echo $UPDATE_FILE_PATH
 UPDATE_FILE_NAME="s21_v0.05.bin"
+FILE_UPDATE_VERSION='33308931d21e0e07ad9aad6daaf15a0b2fbc0484'
+UPDATE_FILE_NAME_TEST1="s21_v0.05-1.bin"
+UPDATE_FILE_NAME_TEST2="s21_v0.05-2.bin"
+FILE_UPDATE_VERSION_1='33308931d21e0e07ad9aad6daaf15a0b2fbc0484'
+FILE_UPDATE_VERSION_2='dd3784f1cb98a77a281e4e5bf415239402c7840b'
 #echo $filename
 TARGET_IP=192.168.2.1
 count=1
@@ -12,10 +17,22 @@ session_id="eca8df00588997f4d8b04c60270140b15550569951555057118"
 password="21232f297a57a5a743894a0e4a801fc3"
 login_name="admin"
 method="POST"
-
+echo "cat /version" > ./cat_cmd
 while [ 1 ]
 	do
 	echo "-------- cpe upgrade test count:$count --------"
+
+	if [ $UPDATE_FILE_NAME"" == $UPDATE_FILE_NAME_TEST1"" ];then
+		UPDATE_FILE_NAME=$UPDATE_FILE_NAME_TEST2
+		FILE_UPDATE_VERSION=$FILE_UPDATE_VERSION_2
+	else
+		UPDATE_FILE_NAME=$UPDATE_FILE_NAME_TEST1
+		FILE_UPDATE_VERSION=$FILE_UPDATE_VERSION_1
+	fi
+
+	echo "FILE NAME:$UPDATE_FILE_NAME"
+	echo "FILE VERSION:$FILE_UPDATE_VERSION"
+
 	cmd="100"
 	#登录
 	echo "@@@@@@  start login"
@@ -76,6 +93,14 @@ while [ 1 ]
            exit 3
         fi
     fi 
+
+    temp_ver=""
+    temp_ver=`sshpass -p 123456 ssh test@192.168.2.1 -p 10210  <>  ./cat_cmd | grep sha1 | awk -F'=' '{print $2}'`
+
+    if [ $FILE_UPDATE_VERSION"" != $temp_ver"" ];then
+    	echo "version check fail. upgrade fail"
+    	exit 4
+    fi
      
     [ "$1" = "1" ] && exit 0
 
