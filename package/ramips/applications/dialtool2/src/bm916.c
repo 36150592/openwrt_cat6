@@ -941,6 +941,7 @@ void bm916_sendat(int num)
 				down_udhcpc(global_system_info.module_info.network_card_name);
 				up_udhcpc(global_system_info.module_info.network_card_name);
 				char cmd_buffer[64];
+				timeLog("start to qcrmcall!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 				if(global_dial_vars.evdo_cdma_flag!=0)
 				{
 					if(!strncmp("IP",global_init_parms.ipstack,strlen(global_init_parms.ipstack)))
@@ -1553,6 +1554,7 @@ void bm916_init(int*  Dial_proc_state)
 			{
 				global_dialtool.Dial_Lvl_1=DIAL_DIAL;
 				*Dial_proc_state=Dial_State_SYSINFO;
+				timeLog("will change to DIAL_DIAL");
 			}
 			break;
 		case Dial_State_CFUN_DISABLE:
@@ -1634,6 +1636,7 @@ void bm916_dial(int* Dial_proc_state )
 		case Dial_State_SYSINFO: 
 			if(NULL!=strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK)&& NULL!=strstr(global_dialtool.buffer_at_sponse,"^SYSINFO:"))
 			{
+				timeLog(global_dialtool.buffer_at_sponse);
 				int srv_status,srv_domain;
 				int roam_status,sys_mode,sim_state;
 				char** result_useful=(char**)m_malloc_two(5,8);
@@ -1706,6 +1709,7 @@ void bm916_dial(int* Dial_proc_state )
 		case Dial_State_BMRAT:
 			if(NULL!=strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
 			{
+				timeLog(global_dialtool.buffer_at_sponse);
 				char *network_type_string=strstr(global_dialtool.buffer_at_sponse,"+BMRAT:");
 				if(NULL!= network_type_string)
 					network_type_string=strip_head_tail_space(network_type_string+strlen("+BMRAT:"));
@@ -2093,6 +2097,7 @@ void bm916_dial(int* Dial_proc_state )
 		case Dial_State_BMDATASTATUS:
 			if(NULL!=strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && NULL!=strstr(global_dialtool.buffer_at_sponse,"+BMDATASTATUS:"))
 			{
+				timeLog(global_dialtool.buffer_at_sponse);
 				char* tmp_ptr=strstr(global_dialtool.buffer_at_sponse,"+BMDATASTATUS:")+strlen("+BMDATASTATUS:");
 				global_dial_vars.network_link=atoi(tmp_ptr);
 				if(global_dial_vars.network_link!=0)

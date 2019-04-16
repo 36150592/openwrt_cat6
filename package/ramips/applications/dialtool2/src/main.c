@@ -858,6 +858,7 @@ int main(int argc,char *argv[] )
 	char* product_id_file = NULL;
 	openlog(argv[0],  LOG_PID, 0);  
 	log_info("program start:%s %d\n",__FUNCTION__,__LINE__);
+	timeLog("aaaaaaaaaaaaaaaaaaa");
 	while((ret= getopt(argc,argv,"p:s:")) != -1)
 	{
 		switch(ret)

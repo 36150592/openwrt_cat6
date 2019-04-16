@@ -80,6 +80,8 @@ boot() {
 		rm /etc/config_update_file/updateconfig.conf
 	fi
 
+	/etc/tozed/tz_test/time_to_capture_message.sh
+
 	# temporary hack until configd exists
 	/sbin/reload_config
 
