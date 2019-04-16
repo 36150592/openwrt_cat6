@@ -7,7 +7,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=tz_mgr
+PKG_NAME:=w13_tool
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
@@ -21,7 +21,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/$(PKG_NAME)
   SECTION:=utils
   CATEGORY:=Utilities
-  TITLE:=TZ_Config_Clients
+  TITLE:=TZ_W13_TOOL
   DEPENDS:=+libpthread +libuci
 endef
 
@@ -44,11 +44,6 @@ define Package/$(PKG_NAME)/install
 	#install bin
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/bin
-	#install shell script
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(FILES_DIR)/$(PKG_NAME).init $(1)/etc/init.d/$(PKG_NAME)
-	#install config
-	$(INSTALL_CONF) $(FILES_DIR)/.flag_factory_config $(1)/etc/.flag_factory_config
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

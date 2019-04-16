@@ -42,13 +42,20 @@ boot() {
 	sleep 1
 	touch /tmp/darren.txt
 
-	#2.4g wifi
-	/etc/tozed/tz_form_wifi
+
 
 	if [ -f /etc/.flag_factory_config ]; then
 		cp /rom/etc/config/tozed /etc/config/tozed
 		tozed_tool -c config -g WEB_USER -w rewrite
 	fi
+
+	#/etc/config/tz_mgr
+	if [ -f /etc/.flag_factory_config ]; then
+		/etc/tozed/tz_form_tz_mgr
+	fi
+
+	#2.4g wifi
+	/etc/tozed/tz_form_wifi
 
 	#/etc/config/network
 	/bin/board_detect

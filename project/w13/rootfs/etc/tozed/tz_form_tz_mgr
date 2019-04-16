@@ -1,3 +1,17 @@
+#!/bin/sh
+
+
+TZ_WLAN_MAC=`eth_mac r wlan`
+TZ_WIFI_SSID_PREFIX="Dialog 4G "
+TZ_WIFI_SSID_T1=`w13_tool -g 6 -m ${TZ_WLAN_MAC}`
+TZ_WIFI_KEY_T1=`w13_tool -g 1 -m ${TZ_WLAN_MAC}`
+TZ_WIFI_KEY_T2=`w13_tool -g 2 -m ${TZ_WLAN_MAC}`
+TZ_WEB_KEY_T1=`w13_tool -g 3 -m ${TZ_WLAN_MAC}`
+
+
+
+cat > /etc/config/tz_mgr <<EOF
+
 config 'main' 'main'
 	option 'AP_SEC_DEBUG' '0'
 	option 'TZ_DM_DEVICE_MANUFACTURER' 'SZTOZED'
@@ -5,10 +19,10 @@ config 'main' 'main'
 	option 'TZ_MODEM_CGCONTRDP_INTERFACE' '-nintf'
 	option 'AP_SECMODE' 'WPA'
 	option 'AP_SECFILE' 'PSK'
-	option 'AP_SSID' 'Tozed-SSID'
+	option 'AP_SSID' '${TZ_WIFI_SSID_PREFIX}${TZ_WIFI_SSID_T1}'
 	option 'AP_CYPHER' 'CCMP'
-	option 'PSK_KEY' '123456789'
-	option 'PWD' '6A7FCADA'
+	option 'PSK_KEY' '${TZ_WIFI_KEY_T2}'
+	option 'PWD' '${TZ_WEB_KEY_T1}'
 	option 'WEP_RADIO_NUM0_KEY_1' 'abcdefghijklm'
 	option 'WEP_RADIO_NUM0_KEY_2' 'abcdefghijklm'
 	option 'WEP_RADIO_NUM0_KEY_3' 'abcdefghijklm'
@@ -28,10 +42,10 @@ config 'main' 'main'
 	option 'AP_WPA_GMK_REKEY' '86400'
 	option 'AP_HIDESSID' '0'
 	option 'AP_GATEWAY'	'192.168.8.1'
-	option 'AP_IPADDR' '192.168.0.1'
+	option 'AP_IPADDR' '192.168.8.1'
 	option 'AP_NETMASK' '255.255.255.0'
-	option 'TZ_DHCP_IP_BEGIN' '192.168.0.100'
-	option 'TZ_DHCP_IP_END' '192.168.0.250'
+	option 'TZ_DHCP_IP_BEGIN' '192.168.8.100'
+	option 'TZ_DHCP_IP_END' '192.168.8.254'
 	option 'TZ_DHCP_EXPIRE_TIME' '86400'
 	option 'AP_PRIMARY_CH' 'auto'
 	option 'AP_CHMODE' '11NGHT20'
@@ -43,3 +57,6 @@ config 'main' 'main'
 	option 'TZ_WIFI_40M_ENABLE' '0'
 	option 'TZ_SPEED_PREFERRED' 'Default'
 	option 'TZ_MAX_STANUM' '32'
+
+EOF
+

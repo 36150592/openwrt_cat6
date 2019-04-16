@@ -3303,4 +3303,5 @@ CONFIG_PACKAGE_tz_mgr=y
 # CONFIG_PACKAGE_usbutils is not set
 # CONFIG_PACKAGE_uuidd is not set
 # CONFIG_PACKAGE_uuidgen is not set
+CONFIG_PACKAGE_w13_tool=y
 # CONFIG_PACKAGE_whereis is not set
