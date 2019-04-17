@@ -468,7 +468,7 @@ function system_module.system_set_tr069_ServerURL(url)
 
 	if(nil ~= url)
 	then
-		x:set("tozed","cfg","tr069_app_enable",url)
+		x:set("tozed","cfg","tr069_ServerURL",url)
 		x:commit("tozed")
 		return 0
 	end
