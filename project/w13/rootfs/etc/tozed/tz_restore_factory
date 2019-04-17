@@ -1,4 +1,17 @@
 #!/bin/sh
 
-jffs2reset -y && reboot &
+#jffs2reset -y && reboot &
+
+FACTORY_FLAG="/etc/.flag_factory_config"
+
+rm -rf /etc/config
+cp -rf /rom/etc/config /etc/ 2>/dev/null
+rm -rf  /etc/config/wireless
+
+#restore all apps switch
+cp -rf /rom/etc/rc.d /etc/ 2>/dev/null
+
+echo '.flag_factory_config' > ${FACTORY_FLAG}
+
+sync
 

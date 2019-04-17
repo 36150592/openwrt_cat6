@@ -49,6 +49,7 @@
 #define SCRIPT_DNSMAQ		"/etc/init.d/dnsmasq"
 #define SCRIPT_HTTPD		"/etc/init.d/mini_httpd"
 #define TZ_FACTORY_FLAG_FILE "/etc/.flag_factory_config"
+#define TZ_SCRIPT_RESTORE	"/etc/tozed/tz_restore_factory"
 #define TZ_VERSION_FILE		"/version"
 #define TZ_FIRMWARE_VERSION "software_version"
 #define TZ_FIRMWARE_INLINE_VERSION "inline_soft_version"
@@ -543,11 +544,7 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 					util_client_send_restore_ack_frame();
 					//wait for the frame is sent
 					print("%s","CMD_TYPE_RESTORE_SYNC_ACK------------>restore and reboot!");
-					shell_recv(NULL,0,"touch %s",TZ_FACTORY_FLAG_FILE);
-					sleep(1);
-					shell_recv(NULL,0,"mtd -r erase rootfs_data");
-					//system( EXECUTED_SCRIPT_WHEN_RESTORE_DEFAULT_CONFIGS );
-					sleep(10);
+					shell_recv(NULL,0,"%s && reboot",TZ_SCRIPT_RESTORE);
 					//start to reboot
 					#ifndef __i386__
 					system("reboot");
@@ -558,11 +555,7 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 				{
 					//start to reboot
 					print("%s","CMD_TYPE_RESTORE_ACK------------>restore and reboot!");
-					shell_recv(NULL,0,"touch %s",TZ_FACTORY_FLAG_FILE);
-					sleep(1);
-					shell_recv(NULL,0,"mtd -r erase rootfs_data");
-					//system( EXECUTED_SCRIPT_WHEN_RESTORE_DEFAULT_CONFIGS );
-					sleep(10);
+					shell_recv(NULL,0,"%s && reboot",TZ_SCRIPT_RESTORE);
 					#ifndef __i386__
 					system("reboot");
 					#endif
@@ -574,13 +567,7 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 					//system( EXECUTED_SCRIPT_WHEN_RESTORE_DEFAULT_CONFIGS );
 					//发送确认帧
 					util_client_send_only_restore_reply_frame();
-					shell_recv(NULL,0,"touch %s",TZ_FACTORY_FLAG_FILE);
-					shell_recv(NULL,0,"cp /etc/config/.%s_cfg.default  /etc/config/%s",APP_NAME,APP_NAME);
-					//start to reboot
-					sleep(1);
-					shell_recv(NULL,0,"mtd -r erase rootfs_data");
-					//system( EXECUTED_SCRIPT_WHEN_RESTORE_DEFAULT_CONFIGS );
-					sleep(10);
+					shell_recv(NULL,0,"%s && reboot",TZ_SCRIPT_RESTORE);
 					#ifndef __i386__
 					system("reboot");
 					#endif
