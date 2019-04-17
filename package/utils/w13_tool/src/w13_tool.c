@@ -39,12 +39,14 @@ bool global_error_flag = false;
 
 enum TZ_CMD_TYPE{
 	UNKOWN = 0,
-	WIFI_KEY_T1 = 1,
-	WIFI_KEY_T2 = 2,
-	WEB_KEY_T1 = 3,
-	LAN_MAC = 4,
-	WAN_MAC = 5,
-	WIFI_SSID_T1 = 6,
+	WIFI_KEY_T1 = 1,//wifi密码随机算法1
+	WIFI_KEY_T2 = 2,//wifi密码随机算法2
+	WEB_KEY_T1 = 3,//web密码随机算法2
+	LAN_MAC = 4,//w13通过wifi mac计算lan mac
+	WAN_MAC = 5,//w13通过wifi mac计算wan mac
+	WIFI_SSID_T1 = 6,//通过mac随机的3位数
+	WIFI_SSID_T2 = 7,//取mac的后六位
+	WIFI_SSID_T3 = 8,//取mac的后三位
 
 };
 
@@ -64,8 +66,9 @@ void print_usage(char const* cmd_name)
 	printf("\tWEB_KEY_T1 --> %d\n",WEB_KEY_T1);
 	printf("\tLAN_MAC --> %d\n",LAN_MAC);
 	printf("\tWAN_MAC --> %d\n",WAN_MAC);
-	printf("\tWIFI_SSID --> %d\n",WIFI_SSID_T1);		
-			
+	printf("\tWIFI_SSID_T1(special 3bit about mac) --> %d\n",WIFI_SSID_T1);		
+	printf("\tWIFI_SSID_T2(mac last 6 bit) --> %d\n",WIFI_SSID_T2);	
+	printf("\tWIFI_SSID_T3(mac last 3 bit) --> %d\n",WIFI_SSID_T3);		
 			
 			
 	printf("\ne.g: %s -g %d -m AA:BB:CC:DD:EE:FF\n\n", cmd_name, LAN_MAC);
@@ -323,7 +326,7 @@ void util_get_key(char *keypre,unsigned char* mac,char* key,int type,int displin
 		}
 		else if(displine==2)
 		{
-			for(i=0,j=1;i<7,j<8;i++,j++)
+			for(i=0,j=1;i<7&&j<8;i++,j++)
 			{
 				if(((tmpkey[i]*tmpkey[j])%223)%2==0)
 				{
@@ -340,7 +343,7 @@ void util_get_key(char *keypre,unsigned char* mac,char* key,int type,int displin
 		}
 		else if(displine==4)
 		{
-			for(i=0,j=1;i<7,j<8;i++,j++)
+			for(i=0,j=1;i<7&&j<8;i++,j++)
 			{
 				if(((tmpkey[i]*tmpkey[j])%223)%2==0)
 				{
@@ -361,7 +364,6 @@ void util_get_key(char *keypre,unsigned char* mac,char* key,int type,int displin
 	{
 		char tmpkey[50];
 		char tmpmac[50];
-		char tmpletter[10];
 		memset(tmpkey,0,sizeof(tmpkey));
 		memset(tmpmac,0,sizeof(tmpmac));
 		if(!strcmp(keylen,"8"))
@@ -388,7 +390,7 @@ void hextoString(char *inhex,char *outstr)
 }
 
 
-void mac2wifikey(char *mac,char* pre,int type,int displine)
+void print_wifikey_by_mac(char *mac,char* pre,int type,int displine)
 {
 	char param[32];
 	memset(param,0,sizeof(param));
@@ -400,7 +402,7 @@ void mac2wifikey(char *mac,char* pre,int type,int displine)
 
 	char mac_hex_string[16]={0};
 	hextoString(mac_without_colon,mac_hex_string);
-	util_get_key(pre,mac_hex_string,param,type,displine);
+	util_get_key(pre,(unsigned char*)mac_hex_string,param,type,displine);
 	
 	printf("%s", param);
 }
@@ -412,7 +414,6 @@ void util_calculate_pin_by_imei( char* original_imei,char* pin,int only_output_d
 	unsigned int random_value;
 	int index;
 	int start_index;
-	char tmppin[50];
 	int string_len=(int)strlen( original_imei );
 
 		for( index=0;index < 8;index++ )
@@ -456,7 +457,7 @@ void util_calculate_pin_by_imei( char* original_imei,char* pin,int only_output_d
 }
 
 
-void mac2webkey(char* mac,int only_output_digit,int displine )
+void print_webkey_by_mac(char* mac,int only_output_digit,int displine )
 {
 	char webkey[32];
 	memset(webkey,0,sizeof(webkey));
@@ -467,7 +468,7 @@ void mac2webkey(char* mac,int only_output_digit,int displine )
 
 
 
-void mac2lanwan_mac(char* mac,int type)
+void print_lanwan_mac_by_wifimac(char* mac,int type)
 {
 	char lan[32],wan[32];
 	memset(lan,0,sizeof(lan));
@@ -538,7 +539,7 @@ void util_get_ssid(unsigned char* mac,char* ssid)
 }
 
 
-int mac2ssid(char* mac)
+void print_ssid_by_wifimac(char* mac)
 {
 	
 	char mac_without_colon[16];
@@ -555,10 +556,33 @@ int mac2ssid(char* mac)
 	char ssid[32];
 	memset(ssid,0,sizeof(ssid));
 
-	util_get_ssid(mac_hex_string,ssid);
+	util_get_ssid((unsigned char*)mac_hex_string,ssid);
 	
 	printf("%s", ssid);
-	return 0;
+}
+
+
+void print_mac_last6bit(char* mac)
+{
+	
+	char mac_last6bit[7];
+	//去掉冒号
+	snprintf(mac_last6bit,sizeof(mac_last6bit),"%C%C%C%C%C%C"
+												, mac[9] , mac[10], mac[12] 
+												, mac[13], mac[15], mac[16]);
+
+	printf("%s", mac_last6bit);
+}
+
+void print_mac_last3bit(char* mac)
+{
+	
+	char mac_last3bit[4];
+	//去掉冒号
+	snprintf(mac_last3bit,sizeof(mac_last3bit),"%C%C%C" 
+												, mac[13], mac[15], mac[16]);
+
+	printf("%s", mac_last3bit);
 }
 
 
@@ -601,27 +625,35 @@ int main(int argc, char * const argv[])
 		switch(tz_cmd_type)
 		{
 			case WIFI_KEY_T1:
-				mac2wifikey(dev_wifi_mac,"",1,0);
+				print_wifikey_by_mac(dev_wifi_mac,"",1,0);
 				break;
 
 			case WIFI_KEY_T2:
-				mac2wifikey(dev_wifi_mac,"",1,2);
+				print_wifikey_by_mac(dev_wifi_mac,"",1,2);
 				break;
 
 			case WEB_KEY_T1:
-				mac2webkey(dev_wifi_mac,0,0);
+				print_webkey_by_mac(dev_wifi_mac,0,0);
 				break;
 
 			case LAN_MAC:
-				mac2lanwan_mac(dev_wifi_mac,1);
+				print_lanwan_mac_by_wifimac(dev_wifi_mac,1);
 				break;
 
 			case WAN_MAC:
-				mac2lanwan_mac(dev_wifi_mac,2);
+				print_lanwan_mac_by_wifimac(dev_wifi_mac,2);
 				break;
 
 			case WIFI_SSID_T1:
-				mac2ssid(dev_wifi_mac);
+				print_ssid_by_wifimac(dev_wifi_mac);
+				break;
+
+			case WIFI_SSID_T2:
+				print_mac_last6bit(dev_wifi_mac);
+				break;
+
+			case WIFI_SSID_T3:
+				print_mac_last3bit(dev_wifi_mac);
 				break;
 
 			default:

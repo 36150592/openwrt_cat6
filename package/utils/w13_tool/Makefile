@@ -44,6 +44,7 @@ define Package/$(PKG_NAME)/install
 	#install bin
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/tz_export $(1)/usr/bin
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

@@ -1,62 +1,312 @@
 #!/bin/sh
 
+TZ_EXPORT="tz_export"
+W13_TOOL="w13_tool"
+TZ_FACTORY_CONFIG_FILE="/etc/tozed_param"
+TZ_VERSION_FILE="/version"
 
 TZ_WLAN_MAC=`eth_mac r wlan`
-TZ_WIFI_SSID_PREFIX="Dialog 4G "
-TZ_WIFI_SSID_T1=`w13_tool -g 6 -m ${TZ_WLAN_MAC}`
-TZ_WIFI_KEY_T1=`w13_tool -g 1 -m ${TZ_WLAN_MAC}`
-TZ_WIFI_KEY_T2=`w13_tool -g 2 -m ${TZ_WLAN_MAC}`
-TZ_WEB_KEY_T1=`w13_tool -g 3 -m ${TZ_WLAN_MAC}`
 
 
+
+#config vension
+
+TZ_CONFIG_FILE_VERSION=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_CONFIG_FILE_VERSION`
+if [ "${TZ_CONFIG_FILE_VERSION}" != "" ]; then
+	:
+else
+	TZ_CONFIG_FILE_VERSION="V1.0"
+fi
+
+sed -i "s/^config_version=.*/config_version=${TZ_CONFIG_FILE_VERSION}/g" ${TZ_VERSION_FILE} 2>/dev/null
+
+#---------------------------- DHCP start ----------------------------
+
+AP_IPADDR=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_IPADDR`
+if [ "${AP_IPADDR}" != "" ]; then
+	:
+else
+	AP_IPADDR="192.168.0.1"
+fi	
+
+AP_GATEWAY="${AP_IPADDR}"
+
+AP_NETMASK=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_NETMASK`
+if [ "${AP_NETMASK}" != "" ]; then
+	:
+else
+	AP_NETMASK="255.255.255.0"
+fi	
+
+TZ_DHCP_IP_BEGIN=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_DHCP_IP_BEGIN`
+if [ "${TZ_DHCP_IP_BEGIN}" != "" ]; then
+	:
+else
+	TZ_DHCP_IP_BEGIN="192.168.0.100"
+fi	
+
+TZ_DHCP_IP_END=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_DHCP_IP_END`
+if [ "${TZ_DHCP_IP_END}" != "" ]; then
+	:
+else
+	TZ_DHCP_IP_END="192.168.0.254"
+fi	
+
+TZ_DHCP_EXPIRE_TIME=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_DHCP_EXPIRE_TIME`
+if [ "${TZ_DHCP_EXPIRE_TIME}" != "" ]; then
+	:
+else
+	TZ_DHCP_EXPIRE_TIME="86400"
+fi	
+
+#---------------------------- DHCP end ----------------------------
+
+#---------------------------- Wlan Setting start ----------------------------
+
+#wifi enable
+TZ_ENABLE_WIFI=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_ENABLE_WIFI`
+if [ "${TZ_ENABLE_WIFI}" != "" ]; then
+	:
+else
+	TZ_ENABLE_WIFI="yes"
+fi	
+
+#wifi hiden
+AP_HIDESSID=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_HIDESSID`
+if [ "${AP_HIDESSID}" != "" ]; then
+	:
+else
+	AP_HIDESSID="0"
+fi	
+
+#wifi channel
+
+TZ_HIDE_WIFI_CHANNEL_12_13=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_HIDE_WIFI_CHANNEL_12_13`
+if [ "${TZ_HIDE_WIFI_CHANNEL_12_13}" != "" ]; then
+	:
+else
+	TZ_HIDE_WIFI_CHANNEL_12_13="no"
+fi	
+
+AP_PRIMARY_CH=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_PRIMARY_CH`
+if [ "${AP_PRIMARY_CH}" != "" ]; then
+	:
+else
+	AP_PRIMARY_CH="auto"
+fi	
+
+#----------------------- wifi security setting start-----------------------
+
+AP_CHMODE=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_CHMODE`
+if [ "${AP_CHMODE}" != "" ]; then
+	:
+else
+	AP_CHMODE="11NGHT20"
+fi	
+
+WIFIWORKMODE=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} WIFIWORKMODE`
+if [ "${WIFIWORKMODE}" != "" ]; then
+	:
+else
+	WIFIWORKMODE="m11ng"
+fi	
+
+AP_CYPHER=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_CYPHER`
+if [ "${AP_CYPHER}" != "" ]; then
+	:
+else
+	AP_CYPHER="CCMP"
+fi	
+
+AP_SECFILE=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_SECFILE`
+if [ "${AP_SECFILE}" != "" ]; then
+	:
+else
+	AP_SECFILE="PSK"
+fi	
+
+AP_SECMODE=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_SECMODE`
+if [ "${AP_SECMODE}" != "" ]; then
+	:
+else
+	AP_SECMODE="WPA"
+fi	
+
+AP_WPA=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_WPA`
+if [ "${AP_WPA}" != "" ]; then
+	:
+else
+	AP_WPA="2"
+fi	
+
+AP_WPA_GROUP_REKEY=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_WPA_GROUP_REKEY`
+if [ "${AP_WPA_GROUP_REKEY}" != "" ]; then
+	:
+else
+	AP_WPA_GROUP_REKEY="600"
+fi	
+
+AP_WPA_GMK_REKEY=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_WPA_GMK_REKEY`
+if [ "${AP_WPA_GMK_REKEY}" != "" ]; then
+	:
+else
+	AP_WPA_GMK_REKEY="86400"
+fi	
+
+#----------------------- wifi security setting end-----------------------
+
+
+
+PUREG=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} PUREG`
+if [ "${PUREG}" != "" ]; then
+	:
+else
+	PUREG="0"
+fi	
+
+PUREN=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} PUREN`
+if [ "${PUREN}" != "" ]; then
+	:
+else
+	PUREN="0"
+fi	
+
+TZ_WIFI_40M_ENABLE=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_WIFI_40M_ENABLE`
+if [ "${TZ_WIFI_40M_ENABLE}" != "" ]; then
+	:
+else
+	TZ_WIFI_40M_ENABLE="0"
+fi	
+
+TZ_MAX_STANUM=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_MAX_STANUM`
+if [ "${TZ_MAX_STANUM}" != "" ]; then
+	:
+else
+	TZ_MAX_STANUM="32"
+fi	
+
+TXPOWER=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TXPOWER`
+if [ "${TXPOWER}" != "" ]; then
+	:
+else
+	TXPOWER="23"
+fi	
+
+#wifi ssid
+AP_SSID=
+
+TZ_SPECIAL_SSID_PREFIX=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_SPECIAL_SSID_PREFIX`
+
+TZ_WIFI_SSID_NAMING_RULE=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_WIFI_SSID_NAMING_RULE`
+if [ "${TZ_WIFI_SSID_NAMING_RULE}" != "" ]; then
+	:
+else
+	TZ_WIFI_SSID_NAMING_RULE="2"
+fi
+
+if [ "${TZ_WIFI_SSID_NAMING_RULE}" = "static" ]; then
+	AP_WIFI_STATIC_SSID=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_WIFI_STATIC_SSID`
+	if [ "${AP_WIFI_STATIC_SSID}" != "" ]; then
+		:
+	else
+		AP_WIFI_STATIC_SSID="tozed-ssid"
+	fi
+	AP_SSID="${TZ_SPECIAL_SSID_PREFIX}${AP_WIFI_STATIC_SSID}"
+elif [ "${TZ_WIFI_SSID_NAMING_RULE}" = "1" ];then
+	TZ_WIFI_SSID_T1=`${W13_TOOL} -g 6 -m ${TZ_WLAN_MAC}`
+	AP_SSID="${TZ_SPECIAL_SSID_PREFIX}${TZ_WIFI_SSID_T1}"
+elif [ "${TZ_WIFI_SSID_NAMING_RULE}" = "2" ];then
+	TZ_WIFI_SSID_T2=`${W13_TOOL} -g 7 -m ${TZ_WLAN_MAC}`
+	AP_SSID="${TZ_SPECIAL_SSID_PREFIX}${TZ_WIFI_SSID_T2}"
+elif [ "${TZ_WIFI_SSID_NAMING_RULE}" = "3" ];then
+	TZ_WIFI_SSID_T3=`${W13_TOOL} -g 8 -m ${TZ_WLAN_MAC}`
+	AP_SSID="${TZ_SPECIAL_SSID_PREFIX}${TZ_WIFI_SSID_T3}"
+else
+	AP_SSID="tozed-ssid"
+fi
+
+#wifi key
+PSK_KEY=
+
+TZ_WIFI_KEY_RULE=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} TZ_WIFI_KEY_RULE`
+if [ "${TZ_WIFI_KEY_RULE}" = "static" ]; then
+	AP_WIFI_STATIC_KEY=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_WIFI_STATIC_KEY`
+	if [ "${AP_WIFI_STATIC_KEY}" != "" ]; then
+		:
+	else
+		AP_WIFI_STATIC_KEY="123456789"
+	fi
+	PSK_KEY="${AP_WIFI_STATIC_KEY}"
+elif [ "${TZ_WIFI_KEY_RULE}" = "1" ];then
+	TZ_WIFI_KEY_T1=`${W13_TOOL} -g 1 -m ${TZ_WLAN_MAC}`
+	PSK_KEY="${TZ_WIFI_KEY_T1}"
+elif [ "${TZ_WIFI_KEY_RULE}" = "2" ];then
+	TZ_WIFI_KEY_T2=`${W13_TOOL} -g 2 -m ${TZ_WLAN_MAC}`
+	PSK_KEY="${TZ_WIFI_KEY_T2}"
+else
+	PSK_KEY="123456789"
+fi
+
+
+#---------------------------- Wlan Setting end ----------------------------
+
+
+AP_SEC_DEBUG=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_SEC_DEBUG`
+if [ "${AP_SEC_DEBUG}" != "" ]; then
+	:
+else
+	AP_SEC_DEBUG="0"
+fi
+
+#TZ_WEB_KEY_T1=`${W13_TOOL} -g 3 -m ${TZ_WLAN_MAC}`
 
 cat > /etc/config/tz_mgr <<EOF
 
 config 'main' 'main'
-	option 'AP_SEC_DEBUG' '0'
+	option 'AP_SEC_DEBUG' '${AP_SEC_DEBUG}'
 	option 'TZ_DM_DEVICE_MANUFACTURER' 'SZTOZED'
 	option 'TZ_MODEM_GET_IPV6' '-nmipv6'
 	option 'TZ_MODEM_CGCONTRDP_INTERFACE' '-nintf'
-	option 'AP_SECMODE' 'WPA'
-	option 'AP_SECFILE' 'PSK'
-	option 'AP_SSID' '${TZ_WIFI_SSID_PREFIX}${TZ_WIFI_SSID_T1}'
-	option 'AP_CYPHER' 'CCMP'
-	option 'PSK_KEY' '${TZ_WIFI_KEY_T2}'
-	option 'PWD' '${TZ_WEB_KEY_T1}'
+	option 'AP_SECMODE' '${AP_SECMODE}'
+	option 'AP_SECFILE' '${AP_SECFILE}'
+	option 'AP_SSID' '${AP_SSID}'
+	option 'AP_CYPHER' '${AP_CYPHER}'
+	option 'PSK_KEY' '${PSK_KEY}'
+	option 'PWD' '${PSK_KEY}'
 	option 'WEP_RADIO_NUM0_KEY_1' 'abcdefghijklm'
 	option 'WEP_RADIO_NUM0_KEY_2' 'abcdefghijklm'
 	option 'WEP_RADIO_NUM0_KEY_3' 'abcdefghijklm'
 	option 'WEP_RADIO_NUM0_KEY_4' 'abcdefghijklm'
-	option 'TZ_ENABLE_WIFI' 'yes'
-	option 'AP_WPA' '2'
+	option 'TZ_ENABLE_WIFI' '${TZ_ENABLE_WIFI}'
+	option 'AP_WPA' '${AP_WPA}'
 	option 'AP_WEP_MODE_0' '2'
 	option 'AP_PRIMARY_KEY_0' '1'
-	option 'PUREG' '0'
+	option 'PUREG' '${PUREG}'
 	option 'RATECTL' 'manual'
 	option 'MANRATE' '0x87868584'
 	option 'MANRETRIES' '0x04040404'
-	option 'WIFIWORKMODE' 'm11ng'
+	option 'WIFIWORKMODE' '${WIFIWORKMODE}'
 	option 'TZ_ISOLATE_WLAN_CLIENTS' '0'
-	option 'PUREN' '0'
-	option 'AP_WPA_GROUP_REKEY' '600'
-	option 'AP_WPA_GMK_REKEY' '86400'
-	option 'AP_HIDESSID' '0'
-	option 'AP_GATEWAY'	'192.168.8.1'
-	option 'AP_IPADDR' '192.168.8.1'
-	option 'AP_NETMASK' '255.255.255.0'
-	option 'TZ_DHCP_IP_BEGIN' '192.168.8.100'
-	option 'TZ_DHCP_IP_END' '192.168.8.254'
-	option 'TZ_DHCP_EXPIRE_TIME' '86400'
-	option 'AP_PRIMARY_CH' 'auto'
-	option 'AP_CHMODE' '11NGHT20'
-	option 'TXPOWER' '23'
+	option 'PUREN' '${PUREN}'
+	option 'AP_WPA_GROUP_REKEY' '${AP_WPA_GROUP_REKEY}'
+	option 'AP_WPA_GMK_REKEY' '${AP_WPA_GMK_REKEY}'
+	option 'AP_HIDESSID' '${AP_HIDESSID}'
+	option 'AP_GATEWAY'	'${AP_GATEWAY}'
+	option 'AP_IPADDR' '${AP_IPADDR}'
+	option 'AP_NETMASK' '${AP_NETMASK}'
+	option 'TZ_DHCP_IP_BEGIN' '${TZ_DHCP_IP_BEGIN}'
+	option 'TZ_DHCP_IP_END' '${TZ_DHCP_IP_END}'
+	option 'TZ_DHCP_EXPIRE_TIME' '${TZ_DHCP_EXPIRE_TIME}'
+	option 'AP_PRIMARY_CH' '${AP_PRIMARY_CH}'
+	option 'AP_CHMODE' '${AP_CHMODE}'
+	option 'TXPOWER' '${TXPOWER}'
 	option 'DIAL_STATUS' '0'
 	option 'CMD_INFO_SIGNAL_QUALITY' '0'
 	option 'CONFIG_CHANGED_BY_SERVER' '0'
-	option 'TZ_ENABLE_WATCHDOG' 'no'
-	option 'TZ_WIFI_40M_ENABLE' '0'
+	option 'TZ_ENABLE_WATCHDOG' 'yes'
+	option 'TZ_WIFI_40M_ENABLE' '${TZ_WIFI_40M_ENABLE}'
 	option 'TZ_SPEED_PREFERRED' 'Default'
-	option 'TZ_MAX_STANUM' '32'
+	option 'TZ_MAX_STANUM' '${TZ_MAX_STANUM}'
 
 EOF
 

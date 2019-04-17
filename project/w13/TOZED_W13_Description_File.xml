@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<!--
+preface用于在配置文件的最开头增加一些字符串,这个可以自己定义
+format用于设置每个字段的配置输出的格式
+class用于对各个分类的意义进行描述,config中的class指示字段所述的分类
+config用于描述配置的字段/类型/含义/所属分类
+default表示字段的默认值
+none表示字段为空情况下的显示,例如TZ_ENABLE_DHCP_SERVER的配置为空,则查找配置为yes,显示开启
+type表示字段的类型,text表示需要进行输入的字符串;select表示所属选项为选项列表类型,option列出所有可以选择的选项;
+fixvalue表示指定的配置选项总是会被设置为指定的值
+int表示要设置的值为数字,rangestart指定最小的数字,rangeend指定最大的数字
+bitcomposite表示使用位进行组合的配置字段
+-->
+<project name="configset" version="V1.00-2019-01-25">
+	<preface value=""/>
+	<format value="export ${field}=&quot;quote{value}&quot;"/>
+	<class name="SYSTEM_CONFIG_FIELD" description="系统配置"  />
+ 	<class name="WIFI_CONFIG_FIELD" description="WIFI配置"  />
+	<class name="DHCP_CONFIG_FIELD" description="DHCP配置"/>
+	
+	<!--能够识别的字段,使用逗号进行分割-->
+	<recognizedfields list="MANRATE,MANRETRIES,RATECTL,AP_CHMODE,PUREG,PUREN,WIFIWORKMODE,AP_SECFILE,AP_WPA_GROUP_REKEY,AP_WPA_GMK_REKEY,AP_CYPHER,AP_WPA,AP_SEC_DEBUG,AP_SECMODE,PSK_KEY" />
+	<!--配置文件版本-->
+	<config name="TZ_CONFIG_FILE_VERSION" type="text" description="配置文件版本" detail="配置文件版本" maxlength="20" class_name="SYSTEM_CONFIG_FIELD">
+		<default value="V1.00"/>
+	</config>
+
+
+	<!--DHCP相关-->
+	<!--路由器的局域网IP地址;-->
+	<config name="AP_IPADDR" type="text" description="LAN IP地址" detail="设置无线路由器本地IP地址,默认为192.168.0.1." class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.0.1"/>
+	</config>
+	<!--路由器的局域网IP地址对应的子网掩码;-->
+	<config name="AP_NETMASK" type="text" description="子网掩码" detail="子网掩码为IP地址中的网络号,默认为255.255.255.0. " class_name="DHCP_CONFIG_FIELD">
+		<default value="255.255.255.0"/>
+	</config>
+	<!--动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,否则将导致无法访问路由器的网页的问题; -->
+	<config name="TZ_DHCP_IP_BEGIN" type="text" description="IP地址池开始IP地址" detail="动态IP地址分配的开始IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题;" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.0.100"/>
+	</config>
+	<!--动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,否则将导致无法访问路由器的网页的问题;-->
+	<config name="TZ_DHCP_IP_END" type="text" description="IP地址池结束IP地址" detail="动态IP地址分配的结束IP地址,该IP地址务必和路由器的局域网IP地址处于同一网段,\n否则将导致无法访问路由器的网页的问题" class_name="DHCP_CONFIG_FIELD">
+		<default value="192.168.0.250"/>
+	</config>
+	<!--DHCP租期时间,默认为86400=24×60×60秒=1天;-->
+	<config name="TZ_DHCP_EXPIRE_TIME" type="text" description="DHCP租期时间(秒)" detail="启用DHCP服务时,设置租期时间.默认为一天,非专业人士不建议修改,默认为86400=24×60×60秒=1天" class_name="DHCP_CONFIG_FIELD">
+		<default value="86400"/>
+	</config>
+
+
+	<!--WiFi 相关-->
+	<!--TZ_ENABLE_WIFI为no表示关闭wifi功能,为yes表示开启wifi功能,只要不为no就表示开启wifi功能;-->
+	<config name="TZ_ENABLE_WIFI" type="select" description="Wi-Fi功能" detail="只要不为关闭就表示开启wifi功能" class_name="WIFI_CONFIG_FIELD">
+		<option value="yes" description="开启"/>
+		<option value="no" description="关闭"/>
+		<default value="yes"/>
+	</config>
+	<!--0:开启 SSID 广播,可以通过搜索网络搜索到相应的 SSID: 
+		1:关闭 SSID 广播,不能搜索到相应的 SSID,但是可以连接上: -->
+	<config name="AP_HIDESSID" type="select" description="SSID广播" detail="开启 SSID 广播,可以通过搜索网络搜索到相应的 SSID:\n关闭 SSID 广播,不能搜索到相应的 SSID,但是可以连接上;" class_name="WIFI_CONFIG_FIELD">
+		<option value="0" description="开启SSID广播"/>
+		<option value="1" description="关闭SSID广播"/>
+		<default value="0"/>
+	</config>
+	<!--设置wifi首选信道-->
+	<config name="AP_PRIMARY_CH" type="select" description="信道" detail="设置wifi首选信道" class_name="WIFI_CONFIG_FIELD">
+		<option value="auto" description="自动"/>
+		<option value="1" description="1"/>
+		<option value="2" description="2"/>
+		<option value="3" description="3"/>
+		<option value="4" description="4"/>
+		<option value="5" description="5"/>
+		<option value="6" description="6"/>
+		<option value="7" description="7"/>
+		<option value="8" description="8"/>
+		<option value="9" description="9"/>
+		<option value="10" description="10"/>
+		<option value="11" description="11"/>
+		<option value="12" description="12"/>
+		<option value="13" description="13"/>
+		<default value="auto"/>
+	</config>
+	<!--是否隐藏12,13信道-->
+	<config name="TZ_HIDE_WIFI_CHANNEL_12_13" type="select" description="隐藏12,13信道" detail="隐藏12,13信道" class_name="WIFI_CONFIG_FIELD">
+		<option value="yes" description="开启"/>
+		<option value="no" description="关闭"/>
+		<default value="no"/>
+	</config>
+	<config name="AP_CHMODE_CONFIG" type="select" description="Wi-Fi工作模式" detail="设置无线路由器使用的Wi-Fi工作模式,默认为“802.11bgn”,无线路由器将自动匹配最佳模式,一般无需更改." class_name="WIFI_CONFIG_FIELD">
+		<option value="1" description="802.11bgn(默认)" selected="WIFIWORKMODE == &quot;m11ng&quot;" commit="{ &quot;AP_CHMODE&quot;:&quot;11NGHT20&quot;,&quot;PUREG&quot;:&quot;0&quot;,&quot;PUREN&quot;:&quot;0&quot;,&quot;RATECTL&quot;:&quot;auto&quot;,&quot;MANRATE&quot;:&quot;&quot;,&quot;MANRETRIES&quot;:&quot;&quot;,&quot;WIFIWORKMODE&quot;:&quot;m11ng&quot;, }"/>
+		<option value="2" description="802.11b" selected="WIFIWORKMODE == &quot;m11b&quot;" commit="{ &quot;AP_CHMODE&quot;:&quot;11B&quot;,&quot;PUREG&quot;:&quot;0&quot;,&quot;PUREN&quot;:&quot;0&quot;,&quot;RATECTL&quot;:&quot;auto&quot;,&quot;MANRATE&quot;:&quot;&quot;,&quot;MANRETRIES&quot;:&quot;&quot;,&quot;WIFIWORKMODE&quot;:&quot;m11b&quot;, }"/>
+		<option value="3" description="802.11g" selected="WIFIWORKMODE == &quot;m11g&quot;" commit="{ &quot;AP_CHMODE&quot;:&quot;11G&quot;,&quot;PUREG&quot;:&quot;1&quot;,&quot;PUREN&quot;:&quot;0&quot;,&quot;RATECTL&quot;:&quot;auto&quot;,&quot;MANRATE&quot;:&quot;&quot;,&quot;MANRETRIES&quot;:&quot;&quot;,&quot;WIFIWORKMODE&quot;:&quot;m11g&quot;, }"/>
+		<option value="4" description="802.11n" selected="WIFIWORKMODE == &quot;m11n&quot;" commit="{ &quot;AP_CHMODE&quot;:&quot;11NGHT20&quot;,&quot;PUREG&quot;:&quot;0&quot;,&quot;PUREN&quot;:&quot;1&quot;,&quot;RATECTL&quot;:&quot;auto&quot;,&quot;MANRATE&quot;:&quot;&quot;,&quot;MANRETRIES&quot;:&quot;&quot;,&quot;WIFIWORKMODE&quot;:&quot;m11n&quot;, }"/>
+		<option value="5" description="802.11n单流固定速率" selected="WIFIWORKMODE == &quot;m11nSingleFixed&quot;" commit="{ &quot;AP_CHMODE&quot;:&quot;11NGHT20&quot;,&quot;PUREG&quot;:&quot;0&quot;,&quot;PUREN&quot;:&quot;1&quot;,&quot;RATECTL&quot;:&quot;manual&quot;,&quot;MANRATE&quot;:&quot;0x84858687&quot;,&quot;MANRETRIES&quot;:&quot;0x04040404&quot;,&quot;WIFIWORKMODE&quot;:&quot;m11nSingleFixed&quot;, }"/>
+		<option value="6" description="802.11n单流固定最高速率" selected="WIFIWORKMODE == &quot;m11nSingleFixedMax&quot;" commit="{ &quot;AP_CHMODE&quot;:&quot;11NGHT20&quot;,&quot;PUREG&quot;:&quot;0&quot;,&quot;PUREN&quot;:&quot;1&quot;,&quot;RATECTL&quot;:&quot;manual&quot;,&quot;MANRATE&quot;:&quot;0x87878787&quot;,&quot;MANRETRIES&quot;:&quot;0x04040404&quot;,&quot;WIFIWORKMODE&quot;:&quot;m11nSingleFixedMax&quot;, }"/>
+		<option value="7" description="802.11n双流固定速率" selected="WIFIWORKMODE == &quot;m11nDoubleFixed&quot;" commit="{ &quot;AP_CHMODE&quot;:&quot;11NGHT20&quot;,&quot;PUREG&quot;:&quot;0&quot;,&quot;PUREN&quot;:&quot;1&quot;,&quot;RATECTL&quot;:&quot;manual&quot;,&quot;MANRATE&quot;:&quot;0x8c8d8e8f&quot;,&quot;MANRETRIES&quot;:&quot;0x04040404&quot;,&quot;WIFIWORKMODE&quot;:&quot;m11nDoubleFixed&quot;, }"/>
+		<option value="8" description="802.11n双流固定最高速率" selected="WIFIWORKMODE == &quot;m11nDoubleFixedMax&quot;" commit="{ &quot;AP_CHMODE&quot;:&quot;11NGHT20&quot;,&quot;PUREG&quot;:&quot;0&quot;,&quot;PUREN&quot;:&quot;1&quot;,&quot;RATECTL&quot;:&quot;manual&quot;,&quot;MANRATE&quot;:&quot;0x8f8f8f8f&quot;,&quot;MANRETRIES&quot;:&quot;0x04040404&quot;,&quot;WIFIWORKMODE&quot;:&quot;m11nDoubleFixedMax&quot;, }"/>
+		<default value="1"/>
+	</config>
+	<config name="AP_SECMODE_CONFIG" type="select" description="安全选项" detail="1、无:无加密\n2、WPA-PSK[TKIP]:使用预共享密钥的Wi-Fi保护访问,采用加密类型为TKIP的WPA-PSK标准加密\n3、WPA2-PSK [AES]:使用预共享密钥的Wi-Fi保护访问,采用加密类型为AES的WPA2-PSK标准加密(推荐)\n4、[WPA-PSK/WPA2-PSK][TKIP]:允许客户端使用WPA-PSK [TKIP]或WPA2-PSK [TKIP]\n5、[WPA-PSK/WPA2-PSK][AES]:允许客户端使用WPA-PSK [AES]或WPA2-PSK [AES]" class_name="WIFI_CONFIG_FIELD">
+		<option value="1" description="无" selected="AP_SECMODE == &quot;None&quot;" commit="{ &quot;AP_SECMODE&quot;:&quot;None&quot;,&quot;TZ_WIFI_AUTH_MODE&quot;:&quot;None&quot; }"/>
+		<option value="2" description="WPA-PSK[TKIP]" selected="( AP_SECMODE == &quot;WPA&quot; ) and ( AP_SECFILE == &quot;PSK&quot; ) and ( AP_CYPHER == &quot;TKIP&quot; ) and ( AP_WPA == &quot;1&quot; )" commit="{ &quot;AP_SECMODE&quot;:&quot;WPA&quot;,&quot;AP_SECFILE&quot;:&quot;PSK&quot;,&quot;AP_CYPHER&quot;:&quot;TKIP&quot;,&quot;AP_WPA&quot;:&quot;1&quot;,&quot;AP_SEC_DEBUG&quot;:&quot;0&quot;,&quot;AP_WPA_GROUP_REKEY&quot;:&quot;600&quot;,&quot;AP_WPA_GMK_REKEY&quot;:&quot;86400&quot;,&quot;TZ_WIFI_AUTH_MODE&quot;:&quot;WPA-PSK-TKIP&quot;}"/>
+		<option value="3" description="WPA2-PSK[AES]" selected="( AP_SECMODE == &quot;WPA&quot; ) and ( AP_SECFILE == &quot;PSK&quot; ) and ( AP_CYPHER == &quot;CCMP&quot; ) and ( AP_WPA == &quot;2&quot; )" commit="{ &quot;AP_SECMODE&quot;:&quot;WPA&quot;,&quot;AP_SECFILE&quot;:&quot;PSK&quot;,&quot;AP_CYPHER&quot;:&quot;CCMP&quot;,&quot;AP_WPA&quot;:&quot;2&quot;,&quot;AP_SEC_DEBUG&quot;:&quot;0&quot;,&quot;AP_WPA_GROUP_REKEY&quot;:&quot;600&quot;,&quot;AP_WPA_GMK_REKEY&quot;:&quot;86400&quot;,&quot;TZ_WIFI_AUTH_MODE&quot;:&quot;WPA2-PSK-AES-CCMP&quot; }"/>
+		<option value="4" description="[WPA-PSK/WPA2-PSK][TKIP]" selected="( AP_SECMODE == &quot;WPA&quot; ) and ( AP_SECFILE == &quot;PSK&quot; ) and ( AP_CYPHER == &quot;TKIP&quot; ) and ( AP_WPA == &quot;3&quot; )" commit="{ &quot;AP_SECMODE&quot;:&quot;WPA&quot;,&quot;AP_SECFILE&quot;:&quot;PSK&quot;,&quot;AP_CYPHER&quot;:&quot;TKIP&quot;,&quot;AP_WPA&quot;:&quot;3&quot;,&quot;AP_SEC_DEBUG&quot;:&quot;0&quot;,&quot;AP_WPA_GROUP_REKEY&quot;:&quot;600&quot;,&quot;AP_WPA_GMK_REKEY&quot;:&quot;86400&quot;, &quot;TZ_WIFI_AUTH_MODE&quot;:&quot;WPA-WPA2-PSK-TKIP&quot;}"/>
+		<option value="5" description="[WPA-PSK/WPA2-PSK][AES]" selected="( AP_SECMODE == &quot;WPA&quot; ) and ( AP_SECFILE == &quot;PSK&quot; ) and ( AP_CYPHER == &quot;CCMP&quot; ) and ( AP_WPA == &quot;3&quot; )" commit="{ &quot;AP_SECMODE&quot;:&quot;WPA&quot;,&quot;AP_SECFILE&quot;:&quot;PSK&quot;,&quot;AP_CYPHER&quot;:&quot;CCMP&quot;,&quot;AP_WPA&quot;:&quot;3&quot;,&quot;AP_SEC_DEBUG&quot;:&quot;0&quot;,&quot;AP_WPA_GROUP_REKEY&quot;:&quot;600&quot;,&quot;AP_WPA_GMK_REKEY&quot;:&quot;86400&quot;,&quot;TZ_WIFI_AUTH_MODE&quot;:&quot;WPA-WPA2-PSK-CCMP&quot; }"/>
+		<option value="6" description="WPA-PSK[TKIP]/WPA2-PSK[AES]" selected="( AP_SECMODE == &quot;WPA&quot; ) and ( AP_SECFILE == &quot;PSK&quot; ) and ( AP_CYPHER == &quot;TKIP CCMP&quot; ) and ( AP_WPA == &quot;3&quot; )" commit="{ &quot;AP_SECMODE&quot;:&quot;WPA&quot;,&quot;AP_SECFILE&quot;:&quot;PSK&quot;,&quot;AP_CYPHER&quot;:&quot;TKIP CCMP&quot;,&quot;AP_WPA&quot;:&quot;3&quot;,&quot;AP_SEC_DEBUG&quot;:&quot;0&quot;,&quot;AP_WPA_GROUP_REKEY&quot;:&quot;600&quot;,&quot;AP_WPA_GMK_REKEY&quot;:&quot;86400&quot;,&quot;TZ_WIFI_AUTH_MODE&quot;:&quot;Mixed-AES-CCMP&quot; }"/>
+		<option value="7" description="WPA-PSK[AES]" selected="( AP_SECMODE == &quot;WPA&quot; ) and ( AP_SECFILE == &quot;PSK&quot; ) and ( AP_CYPHER == &quot;CCMP&quot; ) and ( AP_WPA == &quot;1&quot; )" commit="{ &quot;AP_SECMODE&quot;:&quot;WPA&quot;,&quot;AP_SECFILE&quot;:&quot;PSK&quot;,&quot;AP_CYPHER&quot;:&quot;CCMP&quot;,&quot;AP_WPA&quot;:&quot;1&quot;,&quot;AP_SEC_DEBUG&quot;:&quot;0&quot;,&quot;AP_WPA_GROUP_REKEY&quot;:&quot;600&quot;,&quot;AP_WPA_GMK_REKEY&quot;:&quot;86400&quot;,&quot;TZ_WIFI_AUTH_MODE&quot;:&quot;WPA-PSK-AES-CCMP&quot;}"/>
+		<default value="3"/>
+	</config>
+
+	<!--定制的SSID前缀-->
+	<config name="TZ_SPECIAL_SSID_PREFIX" type="text" description="定制的SSID前缀" detail="定制的SSID前缀，无论什么命名方式都会加上前缀，如果不使用请设置为空字符串" class_name="WIFI_CONFIG_FIELD">
+		<default value=""/>
+	</config>
+	<!--SSID命名规则;-->
+	<config name="TZ_WIFI_SSID_NAMING_RULE" type="select" description="SSID的命名规则" detail="SSID的命名规则，可由设备WiFi MAC地址随机生成，也可以固定" class_name="WIFI_CONFIG_FIELD"  >
+		<option value="static" description="固定SSID"/>
+		<option value="1" description="特殊三位数（通过wifi mac地址生成）"/>
+		<option value="2" description="使用MAC后6位Hex"/>
+		<option value="3" description="使用MAC后3位Hex"/>
+		<default value="static"/>
+	</config>
+	<!--路由器的固定SSID;-->
+	<config name="AP_WIFI_STATIC_SSID" type="text" description="固定的无线网络标识(SSID)" detail="路由器的固定SSID" class_name="WIFI_CONFIG_FIELD">
+		<default value=""/>
+	</config>
+	<!--KEY命名规则;-->
+	<config name="TZ_WIFI_KEY_RULE" type="select" description="Wi-Fi秘钥的规则" detail="Wi-Fi秘钥的规则，可由设备WiFi MAC地址随机生成，也可以固定" class_name="WIFI_CONFIG_FIELD"  >
+		<option value="static" description="固定秘钥"/>
+		<option value="1" description="随机秘钥方式一（数字、大写字母）"/>
+		<option value="2" description="随机秘钥方式二（数字、大写字母、小写字母）"/>
+		<default value="static"/>
+	</config>
+	<!--路由器的固定SSID;-->
+	<config name="AP_WIFI_STATIC_KEY" type="text" description="固定的Wi-Fi秘钥" detail="路由器固定的Wi-Fi秘钥" class_name="WIFI_CONFIG_FIELD">
+		<default value="123456789"/>
+	</config>
+	<!--WiFi 带宽-->
+	<config name="TZ_WIFI_40M_ENABLE" type="select" description="Wi-Fi带宽" detail="W13+的带宽，目前为保证与室外机一致，只能选择20MHz或者40MHz" class_name="WIFI_CONFIG_FIELD"  >
+		<option value="0" description="20MHz"/>
+		<option value="1" description="40MHz"/>
+		<default value="0"/>
+	</config>
+	<!--WiFi 最大连接用户数-->
+	<config name="TZ_MAX_STANUM" type="text" description="Wi-Fi最大连接用户数(1~32)" detail="Wi-Fi最大连接用户数，最大限制32" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="32" />
+	</config>
+	<!--WiFi 发射功率-->
+	<config name="TZ_MAX_STANUM" type="text" description="Wi-Fi发射功率，1~23（dBm）" detail="Wi-Fi发射功率，1~23（dBm）,默认为23,非专业人士不建议修改" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="23" />
+	</config>
+</project>
+
