@@ -1,103 +1,138 @@
 #!/bin/sh
 
 
-TZ_24G_WIFI_MAIN_DISABLE=
-#######2.4g main wifi
-TZ_ENABLE_WIFI=`uci get tz_mgr.main.TZ_ENABLE_WIFI`
-if [ ${TZ_ENABLE_WIFI} = "yes" ]; then
-	TZ_24G_WIFI_MAIN_DISABLE=0
-else
-	TZ_24G_WIFI_MAIN_DISABLE=1
-fi	
-
-TZ_MAIN_SSID=
-
-AP_SSID=`uci get tz_mgr.main.AP_SSID`
-if [ "${AP_SSID}" != "" ]; then
-	TZ_MAIN_SSID=${AP_SSID}
-else
-	TZ_MAIN_SSID="w13-ssid"
-fi	
+FACTORY_FLAG=/etc/.flag_factory_config
 
 
-TZ_ENCRYPTION=
-TZ_WIFI_KEY=
-IF_NO_KEY=
-#PSK || ""
-AP_SECFILE=`uci get tz_mgr.main.AP_SECFILE`
+if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
 
-#OPEN || SHARED || WEPAUTO ||WPA
-AP_SECMODE=`uci get tz_mgr.main.AP_SECMODE`
+	TZ_24G_WIFI_MAIN_DISABLE=
+	#######2.4g main wifi
+	TZ_ENABLE_WIFI=`uci get tz_mgr.main.TZ_ENABLE_WIFI`
+	if [ ${TZ_ENABLE_WIFI} = "yes" ]; then
+		TZ_24G_WIFI_MAIN_DISABLE=0
+	else
+		TZ_24G_WIFI_MAIN_DISABLE=1
+	fi	
 
-# 1 || 2 || 3
-AP_WPA=`uci get tz_mgr.main.AP_WPA`
+	TZ_MAIN_SSID=
 
-# CCMP || TKIP || CCMP+TKIP
-AP_CYPHER=`uci get tz_mgr.main.AP_CYPHER`
-
-if [ "${AP_CYPHER}" = "CCMP" ];then
-	AP_CYPHER="ccmp"
-elif [ "${AP_CYPHER}" = "TKIP" ];then
-	AP_CYPHER="tkip"
-elif [ "${AP_CYPHER}" = "CCMP+TKIP" ];then
-	AP_CYPHER="ccmp+tkip"
-else
-	AP_CYPHER="ccmp+tkip"
-fi
+	AP_SSID=`uci get tz_mgr.main.AP_SSID`
+	if [ "${AP_SSID}" != "" ]; then
+		TZ_MAIN_SSID=${AP_SSID}
+	else
+		TZ_MAIN_SSID="w13-ssid"
+	fi	
 
 
+	TZ_ENCRYPTION=
+	TZ_WIFI_KEY=
+	IF_NO_KEY=
+	#PSK || ""
+	AP_SECFILE=`uci get tz_mgr.main.AP_SECFILE`
 
-if [ "${AP_SECFILE}" = "PSK" ];then
-	TZ_WIFI_KEY=`uci get tz_mgr.main.PSK_KEY`
-	if [ "${AP_SECMODE}" = "WPA" -a ${AP_WPA} = "1" ];then
-		TZ_ENCRYPTION="psk+${AP_CYPHER}"
-	elif [ "${AP_SECMODE}" = "WPA" -a ${AP_WPA} = "2" ];then
-		TZ_ENCRYPTION="psk2+${AP_CYPHER}"
-	elif [ "${AP_SECMODE}" = "WPA" -a ${AP_WPA} = "3" ];then
-		TZ_ENCRYPTION="psk1+psk2"
+	#OPEN || SHARED || WEPAUTO ||WPA
+	AP_SECMODE=`uci get tz_mgr.main.AP_SECMODE`
+
+	# 1 || 2 || 3
+	AP_WPA=`uci get tz_mgr.main.AP_WPA`
+
+	# CCMP || TKIP || CCMP+TKIP
+	AP_CYPHER=`uci get tz_mgr.main.AP_CYPHER`
+
+	if [ "${AP_CYPHER}" = "CCMP" ];then
+		AP_CYPHER="ccmp"
+	elif [ "${AP_CYPHER}" = "TKIP" ];then
+		AP_CYPHER="tkip"
+	elif [ "${AP_CYPHER}" = "CCMP+TKIP" ];then
+		AP_CYPHER="ccmp+tkip"
+	else
+		AP_CYPHER="ccmp+tkip"
+	fi
+
+
+
+	if [ "${AP_SECFILE}" = "PSK" ];then
+		TZ_WIFI_KEY=`uci get tz_mgr.main.PSK_KEY`
+		if [ "${AP_SECMODE}" = "WPA" -a ${AP_WPA} = "1" ];then
+			TZ_ENCRYPTION="psk+${AP_CYPHER}"
+		elif [ "${AP_SECMODE}" = "WPA" -a ${AP_WPA} = "2" ];then
+			TZ_ENCRYPTION="psk2+${AP_CYPHER}"
+		elif [ "${AP_SECMODE}" = "WPA" -a ${AP_WPA} = "3" ];then
+			TZ_ENCRYPTION="psk1+psk2"
+		else
+			:
+		fi
+	fi
+
+
+	if [ "${AP_SECMODE}" = "OPEN" ];then
+		TZ_ENCRYPTION="wep-open"
+		IF_NO_KEY="#"
+	elif [ "${AP_SECMODE}" = "SHARED" ];then
+		TZ_ENCRYPTION="wep-shared"
+		TZ_WIFI_KEY=`uci get tz_mgr.main.AP_PRIMARY_KEY_0`
+	elif [ "${AP_SECMODE}" = "WEPAUTO" ];then
+		TZ_ENCRYPTION=""
+		IF_NO_KEY="#"
+	elif [ "${AP_SECMODE}" = "NONE" ];then
+		TZ_ENCRYPTION="none"
+		IF_NO_KEY="#"
 	else
 		:
 	fi
-fi
+
+	#20dbm
+	TZ_WIFI_TX_POWER_MAX=23
+	TX_POWER=`uci get tz_mgr.main.TXPOWER`
+	TZ_WIFI_TX_POWER=`echo $((${TX_POWER}*100/${TZ_WIFI_TX_POWER_MAX}/10*10))`
+
+	TZ_WIFI_CHANNEL=`uci get tz_mgr.main.AP_PRIMARY_CH`
+
+	TZ_WIFI_MAX_STATION_NUM=`uci get tz_mgr.main.TZ_MAX_STANUM`
+
+	TZ_ISOLATE_WLAN_CLIENTS=`uci get tz_mgr.main.TZ_ISOLATE_WLAN_CLIENTS`
+	TZ_WIFI_HIDDEN=`uci get tz_mgr.main.AP_HIDESSID`
+	TZ_WIFI_40M_ENABLE=`uci get tz_mgr.main.TZ_WIFI_40M_ENABLE`
+	if [ "${TZ_WIFI_40M_ENABLE}"  = "0" ];then
+		TZ_WIFI_BANDWIDTH="20"
+	elif [ "${TZ_WIFI_40M_ENABLE}"  = "1" ];then
+		TZ_WIFI_BANDWIDTH="40"
+	else
+		TZ_WIFI_BANDWIDTH="20"
+	fi
+
+	WIFIWORKMODE=`uci get tz_mgr.main.WIFIWORKMODE`
+	AP_CHMODE=`uci get tz_mgr.main.AP_CHMODE`
+	TZ_WIFI_MODE="9"
+	#这里字符串的对应关系是通过网页下发指令，w13侧抓包得到，而wifi_mode的值为对应uci配置的值，没有为什么!!!
+	if [ "${WIFIWORKMODE}" = "m11ng" -a "${AP_CHMODE}" = "11NGHT20" ];then
+		#bgn
+		TZ_WIFI_MODE="9"
+	elif [ "${WIFIWORKMODE}" = "m11b" -a "${AP_CHMODE}" = "11B" ]; then
+		#b
+		TZ_WIFI_MODE="1"
+	elif [ "${WIFIWORKMODE}" = "m11g" -a "${AP_CHMODE}" = "11G" ]; then
+		#g
+		TZ_WIFI_MODE="4"
+	elif [ "${WIFIWORKMODE}" = "m11bg" -a "${AP_CHMODE}" = "11G" ]; then
+		#bg
+		TZ_WIFI_MODE="0"
+	elif [ "${WIFIWORKMODE}" = "m11n" -a "${AP_CHMODE}" = "11NGHT20" ]; then
+		#n
+		TZ_WIFI_MODE="6"
+	else
+		:
+	fi
 
 
-if [ "${AP_SECMODE}" = "OPEN" ];then
-	TZ_ENCRYPTION="wep-open"
-	IF_NO_KEY="#"
-elif [ "${AP_SECMODE}" = "SHARED" ];then
-	TZ_ENCRYPTION="wep-shared"
-	TZ_WIFI_KEY=`uci get tz_mgr.main.AP_PRIMARY_KEY_0`
-elif [ "${AP_SECMODE}" = "WEPAUTO" ];then
-	TZ_ENCRYPTION=""
-	IF_NO_KEY="#"
-elif [ "${AP_SECMODE}" = "NONE" ];then
-	TZ_ENCRYPTION="none"
-	IF_NO_KEY="#"
-else
-	:
-fi
-
-#20dbm
-TZ_WIFI_TX_POWER_MAX=23
-TX_POWER=`uci get tz_mgr.main.TXPOWER`
-TZ_WIFI_TX_POWER=`echo $((${TX_POWER}*100/${TZ_WIFI_TX_POWER_MAX}/10*10))`
-
-TZ_WIFI_CHANNEL=`uci get tz_mgr.main.AP_PRIMARY_CH`
-
-TZ_WIFI_MAX_STATION_NUM=`uci get tz_mgr.main.TZ_MAX_STANUM`
-
-TZ_ISOLATE_WLAN_CLIENTS=`uci get tz_mgr.main.TZ_ISOLATE_WLAN_CLIENTS`
-TZ_WIFI_HIDDEN=`uci get tz_mgr.main.AP_HIDESSID`
-
-
-
-cat > /etc/config/wireless <<EOF
+	cat > /etc/config/wireless <<EOF
 config wifi-device  'ra0'
 	option type     'rt2860v2'
-	option mode 	'9'
+	option mode 	'${TZ_WIFI_MODE}'
 	option channel  '${TZ_WIFI_CHANNEL}'
 	option txpower 	'${TZ_WIFI_TX_POWER}'
-	option ht 	'20'
+	option ht 	'${TZ_WIFI_BANDWIDTH}'
 	option country 'US'
 	option disabled '${TZ_24G_WIFI_MAIN_DISABLE}'
 
@@ -115,4 +150,4 @@ ${IF_NO_KEY}	option key '${TZ_WIFI_KEY}'
                            
 EOF
 
-
+fi
