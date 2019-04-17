@@ -2884,6 +2884,7 @@ CONFIG_PACKAGE_eth_mac=y
 CONFIG_PACKAGE_macwriter=y
 # CONFIG_PACKAGE_mii_mgr is not set
 CONFIG_PACKAGE_mini_httpd-1.19=y
+# CONFIG_PACKAGE_mislic is not set
 # CONFIG_PACKAGE_mpstat is not set
 CONFIG_PACKAGE_netcwmp=y
 # CONFIG_PACKAGE_nfc is not set
@@ -2891,6 +2892,7 @@ CONFIG_PACKAGE_netcwmp=y
 CONFIG_PACKAGE_reg=y
 # CONFIG_PACKAGE_samba-server is not set
 CONFIG_PACKAGE_sendat=y
+# CONFIG_PACKAGE_slic_spidev is not set
 # CONFIG_PACKAGE_smtplog is not set
 # CONFIG_PACKAGE_socket_at is not set
 CONFIG_PACKAGE_switch=y
