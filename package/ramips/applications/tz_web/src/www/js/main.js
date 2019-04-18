@@ -121,6 +121,7 @@ var RequestCmd = {
     GET_WEB_LIST:217,
     SET_WEB_LIST:218,
     SET_TR069_CONFIG:219,
+    GET_LANGUAGE_SELECT:220
 };
 
 var MenuItem = {
@@ -786,6 +787,24 @@ var Page = {
                     href = href.substring(0, href.indexOf('?'));
                 }
                 location.href = Page.getUrl(href);
+            }
+
+        });
+    },
+     getLanguageConfig: function() {
+        Page.postJSON({
+            json: {
+                cmd: RequestCmd.GET_LANGUAGE_SELECT
+            },
+            success: function(data) {
+                if(data.data.web_language_select_enable == "1"){
+                    $("#languageSelect").show();
+                    $(".tr_language").show();
+                }else{
+                    $("#languageSelect").hide();
+                    $(".tr_language").hide();
+                }
+                
             }
 
         });

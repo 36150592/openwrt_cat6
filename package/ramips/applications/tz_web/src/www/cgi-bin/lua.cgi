@@ -2406,7 +2406,18 @@ function set_tr069_config()
 
 end
 
+function get_web_hide_config()
+	local tz_answer = {}
+	tz_answer["cmd"] = 220
+	local data_array = {}
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = system.system_get_web_info()
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
 
+
+end
 
 local switch = {
      [0] = get_sysinfo,
@@ -2485,6 +2496,7 @@ local switch = {
 	 [217] = get_web_list,
 	 [218] = set_web_list,
 	 [219] = set_tr069_config,
+	 [220] = get_web_hide_config,
 
  }
  

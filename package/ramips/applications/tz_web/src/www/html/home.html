@@ -93,7 +93,7 @@
         $languageSelect.html(Page.getLanguageList(Page.language)).change(function() {
             Page.changeLanguage($languageSelect);
         });
-        $languageSelect.hide();
+         Page.getLanguageConfig();
         /* LANGUAGE END */
 
         function setMenuItem(itemId) {
