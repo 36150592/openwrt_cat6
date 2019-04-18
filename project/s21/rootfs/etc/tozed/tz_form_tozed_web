@@ -19,12 +19,12 @@ else
 	cfg -a TZ_WEB_SHOW_LANGUAGE_SELECT="1" --section web
 fi
 
-if [ "${TZWEB_SHOW_LANGUAGE_SELECT}" = "" ]; then
+if [ "${TZWEB_PREFERRED_LANGUAGE}" = "" ]; then
 	cfg -a TZ_WEB_LANGUAGE="en" --section web
 	/etc/tool_script/set_web_language en
 else
-	cfg -a TZ_WEB_LANGUAGE="${TZWEB_SHOW_LANGUAGE_SELECT}" --section web
-	/etc/tool_script/set_web_language ${TZWEB_SHOW_LANGUAGE_SELECT}
+	cfg -a TZ_WEB_LANGUAGE="${TZWEB_PREFERRED_LANGUAGE}" --section web
+	/etc/tool_script/set_web_language ${TZWEB_PREFERRED_LANGUAGE}
 fi
 
 
