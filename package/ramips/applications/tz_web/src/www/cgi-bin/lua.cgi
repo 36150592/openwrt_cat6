@@ -277,6 +277,7 @@ function get_diviceinfo()
 	data_array["modem"] = modem.modem_get_info() or ''
 	--data_array["device"] = device.device_get_info() or ''
 	data_array["version"] = system.get_divice_version() or ''
+	 data_array["system"]  = system.system_get_status() or ''
     local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 43;

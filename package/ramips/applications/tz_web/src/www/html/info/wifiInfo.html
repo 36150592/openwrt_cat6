@@ -1,0 +1,219 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var currentId = Page.currentId;
+        var count = 0;
+        var sysInfo_plmn;
+        var loading = '-';
+
+        function getWlanSecMode(encry)
+        {
+            var secMode = "None";
+
+            switch (encry){
+                case "none" :
+                    secMode = "None";
+                    break;
+                case "wep" :
+                    secMode = "wep";
+                    break;
+                case "psk" :
+                    secMode = "wpa-psk";
+                    break;
+                case "psk2" :
+                    secMode = "wpa2-psk";
+                    break;
+                case "mixed" :
+                    secMode = "wpa/wpa2-psk";
+                    break;
+            }
+
+            return secMode;
+        }
+
+        function getWlanMode(mode) {
+            var secMode;
+            switch (mode){
+                case 0 :
+                    secMode = "legacy 11b/g mixed";
+                    break;
+                case 1 :
+                    secMode = "legacy 11b only";
+                    break;
+                case 2 :
+                    secMode = "legacy 11a only";
+                    break;
+                case 3 :
+                    secMode = "legacy 11a/b/g mixed";
+                    break;
+                case 4 :
+                    secMode = "legacy 11g only";
+                    break;
+                case 5 :
+                    secMode = "11abgn mixed";
+                    break;
+                case 6 :
+                    secMode = "11N";
+                    break;
+                case 7 :
+                    secMode = "11gn mixed";
+                    break;
+                case 8 :
+                    secMode = "11an mixed";
+                    break;
+                case 9 :
+                    secMode = "11bgn mixed";
+                    break;
+                case 10 :
+                    secMode = "11AGN mixed";
+                    break;
+                case 11 :
+                    secMode = "11A";
+                    break;
+                case 14 :
+                    secMode = "11NA";
+                    break;
+                case 15 :
+                    secMode = "11AC";
+                    break;
+                default :
+                    secMode = "ap";
+                    break;
+            }
+
+            return secMode;
+        }
+
+        function loadWlanPage() {
+            Page.postJSON({
+                json: {cmd: RequestCmd.WIFI_INFO},
+                success: function (datas) {
+                    var data = {"mode":"Master","message":"WLAN未开启"};
+                    var wirelessHtml = "";
+                    if (data.mode.trim() == "NULL") {
+                        wirelessHtml = Page.createTable(DOC.title.wlan2g + '-' + data.message, [], [], 0, 0);
+                    } else {
+                        var names = [];
+                        var values = [];
+                        var data2 = datas.data;
+                        names.push(DOC.wlan.currentMode);
+                        var mode = getWlanMode(parseInt(data2.mode));
+                        values.push(mode);
+
+                        names.push(DOC.wlan.wifi);
+                        if(data2.status == "0"){
+                            values.push(DOC.status.opened);
+                        } else {
+                            values.push(DOC.status.closed);
+                        }
+
+                        names.push(DOC.wlan.ssid);
+                        values.push(data2.ssid || loading);
+
+                        names.push(DOC.net.mac);
+                        values.push(data2.mac || loading);
+
+                        names.push(DOC.wlan.ssidBroadcast);
+                        if(data2.hidden_ssid == "0"){
+                            values.push(DOC.status.opened);
+                        } else {
+                            values.push(DOC.status.closed);
+                        }
+
+                       names.push(DOC.wlan.secMode);
+                        if(data2.encryption){
+                            var encryp = data2.encryption.split("+")[0];
+                            values.push(getWlanSecMode(encryp));
+                        }else{
+                            values.push(loading);
+                        }
+
+                        //values.push(FormatUtil.formatField(getWlanSecMode(data.encKey.trim(), data.wpa.trim(), data.wpaKeyMgmt.trim(), data.wpaPairwise.trim())));
+
+                        names.push(DOC.wlan.channel);
+                        values.push(data2.channel || loading);
+
+                        names.push(DOC.wlan.txPower);
+                        values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
+
+
+                        wirelessHtml = Page.createTable(DOC.title.wlan2g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    }
+                    $('#wlan_info').html(wirelessHtml);
+                    Page.setStripeTable("#wlan_info");
+                }
+            });
+
+        }
+
+        function loadWlan5gPage() {
+            Page.postJSON({
+                json: {cmd: RequestCmd.WIFI5_INFO},
+                success: function (datas) {
+                    console.log(datas);
+                    var data = {"mode":"Master","message":"WLAN未开启"};
+                    var wlan5gHtml = "";
+                    if (data.mode.trim() == "NULL") {
+                        wlan5gHtml = Page.createTable(DOC.title.wlan5g + data.message, [], [], 0, 0);
+                    } else {
+					  
+                        var names = [];
+                        var values = [];
+                        var data2 = datas.data;
+                        names.push(DOC.wlan.currentMode);
+						var mode = getWlanMode(parseInt(data2.mode));
+                        values.push(mode);
+
+                        names.push(DOC.wlan.wifi);
+                        if(data2.status == "0")
+                            values.push(DOC.status.opened);
+                        else
+                            values.push(DOC.status.closed);
+
+                        names.push(DOC.wlan.ssid);
+                        values.push(data2.ssid || loading);
+
+                        names.push(DOC.net.mac);
+                        values.push(data2.mac || loading);
+
+                        names.push(DOC.wlan.ssidBroadcast);
+                        if(data2.hidden_ssid == "0"){
+                            values.push(DOC.status.opened);
+                        } else {
+                            values.push(DOC.status.closed);
+                        }
+
+                        names.push(DOC.wlan.secMode);
+                        if(data2.encryption){
+                            var encryp = data2.encryption.split("+")[0];
+                            values.push(getWlanSecMode(encryp));
+                        }else{
+                            values.push(loading);
+                        }
+
+                        names.push(DOC.wlan.channel);
+                        values.push(data2.channel || loading);
+
+                        names.push(DOC.wlan.txPower);
+                        values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
+                                 
+                        wlan5gHtml = Page.createTable(DOC.title.wlan5g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                    }
+					
+                    $('#wlan_5g_info').html(wlan5gHtml);
+                    Page.setStripeTable("#wlan_5g_info");
+                }
+            });
+
+        }
+    loadWlanPage();
+    loadWlan5gPage();
+     
+    });
+</script>
+
+<div class="detail_box">
+    <div id="wlan_info"></div>
+    <div id="wlan_5g_info"></div>
+</div>

@@ -125,7 +125,10 @@ var RequestCmd = {
 };
 
 var MenuItem = {
-    SYS_INFO: { cmd: RequestCmd.SYS_INFO, url: "html/info/sysInfo.html" },
+    HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
+    WAN_INFO: { cmd: RequestCmd.SYS_INFO, url: "html/info/wanInfo.html" },
+    FourG_INFO: { cmd: RequestCmd.SYS_INFO, url: "html/info/4gInfo.html" },
+    WIFI_INFO: { cmd: RequestCmd.SYS_INFO, url: "html/info/wifiInfo.html" },
     DEVICE_INFO: { cmd: RequestCmd.DEVICE_VERSION_INFO, url: "html/info/deviceInfo.html" },
 
     NETWORK_CONFIG: { cmd: RequestCmd.NETWORK_CONFIG, url: "html/config/networkConfig.html" },
@@ -633,6 +636,13 @@ var StatusUtil = {
                     $('#lan2').html(StatusUtil.formatNetInterfaceInfo(interStatus[1], "Lan2"));
                     $('#lan3').html(StatusUtil.formatNetInterfaceInfo(interStatus[2], "Lan3"));
                     $('#wan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[3], "Wan"));
+                    sessionStorage["2g_register_status"] = modemStatus["2g_register_status"];
+                    sessionStorage["3g_register_status"] = modemStatus["3g_register_status"];
+                    sessionStorage["4g_register_status"] = modemStatus["4g_register_status"];
+                    sessionStorage["signal_lvl"] = modemStatus.signal_lvl;
+                    sessionStorage["wifi_status"] = wifiStatus.status;
+                    sessionStorage["wifi5_status"] = wifiStatus.status5;
+                    sessionStorage["network_link_stauts"] = modemStatus.network_link_stauts;
                     if(simStatus.card_status == 0)                    {
                         var singalLevel = modemStatus.signal_lvl;
                         var netInfo = StatusUtil.formatSingalLevel(singalLevel);

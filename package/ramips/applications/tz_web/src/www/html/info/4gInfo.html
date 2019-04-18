@@ -1,0 +1,87 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var currentId = Page.currentId;
+        var count = 0;
+        var sysInfo_plmn;
+        var loading = '-';
+      
+       function getNetState(flag) {
+            var state = "-";
+            if(flag == -1){
+                state = "?";
+            }else if(flag == 0){
+                state = "2g";
+            }else if(flag == 2){
+                state = "3g";
+            }else if(flag == 7){
+                state = "4g";
+            }
+            return state;
+        }
+
+        function loadPage3() {
+
+            Page.postJSON({
+                json: { cmd: RequestCmd.SYS_INFO_3},
+                success: function(datas) {
+
+                    var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
+                    var values_run = [], values_sim = [], values_net = [], values_lan = [], values_wan = [], values_lte = [];
+                    Page.isNULLToSpace = true;
+
+                    var data2 = datas.data;
+                    var data_modem = data2.modem;
+                    console.log(data_modem);
+                    names_net.push(DOC.lbl.netMode);
+                    names_net.push(DOC.lbl.signal);
+                 
+                    names_net.push(DOC.lte.rsrp);
+                    names_net.push(DOC.lte.rssi);
+                    names_net.push(DOC.lte.rsrq);
+                    names_net.push(DOC.lte.sinr);
+                    names_net.push(DOC.lte.phyCellId);
+                    names_net.push(DOC.lte.freqPoint);
+                    names_net.push(DOC.lte.enodeB);
+                    names_net.push(DOC.lte.cellId);
+                    names_net.push(DOC.lte.cqi);
+                    names_net.push(DOC.lte.mcs);
+                    names_net.push(DOC.lte.plmn);
+
+                    //var netState = StatusUtil.getNetState(data.signalLevel, data.eregStat, data.act, 0);
+                    var netState = getNetState(data_modem.act);
+                    var singalLevel = data_modem.signal_lvl;
+
+     
+                    values_net.push(netState);
+                    values_net.push(StatusUtil.formatSingalLevel(singalLevel));
+                
+                    values_net.push(data_modem.rsrp ? FormatUtil.formatField(data_modem.rsrp, 'dBm') : loading);
+                    values_net.push(data_modem.rssi ? FormatUtil.formatField(data_modem.rssi, 'dBm') : loading);
+                    values_net.push(data_modem.rsrq ? FormatUtil.formatField(data_modem.rsrq, 'dB') : loading);
+                    values_net.push(data_modem.sinr ? FormatUtil.formatField(data_modem.sinr, 'dB') : loading);
+                    values_net.push(data_modem.pci || loading);
+                    values_net.push(data_modem.earfcn ||loading);
+                    values_net.push(data_modem.enodebid || loading);
+                    values_net.push(data_modem.cell_id || loading);
+                    values_net.push(data_modem.cqi || loading);
+                    values_net.push(data_modem.mcs ||loading);
+                    values_net.push(data_modem.plmn || loading);
+                    sysInfo_plmn = data_modem.plmn; 
+                     var net_html = Page.createTable(DOC.title.network, names_net, values_net, names_net.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                     $('#net_info').html(net_html);
+                     Page.isNULLToSpace = false;
+                     return sysInfo_plmn;
+                }
+            })
+        }
+
+
+     loadPage3();
+    });
+</script>
+
+<div class="detail_box">
+    <div id="net_info"></div>
+</div>

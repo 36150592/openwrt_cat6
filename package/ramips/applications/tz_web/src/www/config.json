@@ -1,15 +1,15 @@
 {
   "Login":{
 		"TZ_TEST_USERNAME":{
-			"AUTH":"0xF8F8E0",
+			"AUTH":"0xF8F8FC",
 			"LEVEL":"1"
 		},
         "TZ_SUPER_USERNAME":{
-			"AUTH":"0xF8F8E0",
+			"AUTH":"0xF8F8FC",
 			"LEVEL":"2"
 		},
 		 "TZ_USERNAME":{
-			"AUTH":"0xF8F8E0",
+			"AUTH":"0xF8F8FC",
 			"LEVEL":"3"
 		}
   },

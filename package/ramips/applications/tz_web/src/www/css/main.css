@@ -1135,6 +1135,59 @@ input.txt4 {
     width: 35px;
     text-indent: 27px;
 }
+.signalHome {
+	display: block;
+}
+.signalHome0 {
+    width: 118px;
+	height: 118px;
+	overflow: hidden;
+	background-repeat: no-repeat;
+	background-image: url('../images/signalLevel3.png');
+	background-position: left -1089px;
+}
+.signalHome1 {
+	width: 118px;
+	height: 118px;
+	overflow: hidden;
+	background-repeat: no-repeat;
+	background-image: url('../images/signalLevel3.png');
+	background-position: left -1207px;
+}
+.signalHome2 {
+ 	width: 118px;
+	height: 118px;
+	overflow: hidden;
+	background-repeat: no-repeat;
+	background-image: url('../images/signalLevel3.png');
+	background-position: left -1325px;
+}
+.signalHome3 {
+	width: 118px;
+	height: 118px;
+	overflow: hidden;
+	background-repeat: no-repeat;
+	background-image: url('../images/signalLevel3.png');
+	background-position: left -11443px;
+}
+.signalHome4 {
+	width: 118px;
+	height: 118px;
+	overflow: hidden;
+	background-repeat: no-repeat;
+	background-image: url('../images/signalLevel3.png');
+	background-position: left -1561px;
+}
+.signalHome5 {
+	width: 118px;
+	height: 118px;
+	overflow: hidden;
+	background-repeat: no-repeat;
+	background-image: url('../images/signalLevel3.png');
+	background-position: left -1679px;
+}
+
+
 .singal0, .singal0_lock {
     background: url("../images/anhui/singalLevel.gif") no-repeat 0 0px;
 }
