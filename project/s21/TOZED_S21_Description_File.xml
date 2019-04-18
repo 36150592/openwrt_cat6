@@ -987,7 +987,7 @@ class_name="MODEM_CONFIG_FIELD">
 	  <depend value="TZ_BAND_PREF_64"/>
 	  <default value="0"/>
 	 </config>
-	<config name="TZMODEM_PLMN_LOCK" type="text"  description="锁运营商" detail="锁运营商，值为空时关闭锁运营商，值不为空时开启" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_PLMN_LOCK" type="text"  description="锁运营商" detail="锁运营商，值为空时关闭锁运营商，值不为空时开启，有多个plmn号则用,号隔开" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
 
