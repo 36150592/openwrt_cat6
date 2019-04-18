@@ -231,10 +231,6 @@ bitcomposite表示使用位进行组合的配置字段
 		<default value="auto"/>
 	</config>
 
-	<config name="TZWIFI_24G_MAIN_WIFI_TX_POWER" type="text" description="2.4G wifi 发射功率" detail="2.4G wifi 发射功率" class_name="WIFI_CONFIG_FIELD"  >
-        	<default value="23" />
-	</config>
-
 	<!--2.4G WIFI 辅WIFI 1-->
 	<config name="TZWIFI_24G_VICE_1_WIFI_ENABLE" type="select" description="2.4G 辅wifi 1 开关" detail="2.4G 辅wifi 1 开关，默认关闭" class_name="WIFI_CONFIG_FIELD"  >
         	<option value="n" description="关闭" />
