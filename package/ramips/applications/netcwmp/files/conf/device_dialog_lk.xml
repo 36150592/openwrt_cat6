@@ -389,6 +389,7 @@
                         </object>
                     </object>
                 </object>
+  
                 <object name="WLANConfiguration"  numEntriesParameter="LANWLANConfigurationNumberOfEntries" minEntries="0" maxEntries="unbounded" version="1.0" refresh_func="cpe_refresh_igd_WLANConfiguration">
                     <object name="{i}">
                         <param name="Enable" rw="1" version="1.0" get_func="cpe_get_igd_EnableOfWLAN" set_func="cpe_set_igd_EnableOfWLAN">

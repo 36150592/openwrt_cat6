@@ -10885,17 +10885,17 @@ char* util_get_wan_interface_name( void )
 			if( !strncmp(recvbuf,"eth0.2",sizeof("eth0.2")-1))
 				network_dev_name= "eth0.2";	
 
-			else if( !strncmp(recvbuf,"ath0",sizeof("ath0")-1))
-				network_dev_name= "ath0";
-			else if( !strncmp(recvbuf,"ath1",sizeof("ath1")-1))
-				network_dev_name= "ath1";
-			else 	if(!strncmp(recvbuf,"eth0",sizeof("eth0")-1))
-				network_dev_name= "eth0";		
+			else if( !strncmp(recvbuf,"bmwan0",sizeof("bmwan0")-1))
+				network_dev_name= "bmwan0";
+			else if( !strncmp(recvbuf,"bmwan1",sizeof("bmwan1")-1))
+				network_dev_name= "bmwan1";
+			else 	if(!strncmp(recvbuf,"bmwan2",sizeof("bmwan2")-1))
+				network_dev_name= "bmwan2";		
 			else
-				network_dev_name= "usb0";
+				network_dev_name= "eth0.2";
 		}
 		else
-			network_dev_name= "usb0" ;
+			network_dev_name= "eth0.2" ;
 	}
 #else
 	network_dev_name= "eth0.2" ;

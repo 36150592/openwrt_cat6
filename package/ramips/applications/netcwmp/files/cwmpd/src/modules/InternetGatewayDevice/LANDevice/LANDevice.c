@@ -96,7 +96,7 @@ int getWlanClientInfo(WlanClientInfo *info)
 	char cmd[128];
 	char buffer[128];
 
-	sprintf(cmd, "wlanconfig ath0 list sta > /tmp/.wlan_client_list");
+	sprintf(cmd, "iwinfo ra0 assoclist|grep SNR > /tmp/.wlan_client_list");
 	if(read_memory(cmd, buffer, sizeof(buffer)) < 0)
 	{
 		info->count = 0;
@@ -127,7 +127,7 @@ int getWlanClientInfo(WlanClientInfo *info)
 			strncpy(info->client[i - 1].mac, buffer, 32);
 			memset(info->client[i - 1].ip, 0, 64);
 		}
-		sprintf(cmd, "awk 'NR==%d {print $4}' /tmp/.wlan_client_list", i + 1);
+		sprintf(cmd, "awk 'NR==%d {print $2}' /tmp/.wlan_client_list", i + 1);
 		if(read_memory(cmd, buffer, sizeof(buffer))  == 0)
 		{
 			util_strip_traling_spaces(buffer);
@@ -135,10 +135,7 @@ int getWlanClientInfo(WlanClientInfo *info)
 		}
 	}
 
-	sprintf(cmd, "dumpleases > /tmp/.dumpleases_tmp");
-	if(read_memory(cmd, buffer, sizeof(buffer)) < 0)
-		return 0;
-	sprintf(cmd, "cat /tmp/.dumpleases_tmp | wc -l");
+	sprintf(cmd, "cat /tmp/dhcp.leases  | wc -l");
 	if(read_memory(cmd, buffer, sizeof(buffer)) < 0)
 		return 0;
 	else
@@ -147,7 +144,7 @@ int getWlanClientInfo(WlanClientInfo *info)
 		return 0;
 	for(i = 1; i <= count; i++)
 	{
-		sprintf(cmd, "awk 'NR==%d {print $1}' /tmp/.dumpleases_tmp", i + 1);
+		sprintf(cmd, "awk 'NR==%d {print $2}' /tmp/dhcp.leases", i + 1);
 		if(read_memory(cmd, buffer, sizeof(buffer)) < 0)
 			continue;
 		util_strip_traling_spaces(buffer);
@@ -155,7 +152,7 @@ int getWlanClientInfo(WlanClientInfo *info)
 		{
 			if(strncmp(info->client[j].mac, buffer, 32) != 0)
 				continue;
-			sprintf(cmd, "awk 'NR==%d {print $2}' /tmp/.dumpleases_tmp", i + 1);
+			sprintf(cmd, "awk 'NR==%d {print $3}' /tmp/.dumpleases_tmp", i + 1);
 			if(read_memory(cmd, buffer, sizeof(buffer)) < 0)
 				continue;
 			util_strip_traling_spaces(buffer);
@@ -3285,7 +3282,7 @@ int cpe_set_igd_APNSwitchOfMultiSSID(cwmp_t *cwmp, const char *name, const char 
 
 int cpe_get_igd_APNSwitchOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-    strcpy(param, "");
+    strcpy(param, "0");
     *value = param;
     return FAULT_CODE_OK;
 }
@@ -3343,7 +3340,8 @@ int cpe_set_igd_UsernameOfMultiSSID(cwmp_t *cwmp, const char *name, const char *
 	index++;// 2, 3
 	sprintf(nv_name,"apn%d_username", index);
 	if (strlen(value) != 0) {
-		nv_cfg_set(nv_name, value);
+	   //	nv_cfg_set(nv_name, value);
+
 	}
     return FAULT_CODE_OK;
 }

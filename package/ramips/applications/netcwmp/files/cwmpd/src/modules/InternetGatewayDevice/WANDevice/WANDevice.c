@@ -1,4 +1,4 @@
-#define WANDEVICE_INTERFACE_NAME         "usb0"
+#define WANDEVICE_INTERFACE_NAME         "eth0.2"
 
 extern int cwmp_model_delete_parameter(parameter_node_t * param);
 
@@ -308,21 +308,93 @@ int cpe_get_idg_Layer1DownstreamMaxBitRate(cwmp_t * cwmp, const char * name, cha
 
 int  cpe_refresh_X_TOZED_APN_PROFILE(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
 {
+	igd_entries.apn_entry = 3;
     cwmp_refresh_i_parameter(cwmp, param_node, igd_entries.apn_entry);
     cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg);
 
     return FAULT_CODE_OK;
 }
 
+/*
+static int uci_apn_get_wifi_param(const char * name, const char * option, char ** value)
+{
+    int index;
+    int num;
+    char cmdbuf[64] = {0};
+    num = 4;
+    printf("jiangyibo %s\n",name);
+    index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", 3);
+    
+    if (0 < index && index <= num)
+    {
+        
+        sprintf(cmdbuf,"uci -q get mutilssid.@wifi-iface[%d].%s",index - 1,option);
+        printf("jiangyibo 88 %s\n",cmdbuf);
+        read_memory(cmdbuf, param, sizeof(param));
+        printf("jiangyibo 88 %s\n",param);
+        util_strip_traling_spaces(param);
+        *value = param;
+    }
+    else
+    {   
+        return FAULT_CODE_9005;
+    }
+    printf("jiangyibo %d\n",index);
+    return FAULT_CODE_OK;
+}
+*/
+
+
 int cpe_get_CurrentProfileOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	get_single_config_attr("TZ_APN_PROFILE_NAME", param);
-	if(strlen(param) == 0)
-		*value = NULL;
-	else
-		*value = param;
+	int index;
+	index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", 3);
+    
+    if (0 < index && index <= 3)
+    {
+           if(1 == index){
+				strcpy(param, "main_apn");
+			}
+			else if(2 == index){
+				strcpy(param, "primary_apn");
+			}
+						else if(3 == index){
+				strcpy(param, "primary_apn1");
+			}
+			else {
+				strcpy(param, "");
+			}
+	}
+	*value = param;
+    return FAULT_CODE_OK;
 
-	return FAULT_CODE_OK;
+}
+
+static int uci_apn_get_wifi_param(const char * name, const char * option, char ** value)
+{
+    int index;
+    int num;
+    char cmdbuf[64] = {0};
+    num = 4;
+    printf("jiangyibo %s\n",name);
+    index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    
+    if (0 < index && index <= num)
+    {
+        
+        sprintf(cmdbuf,"uci -q get mutilssid.@wifi-iface[%d].%s",index - 1,option);
+        printf("jiangyibo 88 %s\n",cmdbuf);
+        read_memory(cmdbuf, param, sizeof(param));
+        printf("jiangyibo 88 %s\n",param);
+        util_strip_traling_spaces(param);
+        *value = param;
+    }
+    else
+    {   
+        return FAULT_CODE_9005;
+    }
+    printf("jiangyibo %d\n",index);
+    return FAULT_CODE_OK;
 }
 
 int cpe_set_CurrentProfileOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
@@ -332,46 +404,16 @@ int cpe_set_CurrentProfileOfAPN(cwmp_t *cwmp, const char *name, const char *valu
 
 	if(value == NULL)
 		return FAULT_CODE_OK;
-	apn_index = atoi(value);
-	if(apn_index < 1)
-		apn_index = 1;
-	if(apn_index > igd_entries.apn_entry)
-		apn_index = igd_entries.apn_entry;
-
-	sprintf(param, "%d", apn_index);
-	set_single_config_attr("TZ_APN_PROFILE_NAME", param);
-
-	sprintf(config, "TZ_CONFIG_APN_NAME%d", apn_index);
-	get_single_config_attr(config, param);
-	set_single_config_attr("TZ_CONFIG_APN_NAME", param);
-
-	sprintf(config, "TZ_PPP_USERNAME%d", apn_index);
-	get_single_config_attr(config, param);
-	set_single_config_attr("TZ_PPP_USERNAME", param);
-
-	sprintf(config, "TZ_PPP_PASSWORD%d", apn_index);
-	get_single_config_attr(config, param);
-	set_single_config_attr("TZ_PPP_PASSWORD", param);
-
-	sprintf(config, "TZ_PPP_AUTH_TYPE%d", apn_index);
-	get_single_config_attr(config, param);
-	set_single_config_attr("TZ_PPP_AUTH_TYPE", param);
-
 	return FAULT_CODE_OK;
 }
 
 int cpe_get_ProfileNameOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	char config[64];
-    int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
-    sprintf(config, "TZ_APN_PROFILE_NAME%d", index);
-	get_single_config_attr(config, param);
-	if(strlen(param) == 0)
-		*value = NULL;
-	else
-		*value = param;
-
-	return FAULT_CODE_OK;
+	int res = uci_apn_get_wifi_param(name, "ssid", "TZ_DIALTOOL2_APN_NAME");
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    return FAULT_CODE_OK;
 }
 
 int cpe_set_ProfileNameOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
@@ -386,16 +428,11 @@ int cpe_set_ProfileNameOfAPN(cwmp_t *cwmp, const char *name, const char *value, 
 
 int cpe_get_APNNameOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	char config[64];
-    int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
-    sprintf(config, "TZ_CONFIG_APN_NAME%d", index);
-	get_single_config_attr(config, param);
-	if(strlen(param) == 0)
-		*value = NULL;
-	else
-		*value = param;
-
-	return FAULT_CODE_OK;
+	int res = uci_apn_get_wifi_param(name, "ssid", "TZ_DIALTOOL2_PPP_USERNAME");
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    return FAULT_CODE_OK;
 }
 
 int cpe_set_APNNameOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
@@ -410,16 +447,11 @@ int cpe_set_APNNameOfAPN(cwmp_t *cwmp, const char *name, const char *value, int 
 
 int cpe_get_PPPUserNameOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	char config[64];
-    int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
-    sprintf(config, "TZ_PPP_USERNAME%d", index);
-	get_single_config_attr(config, param);
-	if(strlen(param) == 0)
-		*value = NULL;
-	else
-		*value = param;
-
-	return FAULT_CODE_OK;
+	int res = uci_apn_get_wifi_param(name, "ssid", "TZ_DIALTOOL2_PPP_USERNAME");
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    return FAULT_CODE_OK;
 }
 
 int cpe_set_PPPUserNameOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
@@ -434,16 +466,11 @@ int cpe_set_PPPUserNameOfAPN(cwmp_t *cwmp, const char *name, const char *value, 
 
 int cpe_get_PPPPasswdOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	char config[64];
-    int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
-    sprintf(config, "TZ_PPP_PASSWORD%d", index);
-	get_single_config_attr(config, param);
-	if(strlen(param) == 0)
-		*value = NULL;
-	else
-		*value = param;
-
-	return FAULT_CODE_OK;
+	int res = uci_apn_get_wifi_param(name, "ssid", "TZ_DIALTOOL2_PPP_PASSWORD");
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    return FAULT_CODE_OK;
 }
 
 int cpe_set_PPPPasswdOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
@@ -458,16 +485,11 @@ int cpe_set_PPPPasswdOfAPN(cwmp_t *cwmp, const char *name, const char *value, in
 
 int cpe_get_AuthTypeOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	char config[64];
-    int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
-    sprintf(config, "TZ_PPP_AUTH_TYPE%d", index);
-	get_single_config_attr(config, param);
-	if(strlen(param) == 0)
-		*value = NULL;
-	else
-		*value = param;
-
-	return FAULT_CODE_OK;
+	int res = uci_apn_get_wifi_param(name, "ssid", "TZ_MUTILAPN1_AUTH_TYPE");
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    return FAULT_CODE_OK;
 }
 
 int cpe_set_AuthTypeOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
