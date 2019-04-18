@@ -48,7 +48,6 @@
         };
         var lang = MasterPage.init(opts);
 
-
         var $btnSave = $('#btnSave').disable(),
             $locks = $('.lock').hide(),
             $spanLockedStatus = $('#spanLockedStatus'),
@@ -64,6 +63,12 @@
                 $locks.show();
             }else {
                 $locks.hide();
+            }
+
+            if(this.value == "1"){
+                $(".pciEarfcn").show();
+            }else{
+                $(".pciEarfcn").hide();
             }
         });
 
@@ -95,6 +100,8 @@
                         lockedStatus = 1;
                         currentPhyCellId = datas.modem.pci;
                         currentFreqPoint = datas.modem.earfcn;
+                        $("#currentPoint").text(datas.modem.earfcn);
+                        $("#currentPhyCellId").text(datas.modem.pci);
                         $btnSave.enable();
                         $lockTypes.enable();
                         if(datas.pci != undefined && datas.pci != ''){
@@ -106,6 +113,10 @@
                             }else {
                                 lockType = 2;
                             }
+                        }
+
+                        if(lockType == "1"){
+                            $(".pciEarfcn").show();
                         }
                     }
                 },
@@ -197,6 +208,16 @@
                         </label>
                     </td>
                 </tr>
+
+                <tr class="pciEarfcn" style="display:none;">
+                    <th><%- freqPoint %><%- colon %></th>
+                    <td><span id="currentPoint"></span></td>
+                </tr>
+                <tr class="pciEarfcn" style="display:none;">
+                    <th><%- phyCellId %><%- colon %></th>
+                    <td><span id="currentPhyCellId"></span></td>
+                </tr>
+
                 <tr class="lock">
                     <th><%- freqPoint %><%- colon %></th>
                     <td><input type="text" id="txtFreqPoint" name="txtFreqPoint" /></td>
