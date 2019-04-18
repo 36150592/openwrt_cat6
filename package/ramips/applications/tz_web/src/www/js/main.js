@@ -120,6 +120,7 @@ var RequestCmd = {
     GET_PING_LIST:216,
     GET_WEB_LIST:217,
     SET_WEB_LIST:218,
+    SET_TR069_CONFIG:219,
 };
 
 var MenuItem = {

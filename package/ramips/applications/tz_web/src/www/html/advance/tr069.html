@@ -6,7 +6,7 @@
 
 
         var $btnSave = $('#btnSave');
-        var $tr069 = $('.tr069').hide(),
+        var $tr069 = $('.tr069'),
             $noticeInterval = $('#noticeInterval'),
             $trNotice = $('.trNotice'),
             $trAcs = $('.trAcs'),
@@ -14,44 +14,61 @@
             $trCpe = $('.trCpe'),
             $trCpeInput = $('.trCpe input');
 
-        function setTr069CtrlsStatus(enabled, noticeEnabled, acsAuthEnabled, cpeAuthEnabled) {
-            if (enabled) {
-                $tr069.show();
-                if (!noticeEnabled) {
-                    $trNotice.hide();
-                    $noticeInterval.addClass('ignore');
-                } else {
-                    $noticeInterval.removeClass('ignore');
-                }
-                if (!acsAuthEnabled) {
-                    $trAcs.hide();
-                    $trAcsInput.addClass('ignore');
-                } else {
-                    $trAcsInput.removeClass('ignore');
-                }
-                if (!cpeAuthEnabled) {
-                    $trCpe.hide();
-                    $trCpeInput.addClass('ignore');
-                } else {
-                    $trCpeInput.removeClass('ignore');
-                }
-            } else {
-                $tr069.hide();
-            }
-        }
-
         var $enabled = $('#enabled'),
             $noticeEnabled = $('#noticeEnabled'),
             $acsAuthEnabled = $('#acsAuthEnabled'),
             $cpeAuthEnabled = $('#cpeAuthEnabled');
+            $tr069.hide();
+            $(".trNotice").hide();
+            $(".trAcs").hide();
+            $(".trCpe").hide();
 
-        $('input[type=checkbox]').bind('click', function() {
-            setTr069CtrlsStatus(
-                $enabled.prop("checked"),
-                $noticeEnabled.prop("checked"),
-                $acsAuthEnabled.prop("checked"),
-                $cpeAuthEnabled.prop("checked"));
-        });
+        function isShowenabled(){
+             if($("#enabled").prop("checked")){
+               $tr069.show();
+             }else{
+                $tr069.hide();
+             }
+        }
+        function isShowtrNotice(){
+             if($("#noticeEnabled").prop("checked")){
+               $(".trNotice").show();
+             }else{
+                $(".trNotice").hide();
+             }
+        }
+
+        function isShowtrAcs(){
+            if($("#acsAuthEnabled").prop("checked")){
+                $(".trAcs").show();
+             }else{
+                $(".trAcs").hide();
+             }
+        }
+
+        function isShowtrCpe(){
+             if($("#cpeAuthEnabled").prop("checked")){
+                $(".trCpe").show();
+             }else{
+                $(".trCpe").hide();
+             }
+        }
+
+        $("#enabled").change(function(){
+           isShowenabled();
+           isShowtrNotice();
+           isShowtrAcs();
+           isShowtrCpe();
+        })
+        $("#noticeEnabled").change(function(){
+            isShowtrNotice();
+        })
+        $("#acsAuthEnabled").change(function(){
+           isShowtrAcs();
+        })
+        $("#cpeAuthEnabled").change(function(){
+            isShowtrCpe();
+        })
 
         // 获取TR069数据
         Page.postJSON({
@@ -60,46 +77,108 @@
                 method: JSONMethod.GET
             },
             success: function(data) {
+                var datas = data.tr069;
+            if(datas.tr069_app_enable == "y"){
+                $("#enabled").prop("checked",true);
+               $(".tr069").show();
+
+            }else{
+                 $(".tr069").hide();
+                 $("#enabled").prop("checked",false);
+            }
+            $("#url").val(datas.tr069_ServerURL);
+
+            if(datas.tr069_PeriodicInformEnable == "y"){
+                $(".trNotice").show();
+                $noticeEnabled.prop("checked",true);
+            }else{
+                $noticeEnabled.prop("checked",false);
+                $(".trNotice").hide();
+            }
+
+            $("#noticeInterval").val(datas.tr069_PeriodicInformInterval);
+
+            if(datas.tr069_ACS_auth == "y"){
+                $(".trAcs").show();
+                $acsAuthEnabled.prop("checked",true);
+            }else{
+                $('.trAcs').hide();
+                 $acsAuthEnabled.prop("checked",false);
+            }
+
+            if(datas.tr069_CPE_auth == "y"){
+                $(".trCpe").show();
+                $cpeAuthEnabled.prop("checked",true);
+            }else{
+                $(".trCpe").hide();
+                 $cpeAuthEnabled.prop("checked",false);
+            }
+
+            $("#userName").val(datas.tr069_ServerUsername);
+            $("#passwd").val(datas.tr069_ServerPassword);
+            $("#linkUserName").val(datas.tr069_ConnectionRequestUname);
+            $("#linkPasswd").val(datas.tr069_ConnectionRequestPassword);
+           
+
+
             }
         });
         var rules = {
-                noticeInterval: { required: true, number: true, min: 10 },
-                userName: { required: true },
-                passwd: { required: true },
-                linkUserName: { required: true },
-                linkPasswd: { required: true }
+                noticeInterval: { number: true, min: 10 }
             },
             messages = {
-                noticeInterval: { required: CHECK.required.noticeInterval, number: CHECK.format.inputNumber, min: CHECK.min.noticeInterval },
-                userName: { required: CHECK.required.acsUsername },
-                passwd: { required: CHECK.required.acsPasswd },
-                linkUserName: { required: CHECK.required.cpeUsername },
-                linkPasswd: { required: CHECK.required.cpePasswd }
+                noticeInterval: {  number: CHECK.format.inputNumber, min: CHECK.min.noticeInterval }
             };
 
         $btnSave.bind('click', function() {
             var $form = $('#childForm');
-            if(!CheckUtil.checkForm($form, rules, messages)){
+             if(!CheckUtil.checkForm($form, rules, messages)){
                 return false;
+             }
+            var json = JSON.parmsToJSON($form);
+            json.cmd = RequestCmd.SET_TR069_CONFIG;
+            json.method = JSONMethod.POST;
+            if($("#enabled").prop("checked")){
+                 json.enabled = "y";
+            }else{
+                json.enabled = "n";
+                json.url = "";
+                $("#noticeEnabled").prop("checked",false);
+                $("#acsAuthEnabled").prop("checked",false);
+                $("#cpeAuthEnabled").prop("checked",false);
+            }
+            if($("#noticeEnabled").prop("checked")){
+                 json.noticeEnabled = "y";
+            }else{
+                json.noticeEnabled = "n";
+                json.noticeInterval = "";
+            }
+            if($("#acsAuthEnabled").prop("checked")){
+                 json.acsAuthEnabled = "y";
+            }else{
+                
+                json.userName = "";
+                json.passwd = "";
+                json.acsAuthEnabled = "n";
             }
 
-            var json = JSON.parmsToJSON($form);
-            json.cmd = RequestCmd.TR069_CONFIG;
-            json.method = JSONMethod.POST;
-            json.enabled = (json.enabled) ? "1" : "0";
-            json.noticeEnabled = (json.noticeEnabled) ? "1" : "0";
-            json.acsAuthEnabled = (json.acsAuthEnabled) ? "1" : "0";
-            json.cpeAuthEnabled = (json.cpeAuthEnabled) ? "1" : "0";
-
-			
- //           Page.postJSON({
- //               $id: $btnSave,
- //               json: json,
- //               success: function() {
- //                   //SysUtil.rebootDevice();
-//                    AlertUtil.alertMsg(PROMPT.saving.success);
-//                }
- //           });
+             if($("#cpeAuthEnabled").prop("checked")){
+                 json.cpeAuthEnabled = "y";
+            }else{
+               
+                json.cpeAuthEnabled = "n";
+                json.linkUserName = "";
+                json.linkPasswd = "";
+            }
+           
+           Page.postJSON({
+               $id: $btnSave,
+               json: json,
+               success: function() {
+                   //SysUtil.rebootDevice();
+                   AlertUtil.alertMsg(PROMPT.saving.success);
+               }
+           });
         });
     });
 </script>
@@ -114,11 +193,11 @@
                         <input type="checkbox" id="enabled" name="enabled" /><%- status.enable %>
                     </td>
                 </tr>
-                <tr class="tr069">
+                <tr class="tr069 showEnable">
                     <th><%- tr069.url %><%- colon %></th>
                     <td><input type="text" id="url" name="url" class="larger" maxlength="100" /></td>
                 </tr>
-                <tr class="tr069">
+                <tr class="tr069 showEnable">
                     <th><%- tr069.enableNotice %><%- colon %></th>
                     <td>
                         <input type="checkbox" id="noticeEnabled" name="noticeEnabled" /><%- status.enable %>
@@ -128,7 +207,7 @@
                     <th><%- tr069.noticeInterval %><%- colon %></th>
                     <td><input type="text" id="noticeInterval" name="noticeInterval" maxlength="10" class="txt2" /><span class="cmt"><%- unit.second %></span></td>
                 </tr>
-                <tr class="tr069">
+                <tr class="tr069 showEnable">
                     <th><%- tr069.enableAcsAuth %><%- colon %></th>
                     <td>
                         <input type="checkbox" id="acsAuthEnabled" name="acsAuthEnabled" /><%- status.enable %>
@@ -140,9 +219,9 @@
                 </tr>
                 <tr class="tr069 trAcs">
                     <th><%- tr069.acsPasswd %><%- colon %></th>
-                    <td><input type="password" id="passwd" name="passwd" maxlength="30" /></td>
+                    <td><input type="text" id="passwd" name="passwd" maxlength="30" /></td>
                 </tr>
-                <tr class="tr069">
+                <tr class="tr069 showEnable">
                     <th><%- tr069.enableCpeAuth %><%- colon %></th>
                     <td>
                         <input type="checkbox" id="cpeAuthEnabled" name="cpeAuthEnabled" /><%- status.enable %>
@@ -154,7 +233,7 @@
                 </tr>
                 <tr class="tr069 trCpe">
                     <th><%- tr069.cpePasswd %><%- colon %></th>
-                    <td><input type="password" id="linkPasswd" name="linkPasswd" maxlength="30" /></td>
+                    <td><input type="text" id="linkPasswd" name="linkPasswd" maxlength="30" /></td>
                 </tr>
                 <tr id="trSave">
                     <th>&nbsp;</th>

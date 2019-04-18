@@ -1352,7 +1352,7 @@ function network_tool()
 	
 	local tz_answer = system.system_network_tool(tz_req)
 	
-	
+
 	tz_answer["cmd"] = 145   
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
@@ -1908,7 +1908,7 @@ end
 function get_tr069()
 	local tz_answer = {}
 	tz_answer["cmd"] = 175
-	
+	local dataArr = system.system_get_tr069_info()
 	
 	tz_answer["success"] = true
 	tz_answer["tr069"] = dataArr
@@ -2321,6 +2321,91 @@ function set_web_list()
 
 end
 
+function set_tr069_config()
+	local ret 
+	local tz_answer = {}
+	local enabled = tz_req["enabled"]
+	local url = tz_req["url"]
+	local passwd = tz_req["passwd"]
+	local userName = tz_req["userName"]
+	local linkUserName = tz_req["linkUserName"]
+	local linkPasswd = tz_req["linkPasswd"]
+	local noticeEnabled = tz_req["noticeEnabled"]
+	local acsAuthEnabled = tz_req["acsAuthEnabled"]
+	local cpeAuthEnabled = tz_req["cpeAuthEnabled"]
+	local noticeInterval = tz_req["noticeInterval"]
+
+	ret = system.system_set_tr069_app_enable(enabled)
+
+	ret = system.system_set_tr069_ServerURL(url)
+	if(not ret)
+		then
+			tz_answer["success"] = false
+	end
+
+	if(nil ~= noticeEnabled)
+		then
+		ret = system.system_set_tr069_PeriodicInformEnable(noticeEnabled)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+	ret = system.system_set_tr069_PeriodicInformInterval(noticeInterval)
+	if(not ret)
+		then
+			tz_answer["success"] = false
+	end
+	
+	if(nil ~= acsAuthEnabled)
+		then
+		ret = system.system_set_tr069_tr069_ACS_auth(acsAuthEnabled)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+	ret = system.system_set_tr069_ServerUsername(userName)
+	if(not ret)
+		then
+			tz_answer["success"] = false
+	end
+
+	ret = system.system_set_tr069_ServerPassword(passwd)
+	if(not ret)
+		then
+			tz_answer["success"] = false
+	end
+
+	if(nil ~= cpeAuthEnabled)
+		then
+		ret = system.system_set_tr069_tr069_tr069_CPE_auth(cpeAuthEnabled)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+
+	ret = system.system_set_tr069_ConnectionRequestUname(linkUserName)
+	if(not ret)
+		then
+			tz_answer["success"] = false
+	end
+
+	ret = system.system_set_tr069_ConnectionRequestPassword(linkPasswd)
+	if(not ret)
+		then
+			tz_answer["success"] = false
+	end
+
+
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 219
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 
 
 local switch = {
@@ -2399,6 +2484,7 @@ local switch = {
 	 [216] = get_ping_list,
 	 [217] = get_web_list,
 	 [218] = set_web_list,
+	 [219] = set_tr069_config,
 
  }
  
