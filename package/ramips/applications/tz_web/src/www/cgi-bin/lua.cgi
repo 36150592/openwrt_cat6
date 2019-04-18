@@ -99,34 +99,46 @@ function login()
 	
 
 	if bolename == 1 and bolepassword == 1 
-	  then
-	     if (uti.is_file_exist("/tmp/sessionsave") ~= true)
-				then
+	then
+		if (uti.is_file_exist("/tmp/sessionsave") ~= true)
+		then
 					os.execute("cd /tmp && mkdir  sessionsave")
-			 end
+		end
 			 
-			 local logintime = os.time()   
-		     local fileDir = "/tmp/sessionsave/."
-			 local fileName = string.format("%s%s%s",fileDir,sessionId,logintime)
-			 local file1 = io.open(fileName,"w")
-			 io.input(file1)
-			 file1:write("updateTime:"..logintime)
-			 io.close(file1)
-			 
-			 local file2 = io.open("../config.json", "r")
-			 io.input(file2)
-			 local t =io.read("*a")
-			 io.close(file2)
-			 local Jsondata = cjson.decode(t)
-			 local Login = Jsondata["Login"]
-			 
-		     tz_answer["success"] = true;
-			 tz_answer["sessionId"] = sessionId..logintime;
-			 tz_answer["auth"] = Login[userSign]["AUTH"];
-			 tz_answer["level"] = Login[userSign]["LEVEL"];
-			 result_json = cjson.encode(tz_answer);
-			 print(result_json);
-			 return 
+		local logintime = os.time()   
+		local fileDir = "/tmp/sessionsave/."
+		local fileName = string.format("%s%s%s",fileDir,sessionId,logintime)
+		local file1 = io.open(fileName,"w")
+		io.input(file1)
+		file1:write("updateTime:"..logintime)
+		io.close(file1)
+
+		tz_answer["success"] = true;
+		tz_answer["sessionId"] = sessionId..logintime;
+
+		local web_info = {}
+		web_info = system.system_get_web_info()
+		if ( userSign == 'TZ_USERNAME' )
+		then
+			tz_answer["auth"] = web_info["web_user_show_hide_pref"]
+			tz_answer["level"] = "3"
+		end
+
+		if ( userSign == 'TZ_SUPER_USERNAME' )
+		then
+			tz_answer["auth"] = web_info["web_operator_show_hide_pref"]
+			tz_answer["level"] = "2"
+		end
+
+		if ( userSign == 'TZ_TEST_USERNAME' )
+		then
+			tz_answer["auth"] = "FFFFFFFFFFFF"
+			tz_answer["level"] = "1"
+		end
+
+		result_json = cjson.encode(tz_answer);
+		print(result_json);
+		return 
     end
 	
 	

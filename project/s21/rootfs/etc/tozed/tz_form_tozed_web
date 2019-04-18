@@ -27,6 +27,18 @@ else
 	/etc/tool_script/set_web_language ${TZWEB_PREFERRED_LANGUAGE}
 fi
 
+if [ "${TZWEB_USER_SHOW_HIDE_PREF}" != "" ]; then
+	cfg -a TZ_WEB_USER_SHOW_HIDE_PREF="${TZWEB_USER_SHOW_HIDE_PREF}" --section web
+else
+	cfg -a TZ_WEB_USER_SHOW_HIDE_PREF="3F" --section web
+fi
+
+if [ "${TZWEB_OPERATOR_SHOW_HIDE_PREF}" != "" ]; then
+	cfg -a TZ_WEB_OPERATOR_SHOW_HIDE_PREF="${TZWEB_OPERATOR_SHOW_HIDE_PREF}" --section web
+else
+	cfg -a TZ_WEB_OPERATOR_SHOW_HIDE_PREF="FFFF" --section web
+fi
+
 
 cfg -c
 

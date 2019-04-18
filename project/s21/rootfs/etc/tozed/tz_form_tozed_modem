@@ -29,6 +29,12 @@ else
 	cfg -a TZ_DIALTOOL2_LTE_MODULE_MODE=2 --section $UCI_SECTION
 fi
 
+if [ "${TZWEB_USER_SHOW_HIDE_PREF}" != "" ]; then
+
+else
+	
+fi
+
 
 cfg -a TZ_MUTILAPN1_APN_NAME="${TZMODEM_APN1_NAME}" --section $UCI_SECTION
 cfg -a TZ_MUTILAPN1_PROFILE_NAME="${TZMODEM_APN1_PROFILE}" --section $UCI_SECTION

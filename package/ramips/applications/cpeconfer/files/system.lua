@@ -591,7 +591,9 @@ end
 system_module.web_info = {
 		
 		["web_language_select_enable"] = nil,   --string
-		["web_language"] = nil   --string
+		["web_language"] = nil,   --string
+		["web_user_show_hide_pref"] = nil,   --string
+		["web_operator_show_hide_pref"] = nil
 }
 
 
@@ -614,6 +616,9 @@ function system_module.system_get_web_info()
 
 		info["web_language_select_enable"] =  x:get("tozed","web","TZ_WEB_SHOW_LANGUAGE_SELECT")
 		info["web_language"] =  x:get("tozed","web","TZ_WEB_LANGUAGE")
+		info["web_user_show_hide_pref"] =  x:get("tozed","web","TZ_WEB_USER_SHOW_HIDE_PREF")
+		info["web_operator_show_hide_pref"] =  x:get("tozed","web","TZ_WEB_OPERATOR_SHOW_HIDE_PREF")
+		
 
 		return info
 end

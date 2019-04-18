@@ -30,7 +30,7 @@
                     Page.initPage(true);
                 });
 
-                Page.getLanguageConfig();
+                //Page.getLanguageConfig();
 
                 var $languageSelect = $('#languageSelect');
                 $languageSelect.html(Page.getLanguageList(Page.language)).change(function () {
@@ -84,7 +84,7 @@
                             loginSuccess = data.success;
                             sessionStorage['sessionId'] = data.sessionId;
                             sessionStorage['loginName'] = username;
-                            sessionStorage['auth'] = data.auth;
+                            sessionStorage['auth'] = parseInt(data.auth,16).toString(2);
 							sessionStorage['level'] = data.level;
                             sessionStorage['loginFail'] = 0;
                             sessionStorage['failTime'] = "";

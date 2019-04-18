@@ -748,6 +748,15 @@ var Page = {
     language: DOC.language || "CN",
     allLanguage: "",
     languageList: "110",
+    getShowHideByBit: function(position){
+        if(position){
+            if( Page.AUTH[Page.AUTH.length - position] == "1")
+                return true;
+            else
+                return false;
+        }
+        return false;
+    },
     getLanguageList: function(language) {
         var theLanguageList = Page.languageList;
         var length = theLanguageList.length;

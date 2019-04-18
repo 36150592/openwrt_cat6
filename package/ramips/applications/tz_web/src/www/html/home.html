@@ -9,51 +9,30 @@
         var Settingauth =  parseInt(Pageauth.substr(Pageauth.length-4,2),16).toString(2);
         var Sysauth = parseInt(Pageauth.substr(Pageauth.length-6,2),16).toString(2);
 
+        console.log(Page.AUTH);
+        console.log("77777777777777777777777777777777777");
+
         var menus = [];
 
-        if(parseInt(Infoauth.charAt(0),10)){
-            var infoMenu = new MenuHead("info_menu", MENU.info.head);
 
+        var infoMenu = new MenuHead("info_menu", MENU.info.head);
 
-            if(parseInt(Infoauth.charAt(1),10)){
-                infoMenu.push(new MenuBody("HOME",  MENU.info.home));
-            }
-            if(parseInt(Infoauth.charAt(2),10)){
-                infoMenu.push(new MenuBody("WAN_INFO",  MENU.info.wan));
-            }
-            if(parseInt(Infoauth.charAt(3),10)){
-                infoMenu.push(new MenuBody("FourG_INFO", MENU.info.mobile));
-            }
-
-            if(parseInt(Infoauth.charAt(4),10)){
-                infoMenu.push(new MenuBody("WIFI_INFO", MENU.info.wifi));
-            }
-            if(parseInt(Infoauth.charAt(5),10)){
-                infoMenu.push(new MenuBody("DEVICE_INFO", MENU.info.version));
-            }
-            //	infoMenu.push(new MenuBody("CLIENT_LIST", MENU.info.client));
-            menus.push(infoMenu);
-        }
+        infoMenu.push(new MenuBody("HOME",  MENU.info.home));
+        infoMenu.push(new MenuBody("WAN_INFO",  MENU.info.wan));
+        infoMenu.push(new MenuBody("FourG_INFO", MENU.info.mobile));
+        infoMenu.push(new MenuBody("WIFI_INFO", MENU.info.wifi));
+        infoMenu.push(new MenuBody("DEVICE_INFO", MENU.info.version));
+        menus.push(infoMenu);
+        
 		
-        if(parseInt(Settingauth.charAt(0),10)) {
-            var settingMenu = new MenuHead("setting_menu", MENU.setting.head);
-            if(parseInt(Settingauth.charAt(1),10)) {
-                settingMenu.push(new MenuBody("NETWORK_CONFIG", MENU.setting.dhcp));
-            }
-            if(parseInt(Settingauth.charAt(2),10)) {
-                settingMenu.push(new MenuBody("WIRELESS_CONFIG", MENU.settingWifi.wifi));
-            }
-            if(parseInt(Settingauth.charAt(3),10)) {
-                settingMenu.push(new MenuBody("WLAN_5G_CONFIG", MENU.settingWifi.wifi5g));
-            }
-			if(parseInt(Settingauth.charAt(4),10)){
-				settingMenu.push(new MenuBody("ADVANCED_CONFIG", MENU.setting.advanced));
-			}
-            if(parseInt(Settingauth.charAt(4),10)){
-                settingMenu.push(new MenuBody("APN_CONFIG", DOC.apn.setting));
-            }
-            menus.push(settingMenu);
-        }
+        var settingMenu = new MenuHead("setting_menu", MENU.setting.head);
+        settingMenu.push(new MenuBody("NETWORK_CONFIG", MENU.setting.dhcp));
+        settingMenu.push(new MenuBody("WIRELESS_CONFIG", MENU.settingWifi.wifi));
+        settingMenu.push(new MenuBody("WLAN_5G_CONFIG", MENU.settingWifi.wifi5g));
+		settingMenu.push(new MenuBody("ADVANCED_CONFIG", MENU.setting.advanced));
+        settingMenu.push(new MenuBody("APN_CONFIG", DOC.apn.setting));
+        menus.push(settingMenu);
+
 		
 		// FW BEGIN 
         var fwMenu = new MenuHead("fw_menu", MENU.fw.head);
@@ -67,36 +46,22 @@
 		fwMenu.push(new MenuBody("FW_SPEED_LIMIT", MENU.fw.speedLimit));
 
 
-         menus.push(fwMenu);
+        menus.push(fwMenu);
          // FW END 
 		
-        if(parseInt(Sysauth.charAt(0),10)) {
-			var sysMenu = new MenuHead("manage_menu", MENU.sys.manage);
-			//sysMenu.push(new MenuBody("SYS_SET", MENU.sys.settings));
-			//sysMenu.push(new MenuBody("SYS_LOG", MENU.sys.sysLog));
-            if(parseInt(Sysauth.charAt(1),10)) {
-                sysMenu.push(new MenuBody("SYS_UPDATE", MENU.sys.firmwareUpdate));
-            }
-			if(parseInt(Sysauth.charAt(1),10)) {
-                sysMenu.push(new MenuBody("CONFIG_UPDATE", MENU.sys.configUpdate));
-            }
+        var sysMenu = new MenuHead("manage_menu", MENU.sys.manage);
+        //sysMenu.push(new MenuBody("SYS_SET", MENU.sys.settings));
+	    //sysMenu.push(new MenuBody("SYS_LOG", MENU.sys.sysLog));
+        sysMenu.push(new MenuBody("SYS_UPDATE", MENU.sys.firmwareUpdate));
+        sysMenu.push(new MenuBody("CONFIG_UPDATE", MENU.sys.configUpdate));
+        sysMenu.push(new MenuBody("SYS_TIME", MENU.sys.timeSetting));
+        sysMenu.push(new MenuBody("NETWORK_TOOL", MENU.sys.networkTools));
+        sysMenu.push(new MenuBody("SYS_AT", MENU.sys.at));
 			
-			if(parseInt(Sysauth.charAt(2),10)) {
-                sysMenu.push(new MenuBody("SYS_TIME", MENU.sys.timeSetting));
-            }
+        sysMenu.push(new MenuBody("SYS_REBOOT", MENU.sys.reboot));
 			
-			if(parseInt(Sysauth.charAt(3),10)) {
-                sysMenu.push(new MenuBody("NETWORK_TOOL", MENU.sys.networkTools));
-            }
-			
-			if(parseInt(Sysauth.charAt(4),10)) {
-                sysMenu.push(new MenuBody("SYS_AT", MENU.sys.at));
-            }
-			
-			sysMenu.push(new MenuBody("SYS_REBOOT", MENU.sys.reboot));
-			
-			menus.push(sysMenu);
-        }
+        menus.push(sysMenu);
+        
 			
 		
         $('#menu').html(MenuUtil.create(menus));

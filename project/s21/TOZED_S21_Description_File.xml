@@ -1104,6 +1104,242 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="en" description="English"/>
         	<default value="en"/>
 	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_0" type="select" bit_offset="0" bit_count="1" description="WEB 普通用户显示 辅 的2.4g wifi设置菜单页" detail="WEB 普通用户显示辅的2.4g wifi设置菜单页" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_1" type="select" bit_offset="1" bit_count="1" description="WEB 普通用户显示 辅 的5.8g wifi设置菜单页" detail="WEB 普通用户显示辅的5.8g wifi设置菜单页" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_2" type="select" bit_offset="2" bit_count="1" description="WEB 普通用户显示 辅 的dhcp设置菜单页" detail="WEB 普通用户显示 辅 的dhcp设置菜单页" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_3" type="select" bit_offset="3" bit_count="1" description="WEB 普通用户显示 左边栏 apn菜单" detail="WEB 普通用户显示 左边栏 apn菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_4" type="select" bit_offset="4" bit_count="1" description="WEB 普通用户显示 多apn（另外两路apn）菜单" detail="WEB 普通用户显示 多apn（另外两路apn）菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_5" type="select" bit_offset="5" bit_count="1" description="WEB 普通用户显示 网络工具菜单" detail="WEB 普通用户显示 网络工具菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_6" type="select" bit_offset="6" bit_count="1" description="WEB 普通用户显示 AT命令菜单" detail="WEB 普通用户显示 AT命令菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_7" type="select" bit_offset="7" bit_count="1" description="WEB 普通用户显示 高级设置菜单" detail="WEB 普通用户显示 高级设置菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_8" type="select" bit_offset="8" bit_count="1" description="WEB 普通用户显示 高级设置 -> PLMN锁 菜单" detail="WEB 普通用户显示 高级设置 -> PLMN锁 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_9" type="select" bit_offset="9" bit_count="1" description="WEB 普通用户显示 高级设置 -> 锁band 菜单" detail="WEB 普通用户显示 高级设置 -> 锁band 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_10" type="select" bit_offset="10" bit_count="1" description="WEB 普通用户显示 高级设置 -> 锁物理小区 菜单" detail="WEB 普通用户显示 高级设置 -> 锁物理小区 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_11" type="select" bit_offset="11" bit_count="1" description="WEB 普通用户显示 高级设置 -> 解sim pin 菜单" detail="WEB 普通用户显示 高级设置 -> 解sim pin 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_12" type="select" bit_offset="12" bit_count="1" description="WEB 普通用户显示 高级设置 -> 远程WEB登录 菜单" detail="WEB 普通用户显示 高级设置 -> 远程WEB登录 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_13" type="select" bit_offset="13" bit_count="1" description="WEB 普通用户显示 高级设置 -> 远程ping 菜单" detail="WEB 普通用户显示 高级设置 -> 远程ping 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_14" type="select" bit_offset="14" bit_count="1" description="WEB 普通用户显示 高级设置 -> tr069设置 菜单" detail="WEB 普通用户显示 高级设置 -> tr069设置 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_15" type="select" bit_offset="15" bit_count="1" description="WEB 普通用户显示 静态路由设置 菜单" detail="WEB 普通用户显示 静态路由设置 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	 <config name="TZWEB_USER_SHOW_HIDE_PREF" type="bitcomposite" format="hex" lower_case="false" description="web普通用户网页显示-隐藏设置" detail="web普通用户网页显示-隐藏设置" class_name="MODEM_CONFIG_FIELD">
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_0"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_1"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_2"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_3"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_4"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_5"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_6"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_7"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_8"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_9"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_10"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_11"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_12"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_13"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_14"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_15"/>
+		<default value="0"/>
+	</config>
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_0" type="select" bit_offset="0" bit_count="1" description="WEB 高级用户显示 辅 的2.4g wifi设置菜单页" detail="WEB 高级用户显示 辅 的2.4g wifi设置菜单页" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_1" type="select" bit_offset="1" bit_count="1" description="WEB 高级用户显示 辅 的5.8g wifi设置菜单页" detail="WEB 高级用户显示 辅 的5.8g wifi设置菜单页" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_2" type="select" bit_offset="2" bit_count="1" description="WEB 高级用户显示 辅 的dhcp设置菜单页" detail="WEB 高级用户显示 辅 的dhcp设置菜单页" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_3" type="select" bit_offset="3" bit_count="1" description="WEB 高级用户显示 左边栏 apn菜单" detail="WEB 高级用户显示 左边栏 apn菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_4" type="select" bit_offset="4" bit_count="1" description="WEB 高级用户显示 多apn（另外两路apn）菜单" detail="WEB 高级用户显示 多apn（另外两路apn）菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_5" type="select" bit_offset="5" bit_count="1" description="WEB 高级用户显示 网络工具菜单" detail="WEB 高级用户显示 网络工具菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="1"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_6" type="select" bit_offset="6" bit_count="1" description="WEB 高级用户显示 AT命令菜单" detail="WEB 高级用户显示 AT命令菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_7" type="select" bit_offset="7" bit_count="1" description="WEB 高级用户显示 高级设置菜单" detail="WEB 高级用户显示 高级设置菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_8" type="select" bit_offset="8" bit_count="1" description="WEB 高级用户显示 高级设置 -> PLMN锁 菜单" detail="WEB 高级用户显示 高级设置 -> PLMN锁 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_9" type="select" bit_offset="9" bit_count="1" description="WEB 高级用户显示 高级设置 -> 锁band 菜单" detail="WEB 高级用户显示 高级设置 -> 锁band 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_10" type="select" bit_offset="10" bit_count="1" description="WEB 高级用户显示 高级设置 -> 锁物理小区 菜单" detail="WEB 高级用户显示 高级设置 -> 锁物理小区 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_11" type="select" bit_offset="11" bit_count="1" description="WEB 高级用户显示 高级设置 -> 解sim pin 菜单" detail="WEB 高级用户显示 高级设置 -> 解sim pin 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_12" type="select" bit_offset="12" bit_count="1" description="WEB 高级用户显示 高级设置 -> 远程WEB登录 菜单" detail="WEB 高级用户显示 高级设置 -> 远程WEB登录 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_13" type="select" bit_offset="13" bit_count="1" description="WEB 高级用户显示 高级设置 -> 远程ping 菜单" detail="WEB 高级用户显示 高级设置 -> 远程ping 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_14" type="select" bit_offset="14" bit_count="1" description="WEB 高级用户显示 高级设置 -> tr069设置 菜单" detail="WEB 高级用户显示 高级设置 -> tr069设置 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_15" type="select" bit_offset="15" bit_count="1" description="WEB 高级用户显示 静态路由设置 菜单" detail="WEB 高级用户显示 静态路由设置 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
+
+	 <config name="TZWEB_OPERATOR_SHOW_HIDE_PREF" type="bitcomposite" format="hex" lower_case="false" description="web高级用户网页显示-隐藏设置" detail="web高级用户网页显示-隐藏设置" class_name="MODEM_CONFIG_FIELD">
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_0"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_1"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_2"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_3"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_4"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_5"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_6"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_7"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_8"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_9"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_10"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_11"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_12"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_13"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_14"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_15"/>
+		<default value="0"/>
+	</config>
+	
 	
 </project>
 
