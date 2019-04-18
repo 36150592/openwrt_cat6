@@ -991,6 +991,12 @@ class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
 
+	<config name="TZMODEM_NETWORK_MODE" type="select"  description="设备网络模式" detail="设备网络模式，默认4g优先" class_name="MODEM_CONFIG_FIELD">
+		<option value="1" description="仅4g网络"/>
+		<option value="2" description="4g 优先"/>
+	 	<default value="2"/>
+	 </config>
+
 	<config name="TZMODEM_APN0_NAME" type="text"  description="主apn 名称" detail="主apn 名称" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
