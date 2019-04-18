@@ -39,7 +39,7 @@ $(document).ready(function(){
         Page.postJSON({
             json: json,
             success: function(data) {
-                 AlertUtil.alertMsg(PROMPT.saving.success);
+                 SysUtil.rebootDevice(PROMPT.tips.rebootMessage);
 				 $("ul.tabs a").eq(0).click();
             },
             complete: function(){
