@@ -15,6 +15,7 @@ bitcomposite表示使用位进行组合的配置字段
 	<preface value=""/>
 	<format value="export ${field}=&quot;quote{value}&quot;"/>
 	<class name="SYSTEM_CONFIG_FIELD" description="系统配置"  />
+	<class name="USER_CONFIG_FIELD" description="用户配置"  />
  	<class name="WIFI_CONFIG_FIELD" description="WIFI配置"  />
 	<class name="DHCP_CONFIG_FIELD" description="DHCP配置"/>
 	
@@ -23,6 +24,57 @@ bitcomposite表示使用位进行组合的配置字段
 	<!--配置文件版本-->
 	<config name="TZ_CONFIG_FILE_VERSION" type="text" description="配置文件版本" detail="配置文件版本" maxlength="20" class_name="SYSTEM_CONFIG_FIELD">
 		<default value="V1.00"/>
+	</config>
+
+	<!--用户配置-->
+	<config name="TZUSER_WEB_SUPER_USER_NAME" type="text" description="网页超级用户名" detail="网页超级用户名" class_name="USER_CONFIG_FIELD"  >
+        	<default value="sztozed" />
+	</config>
+	<config name="TZUSER_WEB_SUPER_USER_PWD_RANDOM" type="select" description="网页超级用户密码随机" detail="网页超级用户密码随机，若否，请填写网页超级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+		<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+	<config name="TZUSER_WEB_SUPER_USER_PWD" type="text" description="网页超级用户固定密码" detail="网页超级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+		<default value="keep0It3" />
+	</config>
+	<config name="TZUSER_WEB_SUPER_USER_PWD_RANDOM_WAY" type="select" description="网页超级用户密码随机方式选择" detail="网页超级用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
+	<option value="1" description="随机方式一" />
+	<default value="1"/>
+	</config>
+	<!--网页高级用户设置; -->
+	<config name="TZUSER_WEB_SENIOR_USER_NAME" type="text" description="网页高级用户名" detail="网页高级用户名" class_name="USER_CONFIG_FIELD"  >
+		<default value="superadmin" />
+	</config>
+	<config name="TZUSER_WEB_SENIOR_USER_PWD_RANDOM" type="select" description="网页高级用户密码随机" detail="网页高级用户密码随机，若否，请填写网页高级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+		<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+	<config name="TZUSER_WEB_SENIOR_USER_PWD" type="text" description="网页高级用户固定密码" detail="网页高级用户固定密码" class_name="USER_CONFIG_FIELD"  >
+		<default value="superadmin" />
+	</config>
+
+	<config name="TZUSER_WEB_SENIOR_USER_PWD_RANDOM_WAY" type="select" description="网页高级用户密码随机方式选择" detail="网页高级用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
+		<option value="1" description="随机方式一,Dialog规则" />
+		<default value="1"/>
+	</config>
+	<!--网页普通用户设置; -->
+	<config name="TZUSER_WEB_GENERAL_USER_NAME" type="text" description="网页普通用户名" detail="网页普通用户名" class_name="USER_CONFIG_FIELD"  >
+		<default value="admin" />
+	</config>
+
+	<config name="TZUSER_WEB_GENERAL_USER_PWD_RANDOM" type="select" description="网页普通用户密码随机" detail="网页普通用户密码随机，若否，请填写网页普通用户固定密码" class_name="USER_CONFIG_FIELD"  >
+		<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+	<config name="TZUSER_WEB_GENERAL_USER_PWD" type="text" description="网页普通用户固定密码" detail="网页普通用户固定密码" class_name="USER_CONFIG_FIELD"  >
+		<default value="admin" />
+	</config>
+	<config name="TZUSER_WEB_GENERAL_USER_PWD_RANDOM_WAY" type="select" description="网页普通用户密码随机方式选择" detail="网页普通用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
+		<option value="1" description="随机方式一,Dialog规则" />
+		<default value="1"/>
 	</config>
 
 
@@ -123,7 +175,7 @@ bitcomposite表示使用位进行组合的配置字段
 	</config>
 	<!--路由器的固定SSID;-->
 	<config name="AP_WIFI_STATIC_SSID" type="text" description="固定的无线网络标识(SSID)" detail="路由器的固定SSID" class_name="WIFI_CONFIG_FIELD">
-		<default value=""/>
+		<default value="Tozed-wifi"/>
 	</config>
 	<!--KEY命名规则;-->
 	<config name="TZ_WIFI_KEY_RULE" type="select" description="Wi-Fi秘钥的规则" detail="Wi-Fi秘钥的规则，可由设备WiFi MAC地址随机生成，也可以固定" class_name="WIFI_CONFIG_FIELD"  >
@@ -147,7 +199,7 @@ bitcomposite表示使用位进行组合的配置字段
         	<default value="32" />
 	</config>
 	<!--WiFi 发射功率-->
-	<config name="TZ_MAX_STANUM" type="text" description="Wi-Fi发射功率，1~23（dBm）" detail="Wi-Fi发射功率，1~23（dBm）,默认为23,非专业人士不建议修改" class_name="WIFI_CONFIG_FIELD"  >
+	<config name="TZ_MAX_STANUM" type="text" description="Wi-Fi发射功率，1~23（dBm）" detail="Wi-Fi发射功率，1~23（dBm）,实际值会按百分比计算四舍五入后得出,默认为23,非专业人士不建议修改" class_name="WIFI_CONFIG_FIELD"  >
         	<default value="23" />
 	</config>
 </project>

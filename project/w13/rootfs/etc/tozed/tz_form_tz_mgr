@@ -4,6 +4,7 @@ TZ_EXPORT="tz_export"
 W13_TOOL="w13_tool"
 TZ_FACTORY_CONFIG_FILE="/etc/tozed_param"
 TZ_VERSION_FILE="/version"
+TZ_WIFI_CONFIG_PAGE_FILE=/tz_www/html/config/wirelessConfig.html
 
 TZ_WLAN_MAC=`eth_mac r wlan`
 
@@ -87,6 +88,14 @@ if [ "${TZ_HIDE_WIFI_CHANNEL_12_13}" != "" ]; then
 else
 	TZ_HIDE_WIFI_CHANNEL_12_13="no"
 fi	
+#hidden channel 12 13
+if [ "${TZ_HIDE_WIFI_CHANNEL_12_13}" = "yes" ];then
+	sed -i "s/class=\"ch_opt2\">/class=\"ch_opt2\" style=\"display:none\">/g" ${TZ_WIFI_CONFIG_PAGE_FILE} 2>/dev/null
+else
+	sed -i "s/class=\"ch_opt2\" style=\"display:none\">/class=\"ch_opt2\">/g" ${TZ_WIFI_CONFIG_PAGE_FILE} 2>/dev/null
+fi
+
+
 
 AP_PRIMARY_CH=`${TZ_EXPORT} ${TZ_FACTORY_CONFIG_FILE} AP_PRIMARY_CH`
 if [ "${AP_PRIMARY_CH}" != "" ]; then
