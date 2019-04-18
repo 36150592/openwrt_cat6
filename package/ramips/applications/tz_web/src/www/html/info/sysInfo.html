@@ -305,8 +305,8 @@
                     values_net.push(data_modem.earfcn ||loading);
                     values_net.push(data_modem.enodebid || loading);
                     values_net.push(data_modem.cell_id || loading);
-                    values_net.push(loading);
-                    values_net.push(loading);
+                    values_net.push(data_modem.cqi || loading);
+                    values_net.push(data_modem.mcs ||loading);
                     values_net.push(data_modem.plmn || loading);
                     sysInfo_plmn = data_modem.plmn; 
                      var net_html = Page.createTable(DOC.title.network, names_net, values_net, names_net.length, 2).replace("<td>", "<td style=\"width:32%;\">");
