@@ -36,6 +36,7 @@
                 $languageSelect.html(Page.getLanguageList(Page.language)).change(function () {
                     Page.changeLanguage($languageSelect);
                 });
+                Page.getLanguageConfig();
                 var $username = $('#username').focus(),
                     $passwd = $('#passwd'),
                     $btnLogin = $('#btnLogin');
@@ -181,10 +182,10 @@
             <div id="login_container">
                 <script type="text/template" id="login_template">
                     <table>
-                        <tr class="tr_login tr_language">
+                        <tr class="tr_login tr_language" style="display:none;">
                             <th><%- login.language %><%- colon %></th>
                         </tr>
-                        <tr class="tr_login tr_language">
+                        <tr class="tr_login tr_language" style="display:none;">
                             <td><select id="languageSelect" name="languageSelect" class="ddl"></select></td>
                         </tr>
 

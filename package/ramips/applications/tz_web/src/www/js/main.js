@@ -691,7 +691,6 @@ var CheckUtil = {
         return asciiReg.test(pwd) || hexReg.test(pwd);
     },
 	checkIp: function(ip, isIpv6) {
-		//console.log(ip);
         if(isIpv6 != "IPV6"){
             var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
             return reg.test(ip);
@@ -742,6 +741,7 @@ var CheckUtil = {
 
 var Page = {
     AUTH:"",
+    isShowLangu:"",
 	Level:"",
 	menuItem: null,
     isNULLToSpace: false,
@@ -815,9 +815,11 @@ var Page = {
      getLanguageConfig: function() {
         Page.postJSON({
             json: {
+                asynss:true,
                 cmd: RequestCmd.GET_LANGUAGE_SELECT
             },
             success: function(data) {
+                Page.isShowLangu = data.data.web_language_select_enable;
                 if(data.data.web_language_select_enable == "1"){
                     $("#languageSelect").show();
                     $(".tr_language").show();
@@ -1027,7 +1029,6 @@ var Page = {
         if (!json.method) {
             json.method = JSONMethod.GET;
         }
-
         if(!json.language){
             json.language = Page.language;
         }
@@ -1040,9 +1041,13 @@ var Page = {
         if(isIE()){
             asyns = false;
         }else {
-            asyns = true;
+            if(json.asynss){
+                 asyns = false;
+             }else{
+                 asyns = true;
+             }
+           
         }
-
         $.ajax({
             async:asyns,
             url: settings.url,

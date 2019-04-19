@@ -8,10 +8,6 @@
         var Infoauth = parseInt(Pageauth.substr(Pageauth.length-2),16).toString(2);
         var Settingauth =  parseInt(Pageauth.substr(Pageauth.length-4,2),16).toString(2);
         var Sysauth = parseInt(Pageauth.substr(Pageauth.length-6,2),16).toString(2);
-
-        console.log(Page.AUTH);
-        console.log("77777777777777777777777777777777777");
-
         var menus = [];
 
 
@@ -235,7 +231,7 @@
         <div id="closeInternet"></div>
         <div id="userinfo">
             <!-- LANGUAGE -->
-            <select id="languageSelect" name="languageSelect"></select>
+            <select id="languageSelect" name="languageSelect" style="display:none;"></select>
             <a id="logout" href="javascript:;"><%- link.logout %></a>&nbsp;
             <!-- HELP -->
             <a id="onlineHelp" href="javascript:;" style="display:none;"><%- link.help %></a>
