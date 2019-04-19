@@ -607,12 +607,15 @@ function system_module.web_info:new(o,obj)
 		
 	self["web_language_select_enable"] = obj["web_language_select_enable"] or nil
 	self["web_language"] = obj["web_language"] or nil
+	self["web_user_show_hide_pref"] = obj["web_user_show_hide_pref"] or nil
+	self["web_operator_show_hide_pref"] = obj["web_operator_show_hide_pref"] or nil
+
 end
 
 
 function system_module.system_get_web_info()
 
-		local info = system_module.tr069_info:new(nil,nil)
+		local info = system_module.web_info:new(nil,nil)
 
 		info["web_language_select_enable"] =  x:get("tozed","web","TZ_WEB_SHOW_LANGUAGE_SELECT")
 		info["web_language"] =  x:get("tozed","web","TZ_WEB_LANGUAGE")
@@ -622,6 +625,37 @@ function system_module.system_get_web_info()
 
 		return info
 end
+
+system_module.tozed_system_info = {
+		
+		["config_version"] = nil,   --string
+		["software_version"] = nil,   --string
+}
+
+
+function system_module.tozed_system_info:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+		
+	self["config_version"] = obj["config_version"] or nil
+	self["software_version"] = obj["software_version"] or nil
+
+end
+
+function system_module.system_get_tozed_system_info()
+
+		local info = system_module.tozed_system_info:new(nil,nil)
+
+		info["config_version"] =  x:get("tozed","system","TZ_SYSTEM_CONFIG_VERSION")
+		info["software_version"] =  x:get("tozed","system","TZ_SYSTEM_SOFTWARE_VERSION")
+		
+		return info
+end
+
 
 local timezone_location = {
 	["Africa/Abidjan"]= "GMT0",

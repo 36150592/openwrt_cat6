@@ -50,6 +50,7 @@ boot() {
 		/etc/tozed/tz_form_tozed_modem
 		/etc/tozed/tz_form_tozed_remote
 		/etc/tozed/tz_form_tozed_web
+		/etc/tozed/tz_form_tozed_system
 		tozed_tool -c config -g WEB_USER -w rewrite
 	fi
 
@@ -80,7 +81,7 @@ boot() {
 		rm /etc/config_update_file/updateconfig.conf
 	fi
 
-	/etc/tozed/tz_test/time_to_capture_message.sh &
+	#/etc/tozed/tz_test/time_to_capture_message.sh &
 
 	# temporary hack until configd exists
 	/sbin/reload_config

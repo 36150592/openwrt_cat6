@@ -1,0 +1,37 @@
+#!/bin/sh
+
+tozed_system_param_list="\n
+TZSYSTEM_CONFIG_VERSION="TZ_SYSTEM_CONFIG_VERSION"\n
+TZSYSTEM_CUSTOMER_SOFT_VERSION="TZ_SYSTEM_SOFTWARE_VERSION"\n
+"
+
+param_file_system=/tmp/.param_file_system
+extern_file=$1
+
+if [ ! -e "${extern_file}" ]; then
+	exit
+fi
+
+cat $extern_file | grep TZSYSTEM_ > ${param_file_system}
+
+
+#
+while read line
+do
+        name=`echo $line | awk -F "=" '{print$1}' | awk '{print $2}'`
+        value=`echo $line | awk -F "=" '{print$2}' | awk -F '"' '{print $2}'`
+
+        name_in_tozed_system_param=`echo -e ${tozed_system_param_list} | grep ${name} | awk -F "=" '{print $2}'`
+        if [ -n "${name_in_tozed_system_param}" ]; then
+
+        	if [ "${name_in_tozed_system_param}" = "TZSYSTEM_CUSTOMER_SOFT_VERSION" ]; then
+        		uci set tozed.system.${name_in_tozed_system_param}=V"${value}"
+        	else
+        		uci set tozed.system.${name_in_tozed_system_param}="${value}"
+        	fi
+        	
+        fi
+
+done < ${param_file_system}
+
+cfg -c

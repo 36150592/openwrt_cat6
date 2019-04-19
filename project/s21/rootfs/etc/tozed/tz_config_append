@@ -58,6 +58,7 @@ done < /tmp/config_param_file
 /etc/tozed/tz_append_tozed_tr069 /tmp/config_param_file
 /etc/tozed/tz_append_tozed_modem /tmp/config_param_file
 /etc/tozed/tz_append_tozed_remote /tmp/config_param_file
+/etc/tozed/tz_append_tozed_system /tmp/config_param_file
 
 
 #/etc/config/dropbear

@@ -1,0 +1,30 @@
+#!/bin/sh
+
+FORM_CONFIG_STATION=/tmp/form_config/
+FACTORY_CONFIG_FILE=/etc/tozed_param
+TOZED_SYSTEM_CONFIG_LOAD_FILE=${FORM_CONFIG_STATION}/tozedsystem
+
+mkdir -p ${FORM_CONFIG_STATION}
+
+#export param
+cat ${FACTORY_CONFIG_FILE} | grep TZSYSTEM_ > ${TOZED_SYSTEM_CONFIG_LOAD_FILE}
+chmod 777 ${TOZED_SYSTEM_CONFIG_LOAD_FILE}
+. ${TOZED_SYSTEM_CONFIG_LOAD_FILE}
+
+
+
+if [ "${TZSYSTEM_CONFIG_VERSION}" != "" ]; then
+	cfg -a TZ_SYSTEM_CONFIG_VERSION="${TZSYSTEM_CONFIG_VERSION}" --section system
+else
+	cfg -a TZ_SYSTEM_CONFIG_VERSION="" --section system
+fi
+
+if [ "${TZSYSTEM_CUSTOMER_SOFT_VERSION}" != "" ]; then
+	cfg -a TZ_SYSTEM_SOFTWARE_VERSION=V"${TZSYSTEM_CUSTOMER_SOFT_VERSION}" --section system
+else
+	real_version=`cat /version | grep software_version | awk -F "=" '{print $2}'`
+	cfg -a TZ_SYSTEM_SOFTWARE_VERSION=V"${real_version}" --section system
+fi
+
+cfg -c
+

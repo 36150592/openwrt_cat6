@@ -1,6 +1,5 @@
 
 config value 'cfg'
-	option TZ_PREFERRED_LANGUAGE 'en'
 
 config value 'modem'
     option TZ_ENABLE_AUTO_DIAL '1'
@@ -53,4 +52,7 @@ config value 'remote_control'
     list TZ_REMOTE_PING_LIST ''
 
 config value 'web'
+
+
+config value 'system'
 
