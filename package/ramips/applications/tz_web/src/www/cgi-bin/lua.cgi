@@ -2582,7 +2582,7 @@ else
 	data1=io.read();
 	tz_req = cjson.decode(data1)
 	local cmd = tz_req["cmd"]
-	if(cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 113 )
+	if(cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 113 and cmd ~= 220)
 	  then
 	     local fileName = string.format("/tmp/sessionsave/.%s",tz_req["sessionId"])
 	      if (uti.is_file_exist(fileName) ~= true)
