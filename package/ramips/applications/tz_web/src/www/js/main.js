@@ -752,7 +752,7 @@ var Page = {
     languageList: "110",
     getShowHideByBit: function(position){
         if(position){
-            if( Page.AUTH[Page.AUTH.length - position] == "1")
+            if( Page.AUTH[Page.AUTH.length -1 -position] == "1")
                 return true;
             else
                 return false;

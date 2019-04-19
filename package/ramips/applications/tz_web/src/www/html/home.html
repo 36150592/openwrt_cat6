@@ -29,8 +29,10 @@
         settingMenu.push(new MenuBody("NETWORK_CONFIG", MENU.setting.dhcp));
         settingMenu.push(new MenuBody("WIRELESS_CONFIG", MENU.settingWifi.wifi));
         settingMenu.push(new MenuBody("WLAN_5G_CONFIG", MENU.settingWifi.wifi5g));
-		settingMenu.push(new MenuBody("ADVANCED_CONFIG", MENU.setting.advanced));
-        settingMenu.push(new MenuBody("APN_CONFIG", DOC.apn.setting));
+        if(Page.getShowHideByBit(3))
+            settingMenu.push(new MenuBody("APN_CONFIG", DOC.apn.setting));
+        if(Page.getShowHideByBit(7))
+            settingMenu.push(new MenuBody("ADVANCED_CONFIG", MENU.setting.advanced));
         menus.push(settingMenu);
 
 		
