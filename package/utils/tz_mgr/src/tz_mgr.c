@@ -57,7 +57,7 @@
 #define TZ_MGR_RESTART_COUNT_FILE "/tmp/.tz_mgr_restart_count"//记录程序的重启次数，从而计算连接不上室外机的时间
 #define TZ_MGR_ENABLE_DHCP_FLAG_FILE "/tmp/.tz_mgr_dhcp_enable"//如果存在此文件，则启动dhcp服务
 #define TZ_DHCP_SERVER_ALIVE_FLAG_FILE "/tmp/.tz_mgr_dhcp_alive"//记录dhcp启动状态，防止重复启动
-
+#define AFTER_KEY_RESTORE_FLAG_FILE "/etc/.flag_after_key_restore_factory"//通过按键恢复出厂后创建，如果存在此文件，通知室外机恢复出厂
 
 
 #define APP_NAME	"tz_mgr"  //程序名字,必须与配置文件及脚本一致！
@@ -1977,14 +1977,13 @@ void process_1s_signal(void)
 	}
 
 	//need to restore settings
-	if( file_exists( NEED_TO_RESTORE_SETTINGS_TEMP_FILE ) )
+	if( file_exists( AFTER_KEY_RESTORE_FLAG_FILE ) )
 	{
 		reboot_timer_started=FALSE;
 		restore_settings_timer_started=TRUE;
 		reboot_timer_counter=0;
-		print("%s","---------------NEED_TO_RESTORE_SETTINGS_TEMP_FILE-------------------");
-		shell_recv(NULL,0,"rm -f %s",NEED_TO_RESTORE_SETTINGS_TEMP_FILE);
-		//cmd_rm( NEED_TO_RESTORE_SETTINGS_TEMP_FILE );
+		shell_recv(NULL,0,"rm -f %s",AFTER_KEY_RESTORE_FLAG_FILE);
+		print("%s","-----Send restore cmd!-----");
 		util_client_send_restore_sync_frame();
 	}
 }
@@ -2375,7 +2374,7 @@ void tz_check_restart_count(void)
 }
 
 
-int get_interface_mac(char const* interface_name,IN unsigned char* mac_buf)
+int get_interface_mac(char const* interface_name,OUT unsigned char* mac_buf)
 {
 	struct ifreq interface;
 	int fd=socket(AF_INET,SOCK_DGRAM,0);

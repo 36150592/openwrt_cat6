@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# ***************
+[ "${ACTION}" = "released" ] || exit 0
+
+logger "$BUTTON pressed for $SEEN seconds"
+
+#if [ "$SEEN" -lt 1 ]
+#then
+#	echo "REBOOT" > /dev/console
+#	reboot
+#elif [ "$SEEN" -gt 5 ]
+
+
+if [ "$SEEN" -gt 3 ]
+then
+	echo "FACTORY RESET" > /dev/console
+	#jffs2reset -y && reboot &
+	
+	/etc/tozed/tz_restore_factory
+	touch "/etc/.flag_after_key_restore_factory" 2>/dev/null
+	reboot
+fi
+
+return 0
