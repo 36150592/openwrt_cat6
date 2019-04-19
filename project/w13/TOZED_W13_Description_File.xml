@@ -199,7 +199,7 @@ bitcomposite表示使用位进行组合的配置字段
         	<default value="32" />
 	</config>
 	<!--WiFi 发射功率-->
-	<config name="TZ_MAX_STANUM" type="text" description="Wi-Fi发射功率，1~23（dBm）" detail="Wi-Fi发射功率，1~23（dBm）,实际值会按百分比计算四舍五入后得出,默认为23,非专业人士不建议修改" class_name="WIFI_CONFIG_FIELD"  >
+	<config name="TXPOWER" type="text" description="Wi-Fi发射功率，1~23（dBm）" detail="Wi-Fi发射功率，1~23（dBm）,实际值会按百分比计算四舍五入后得出,默认为23,非专业人士不建议修改" class_name="WIFI_CONFIG_FIELD"  >
         	<default value="23" />
 	</config>
 </project>
