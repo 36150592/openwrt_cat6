@@ -2432,6 +2432,60 @@ function get_web_hide_config()
 
 end
 
+
+function get_auto_dial()
+	local tz_answer = {}
+	tz_answer["cmd"] = 221
+	local data_array = {}
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = modem.modem_get_auto_dial()
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+
+end
+
+function set_open_auto_dial()
+	local ret 
+	local tz_answer = {}
+	local enable = tonumber(tz_req["enable"])
+	if(nil ~= enable)
+		then
+		ret = modem.modem_enable_auto_dial(enable)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 222
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function set_close_auto_dial()
+	local ret 
+	local tz_answer = {}
+	local enable = tonumber(tz_req["enable"])
+	if(nil ~= enable)
+		then
+		ret = modem.modem_disable_auto_dial(enable)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 223
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+
+end
+
 local switch = {
      [0] = get_sysinfo,
 	 [1] = get_systime,
@@ -2510,6 +2564,9 @@ local switch = {
 	 [218] = set_web_list,
 	 [219] = set_tr069_config,
 	 [220] = get_web_hide_config,
+	 [221] = get_auto_dial,
+	 [222] = set_open_auto_dial,
+	 [223] = set_close_auto_dial,
 
  }
  

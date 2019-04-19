@@ -121,9 +121,11 @@ var RequestCmd = {
     GET_WEB_LIST:217,
     SET_WEB_LIST:218,
     SET_TR069_CONFIG:219,
-    GET_LANGUAGE_SELECT:220
+    GET_LANGUAGE_SELECT:220,
+    GET_AUTO_DIAL:221,
+    GET_OPEN_AUTO_DIAL:222,
+    GET_CLOSE_AUTO_DIAL:223
 };
-
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
     WAN_INFO: { cmd: RequestCmd.SYS_INFO, url: "html/info/wanInfo.html" },

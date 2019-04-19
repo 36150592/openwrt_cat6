@@ -1,0 +1,68 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+
+        Page.postJSON({
+            json: {
+                cmd: RequestCmd.GET_AUTO_DIAL
+            },
+            success: function(data) {
+                $("#dialMode").val(data.data);
+            }
+
+        });
+
+        $("#btnSave").on("click",function(){
+            var cmdPost = "";
+
+            if($("#dialMode").val() == "1"){
+                cmdPost = RequestCmd.GET_OPEN_AUTO_DIAL;
+            }else{
+                cmdPost = RequestCmd.GET_CLOSE_AUTO_DIAL;
+            }
+
+            var json = new Object();
+
+            json.enable = $("#dialMode").val();
+            json.cmd = cmdPost;
+            json.method = JSONMethod.POST;
+            Page.postJSON({
+               json: json,
+               success: function(data) {
+                   AlertUtil.alertMsg(PROMPT.saving.success);
+               }
+           });
+            
+
+
+        });
+
+
+    });
+</script>
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="childForm">
+            <table id="childTable" class="detail" cellspacing="0">
+                <tr id="trDialMode">
+                        <th><%- TAB.advance.autoMode %></th>
+                        <td>
+                            <select id="dialMode" name="dialMode">
+                                <option value="1"><%- TAB.advance.autoModeOpen %></option>
+                                <option value="0"><%- TAB.advance.autoModeClose %></option>
+                            </select>
+                        </td>
+                    </tr>
+                  <tr id="trSave">
+                    <th>&nbsp;</th>
+                    <td>
+                        <input type="button" id="btnSave" value="<%- btn.save %>"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </script>
+</div>
