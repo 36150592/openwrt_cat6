@@ -58,6 +58,8 @@
 #define TZ_MGR_ENABLE_DHCP_FLAG_FILE "/tmp/.tz_mgr_dhcp_enable"//如果存在此文件，则启动dhcp服务
 #define TZ_DHCP_SERVER_ALIVE_FLAG_FILE "/tmp/.tz_mgr_dhcp_alive"//记录dhcp启动状态，防止重复启动
 
+
+
 #define APP_NAME	"tz_mgr"  //程序名字,必须与配置文件及脚本一致！
 
 //空宏
@@ -212,9 +214,13 @@ int main(int argc, char * const argv[])
 		return -1;
 	}
 	print("network_dev_name=%s",network_dev_name);
+	get_interface_mac(NAME_OF_WIRELESS_INTERFACE,self_mac_addr);
+	print("wifi_mac_addr=%02X:%02X:%02X:%02X:%02X:%02X:"
+		,self_mac_addr[0],self_mac_addr[1],self_mac_addr[2]
+		,self_mac_addr[3],self_mac_addr[4],self_mac_addr[5]);
 
 	unsigned short send_protocol_type = PROTOCOL_TYPE_ECTSP;//发送到服务端协议类型
-	g_send_sock_fd=CreateRawSocket(network_dev_name,send_protocol_type, self_mac_addr, &self_interface_index);
+	g_send_sock_fd=CreateRawSocket(network_dev_name,send_protocol_type, NULL, &self_interface_index);
 	if(g_send_sock_fd<0)
 	{
 		print("CreateRawSocket failed! ret=%d",g_send_sock_fd);
@@ -2366,5 +2372,21 @@ void tz_check_restart_count(void)
 		shell_recv(NULL,0,"%s stop",SCRIPT_DNSMAQ);
 		shell_recv(NULL,0,"rm -f %s",TZ_DHCP_SERVER_ALIVE_FLAG_FILE);
 	}
+}
+
+
+int get_interface_mac(char const* interface_name,IN unsigned char* mac_buf)
+{
+	struct ifreq interface;
+	int fd=socket(AF_INET,SOCK_DGRAM,0);
+	strncpy(interface.ifr_name, interface_name, sizeof(interface.ifr_name));
+	if (ioctl(fd, SIOCGIFHWADDR, &interface) < 0) 
+	{
+		print("ioctl(SIOCGIFHWADDR) failed!");
+		return -1;
+	}
+	close(fd);
+	memcpy(mac_buf, interface.ifr_hwaddr.sa_data,6);
+	return 0;
 }
 
