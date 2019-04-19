@@ -485,13 +485,14 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 				break;
 			case CMD_TYPE_REBOOT_SYNC:
 				{
-					//send reboot sync ack message
+					//室外机主动重启,要求室内机也重启的命令，首先需要回复，室外机收到回复会发送CMD_TYPE_REBOOT_SYNC给室内机
 					print("%s","------------receive reboot command from server----------------");
 					util_client_send_reboot_sync_ack_frame();
 				}
 				break;
 			case CMD_TYPE_REBOOT_SYNC_ACK:
 				{
+					//室内机主动重启，发送CMD_TYPE_REBOOT_SYNC至室外机后，收到室外机的回复，此时可以进行重启，下面的回复可能有点多余
 					//send reboot sync ack message
 					util_client_send_reboot_ack_frame();
 					//wait for the frame is sent
@@ -505,11 +506,11 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 				break;
 			case CMD_TYPE_REBOOT_ACK:
 				{
+					//室外机已经收到回复，可以进行重启操作,(form  CMD_TYPE_REBOOT_SYNC)
 					print("%s","receive CMD_TYPE_REBOOT_ACK-------->reboot!");
 					//start to reboot
-					#ifndef __i386__
 					system("reboot");
-					#endif
+
 				}
 				break;
 			case CMD_TYPE_UPDATE_SYNC:
@@ -539,6 +540,8 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 				break;
 			case CMD_TYPE_RESTORE_SYNC:
 				{
+					//室外机主动恢复出厂，通知室内机的同步消息，只需要回复
+					//如果室外机收到回复，会发送CMD_TYPE_RESTORE_ACK进行确认
 					print("%s","receive CMD_TYPE_RESTORE_SYNC!");
 					//send reboot sync ack message
 					util_client_send_restore_sync_ack_frame();
@@ -546,21 +549,21 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 				break;
 			case CMD_TYPE_RESTORE_SYNC_ACK:
 				{
+					//室内机主动（按键）恢复出厂后，要求室外机也回复出厂，发送CMD_TYPE_RESTORE_SYNC命令至室外机后，收到室外机的回复
+					//这里实际上因为室内机已经是恢复出厂后的状态，下面无需恢复出厂，重启(与室外机同步)即可。
 					//send reboot sync ack message
 					util_client_send_restore_ack_frame();
 					//wait for the frame is sent
-					print("%s","CMD_TYPE_RESTORE_SYNC_ACK------------>restore and reboot!");
-					shell_recv(NULL,0,"%s && reboot",TZ_SCRIPT_RESTORE);
-					//start to reboot
-					#ifndef __i386__
-					system("reboot");
-					#endif
+					print("%s","CMD_TYPE_RESTORE_SYNC_ACK------------>restore factory and reboot!");
+					shell_recv(NULL,0,"(sleep 1 && reboot)&");
+					
 				}
 				break;
 			case CMD_TYPE_RESTORE_ACK:
 				{
 					//start to reboot
-					print("%s","CMD_TYPE_RESTORE_ACK------------>restore and reboot!");
+					//室外机已经收到回复，室内机可以恢复出厂，(form  CMD_TYPE_RESTORE_SYNC)
+					print("%s","CMD_TYPE_RESTORE_ACK------------>restore factory and reboot!");
 					shell_recv(NULL,0,"%s && reboot",TZ_SCRIPT_RESTORE);
 					#ifndef __i386__
 					system("reboot");
@@ -569,14 +572,11 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 				break;
 			case CMD_TYPE_ONLY_RESTORE_CONFIGS:
 				{
-					print("%s","CMD_TYPE_ONLY_RESTORE_CONFIGS------------>restore!");
-					//system( EXECUTED_SCRIPT_WHEN_RESTORE_DEFAULT_CONFIGS );
+					print("%s","CMD_TYPE_ONLY_RESTORE_CONFIGS------------>restore factory without reboot!");
 					//发送确认帧
+					//室外机主动恢复出厂，但是用户要求稍后重启，需要回复室外机后恢复出厂，但不重启
 					util_client_send_only_restore_reply_frame();
-					shell_recv(NULL,0,"%s && reboot",TZ_SCRIPT_RESTORE);
-					#ifndef __i386__
-					system("reboot");
-					#endif
+					shell_recv(NULL,0,"%s",TZ_SCRIPT_RESTORE);
 				}
 				break;
 
@@ -1873,7 +1873,6 @@ void process_1s_signal(void)
 		if( restore_settings_timer_started )
 		{
 			print("%s","---------------restore---------------------");
-			shell_recv(NULL,0,"cp /etc/config/.%s_cfg.default  /etc/config/%s",APP_NAME,APP_NAME);
 			//system( EXECUTED_SCRIPT_WHEN_RESTORE_DEFAULT_CONFIGS );
 		}
 	}
