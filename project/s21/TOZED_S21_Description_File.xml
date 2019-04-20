@@ -76,11 +76,6 @@ bitcomposite表示使用位进行组合的配置字段
         	<default value="12345678" />
 	</config>
 
-	<config name="TZUSER_WEB_SUPER_USER_PWD_RANDOM_WAY" type="select" description="网页超级用户密码随机方式选择" detail="网页超级用户密码随机方式选择" class_name="USER_CONFIG_FIELD"  >
-        	<option value="1" description="随机方式一" />
-		<default value="1"/>
-	</config>
-
 	<!--网页高级用户设置; -->
 	<config name="TZUSER_WEB_SENIOR_USER_NAME" type="text" description="网页高级用户名" detail="网页高级用户名" class_name="USER_CONFIG_FIELD"  >
         	<default value="Operator" />

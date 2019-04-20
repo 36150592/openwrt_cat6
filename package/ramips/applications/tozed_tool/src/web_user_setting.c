@@ -264,7 +264,6 @@ static void set_web_seniro_user()
 	
 }
 
-
 static void set_web_super_user()
 {
 	char tz_config_super_user_name[128] = "";
@@ -303,7 +302,26 @@ static void set_web_super_user()
 	}
 	else
 	{
-		strcpy(tz_config_super_user_pwd,"keep0It3");
+		char pwd[32] = {0};
+		int password_len = 8;
+		int len = 0, i = 0;
+		int num = 0, sum = 0;
+
+		len = strlen(imei);
+
+		if (len >  8)
+		{
+			for (i = 0; i < password_len; i++)
+			{
+				num = imei[len-password_len+i] - '0';
+				sum = sum + num + i;
+				pwd[i] = '0' + sum % 10;
+			}	
+			strcpy(tz_config_super_user_pwd, pwd);
+		}
+		else
+			strcpy(tz_config_super_user_pwd,"keep0It3");
+		
 	}
 
 	//change to md5 value
