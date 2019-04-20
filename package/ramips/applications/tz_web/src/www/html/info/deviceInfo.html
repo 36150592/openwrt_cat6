@@ -8,7 +8,6 @@
             Page.postJSON({
                 json: { cmd: RequestCmd.DEVICE_VERSION_INFO },
                 success: function(datas) {
-                    
                     var names = [], names_lte = [],names_run = [];
                     var device = DOC.device;
                     names.push(device.name);
@@ -48,9 +47,9 @@
 
                     values.push(data2.version.type || loading);
                    
-                    values.push(data2.version.software_version || loading);
+                    values.push(data2.softVersion.software_version || loading);
                     values.push(data2.version.hwversion || loading);
-                    values.push( loading);
+                    values.push( data2.softVersion.config_version || loading);
 					if(Page.Level == 1){
 						values.push(data2.version.inline_soft_version || loading);
 						values.push(data2.version.branch || loading);

@@ -290,6 +290,7 @@ function get_diviceinfo()
 	--data_array["device"] = device.device_get_info() or ''
 	data_array["version"] = system.get_divice_version() or ''
 	 data_array["system"]  = system.system_get_status() or ''
+	 data_array["softVersion"] = system.system_get_tozed_system_info() or ''
     local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 43;
@@ -2485,6 +2486,7 @@ function set_close_auto_dial()
 
 
 end
+
 
 local switch = {
      [0] = get_sysinfo,
