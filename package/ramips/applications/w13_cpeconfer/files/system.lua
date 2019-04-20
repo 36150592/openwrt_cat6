@@ -276,7 +276,7 @@ function system_module.update_config(file_path)
 		return -1
 	end
 	
-	os.execute(string.format("/etc/tozed/config_update %s 0",file_path))
+	os.execute(string.format("/etc/tozed/config_update %s 0  1>/dev/null 2>/dev/null",file_path))
 	
 	if (util.is_file_exist("/tmp/.update_config_success") == true)
 	then

@@ -24,11 +24,15 @@ config_go_exit()
         if [ "$1" = "success" ]; then
                 rm ${UPDATE_CONFIG_STATUS_FAIL} -f
                 touch ${UPDATE_CONFIG_STATUS_SUCCESS}
+                echo "success"
         else
                 rm ${UPDATE_CONFIG_STATUS_SUCCESS} -f
                 touch ${UPDATE_CONFIG_STATUS_FAIL}
 		if [ "$2" != "" ]; then
 			echo "$2" > ${UPDATE_CONFIG_STATUS_FAIL}
+                        echo "failed: $2"
+                else
+                        echo "failed: none"
 		fi
         fi
         exit
@@ -45,7 +49,7 @@ mkdir -p ${CONFIG_WORK_STATION}
 rm -rf ${CONFIG_WORK_STATION}/*
 
 #unzip
-unzip -P ${zip_pwd} ${CONFIG_ZIP_FILE} -d ${CONFIG_WORK_STATION}
+unzip -P ${zip_pwd} ${CONFIG_ZIP_FILE} -d ${CONFIG_WORK_STATION}  1>/dev/null 2>/dev/null
 
 cd ${CONFIG_WORK_STATION}
 if [ ! -f md5sum.txt ]; then
@@ -73,7 +77,7 @@ if [ -d ${CONFIG_WORK_STATION}/LOGO ]; then
 fi
 
 #get the config file
-tozed_tool -a ${CONFIG_WORK_STATION}/${config_file}
+tozed_tool -a ${CONFIG_WORK_STATION}/${config_file} 1>/dev/null 2>/dev/null
 
 toolret=`cat /tmp/.tozed_tool_ret | awk '{print $1}'`
 if [ "${toolret}" != "success" ]; then
