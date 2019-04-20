@@ -1130,8 +1130,13 @@ function system_module.system_ntp_get_timezone()
 	local timezone
 	x:foreach(SYSTEM_CONFIG_FILE, "system", function(s)
 		timezone = s["timezone"]
-		local index = string.find(timezone, ">")
-		timezone = string.sub(timezone, index+1, string.len(timezone))
+		local index = string.find(timezone, "CST")
+		if nil == index
+		then
+			index = string.find(timezone, ">")
+			return tonumber(string.sub(timezone, index+1, string.len(timezone)))
+		end
+		timezone = string.sub(timezone, index+3, string.len(timezone))
 	end)
 
 	return tonumber(timezone)
@@ -1151,9 +1156,9 @@ function system_module.system_ntp_set_timezone(timezone)
 	x:foreach(SYSTEM_CONFIG_FILE, "system", function(s)
 		if timezone > 0
 		then
-			x:set(SYSTEM_CONFIG_FILE,s[".name"], "timezone", "<-0"..timezone .. ">+"..timezone)
+			x:set(SYSTEM_CONFIG_FILE,s[".name"], "timezone", "CST+"..timezone)
 		else
-			x:set(SYSTEM_CONFIG_FILE,s[".name"], "timezone", "<+0"..math.abs(timezone) .. ">"..timezone)
+			x:set(SYSTEM_CONFIG_FILE,s[".name"], "timezone", "CST"..timezone)
 		end
 
 	end)
