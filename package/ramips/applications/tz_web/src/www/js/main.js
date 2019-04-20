@@ -124,7 +124,8 @@ var RequestCmd = {
     GET_LANGUAGE_SELECT:220,
     GET_AUTO_DIAL:221,
     GET_OPEN_AUTO_DIAL:222,
-    GET_CLOSE_AUTO_DIAL:223
+    GET_CLOSE_AUTO_DIAL:223,
+    RESTORE_DEFAULT:224
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },

@@ -40,19 +40,23 @@
 
             setTimeout(function() {
                 datas = {};
-                $btnSave.enable();
-            }, 40000);
-
-            Page.postJSON({
+                setTimeout(function(){
+                    Page.postJSON({
                 $id: $btnSave,
                 json: {
                     cmd: RequestCmd.RESTORE_DEFAULT,
                     method: JSONMethod.POST
                 },
                 success: function(data) {
-                    datas = data;
+                   if(data.success == true){
+                        SysUtil.rebootDevice(PROMPT.tips.rebootMessage);
+                   }
                 }
             });
+                },1000);
+            }, 40000);
+
+
         });
 
     });

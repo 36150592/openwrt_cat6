@@ -2487,6 +2487,18 @@ function set_close_auto_dial()
 
 end
 
+function restore_factory()
+	local tz_answer = {}
+	tz_answer["cmd"] = 224
+	local data_array = {}
+	
+	tz_answer["success"] = true
+	os.execute("/etc/tozed/tz_restore_factory")
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 
 local switch = {
      [0] = get_sysinfo,
@@ -2569,6 +2581,7 @@ local switch = {
 	 [221] = get_auto_dial,
 	 [222] = set_open_auto_dial,
 	 [223] = set_close_auto_dial,
+	 [224] = restore_factory,
 
  }
  
