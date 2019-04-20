@@ -209,11 +209,15 @@
         }
     loadWlanPage();
     loadWlan5gPage();
-     
+    Page.getHelperPage('html/info/wifiInfo.html');
+    $('.helper_box').show();
     });
 </script>
 
-<div class="detail_box">
-    <div id="wlan_info"></div>
-    <div id="wlan_5g_info"></div>
+<div class="detail_box" style="width:60%;float:left;">
+    <div id="wlan_info" style="margin-left:20px"></div>
+    <div id="wlan_5g_info" style="margin-left:20px"></div>
+</div>
+<div class="helper_box" >
+    <div id="helper"></div>
 </div>

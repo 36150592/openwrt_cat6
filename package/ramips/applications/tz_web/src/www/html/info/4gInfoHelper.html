@@ -1,0 +1,30 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function(){
+       //var helper = $.extend({}, homeInfohtml.helper, homeInfohtml.form1);
+        TempUtil.render('helperContainer-template', 'helperContainer', fourgInfohtml.helper);
+
+    });
+</script>
+
+<div id="helperContainer">
+    <script type="text/template" id="helperContainer-template">
+        <div id="helper0">
+            <div class="helper_name"><%= title1 %></div>
+            <div class="helper_desc">
+                <%= item1 %>
+            </div>
+
+            <div class="helper_name"><%= title2 %></div>
+            <div class="helper_desc">
+                <%= item2 %>
+            </div>
+
+           
+
+        </div>
+    </script>
+</div>
+
+

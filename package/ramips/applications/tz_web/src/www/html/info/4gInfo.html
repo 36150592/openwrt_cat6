@@ -78,10 +78,15 @@
         }
 
 
-     loadPage3();
+    loadPage3();
+    Page.getHelperPage('html/info/4gInfo.html');
+    $('.helper_box').show();
     });
 </script>
 
-<div class="detail_box">
-    <div id="net_info"></div>
+<div class="detail_box" style="width:60%;float:left;">
+    <div id="net_info" style="margin-left:20px"></div>
+</div>
+<div class="helper_box" >
+    <div id="helper"></div>
 </div>

@@ -640,7 +640,8 @@ var StatusUtil = {
                     $('#wan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[3], "Wan"));
                     sessionStorage["2g_register_status"] = modemStatus["2g_register_status"];
                     sessionStorage["3g_register_status"] = modemStatus["3g_register_status"];
-                    sessionStorage["4g_register_status"] = modemStatus["4g_register_status"];
+                    sessionStorage["4g_register_status"] = modemStatus["4g_register_stauts"];
+                    sessionStorage["rsrp"] = modemStatus.rsrp;
                     sessionStorage["signal_lvl"] = modemStatus.signal_lvl;
                     sessionStorage["wifi_status"] = wifiStatus.status;
                     sessionStorage["wifi5_status"] = wifiStatus.status5;

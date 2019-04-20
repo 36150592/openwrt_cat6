@@ -85,6 +85,19 @@ var HELP = {
 	body: {}
 };
 
+var homeInfohtml = {};
+homeInfohtml.mainlabel = {};
+homeInfohtml.helper = {};
+
+var fourgInfohtml = {};
+fourgInfohtml.helper = {};
+
+var wanInfohtml = {};
+wanInfohtml.helper = {};
+
+var wifiInfohtml = {};
+wifiInfohtml.helper = {};
+
 var dialconfightml = {};
 dialconfightml.form1 = {};
 dialconfightml.form1.dialStateVal = {};

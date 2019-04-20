@@ -2,7 +2,7 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-    
+         TempUtil.render('homeMain-template', 'homeMainDiv', homeInfohtml.mainlabel);
        // sessionStorage["2g_register_status"] = modemStatus.2g_register_status;
         //sessionStorage["3g_register_status"] = modemStatus.3g_register_status;
        // sessionStorage["4g_register_status"] = modemStatus.4g_register_status;
@@ -13,50 +13,68 @@
         var singalLevel = sessionStorage["signal_lvl"];
         var netInfo =String.format('<div id="signalHome" class=" signalHome signalHome{0}" style="margin-left:70%" title="Signal Strength:No signal"></div>', singalLevel);
         $('#signalHome').html(netInfo);
-        $('#signalHome_service').html("No service");
-        $('#signalHome_rsrp').html("-116dbm");
-        $('#signalHome_24gwlan').html(sessionStorage["wifi_status"] ==0?"ON":"OFF");
-        $('#signalHome_5gwlan').html(sessionStorage["wifi5_status"] ==0?"ON":"OFF");
-        $('#signalHome_dial').html(sessionStorage["network_link_stauts"] ==1?"CONNECT":"DISCONNECT");
+
+        if(sessionStorage["2g_register_status"] == 1)
+            $('#signalHome_service').html('<h4 style="color:#6CF226; font-size:x-large;margin-top:0px">2G</h4>');
+        else if(sessionStorage["3g_register_status"] == 1)
+            $('#signalHome_service').html('<h4 style="color:#6CF226; font-size:x-large;margin-top:0px">3G</h4>');
+        else if(sessionStorage["4g_register_status"] == 1)
+            $('#signalHome_service').html('<h4 style="color:#6CF226; font-size:x-large;margin-top:0px">4G</h4>');
+        else
+            $('#signalHome_service').html('<h4 style="color:#FF0000; font-size:x-large;margin-top:0px">'+homeInfohtml.mainlabel.noService+'</h4>');
+        $('#signalHome_rsrp').html(sessionStorage["rsrp"]+"dbm");
+        $('#signalHome_24gwlan').html(sessionStorage["wifi_status"] ==0?homeInfohtml.mainlabel.on:homeInfohtml.mainlabel.off);
+        $('#signalHome_5gwlan').html(sessionStorage["wifi5_status"] ==0?homeInfohtml.mainlabel.on:homeInfohtml.mainlabel.off);
+        $('#signalHome_dial').html(sessionStorage["network_link_stauts"] ==1?homeInfohtml.mainlabel.connect:homeInfohtml.mainlabel.disconnect);
+
+        Page.getHelperPage('html/info/homeInfo.html');
+        $('.helper_box').show();
     });
 </script>
 
-<div class="detail_box">
+<div class="detail_box" id="homeMainDiv" style="float:left;width:60%">
+<script type="text/template" id="homeMain-template">
     <table width="100%" style="margin-top:5%">
     <tr>
-        <td  width="30%">
+        <td  width="50%">
         <div id="signalHome"></div>
         
 
         </td>
-        <td width="70%" colspan="2">
-            <div id="signalHome_service">4G</div>
-            <div id="signalHome_rsrp">RSRP</div>
+        <td width="50%" colspan="2">
+            <div id="signalHome_service"></div>
+            <div id="signalHome_rsrp"></div>
         </td>
 
     </tr>
 
     <tr>
-        <td width="30%">
+        <td width="50%">
             <div style="margin-left: 60%">
-                <h3>WLAN Status</h3>
+                <h3><%- wifiHead %></h3>
                 <table>
                     
-                    <tr><td>WLAN 2.4G:</td><td id="signalHome_24gwlan"></td></tr>
-                    <tr><td>WLAN 5G:</td><td id="signalHome_5gwlan"></td></tr>
+                    <tr><td><%- wifi24 %>:</td><td id="signalHome_24gwlan"></td></tr>
+                    <tr><td><%- wifi5 %>:</td><td id="signalHome_5gwlan"></td></tr>
                 </table>
             </div>
         </td>
-        <td width="70%">
+        <td width="50%">
         <div>
-             <h3>Data Service</h3>
+             <h3><%- dataService %></h3>
             <table>
                
-                <tr><td>Dial Status:</td><td id="signalHome_dial"></td></tr>
+                <tr><td><%- dailStatus%>:</td><td id="signalHome_dial"></td></tr>
                 <tr><td></td><td></td></tr>
             </table>
         </div>
         </td>
     </tr>
     </table>
+    </script>
 </div>
+<div class="helper_box" >
+    <div id="helper"></div>
+</div>
+
+
