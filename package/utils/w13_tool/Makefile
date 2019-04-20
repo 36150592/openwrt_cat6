@@ -45,6 +45,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/tz_export $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/w13_write_mac $(1)/usr/bin
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

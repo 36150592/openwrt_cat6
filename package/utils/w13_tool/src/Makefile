@@ -1,4 +1,4 @@
-all: w13_tool tz_export
+all: w13_tool tz_export w13_write_mac
 
 CC = gcc
 CFLAGS = -Wall
@@ -19,8 +19,11 @@ w13_tool: $(OBJS)
 	$(CC)  $^ $(LDFLAGS) -o $@ 
 tz_export: tz_export.o
 	$(CC)  $^ $(LDFLAGS) -o $@ 
+w13_write_mac: Cshell.o w13_write_mac.o
+	$(CC)  $^ $(LDFLAGS) -o $@ 
+
 
 .PHONY: clean
 
 clean:
-	rm -f w13_tool tz_export *.o
+	rm -f w13_tool tz_export w13_write_mac *.o
