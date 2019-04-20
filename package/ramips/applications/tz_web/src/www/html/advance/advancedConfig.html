@@ -10,13 +10,21 @@
         var items = [];
         
 		items.push({title: tabs.networkSet, url: 'html/advance/networkSet.html'});
-		items.push({title: DOC.lbl.plmn, url: 'html/advance/lockPlmn.html'});
-		items.push({title: tabs.lockFreq, url: "html/advance/lockBand.html"});
-		items.push({title: tabs.lockPhyCell, url: 'html/advance/lockPhyCell.html'});
-		items.push({title: TAB.basic.pinSet, url: 'html/advance/pinSet.html'});
-		items.push({title: TAB.basic.remoteLogin, url: 'html/advance/remoteLogin.html'});
-		items.push({title: TAB.basic.remotePin, url: 'html/advance/remotePin.html'});
-        items.push({title: tabs.tr069, url: 'html/advance/tr069.html'});
+        if(Page.getShowHideByBit(8))
+		  items.push({title: DOC.lbl.plmn, url: 'html/advance/lockPlmn.html'});
+        if(Page.getShowHideByBit(9))
+		  items.push({title: tabs.lockFreq, url: "html/advance/lockBand.html"});
+        if(Page.getShowHideByBit(10))
+		  items.push({title: tabs.lockPhyCell, url: 'html/advance/lockPhyCell.html'});
+        if(Page.getShowHideByBit(11))
+		  items.push({title: TAB.basic.pinSet, url: 'html/advance/pinSet.html'});
+        if(Page.getShowHideByBit(12))
+		  items.push({title: TAB.basic.remoteLogin, url: 'html/advance/remoteLogin.html'});
+        if(Page.getShowHideByBit(13))
+		  items.push({title: TAB.basic.remotePin, url: 'html/advance/remotePin.html'});
+        if(Page.getShowHideByBit(14))
+            items.push({title: tabs.tr069, url: 'html/advance/tr069.html'});
+        if(Page.getShowHideByBit(15))
         items.push({title: tabs.route, url: 'html/advance/route.html'});
         items.push({title: DOC.lbl.autoDial, url: 'html/advance/autoDial.html'});
        

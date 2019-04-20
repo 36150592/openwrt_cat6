@@ -20,11 +20,12 @@
         infoMenu.push(new MenuBody("DEVICE_INFO", MENU.info.version));
         menus.push(infoMenu);
         
-		
         var settingMenu = new MenuHead("setting_menu", MENU.setting.head);
         settingMenu.push(new MenuBody("NETWORK_CONFIG", MENU.setting.dhcp));
-        settingMenu.push(new MenuBody("WIRELESS_CONFIG", MENU.settingWifi.wifi));
-        settingMenu.push(new MenuBody("WLAN_5G_CONFIG", MENU.settingWifi.wifi5g));
+        if(Page.getShowHideByBit(0))
+            settingMenu.push(new MenuBody("WIRELESS_CONFIG", MENU.settingWifi.wifi));
+        if(Page.getShowHideByBit(1))
+            settingMenu.push(new MenuBody("WLAN_5G_CONFIG", MENU.settingWifi.wifi5g));
         if(Page.getShowHideByBit(3))
             settingMenu.push(new MenuBody("APN_CONFIG", DOC.apn.setting));
         if(Page.getShowHideByBit(7))
@@ -53,8 +54,10 @@
         sysMenu.push(new MenuBody("SYS_UPDATE", MENU.sys.firmwareUpdate));
         sysMenu.push(new MenuBody("CONFIG_UPDATE", MENU.sys.configUpdate));
         sysMenu.push(new MenuBody("SYS_TIME", MENU.sys.timeSetting));
-        sysMenu.push(new MenuBody("NETWORK_TOOL", MENU.sys.networkTools));
-        sysMenu.push(new MenuBody("SYS_AT", MENU.sys.at));
+        if(Page.getShowHideByBit(5))
+            sysMenu.push(new MenuBody("NETWORK_TOOL", MENU.sys.networkTools));
+        if(Page.getShowHideByBit(6))  
+            sysMenu.push(new MenuBody("SYS_AT", MENU.sys.at));
 			
         sysMenu.push(new MenuBody("SYS_REBOOT", MENU.sys.reboot));
 			
