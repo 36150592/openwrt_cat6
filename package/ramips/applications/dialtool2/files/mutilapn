@@ -53,7 +53,7 @@ check_ifname()
 
 dial_mutilapn1()
 {
-	if [ $TZ_ENABLE_AUTO_DIAL'' == '1' -a $TZ_MUTILAPN1_ENABLE'' == '1'   -a $TZ_MUTILAPN1_IP_STACK_MODE"" != ""  -a $TZ_MUTILAPN1_APN_NAME"" != "" ];then
+	if [ $TZ_ENABLE_AUTO_DIAL'' != '0' -a $TZ_MUTILAPN1_ENABLE'' == '1'   -a $TZ_MUTILAPN1_IP_STACK_MODE"" != ""  -a $TZ_MUTILAPN1_APN_NAME"" != "" ];then
 
 		send_at "at+cgdcont=2,\"$TZ_MUTILAPN1_IP_STACK_MODE\",\"$TZ_MUTILAPN1_APN_NAME\""
 		logger "dial_mutilapn1:send_at at+cgdcont=2,\"$TZ_MUTILAPN1_IP_STACK_MODE\",\"$TZ_MUTILAPN1_APN_NAME\"  ret = $? "
@@ -91,7 +91,7 @@ dial_mutilapn1()
 
 dial_mutilapn2()
 {
-	if [ $TZ_ENABLE_AUTO_DIAL'' == '1' -a  $TZ_MUTILAPN2_ENABLE'' == '1'  -a $TZ_MUTILAPN2_IP_STACK_MODE"" != ""  -a $TZ_MUTILAPN2_APN_NAME"" != "" ];then
+	if [ $TZ_ENABLE_AUTO_DIAL'' != '0' -a  $TZ_MUTILAPN2_ENABLE'' == '1'  -a $TZ_MUTILAPN2_IP_STACK_MODE"" != ""  -a $TZ_MUTILAPN2_APN_NAME"" != "" ];then
 
 		send_at "at+cgdcont=3,\"$TZ_MUTILAPN2_IP_STACK_MODE\",\"$TZ_MUTILAPN2_APN_NAME\""
         logger "dial_mutilapn2:send_at at+cgdcont=3,\"$TZ_MUTILAPN2_IP_STACK_MODE\",\"$TZ_MUTILAPN2_APN_NAME\"  ret = $? "                                                                          
