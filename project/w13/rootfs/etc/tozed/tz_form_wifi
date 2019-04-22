@@ -59,7 +59,7 @@ if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
 		elif [ "${AP_SECMODE}" = "WPA" -a ${AP_WPA} = "2" ];then
 			TZ_ENCRYPTION="psk2+${AP_CYPHER}"
 		elif [ "${AP_SECMODE}" = "WPA" -a ${AP_WPA} = "3" ];then
-			TZ_ENCRYPTION="psk1+psk2"
+			TZ_ENCRYPTION="psk+psk2+${AP_CYPHER}"
 		else
 			:
 		fi
