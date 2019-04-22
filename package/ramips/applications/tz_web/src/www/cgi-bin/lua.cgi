@@ -205,11 +205,10 @@ end
 function get_sysinfo()
 	local data_array = {}
 
-	data_array["network"] = network.network_get_wan_info() 
-	if nil == data_array["network"]
-	  then
-	    data_array["network"] = network.network_get_4g_net_info() or ''
-	end
+	data_array["wan"] = network.network_get_wan_info() 
+	data_array["4g"] = network.network_get_4g_net_info()
+	data_array["4g1"] = network.network_get_4g1_net_info()
+	data_array["4g2"] = network.network_get_4g2_net_info()
 		
 	local tz_answer = {};
     tz_answer["success"] = true;

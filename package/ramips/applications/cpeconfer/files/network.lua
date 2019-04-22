@@ -16,6 +16,7 @@ network_module.net_info = {
 		["ipaddr"] = nil,
 		["netmask"] = nil,
 		["gateway"] = nil,
+		["interface"] = nil,
 		["first_dns"] = nil,
 		["second_dns"] = nil,
 		["tx_package"] = nil,
@@ -37,6 +38,7 @@ function network_module.net_info:new(o,obj)
 	self["ipaddr"] = obj["ipaddr"] or nil
 	self["netmask"] = obj["netmask"] or nil
 	self["gateway"] = obj["gateway"] or nil
+	self["interface"] = obj["interface"] or nil
 	self["first_dns"] = obj["first_dns"] or nil
 	self["second_dns"] = obj["second_dns"] or nil
 	self["tx_packets"] = obj["tx_package"] or nil
@@ -232,7 +234,7 @@ function network_module.network_get_wan_info()
 	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
 	info["first_dns"],info["second_dns"] = get_dns("wan")
-
+	info["interface"] = ifname
 	if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the wan interface,return nil")
@@ -256,6 +258,7 @@ function network_module.network_get_4g_net_info()
 	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
 	info["first_dns"],info["second_dns"] = get_dns("4g")
+	info["interface"] = ifname
 	if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the 4g interface,return nil")
@@ -279,6 +282,7 @@ function network_module.network_get_4g1_net_info()
 	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
 	info["first_dns"],info["second_dns"] = get_dns("4g1")
+	info["interface"] = ifname
 	if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the 4g interface,return nil")
@@ -302,6 +306,7 @@ function network_module.network_get_4g2_net_info()
 	info["ipaddr"],temp,info["netmask"], info["mac"],info["tx_packets"],info["rx_packets"],info["tx_bytes"],info["rx_bytes"]= get_ip_bcast_mask_mac(ifname)
 	info["gateway"] = get_gateway(ifname)
 	info["first_dns"],info["second_dns"] = get_dns("4g2")
+	info["interface"] = ifname
 	if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the 4g interface,return nil")

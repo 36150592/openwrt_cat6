@@ -74,6 +74,7 @@ var DOC = {
 	lockband: {},
 	timezone:{},
 	week:{},
+	lan:{},
 	
 	networkMode: { helper: {} },
 	dial: { helper: {} },
@@ -97,6 +98,9 @@ wanInfohtml.helper = {};
 
 var wifiInfohtml = {};
 wifiInfohtml.helper = {};
+
+var lanInfohtml = {};
+lanInfohtml.helper = {};
 
 var dialconfightml = {};
 dialconfightml.form1 = {};

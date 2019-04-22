@@ -1,0 +1,70 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var currentId = Page.currentId;
+        var count = 0;
+        var sysInfo_plmn;
+        var loading = '-';
+
+        function loadPage() {
+
+            Page.postJSON({
+                json: { cmd: RequestCmd.DHCP_INFO },
+                success: function(datas) {
+                    
+                    var data = datas.data;
+                    Page.isNULLToSpace = true;
+                    for(var i = 0; i < data.length; i++)
+                    {
+                        if(!data[i].enable)
+                            continue;
+
+                        var names_wan = [];
+                        var values_wan = [];
+                        names_wan.push(DOC.lan.lannet);
+                        names_wan.push(DOC.lan.netmask);
+                        names_wan.push(DOC.lan.beginip);
+                        names_wan.push(DOC.lan.endip);
+                        names_wan.push(DOC.lan.intermac);
+                        names_wan.push(DOC.lan.intername);
+
+                        values_wan.push(data[i].server_ip);
+                        values_wan.push(data[i].netmask);
+                        values_wan.push(data[i].start_ip);
+                        values_wan.push(data[i].end_ip);
+                        values_wan.push(data[i].lan_mac);
+                        values_wan.push("br-"+data[i].interface);
+                        var wan_html = Page.createTable(data[i].interface.toUpperCase(), names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                        $('#'+data[i].interface+"_info").html(wan_html);
+                    }
+                  
+
+                   // Page.setStripeTable();
+                    Page.isNULLToSpace = false;
+                }
+            });
+
+
+        }
+
+    
+        loadPage();
+        Page.getHelperPage('html/info/lanInfo.html');
+        $('.helper_box').show();
+  
+    });
+
+
+
+</script>
+
+<div class="detail_box" style="width:60%;float:left;">
+    <div id="lan_info" style="margin-left:20px"></div>
+    <div id="lan1_info" style="margin-left:20px"></div>
+    <div id="lan2_info" style="margin-left:20px"></div>
+</div>
+
+<div class="helper_box" >
+    <div id="helper"></div>
+</div>

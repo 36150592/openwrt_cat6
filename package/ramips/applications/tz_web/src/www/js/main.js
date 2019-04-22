@@ -130,6 +130,7 @@ var RequestCmd = {
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
     WAN_INFO: { cmd: RequestCmd.SYS_INFO, url: "html/info/wanInfo.html" },
+    LAN_INFO: { cmd: RequestCmd.SYS_INFO, url: "html/info/lanInfo.html" },
     FourG_INFO: { cmd: RequestCmd.SYS_INFO, url: "html/info/4gInfo.html" },
     WIFI_INFO: { cmd: RequestCmd.SYS_INFO, url: "html/info/wifiInfo.html" },
     DEVICE_INFO: { cmd: RequestCmd.DEVICE_VERSION_INFO, url: "html/info/deviceInfo.html" },

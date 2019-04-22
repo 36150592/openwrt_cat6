@@ -13,48 +13,189 @@
                 json: { cmd: RequestCmd.SYS_INFO },
                 success: function(datas) {
                     var data2 = datas.data;   
-                    var data_wan = data2.network;
+                    var data_wan = data2.wan;
+                    var data_4g = data2['4g'];
+                    var data_4g1 = data2['4g1'];
+                    var data_4g2 = data2['4g2'];
                      var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
                     var values_run = [], values_sim = [], values_net = [], values_lan = [], values_wan = [], values_lte = [];
                     Page.isNULLToSpace = true;
 
+                    if(data_wan != undefined)
+                    {
 
-                    names_wan.push(DOC.net.mac);
-                    names_wan.push(DOC.net.ip);
-                    names_wan.push(DOC.net.mask);
-                    names_wan.push(DOC.net.gateway);
-                    names_wan.push(DOC.net.dns1);
-                    names_wan.push(DOC.net.dns2);
+                        names_wan.push(DOC.net.mac);
+                        names_wan.push(DOC.net.ip);
+                        names_wan.push(DOC.net.mask);
+                        names_wan.push(DOC.net.gateway);
+                        names_wan.push(DOC.net.dns1);
+                        names_wan.push(DOC.net.dns2);
 
 
-                    values_wan.push(data_wan.mac || loading);
-                    values_wan.push(data_wan.ipaddr || loading);
-                    values_wan.push(data_wan.netmask || loading);
-                    values_wan.push(data_wan.gateway || loading);
-                    if(data_wan.ipaddr == undefined){
-                            values_wan.push("-");
-                            values_wan.push("-");
-                    } else {
-                            values_wan.push(data_wan.first_dns || loading);
-                            values_wan.push(data_wan.second_dns || loading);
+                        values_wan.push(data_wan.mac || loading);
+                        values_wan.push(data_wan.ipaddr || loading);
+                        values_wan.push(data_wan.netmask || loading);
+                        values_wan.push(data_wan.gateway || loading);
+                        if(data_wan.ipaddr == undefined){
+                                values_wan.push("-");
+                                values_wan.push("-");
+                        } else {
+                                values_wan.push(data_wan.first_dns || loading);
+                                values_wan.push(data_wan.second_dns || loading);
+                        }
+                        
+                        names_wan.push(DOC.net.rxPackets);
+                        names_wan.push(DOC.net.rxBytes);
+                        names_wan.push(DOC.net.txPackets);
+                        names_wan.push(DOC.net.txBytes);
+                        names_wan.push(DOC.net.interface);
+                        // names_wan.push(wan_text.manageTime);
+
+                        values_wan.push(data_wan.rx_packets || loading);
+                        values_wan.push(data_wan.rx_bytes || loading);
+                        values_wan.push(data_wan.tx_packets || loading);
+                        values_wan.push(data_wan.tx_bytes || loading);
+                        values_wan.push(data_wan.interface || loading);
+                       
+                       
+                        var wan_html = Page.createTable(DOC.title.wan, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                        $('#wan_info').html(wan_html);
+
                     }
-                    
-                    names_wan.push(DOC.net.rxPackets);
-                    names_wan.push(DOC.net.rxBytes);
-                    names_wan.push(DOC.net.txPackets);
-                    names_wan.push(DOC.net.txBytes);
-                    // names_wan.push(wan_text.manageTime);
+                  
+                    names_wan = [];
+                    values_wan = [];
+                    if(data_4g.ipaddr != undefined)
+                    {
 
-                    values_wan.push(data_wan.rx_packets || loading);
-                    values_wan.push(data_wan.rx_bytes || loading);
-                    values_wan.push(data_wan.tx_packets || loading);
-                    values_wan.push(data_wan.tx_bytes || loading);
+                        names_wan.push(DOC.net.mac);
+                        names_wan.push(DOC.net.ip);
+                        names_wan.push(DOC.net.mask);
+                        names_wan.push(DOC.net.gateway);
+                        names_wan.push(DOC.net.dns1);
+                        names_wan.push(DOC.net.dns2);
 
-                   
-                   
-                    var wan_html = Page.createTable(DOC.title.wan, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
-                    $('#wan_info').html(wan_html);
-                    
+
+                        values_wan.push(data_4g.mac || loading);
+                        values_wan.push(data_4g.ipaddr || loading);
+                        values_wan.push(data_4g.netmask || loading);
+                        values_wan.push(data_4g.gateway || loading);
+                        if(data_4g.ipaddr == undefined){
+                                values_wan.push("-");
+                                values_wan.push("-");
+                        } else {
+                                values_wan.push(data_4g.first_dns || loading);
+                                values_wan.push(data_4g.second_dns || loading);
+                        }
+                        
+                        names_wan.push(DOC.net.rxPackets);
+                        names_wan.push(DOC.net.rxBytes);
+                        names_wan.push(DOC.net.txPackets);
+                        names_wan.push(DOC.net.txBytes);
+                        names_wan.push(DOC.net.interface);
+                        // names_wan.push(wan_text.manageTime);
+
+                        values_wan.push(data_4g.rx_packets || loading);
+                        values_wan.push(data_4g.rx_bytes || loading);
+                        values_wan.push(data_4g.tx_packets || loading);
+                        values_wan.push(data_4g.tx_bytes || loading);
+                        values_wan.push(data_4g.interface || loading);
+                       
+                       
+                        var wan_html = Page.createTable(DOC.title.apn, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                        $('#4g_info').html(wan_html);
+
+                    }
+
+                    names_wan = [];
+                    values_wan = [];
+                    if(data_4g1 != undefined)
+                    {
+
+                        names_wan.push(DOC.net.mac);
+                        names_wan.push(DOC.net.ip);
+                        names_wan.push(DOC.net.mask);
+                        names_wan.push(DOC.net.gateway);
+                        names_wan.push(DOC.net.dns1);
+                        names_wan.push(DOC.net.dns2);
+
+
+                        values_wan.push(data_4g1.mac || loading);
+                        values_wan.push(data_4g1.ipaddr || loading);
+                        values_wan.push(data_4g1.netmask || loading);
+                        values_wan.push(data_4g1.gateway || loading);
+                        if(data_4g1.ipaddr == undefined){
+                                values_wan.push("-");
+                                values_wan.push("-");
+                        } else {
+                                values_wan.push(data_4g1.first_dns || loading);
+                                values_wan.push(data_4g1.second_dns || loading);
+                        }
+                        
+                        names_wan.push(DOC.net.rxPackets);
+                        names_wan.push(DOC.net.rxBytes);
+                        names_wan.push(DOC.net.txPackets);
+                        names_wan.push(DOC.net.txBytes);
+                        names_wan.push(DOC.net.interfce);
+                        // names_wan.push(wan_text.manageTime);
+
+                        values_wan.push(data_4g1.rx_packets || loading);
+                        values_wan.push(data_4g1.rx_bytes || loading);
+                        values_wan.push(data_4g1.tx_packets || loading);
+                        values_wan.push(data_4g1.tx_bytes || loading);
+                        values_wan.push(data_4g1.interface || loading);
+
+                       
+                       
+                        var wan_html = Page.createTable(DOC.title.apn1, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                        $('#4g1_info').html(wan_html);
+
+                    }
+                  
+                    names_wan = [];
+                    values_wan = [];
+                    if(data_4g2 != undefined)
+                    {
+
+                        names_wan.push(DOC.net.mac);
+                        names_wan.push(DOC.net.ip);
+                        names_wan.push(DOC.net.mask);
+                        names_wan.push(DOC.net.gateway);
+                        names_wan.push(DOC.net.dns1);
+                        names_wan.push(DOC.net.dns2);
+
+
+                        values_wan.push(data_4g2.mac || loading);
+                        values_wan.push(data_4g2.ipaddr || loading);
+                        values_wan.push(data_4g2.netmask || loading);
+                        values_wan.push(data_4g2.gateway || loading);
+                        if(data_4g2.ipaddr == undefined){
+                                values_wan.push("-");
+                                values_wan.push("-");
+                        } else {
+                                values_wan.push(data_4g2.first_dns || loading);
+                                values_wan.push(data_4g2.second_dns || loading);
+                        }
+                        
+                        names_wan.push(DOC.net.rxPackets);
+                        names_wan.push(DOC.net.rxBytes);
+                        names_wan.push(DOC.net.txPackets);
+                        names_wan.push(DOC.net.txBytes);
+                        names_wan.push(DOC.net.interface);
+                        // names_wan.push(wan_text.manageTime);
+
+                        values_wan.push(data_4g2.rx_packets || loading);
+                        values_wan.push(data_4g2.rx_bytes || loading);
+                        values_wan.push(data_4g2.tx_packets || loading);
+                        values_wan.push(data_4g2.tx_bytes || loading);
+                        values_wan.push(data_4g2.interface || loading);
+                       
+                       
+                        var wan_html = Page.createTable(DOC.title.apn2, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                        $('#4g2_info').html(wan_html);
+
+                    }
+                  
 
                    // Page.setStripeTable();
                     Page.isNULLToSpace = false;
@@ -64,45 +205,7 @@
 
         }
 
-        $('#net_info').click(function(e){
-            if(e.target.id == "net_connect"){
-                if(!AlertUtil.confirm(prompt.item1)){
-                    return false;
-                }
-
-                Page.postJSON({
-                    json:{
-                        cmd: RequestCmd.NET_CONNECT
-                    },
-                    success: function(){
-
-                    },
-                    complete: function(){
-                        count = 2;
-                        Page.connectStatus = true;
-                        $('#connectPrompt').html(prompt.item2);
-                    }
-                });
-            } else if(e.target.id == "net_disconnect"){
-                if(!AlertUtil.confirm(prompt.item3)){
-                    return false;
-                }
-                Page.postJSON({
-                    json:{
-                        cmd: RequestCmd.NET_DISCONNECT
-                    },
-                    success: function(){
-
-                    },
-                    complete: function(){
-                        count = 2;
-                        Page.connectStatus = false;
-                        $('#connectPrompt').html(prompt.item4);
-                    }
-                });
-            }
-        });
-
+    
         loadPage();
         Page.getHelperPage('html/info/wanInfo.html');
         $('.helper_box').show();
@@ -116,7 +219,11 @@
 <div class="detail_box" style="width:60%;float:left;">
     <div id="net_info"></div>
     <div id="wan_info" style="margin-left:20px"></div>
+    <div id="4g_info" style="margin-left:20px"></div>
+    <div id="4g1_info" style="margin-left:20px"></div>
+    <div id="4g2_info" style="margin-left:20px"></div>
 </div>
+
 <div class="helper_box" >
     <div id="helper"></div>
 </div>
