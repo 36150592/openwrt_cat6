@@ -104,7 +104,8 @@ var RequestCmd = {
 
     WIFI5_INFO: 201,
     WIRELESS5_CONFIG: 202,
-	LAN_INFO: 203
+	LAN_INFO: 203,
+    RESTORE_DEFAULT:224
 
 };
 

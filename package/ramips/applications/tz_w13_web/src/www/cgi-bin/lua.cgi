@@ -2066,6 +2066,24 @@ function set_wps5Set()
 end
 
 
+function restore_factory()
+	local tz_answer = {}
+	tz_answer["cmd"] = 224
+	local data_array = {}
+	os.execute("/etc/tozed/tz_restore_factory")
+
+	if (uti.is_file_exist("/etc/.flag_factory_config") ~= true)
+	then
+		tz_answer["success"] = false
+	else
+		tz_answer["success"] = true
+	end	
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+
 
 local switch = {
      [0] = get_sysinfo,
@@ -2128,6 +2146,7 @@ local switch = {
 	 [201] = get_wifi5,
 	 [202] = set_wifi5,
 	 [203] = get_lan,
+	 [224] = restore_factory,	 
  }
  
 cmdid = uti.get_env_cmdId(envv)
