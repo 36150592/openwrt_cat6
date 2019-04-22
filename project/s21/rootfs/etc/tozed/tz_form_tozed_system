@@ -26,5 +26,11 @@ else
 	cfg -a TZ_SYSTEM_SOFTWARE_VERSION=V"${real_version}" --section system
 fi
 
+if [ "${TZSYSTEM_TELNET_ENABLE}" = "1" ]; then
+	cfg -a TZ_SYSTEM_TELNET_ENABLE="1" --section system
+else
+	cfg -a TZ_SYSTEM_TELNET_ENABLE="0" --section system
+fi
+
 cfg -c
 

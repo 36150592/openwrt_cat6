@@ -33,6 +33,12 @@ bitcomposite表示使用位进行组合的配置字段
         	<default value="" />
 	</config>
 
+	<config name="TZSYSTEM_TELNET_ENABLE" type="select" description="telnet开关" detail="telnet开关，默认关闭" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<option value="1" description="开启" />
+		<option value="0" description="关闭" />
+		<default value="0"/>
+	</config>
+
 	<config name="TZSYSTEM_SNTP_TIMEZONE" type="text" description="时区" detail="时区(-12~12, 如5.5、-4.5、8)" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
         	<default value="8" />
 	</config>
