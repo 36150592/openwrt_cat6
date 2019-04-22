@@ -1022,9 +1022,8 @@ function getOpenInfo() {
         if (1) {
             names = [];
             names.push(wlanNames.ssid);
-            names.push(wlanNames.key);
             names.push(wlanNames.channel);
-            
+            names.push(wlanNames.wifi);
             // names.push(DOC.lbl.connectedDevicesViaWiFi);
             //names.push(wlanNames.secMode);
             values = [];
