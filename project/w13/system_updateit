@@ -27,7 +27,7 @@ go_exit()
 touch ${UPDATE_SYSTEM_STATUS_ING}
 
 if [ "${TARGET_PACKAGE}" = "" -o ! -f ${TARGET_PACKAGE} ]; then
-	echo "the target package is not exist"
+	echo "failed: the target package is not exist"
 	go_exit
 fi
 
@@ -35,7 +35,7 @@ mkdir -p ${WORK_STATION}
 rm -rf ${WORK_STATION}/*
 
 #解压到升级目录
-unzip -P ${zip_pwd} ${TARGET_PACKAGE} -d ${WORK_STATION}
+unzip -P ${zip_pwd} ${TARGET_PACKAGE} -d ${WORK_STATION} 1>/dev/null 2>/dev/null
 
 #check configDir
 
@@ -60,9 +60,9 @@ if [ "${md5_value_in_file}" != "${md5_value_by_cal}" ]; then
 	go_exit
 fi
 
-echo "md5sum success"
+echo "check md5sum success, upgrade firmware now..."
 
 ##firmware update
-sysupgrade ${WORK_STATION}/${system_firmware}
+sysupgrade -q ${WORK_STATION}/${system_firmware}
 
 

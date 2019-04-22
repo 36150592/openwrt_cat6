@@ -1,0 +1,25 @@
+#!/bin/sh
+
+#$1 firmware.bin file
+FIRMWARE_ZIP_FILE=$1
+TMP_UPDATEIT=/tmp/updateit
+
+if [ ! -f ${FIRMWARE_ZIP_FILE} ];then
+	echo "failed: firmware file ${FIRMWARE_ZIP_FILE} no exist"
+	exit
+fi
+
+rm -rf ${TMP_UPDATEIT}
+cd /tmp && unzip -P tz18c6 ${FIRMWARE_ZIP_FILE} updateit
+
+if [ ! -f ${TMP_UPDATEIT} ];then
+	echo "failed: invalid file "
+	exit
+fi
+
+chmod 777 ${TMP_UPDATEIT}
+
+${TMP_UPDATEIT} ${FIRMWARE_ZIP_FILE}
+
+echo "success"
+
