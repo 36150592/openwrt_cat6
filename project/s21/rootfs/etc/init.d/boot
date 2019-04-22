@@ -88,6 +88,9 @@ boot() {
 
 	#/etc/tozed/tz_test/soft_reboot_test.sh	& 
 
+	#tmp
+	/etc/tool_script/set_web_language en
+
 	# create /dev/root if it doesn't exist
 	[ -e /dev/root -o -h /dev/root ] || {
 		rootdev=$(awk 'BEGIN { RS=" "; FS="="; } $1 == "root" { print $2 }' < /proc/cmdline)
