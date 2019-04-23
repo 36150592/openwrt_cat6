@@ -11,6 +11,7 @@ local TOZED_CONFIG_FILE="tozed"
 local TOZED_UCI_SECTION="cfg"
 local TOZED_REMOTE_CONTROL_SECTION="remote_control"
 local TOZED_UCI_OPTION_STATIC_ROUTE="TZ_STATIC_ROUTE"
+local TOZED_DMZ_SECTION="dmz"
 
 local FIREWALL_MAC_FILTER_PREX="MAC-FILTER"
 local FIREWALL_URL_FILTER_PREX="URL-FILTER"
@@ -1755,5 +1756,53 @@ function firewall_module.firewall_get_static_route()
 
 
 end
+
+-- set dmz
+-- input:
+--		enable: 0 --> to disable dmz  1 --> enable dmz
+--		host_ip: the dmz server ip 
+-- return:true if success  false if fail
+function firewall_module.firewall_set_dmz(enable, host_ip)
+
+	if '1' ~= enable and '0' ~= enable
+	then
+		debug("input error")
+		return false
+	end
+
+	if check_ip(host_ip) == false
+	then
+		debug("bad ip")
+		return false
+	end
+
+	x:delete(TOZED_CONFIG_FILE,TOZED_DMZ_SECTION)
+	x:set(TOZED_CONFIG_FILE,TOZED_DMZ_SECTION,"value")
+	local ret = x:set(TOZED_CONFIG_FILE, TOZED_DMZ_SECTION, "TZ_DMZ_ENABLE", enable)
+
+	x:set(TOZED_CONFIG_FILE, TOZED_DMZ_SECTION, "TZ_DMZ_HOST_IP", host_ip)
+
+	return x:commit(TOZED_CONFIG_FILE)
+
+end
+
+-- get dmz 
+-- input:none
+-- return:
+--		enable: 0 --> to disable dmz  1 --> enable dmz
+--		host_ip: the dmz server ip 
+
+function firewall_module.firewall_get_dmz()
+	local enable = x:get(TOZED_CONFIG_FILE, TOZED_DMZ_SECTION, "TZ_DMZ_ENABLE")
+	local host_ip = x:get(TOZED_CONFIG_FILE, TOZED_DMZ_SECTION, "TZ_DMZ_HOST_IP")
+
+	if nil == enable or nil == host_ip 
+	then
+		enable = "0"
+		host_ip = "*"
+	end
+	return enable,host_ip
+end
+
 
 return firewall_module

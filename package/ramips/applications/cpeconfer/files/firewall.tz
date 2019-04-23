@@ -6,7 +6,7 @@ local TZ_REMOTE_DEFAULT_LIST=`cfg -g  TZ_REMOTE_DEFAULT_LIST --section remote_co
 local TZ_REMOTE_LOGIN_LIST=`cfg -g  TZ_REMOTE_LOGIN_LIST --section remote_control`
 local TZ_REMOTE_PING=`cfg -g  TZ_REMOTE_PING --section remote_control`
 local TZ_REMOTE_PING_LIST=`cfg -g  TZ_REMOTE_PING_LIST --section remote_control`
-
+local TZ_DMZ_ENABLE=`cfg -g TZ_DMZ_ENABLE --section dmz`
 if [ $REMOTE_MINI_HTTP_LISTEN_PORT'' == '' ];then
         REMOTE_MINI_HTTP_LISTEN_PORT=80
 fi
@@ -180,6 +180,21 @@ turn_on_remote_ping(){
 }
 
 
+set_dmz(){
+	
+	local host_ip=`cfg -g TZ_DMZ_HOST_IP --section dmz`	
+        for wan in $wan_interfaces
+	do	
+		
+		local ip=`ifconfig $wan | grep 'inet addr' | awk '{print $2}' | awk -F ':'  '{print $2}'`
+		if [ $ip"" == "" ];then
+			continue;
+		fi
+		iptables -t nat -I PREROUTING -d $ip -j DNAT --to-destination $host_ip
+	done
+}
+
+
 set_user_static_route(){
         local rows=`cat /etc/config/tozed | grep TZ_STATIC_ROUTE | wc -l `
         local ip
@@ -243,6 +258,11 @@ else
 fi
 
 set_user_static_route
+
+if [ $TZ_DMZ_ENABLE"" == "1" ];then
+	set_dmz
+
+fi
 
 echo -n 
 

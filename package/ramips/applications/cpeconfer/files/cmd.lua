@@ -76,6 +76,18 @@ function led_set_phone()
 	end
 end
 
+function firewall_set_dmz()
+	local ret = firewall.firewall_set_dmz(arg[2], arg[3])
+	print(ret)
+
+end
+
+function firewall_get_dmz()
+	local enable, host_ip = firewall.firewall_get_dmz()
+	print("enable = ".. enable)
+	print("host_ip = ".. host_ip)
+end
+
 function firewall_get_static_route()
 	print("firewall_get_static_route")
 	local list = firewall.firewall_get_static_route()
@@ -2443,6 +2455,8 @@ local api_func = {
 	["firewall_get_lan_network"] = firewall_get_lan_network,
 	["firewall_set_static_route"] = firewall_set_static_route,
 	["firewall_get_static_route"] = firewall_get_static_route,
+	["firewall_get_dmz"] = firewall_get_dmz,
+	["firewall_set_dmz"] = firewall_set_dmz,
 
 	--led
 	["led_set_normal"] = led_set_normal,
