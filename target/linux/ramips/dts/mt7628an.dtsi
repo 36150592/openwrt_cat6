@@ -147,9 +147,25 @@
 			#size-cells = <1>;
 
 			pinctrl-names = "default";
-			pinctrl-0 = <&spi_pins>;
+			pinctrl-0 = <&spi_pins>,<&spi_cs1_pins>;
 
-			status = "disabled";
+			status = "okay";
+			m25p80@0 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				reg = <0 0>;
+				spi-max-frequency = <10000000>;
+				m25p,chunked-io = <32>;
+			};
+			spidev@1 {
+				compatible = "rohm,dh2228fv";
+				reg = <1 0>;
+				linux,modalias = "spidev";
+				spi-cpha;
+				spi-cpol;
+				status = "okay";
+				spi-max-frequency = <2048000>;
+			};
 		};
 
 		uartlite@c00 {
