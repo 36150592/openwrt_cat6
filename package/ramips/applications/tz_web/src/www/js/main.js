@@ -628,7 +628,6 @@ var StatusUtil = {
                     sysStatus = datas.data;
                 },
                 complete: function() {
-
                     var wifiStatus = sysStatus.wifi;
                     var simStatus = sysStatus.sim;
                     var modemStatus = sysStatus.modem;
@@ -662,6 +661,7 @@ var StatusUtil = {
         }
 
         loop();
+        setInterval(loop,10000);
     }
 };
 
