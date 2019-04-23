@@ -440,20 +440,32 @@ dhcp_option_add() {
 
 	[ "$force" = "0" ] && force=
 
+	dns_list=
+
 	config_get main_dns "$cfg" main_dns
 	if [ "${main_dns}" != "" ]; then
-		xappend "--dhcp-option${force:+-force}=${networkid:+$networkid,}option:dns-server,${main_dns}"
+		dns_list=${main_dns}
 	fi
 
     config_get vice_dns "$cfg" vice_dns
     if [ "${vice_dns}" != "" ]; then
-		xappend "--dhcp-option${force:+-force}=${networkid:+$networkid,}option:dns-server,${vice_dns}"
+		dns_list=${dns_list}",${vice_dns}"
     fi
 
-	config_get dhcp_option "$cfg" dhcp_option
-	for o in $dhcp_option; do
-		xappend "--dhcp-option${force:+-force}=${networkid:+$networkid,}$o"
-	done
+	#config_get dhcp_option "$cfg" dhcp_option
+	#for o in $dhcp_option; do
+	#	xappend "--dhcp-option${force:+-force}=${networkid:+$networkid,}$o"
+	#done
+
+	if [ -f /tmp/"$cfg".dns ]; then
+		for single_dns in `cat /tmp/"$cfg".dns`; do
+			dns_list=${dns_list}",${single_dns}"
+		done
+	fi
+
+	if [ "${dns_list}" != "" ]; then
+		xappend "--dhcp-option${force:+-force}=${networkid:+$networkid,}option:dns-server,${dns_list}"
+	fi
 
 }
 
