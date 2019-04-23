@@ -1569,8 +1569,8 @@ function get_systime()
 	local tz_answer = {}
 	tz_answer["cmd"] = 1 
 	
-	local timezone = system.system_ntp_get_timezone()
-	local systime = os.time() + 3600*(-timezone-8)
+	--local timezone = system.system_ntp_get_timezone()
+	local systime = os.time()
 	
 	tz_answer["success"] = true
 	tz_answer["systime"] = systime

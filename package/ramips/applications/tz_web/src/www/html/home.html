@@ -186,11 +186,11 @@
                     cmd: RequestCmd.GET_SYSTEM_TIME
                 },
                 success: function(data) {
-				  // var timeTo = new Date(parseInt(data.systime)*1000).toLocaleString();
-				 //  var time = timetrans(data.systime);
-                 //   $('#sysTime').text(time);
-				 // var timestamp = new Date(data.systime1).getTime();
-				// var timestamp = (new Date()).getTime();
+				  var timeTo = new Date(parseInt(data.systime)*1000).toLocaleString();
+				  var time = timetrans(data.systime);
+                   $('#sysTime').text(time);
+				 var timestamp = new Date(data.systime1).getTime();
+				var timestamp = (new Date()).getTime();
 				  var systime = data.systime;
                     var intervalId2 = setInterval(function () {
                         var time = timetrans(systime);

@@ -3,7 +3,7 @@ config system
 	option conloglevel '8'
 	option cronloglevel '8'
         option zonename 'Asia/Bangkok'
-        option timezone '<+07>-7'
+        option timezone 'CST-8'
 
 
 config timeserver ntp
