@@ -165,6 +165,8 @@ local function get_dhcp_config(name)
 	temp["netmask"] = x:get(NETWORK_CONFIG_FILE, temp["interface"], "netmask")
 	temp["lan_mac"] = x:get(NETWORK_CONFIG_FILE, temp["interface"], "macaddr")
 	temp["leasetime"] = x:get(DHCP_CONFIG_FILE, name, "leasetime")
+	temp["main_dns"] = x:get(DHCP_CONFIG_FILE, name, "main_dns")
+	temp["vice_dns"] = x:get(DHCP_CONFIG_FILE, name, "vice_dns")
 	if nil == temp["leasetime"]
 	then
 		return nil
@@ -320,20 +322,6 @@ function dhcp_module.dhcp_set_server_ip(name,ip)
 	end
 	
 	debug("interface = ", interface)
-
-	local origin_ip = x:get(NETWORK_CONFIG_FILE,interface, "ipaddr")
-	local dhcp_option = x:get(DHCP_CONFIG_FILE, name,"dhcp_option")
-
-	for k,v in pairs(dhcp_option)
-	do
-		if 'option:dns-server,'..origin_ip == v
-		then
-			dhcp_option[k] = 'option:dns-server,'..ip
-		end
-	end
-	x:set(DHCP_CONFIG_FILE, name, "dhcp_option", dhcp_option)
-	x:commit(DHCP_CONFIG_FILE)
-
 
 	if x:set(NETWORK_CONFIG_FILE,interface, "ipaddr",ip)
 	then
@@ -517,6 +505,46 @@ function dhcp_module.dhcp_set_lease_time(name, hour)
 	end
 	
 	
+	return false
+end
+
+--set main dhs
+function dhcp_module.dhcp_set_main_dns(name, ip)
+
+	if nil == name 
+	then
+		debug("name is nil")
+		return false
+	end
+	
+	if ( nil ~= ip)
+	then
+		x:set(DHCP_CONFIG_FILE, name, "main_dns",ip)
+		return x:commit(DHCP_CONFIG_FILE)
+	else
+		x:set(DHCP_CONFIG_FILE, name, "main_dns","")
+	end
+
+	return false
+end
+
+--set vice dhs
+function dhcp_module.dhcp_set_vice_dns(name, ip)
+
+	if nil == name 
+	then
+		debug("name is nil")
+		return false
+	end
+	
+	if ( nil ~= ip)
+	then
+		x:set(DHCP_CONFIG_FILE, name, "vice_dns",ip)
+		return x:commit(DHCP_CONFIG_FILE)
+	else
+		x:set(DHCP_CONFIG_FILE, name, "vice_dns","")
+	end
+
 	return false
 end
 

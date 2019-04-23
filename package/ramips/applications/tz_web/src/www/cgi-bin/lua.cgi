@@ -958,6 +958,9 @@ function set_dhcp()
 	local ipEnd = tz_req["ipEnd"]
 	local limitNum = tz_req["limitNum"]
 	local expireTime = tonumber(tz_req["expireTime"])
+	local mainDns = tz_req["mainDns"]
+	local secondDns = tz_req["secondDns"]
+
 	
    
 	if(nil ~= lanIp)
@@ -965,7 +968,7 @@ function set_dhcp()
 		ret = dhcp.dhcp_set_server_ip(lanName,lanIp)
 			if(ret)
 				then
-				tz_answer["setIp"] = true	
+				tz_answer["setIp"] = true
 			else
                 tz_answer["setIp"] = false			
 			end
@@ -1018,6 +1021,27 @@ function set_dhcp()
 			end
 	end	
 	
+	if(nil ~= mainDns)
+	then
+		ret = dhcp.dhcp_set_main_dns(lanName, mainDns)
+
+		if(not ret)
+		then
+			tz_answer["mainDns"] = false
+		end
+
+	end
+
+	if(nil ~= secondDns)
+	then
+		ret = dhcp.dhcp_set_vice_dns(lanName, secondDns)
+
+		if(not ret)
+		then
+			tz_answer["secondDns"] = false
+		end
+
+	end
 	
 	
     dhcp.dhcp_restart()
