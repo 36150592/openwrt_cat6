@@ -1,0 +1,312 @@
+#!/bin/sh
+[ -z "$1" ] && echo "Error: should be run by udhcpc" && exit 1
+
+. /lib/functions.sh
+. /lib/netifd/netifd-proto.sh
+
+set_classless_routes() {
+	local max=128
+	while [ -n "$1" -a -n "$2" -a $max -gt 0 ]; do
+		proto_add_ipv4_route "${1%%/*}" "${1##*/}" "$2" "$ip"
+		max=$(($max-1))
+		shift 2
+	done
+}
+
+local wan_sections=""
+local lan_sections=""
+local flag=0
+local table_num=10
+local table_name=""
+local inter_sections
+local wan_interfaces=""
+load_interface() {
+        local cfgfile="$1"
+        DEVICES=
+        config_cb() {
+                local type="$1"
+                local section="$2"
+
+                config_get TYPE "$CONFIG_SECTION" TYPE
+                case "$TYPE" in
+                        interface)
+							local type=""
+			                config_get ifname "$CONFIG_SECTION" ifname
+			                config_get type "$CONFIG_SECTION" type
+			                if [  $type ];then
+								if [ $type == "bridge" ]
+			                                	then 
+							       		lan_sections="$lan_sections $CONFIG_SECTION"
+
+			                                	fi
+							else
+								if [ $CONFIG_SECTION != "loopback" -a `echo $wan_interfaces | grep $ifname |wc -l ` == "0" ]
+								then
+			                        wan_sections="$wan_sections $CONFIG_SECTION"
+									wan_interfaces="$wan_interfaces $ifname"
+								fi
+							fi                                     
+
+                            append inter_sections "$CONFIG_SECTION"
+                        ;;
+                esac                     
+        }                                
+        config_load "${cfgfile:-network}"
+}        
+
+
+
+setup_ip_rules () {
+	flag=0
+
+	for inter in $wan_interfaces; do
+		echo "inter = $inter interface = $interface"
+		echo "ip = $ip router = $router subnet=$subnet"
+		if [ $inter == $interface ]; then
+			for i in $router; do
+						
+				[ `cat /etc/iproute2/rt_tables | grep "$inter" | wc -l` == "0" ] && {
+	
+					while [ `cat /etc/iproute2/rt_tables | grep "^$table_num	" | wc -l` != 0 ]
+					do
+						table_num=$(($table_num+1))
+					done				
+					echo "$table_num	$inter" >> /etc/iproute2/rt_tables 
+				}
+				
+				ip route flush table $inter				
+	
+				ip route add default proto static table $inter via $i dev $inter src $ip
+				ip route add $i proto static scope link table $inter via 0.0.0.0 dev $inter  src $ip
+
+				network=`/bin/ipcalc.sh $ip $subnet | grep "NETWORK" | cut -d'=' -f 2`
+				prefix_num=`/bin/ipcalc.sh $ip $subnet | grep "PREFIX" | cut -d'=' -f 2`
+				ip route add $network/$prefix_num proto kernel scope link table $inter via 0.0.0.0 dev $inter src $ip	
+				ip route flush cache	
+				table_name=$inter	
+			done
+			flag=1
+		fi	
+	done
+	#templately let all lan networks go to one wan interface
+	#ip rule del pref 1000
+	#while [ `echo $?` == "0"  ]
+	#do
+	#	ip rule del pref 1000  2> /dev/null
+	#done
+
+	for temp in $wan_sections;do
+
+		config_get route_lan_section $temp route_lan_section
+		config_get ifname $temp ifname
+
+		if [ $route_lan_section"" == "" ];then
+			continue
+		fi
+
+		if [ $ifname"" == $table_name"" ];then
+
+			config_get ipaddr $route_lan_section ipaddr
+			config_get netmask $route_lan_section netmask
+			network=`/bin/ipcalc.sh $ipaddr $netmask | grep "NETWORK" | cut -d'=' -f 2`
+			prefix_num=`/bin/ipcalc.sh $ipaddr $netmask | grep "PREFIX" | cut -d'=' -f 2`
+
+			local primary_apn
+			config_get primary_apn $temp primary_apn
+			if [ $primary_apn"" == "1" ];then
+				local ret=`ip rule list | grep $network | wc -l`
+				if [ $ret"" == "0" ];then
+					ip rule del to $network/$prefix_num
+					ip rule del from $network/$prefix_num
+					ip rule add to $network/$prefix_num table $table_name pref 1000
+					ip rule add from $network/$prefix_num table $table_name pref 1000
+				fi
+			else
+				ip rule del to $network/$prefix_num
+				ip rule del from $network/$prefix_num				
+				ip rule add to $network/$prefix_num table $table_name pref 1000
+				ip rule add from $network/$prefix_num table $table_name pref 1000
+			fi
+			ip route add $network/$prefix_num proto kernel scope link table $table_name via 0.0.0.0 dev br-$route_lan_section src $ipaddr
+		fi
+
+	done
+}
+
+
+
+setup_interface () {
+	proto_init_update "*" 1
+
+	proto_add_ipv4_address "$ip" "${subnet:-255.255.255.0}"
+    	#ifconfig $interface $ip ${subnet:-255.255.255.0}
+
+	# TODO: apply $broadcast
+
+	load_interface
+	local land_wan_if
+	local primary_apn_if
+	local primary_apn_section
+
+	for temp in $wan_sections;do
+		config_get land_wan $temp land_wan
+		if [ $land_wan"" == "1" ];then
+			config_get land_wan_if $temp ifname
+		fi
+
+		config_get primary_apn $temp primary_apn
+
+		if [ $primary_apn"" == "1" ];then
+			config_get primary_apn_if $temp ifname
+			primary_apn_section=$temp
+		fi
+	done
+
+	if [ $land_wan_if"" == "" ];then
+		config_get land_wan_if 'wan' ifname
+	fi
+
+	if [ $primary_apn_if"" == "" ];then
+		config_get primary_apn_if '4g' ifname
+	fi
+
+	if [ $interface"" == $land_wan_if ];then		
+		local ret=`route | grep default | awk '{print $8}'`
+		if [ $ret"" != "" ];then
+		
+			for target in `ip route | grep $ret | awk '{print $1}'`
+			do
+				ip route del $target
+			done
+		fi 
+	elif [ $interface"" == $primary_apn_if ]; then
+		local ret=`route | grep default | grep $land_wan_if | wc -l`
+		if [ $ret"" != "0" ];then
+			ping -w 3 8.8.8.8
+			
+			if [ $? == "0" ];then 
+
+				for dns in $dns; do
+					proto_add_dns_server "$dns"
+				done
+				for domain in $domain; do
+					proto_add_dns_search "$domain"
+				done
+
+				proto_send_update "$INTERFACE"
+				setup_ip_rules
+				return 0
+			fi
+		else
+			local ret=`route | grep default | awk '{print $8}'`
+			if [ $ret"" != "" ];then
+			
+				for target in `ip route | grep $ret | awk '{print $1}'`
+				do
+					ip route del $target
+				done
+				
+				
+			fi 
+		fi
+	else
+		for dns in $dns; do
+			proto_add_dns_server "$dns"
+		done
+		for domain in $domain; do
+			proto_add_dns_search "$domain"
+		done
+
+		proto_send_update "$INTERFACE"
+		setup_ip_rules
+		return 0
+	fi
+
+
+
+
+	for i in $router; do
+		proto_add_ipv4_route "$i" 32 "" "$ip"
+		proto_add_ipv4_route 0.0.0.0 0 "$i" "$ip"
+
+		for r in $CUSTOMROUTES; do
+			proto_add_ipv4_route "${r%%/*}" "${r##*/}" "$i" "$ip"
+		done
+	done
+
+	# CIDR STATIC ROUTES (rfc3442)
+	echo "staticroutes = $staticroutes " >> /tmp/router
+	echo "msstaticroutes = $msstaticroutes" >> /tmp/router
+	[ -n "$staticroutes" ] && set_classless_routes $staticroutes
+	[ -n "$msstaticroutes" ] && set_classless_routes $msstaticroutes
+
+	for dns in $dns; do
+		proto_add_dns_server "$dns"
+	done
+	for domain in $domain; do
+		proto_add_dns_search "$domain"
+	done
+
+	proto_add_data
+	[ -n "$ZONE" ]     && json_add_string zone "$ZONE"
+	[ -n "$ntpsrv" ]   && json_add_string ntpserver "$ntpsrv"
+	[ -n "$timesvr" ]  && json_add_string timeserver "$timesvr"
+	[ -n "$hostname" ] && json_add_string hostname "$hostname"
+	[ -n "$message" ]  && json_add_string message "$message"
+	[ -n "$timezone" ] && json_add_int timezone "$timezone"
+	[ -n "$lease" ]    && json_add_int leasetime "$lease"
+	proto_close_data
+
+	proto_send_update "$INTERFACE"
+
+	setup_ip_rules
+
+	if [ "$IFACE6RD" != 0 -a -n "$ip6rd" ]; then
+		local v4mask="${ip6rd%% *}"
+		ip6rd="${ip6rd#* }"
+		local ip6rdprefixlen="${ip6rd%% *}"
+		ip6rd="${ip6rd#* }"
+		local ip6rdprefix="${ip6rd%% *}"
+		ip6rd="${ip6rd#* }"
+		local ip6rdbr="${ip6rd%% *}"
+
+		[ -n "$ZONE" ] || ZONE=$(fw3 -q network $INTERFACE)
+		[ -z "$IFACE6RD" -o "$IFACE6RD" = 1 ] && IFACE6RD=${INTERFACE}_6
+
+		json_init
+		json_add_string name "$IFACE6RD"
+		json_add_string ifname "@$INTERFACE"
+		json_add_string proto "6rd"
+		json_add_string peeraddr "$ip6rdbr"
+		json_add_int ip4prefixlen "$v4mask"
+		json_add_string ip6prefix "$ip6rdprefix"
+		json_add_int ip6prefixlen "$ip6rdprefixlen"
+		json_add_string tunlink "$INTERFACE"
+		[ -n "$IFACE6RD_DELEGATE" ] && json_add_boolean delegate "$IFACE6RD_DELEGATE"
+		[ -n "$ZONE6RD" ] || ZONE6RD=$ZONE
+		[ -n "$ZONE6RD" ] && json_add_string zone "$ZONE6RD"
+		[ -n "$MTU6RD" ] && json_add_string mtu "$MTU6RD"
+		json_close_object
+
+		ubus call network add_dynamic "$(json_dump)"
+	fi
+}
+
+deconfig_interface() {
+	proto_init_update "*" 0
+	proto_send_update "$INTERFACE"
+}
+
+case "$1" in
+	deconfig)
+		deconfig_interface
+	;;
+	renew|bound)
+		setup_interface
+	;;
+esac
+
+# user rules
+[ -f /etc/udhcpc.user ] && . /etc/udhcpc.user "$@"
+
+exit 0
