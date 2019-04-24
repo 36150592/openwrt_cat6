@@ -657,6 +657,41 @@ function system_module.system_get_tozed_system_info()
 end
 
 
+system_module.lte_ant_status = {
+		
+		["main_ant"] = nil,   --string
+		["sub_ant"] = nil,   --string
+}
+
+
+function system_module.lte_ant_status:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+		
+	self["main_ant"] = obj["main_ant"] or nil
+	self["sub_ant"] = obj["sub_ant"] or nil
+
+end
+--if true ~= util.is_file_exist(file_path)
+function system_module.system_get_4g_ant()
+	local info = system_module.lte_ant_status:new(nil,nil)
+	if true ~= util.is_file_exist("/sys/class/gpio/gpio4") then
+		os.execute("echo 3 > /sys/class/gpio/export");
+		os.execute("echo 4 > /sys/class/gpio/export");
+		os.execute("echo in > /sys/class/gpio/gpio3/direction");
+		os.execute("echo in > /sys/class/gpio/gpio4/direction");
+	end
+
+	info["main_ant"] = execute_cmd("cat /sys/class/gpio/gpio4/value")
+	info["sub_ant"] = execute_cmd("cat /sys/class/gpio/gpio3/value")
+	return info
+end
+
+
 local timezone_location = {
 	["Africa/Abidjan"]= "GMT0",
 	["Africa/Accra"]= "GMT0",
