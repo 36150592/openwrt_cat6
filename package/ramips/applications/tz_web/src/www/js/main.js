@@ -1052,7 +1052,7 @@ var Page = {
             }
 
             // 输出th
-            sb.append("<th style='height:40px;font-size:16px;'>");
+            sb.append("<th style='height:30px;font-size:16px;'>");
             if (!names[i]) {
                 sb.append("&nbsp;</th>");
             } else {
@@ -1066,9 +1066,9 @@ var Page = {
             if (columnNum == 2 && (i + 1) < count && !names[i + 1]) {
                 // colspan
                 colspan = true;
-                sb.append('<td colspan="3" style="height:40px;font-size:16px;width:60%">');
+                sb.append('<td colspan="3" style="height:30px;font-size:16px;width:60%">');
             } else {
-                sb.append("<td style='height:40px;font-size:16px;width:60%;'>");
+                sb.append("<td style='height:30px;font-size:16px;width:60%;'>");
             }
             if (values[i].length == 0) {
                 sb.append("&nbsp;</td>");

@@ -35,7 +35,7 @@
                         values_wan.push(data[i].end_ip);
                         values_wan.push(data[i].lan_mac);
                         values_wan.push("br-"+data[i].interface);
-                        var wan_html = Page.createTable(data[i].interface.toUpperCase(), names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                        var wan_html = Page.createTable2(data[i].interface.toUpperCase(), names_wan, values_wan, names_wan.length, 1).replace("<td>", "<td>");
                         $('#'+data[i].interface+"_info").html(wan_html);
                     }
                   

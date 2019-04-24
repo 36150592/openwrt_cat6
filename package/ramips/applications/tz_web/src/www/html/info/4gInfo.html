@@ -69,7 +69,7 @@
                     values_net.push(data_modem.mcs ||loading);
                     values_net.push(data_modem.plmn || loading);
                     sysInfo_plmn = data_modem.plmn; 
-                     var net_html = Page.createTable(DOC.title.network, names_net, values_net, names_net.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                     var net_html = Page.createTable2(DOC.title.network, names_net, values_net, names_net.length, 1).replace("<td>", "<td>");
                      $('#net_info').html(net_html);
                      Page.isNULLToSpace = false;
                      return sysInfo_plmn;

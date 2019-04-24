@@ -92,7 +92,7 @@
                     var data = {"mode":"Master","message":"WLAN未开启"};
                     var wirelessHtml = "";
                     if (data.mode.trim() == "NULL") {
-                        wirelessHtml = Page.createTable(DOC.title.wlan2g + '-' + data.message, [], [], 0, 0);
+                        wirelessHtml = Page.createTable2(DOC.title.wlan2g + '-' + data.message, [], [], 0, 0);
                     } else {
                         var names = [];
                         var values = [];
@@ -138,7 +138,7 @@
                         values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
 
 
-                        wirelessHtml = Page.createTable(DOC.title.wlan2g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                        wirelessHtml = Page.createTable2(DOC.title.wlan2g, names, values, names.length, 1).replace("<td>", "<td>");
                     }
                     $('#wlan_info').html(wirelessHtml);
                     Page.setStripeTable("#wlan_info");
@@ -151,11 +151,10 @@
             Page.postJSON({
                 json: {cmd: RequestCmd.WIFI5_INFO},
                 success: function (datas) {
-                    console.log(datas);
                     var data = {"mode":"Master","message":"WLAN未开启"};
                     var wlan5gHtml = "";
                     if (data.mode.trim() == "NULL") {
-                        wlan5gHtml = Page.createTable(DOC.title.wlan5g + data.message, [], [], 0, 0);
+                        wlan5gHtml = Page.createTable2(DOC.title.wlan5g + data.message, [], [], 0, 0);
                     } else {
 					  
                         var names = [];
@@ -198,7 +197,7 @@
                         names.push(DOC.wlan.txPower);
                         values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
                                  
-                        wlan5gHtml = Page.createTable(DOC.title.wlan5g, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
+                        wlan5gHtml = Page.createTable2(DOC.title.wlan5g, names, values, names.length, 1).replace("<td>", "<td>");
                     }
 					
                     $('#wlan_5g_info').html(wlan5gHtml);
