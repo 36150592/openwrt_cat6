@@ -29,6 +29,8 @@
             settingMenu.push(new MenuBody("WLAN_5G_CONFIG", MENU.settingWifi.wifi5g));
         if(Page.getShowHideByBit(3))
             settingMenu.push(new MenuBody("APN_CONFIG", DOC.apn.setting));
+        if(Page.getShowHideByBit(15))
+            settingMenu.push(new MenuBody("ROUTE_SETTING", TAB.advance.route))；
         if(Page.getShowHideByBit(7))
             settingMenu.push(new MenuBody("ADVANCED_CONFIG", MENU.setting.advanced));
         menus.push(settingMenu);
