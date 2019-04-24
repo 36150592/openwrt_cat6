@@ -1704,25 +1704,28 @@ function firewall_module.firewall_set_static_route(route_list)
 	local list = {}
 	local i = 1
 
-	x:delete(TOZED_CONFIG_FILE,TOZED_CONFIG_FILE,TOZED_UCI_OPTION_STATIC_ROUTE)
-	for k,temp in pairs(route_list)
-	do
+	x:delete(TOZED_CONFIG_FILE,TOZED_UCI_SECTION,TOZED_UCI_OPTION_STATIC_ROUTE)
+	if nil ~= route_list and table.maxn(route_list) ~= 0
+	then
+		for k,temp in pairs(route_list)
+		do
 
-		debug(temp["target_ip"])
-		debug(temp["next_ip"])
-		debug(temp["target_netmask"])
-		debug(temp["target_interface"])
+			debug(temp["target_ip"])
+			debug(temp["next_ip"])
+			debug(temp["target_netmask"])
+			debug(temp["target_interface"])
 
-		if check_ip(temp["target_ip"]) and check_ip(temp["next_ip"]) and check_ip(temp["target_netmask"]) and check_net_interface(temp["target_interface"])
-		then
-			list[i] = temp["target_interface"] .. " " .. temp["target_ip"] .. " " .. temp["target_netmask"] .. " " .. temp["next_ip"]
-			debug(list[i])
-			i = i + 1
+			if check_ip(temp["target_ip"]) and check_ip(temp["next_ip"]) and check_ip(temp["target_netmask"]) and check_net_interface(temp["target_interface"])
+			then
+				list[i] = temp["target_interface"] .. " " .. temp["target_ip"] .. " " .. temp["target_netmask"] .. " " .. temp["next_ip"]
+				debug(list[i])
+				i = i + 1
+			end
+
 		end
 
+		x:set(TOZED_CONFIG_FILE, TOZED_UCI_SECTION,TOZED_UCI_OPTION_STATIC_ROUTE, list)
 	end
-
-	x:set(TOZED_CONFIG_FILE, TOZED_UCI_SECTION,TOZED_UCI_OPTION_STATIC_ROUTE, list)
 
 	return x:commit(TOZED_CONFIG_FILE)
 
