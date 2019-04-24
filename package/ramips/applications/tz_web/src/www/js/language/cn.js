@@ -1,4 +1,5 @@
 CHECK.format.dns = "DNS服务器地址格式错误,请检查";
+CHECK.format.dns2 = "DNS服务器地址不能为空";
 CHECK.format.dtuDuplicatePort = "串口DTU的服务端口不能和LAN DTU的服务端口相同";
 CHECK.format.gateway = "网关格式不正确";
 CHECK.format.inputNumber = "请输入数字";
@@ -1404,6 +1405,8 @@ networkconfightml.form1.th2 = "子网掩码:";
 networkconfightml.form1.th3 = "DHCP服务器:";
 networkconfightml.form1.th4 = "IP地址池:";
 networkconfightml.form1.th5 = "租期时间:";
+networkconfightml.form1.th6 = "主 DNS:";
+networkconfightml.form1.th7 = "Vice DNS:";
 networkconfightml.form1.edit = "编辑";
 networkconfightml.form1.del = "删除";
 networkconfightml.form1.title = "DHCP配置";

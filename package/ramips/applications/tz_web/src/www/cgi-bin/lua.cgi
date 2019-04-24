@@ -958,8 +958,8 @@ function set_dhcp()
 	local ipEnd = tz_req["ipEnd"]
 	local limitNum = tz_req["limitNum"]
 	local expireTime = tonumber(tz_req["expireTime"])
-	local mainDns = tz_req["mainDns"]
-	local secondDns = tz_req["secondDns"]
+	local main_Dns = tz_req["main_dns"]
+	local vice_Dns = tz_req["vice_dns"]
 
 	
    
@@ -1021,9 +1021,9 @@ function set_dhcp()
 			end
 	end	
 	
-	if(nil ~= mainDns)
+	if(nil ~= main_Dns)
 	then
-		ret = dhcp.dhcp_set_main_dns(lanName, mainDns)
+		ret = dhcp.dhcp_set_main_dns(lanName, main_Dns)
 
 		if(not ret)
 		then
@@ -1032,9 +1032,9 @@ function set_dhcp()
 
 	end
 
-	if(nil ~= secondDns)
+	if(nil ~= vice_Dns)
 	then
-		ret = dhcp.dhcp_set_vice_dns(lanName, secondDns)
+		ret = dhcp.dhcp_set_vice_dns(lanName, vice_Dns)
 
 		if(not ret)
 		then
@@ -1042,7 +1042,6 @@ function set_dhcp()
 		end
 
 	end
-	
 	
     dhcp.dhcp_restart()
 	tz_answer["success"] = true
@@ -2514,7 +2513,19 @@ function restore_factory()
 	print(result_json)
 
 end
+function get_wps_function()
+	local tz_answer = {}
+	tz_answer["cmd"] = 225
+	local data_array = {}
+	data_array["pin"] = wifi.wifi_get_wps_pin1()
+	data_array["pbc"] = wifi.wifi_get_wps_pbc_enable_status()
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
 
+end
 
 local switch = {
      [0] = get_sysinfo,
@@ -2598,6 +2609,7 @@ local switch = {
 	 [222] = set_open_auto_dial,
 	 [223] = set_close_auto_dial,
 	 [224] = restore_factory,
+	 [225] = get_wps_function,
 
  }
  

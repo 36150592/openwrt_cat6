@@ -1,4 +1,5 @@
 CHECK.format.dns = "DNS format error, please check";
+CHECK.format.dns2 = "DNS server address cannot be empty";
 CHECK.format.dtuDuplicatePort = "The service ports of DTU and LAN DTU can not be the same.";
 CHECK.format.gateway = "Gateway is incorrect";
 CHECK.format.inputNumber = "Please input numbers";
@@ -1433,6 +1434,8 @@ networkconfightml.form1.th2 = "Subnet Mask:";
 networkconfightml.form1.th3 = "DHCP Server:";
 networkconfightml.form1.th4 = "IP Address Pool:";
 networkconfightml.form1.th5 = "Lease Time:";
+networkconfightml.form1.th6 = "Main DNS:";
+networkconfightml.form1.th7 = "Vice DNS:";
 networkconfightml.form1.edit = "Edit";
 networkconfightml.form1.del = "Delete";
 networkconfightml.form1.title = "DHCP Setting";

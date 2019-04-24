@@ -365,11 +365,15 @@
                                 }
                                 $('#dhcpServer' + i).attr('old',dstatus);
                                 $('#lanName' + i).val(data[i].name);
+                                // $('#main_dns' + i).val(data[i].main_dns);
+                                // $('#vice_dns' + i).val(data[i].vice_dns);
                                 Page.setFormFieldValue2("lanIp"+i, data[i].server_ip);
                                 Page.setFormFieldValue2("netMask"+i, data[i].netmask);
                                 Page.setFormFieldValue2("ipBegin"+i, data[i].start_ip);
                                 Page.setFormFieldValue2("ipEnd"+i, data[i].end_ip);
                                 Page.setFormFieldValue2("expireTime"+i, data[i].leasetime);
+                                Page.setFormFieldValue2("main_dns"+i, data[i].main_dns);
+                                Page.setFormFieldValue2("vice_dns"+i, data[i].vice_dns);
                             }
 							var dhcp0_ip = $("#lanIp0").val();
                             var dhcp0_ip_pre = dhcp0_ip.substring(0, dhcp0_ip.lastIndexOf('.'));
@@ -447,6 +451,8 @@
             netMask : {required: true, ip: true},
             ipBegin : {required: true, ipnozero: true},
             ipEnd : {required: true, ipnozero: true},
+            main_dns : {required: true, ip: true},
+            vice_dns : {required: true, ip: true},
             expireTime : {required: true, digits: true, min: 1}
         };
 
@@ -455,6 +461,8 @@
             netMask : {required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3},
             ipBegin : {required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3},
             ipEnd : {required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3},
+            main_dns : {required: CHECK.format.dns2, ip: CHECK.format.dns},
+            vice_dns : {required: CHECK.format.dns2, ip: CHECK.format.dns},
             expireTime : {required: showText.timeCheckMsg1, digits: showText.timeCheckMsg2, min: showText.timeCheckMsg3}
         };
 
@@ -469,7 +477,6 @@
             }
             var json = JSON.parmsToJSON($form);
             json.dhcpServer = json.dhcpServer ? '1' : '0';
-
             if(json.dhcpServer == DHCPServer.OPENED){
                 if(!CheckUtil.checkNetSegment(json.lanIp, json.netMask, json.ipBegin)){
                     AlertUtil.alertMsg(showText.ipCheckMsg4);
@@ -480,6 +487,14 @@
                     AlertUtil.alertMsg(showText.ipCheckMsg5);
                     $(this).attr("disabled",false);
                     return false;
+                }
+                if(json.main_dns == $("#main_dns" +id).attr('old')){
+                    delete json["main_dns"];
+                    count++;
+                }
+                if(json.vice_dns == $("#vice_dns" +id).attr('old')){
+                    delete json["vice_dns"];
+                    count++;
                 }
                 if(json.ipBegin ==  $("#ipBegin" +id).attr('old')  && json.ipEnd ==  $("#ipEnd" +id).attr('old')){
                     delete json["ipBegin"];
@@ -497,13 +512,16 @@
                 delete json["ipBegin"];
                 delete json["ipEnd"];
                 delete json["expireTime"];
-                count += 3;
+                delete json["main_dns"];
+                delete json["vice_dns"];
+                count += 5;
             }
 
             if(json.dhcpServer == $("#dhcpServer" +id).attr('old')){
                 delete json["dhcpServer"];
                 count++;
             }
+
 
             if(json.lanIp ==  $("#lanIp" +id).attr('old')){
                 delete json["lanIp"];
@@ -513,13 +531,12 @@
                 delete json["netMask"];
                 count++;
             }
-
-            if(count == 6){
+            if(count == 8){
                 AlertUtil.alertMsg(CHECK.required.noChanges);
                 $(this).attr("disabled",false);
                 return false;
             }
-
+            
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_CONFIG;
 
@@ -538,13 +555,10 @@
              }
              );
              }*/
-
-
             Page.postJSON({
                 json: json,
                 success: function(data) {
                     // AlertUtil.alertMsg(PROMPT.saving.success);
-                    $lis.eq(0).click();
                     if (AlertUtil.confirm(PROMPT.tips.rebootMessage)) {
 						if(id == 0){
                             reboot(json.lanIp);	
@@ -634,6 +648,18 @@
                                     <input type="checkbox" id="dhcpServer0" name="dhcpServer" value="1" checked="checked" class="inputs_lan" /><%- td3 %>
                                 </td>
                             </tr>
+                             <tr class="nat dhcp0">
+                                <th><%- th6 %></th>
+                                <td>
+                                    <input type="text" id="main_dns0" name="main_dns" class="txt4 inputs_lan"/>
+                                </td>
+                            </tr>
+                             <tr class="nat dhcp0">
+                                <th><%- th7 %></th>
+                                <td>
+                                    <input type="text" id="vice_dns0" name="vice_dns" class="txt4 inputs_lan"/>
+                                </td>
+                            </tr>
                             <tr class="nat dhcp0">
                                 <th><%- th4 %></th>
                                 <td>
@@ -684,6 +710,18 @@
                                 </td>
                             </tr>
                             <tr class="nat dhcp1">
+                                <th><%- th6 %></th>
+                                <td>
+                                    <input type="text" id="main_dns1" name="main_dns" class="txt4 inputs_lan"/>
+                                </td>
+                            </tr>
+                             <tr class="nat dhcp1">
+                                <th><%- th7 %></th>
+                                <td>
+                                    <input type="text" id="vice_dns1" name="vice_dns" class="txt4 inputs_lan"/>
+                                </td>
+                            </tr>
+                            <tr class="nat dhcp1">
                                 <th><%- th4 %></th>
                                 <td>
                                     <input type="text" id="ipBegin1" name="ipBegin" class="txt4 inputs_lan"/> -
@@ -725,6 +763,18 @@
                                 <th><%- th3 %></th>
                                 <td>
                                     <input type="checkbox" id="dhcpServer2" name="dhcpServer" value="1" checked="checked" class="inputs_lan" /><%- td3 %>
+                                </td>
+                            </tr>
+                            <tr class="nat dhcp2">
+                                <th><%- th6 %></th>
+                                <td>
+                                    <input type="text" id="main_dns2" name="main_dns" class="txt4 inputs_lan"/>
+                                </td>
+                            </tr>
+                             <tr class="nat dhcp2">
+                                <th><%- th7 %></th>
+                                <td>
+                                    <input type="text" id="vice_dns2" name="vice_dns" class="txt4 inputs_lan"/>
                                 </td>
                             </tr>
                             <tr class="nat dhcp2">
