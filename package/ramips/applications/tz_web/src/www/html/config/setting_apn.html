@@ -23,8 +23,8 @@
                    $("#selectAuthentication").val(apnData.auth_type);
                    $("#apn_user_name").val(apnData.username);
                    $("#apn_user_password").val(apnData.password);
-                   if($("#selectAuthentication").val() == "0"){
-                      $(".hideNone").hide();
+                   if($("#selectAuthentication").val() == "1"){
+                      $(".hideNone").show();
                    }
                    if(apnData.apn_name == undefined || apnData.apn_name == ""){
                         $("#apn_name").val("");
@@ -39,10 +39,10 @@
       getData();
 
       $("#selectAuthentication").change(function(){
-        if($("#selectAuthentication").val() == "0"){
-            $(".hideNone").hide();
+        if($("#selectAuthentication").val() == "1"){
+            $(".hideNone").show();
         }else{
-           $(".hideNone").show();
+           $(".hideNone").hide();
         }
       });
 
@@ -145,13 +145,13 @@
                     <input type="text" name="apnName" id="apn_name">
                 </td>
             </tr>
-            <tr class="hideNone">
+            <tr class="hideNone" style="display:none;">
                 <th><%-DOC.apn.user %><%- colon %></th>
                 <td>
                     <input type="text" name="apnUserName" id="apn_user_name">
                 </td>
             </tr>
-            <tr class="hideNone">
+            <tr class="hideNone" style="display:none;">
                 <th><%-DOC.apn.password %><%- colon %></th>
                 <td>
                     <input type="text" name="apnUserPassword" id="apn_user_password">

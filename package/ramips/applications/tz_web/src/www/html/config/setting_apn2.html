@@ -28,8 +28,8 @@
                    }else{
                         $("#apn_name").val(apnData.apn_name);
                    }
-                   if($("#selectAuthentication").val() == "0"){
-                      $(".hideNone").hide();
+                   if($("#selectAuthentication").val() == "1"){
+                      $(".hideNone").show();
                    }
                    ApnList = datas.data;
                 }
@@ -37,10 +37,10 @@
         }
       getData();
     $("#selectAuthentication").change(function(){
-        if($("#selectAuthentication").val() == "0"){
-            $(".hideNone").hide();
+        if($("#selectAuthentication").val() == "1"){
+            $(".hideNone").show();
         }else{
-           $(".hideNone").show();
+           $(".hideNone").hide();
         }
       });
 
@@ -158,13 +158,13 @@
                     <input type="text" name="apnName" id="apn_name">
                 </td>
             </tr>
-            <tr class="hideNone">
+            <tr class="hideNone"  style="display:none;">
                 <th><%-DOC.apn.user %><%- colon %></th>
                 <td>
                     <input type="text" name="apnUserName" id="apn_user_name">
                 </td>
             </tr>
-            <tr class="hideNone">
+            <tr class="hideNone"  style="display:none;">
                 <th><%-DOC.apn.password %><%- colon %></th>
                 <td>
                     <input type="text" name="apnUserPassword" id="apn_user_password">
