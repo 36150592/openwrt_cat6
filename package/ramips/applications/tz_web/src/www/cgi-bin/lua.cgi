@@ -2202,15 +2202,8 @@ function route_list_set()
 	local ret 
 	local tz_answer = {}
 	local routeList = tz_req["routeList"]
+	firewall.firewall_set_static_route(routeList)
 
-	if(nil ~= routeList)
-		then
-		ret = firewall.firewall_set_static_route(routeList)
-		if(not ret)
-		then
-			tz_answer["success"] = false
-		end
-	end
 	tz_answer["success"] = true
 	tz_answer["cmd"] = 212
 	tz_answer["data"] = data_array
