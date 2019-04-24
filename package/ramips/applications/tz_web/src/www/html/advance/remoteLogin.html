@@ -113,7 +113,6 @@
             json.pingFlag = enableRemoteLogin;
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.SET_WEB_LIST;
-            console.log(json);
              Page.postJSON({
                 json: json,
                 success: function(data) {
@@ -234,7 +233,6 @@
                     cmd: RequestCmd.GET_WEB_LIST
                 },
                 success: function(datas) {
-                    console.log(datas);
                         createIpListTable(datas.data.webList);
                         createIpListTable2(datas.data.defultList);
                          if(datas.data.webFlag == true){

@@ -261,7 +261,6 @@
 
                     var data2 = datas.data;
                     var data_modem = data2.modem;
-                    console.log(data_modem);
                     names_net.push(DOC.lbl.netMode);
                     names_net.push(DOC.lbl.signal);
                    // names_net.push(DOC.lbl.signalLevel);
@@ -531,7 +530,6 @@
             Page.postJSON({
                 json: {cmd: RequestCmd.WIFI5_INFO},
                 success: function (datas) {
-                    console.log(datas);
                     var data = {"mode":"Master","message":"WLAN未开启"};
                     var wlan5gHtml = "";
                     if (data.mode.trim() == "NULL") {
