@@ -958,6 +958,16 @@ var Page = {
 
         return sb.toString();
     },
+    createTable2: function(title, names, values, count, columnNum, css) {
+        var sb = new StringBuilder();
+        sb.append(Page.createTableHead(title, css));
+
+        if (count <= 0 || columnNum <= 0) return sb.toString();
+
+        Page.createTableBody2(sb, names, values, count, columnNum, css);
+
+        return sb.toString();
+    },
     createTableHead: function(title, css) {
         if (!css) {
             css = "detail";
@@ -1000,6 +1010,65 @@ var Page = {
                 sb.append('<td colspan="3">');
             } else {
                 sb.append("<td>");
+            }
+            if (values[i].length == 0) {
+                sb.append("&nbsp;</td>");
+            } else {
+                sb.append(values[i]);
+                sb.append("</td>");
+            }
+
+            columnCount++;
+            if (colspan || columnCount == columnNum) {
+                sb.append("</tr>");
+                columnCount = 0;
+            }
+            if (colspan) {
+                i++;
+            }
+        }
+        if (columnCount != 0) {
+            // 补充输出th,td
+            for (var i = columnCount; i < columnNum; i++) {
+                sb.append("<th>&nbsp;</th><td>&nbsp;</td>");
+            }
+            sb.append("</tr>");
+        }
+        sb.append("</table>");
+    },
+    createTableBody2: function(sb, names, values, count, columnNum, css) {
+        if (!css) {
+            css = "detail";
+        } else {
+            css = "detail " + css;
+        }
+        sb.append(String.format("<table class=\"{0}\" cellspacing=\"0\">", css));
+
+        var columnCount = 0;
+        var colon = (Page.isChinese() ? "：" : ":");
+        for (var i = 0; i < count; i++) {
+            if (i % columnNum == 0) {
+                sb.append("<tr>");
+            }
+
+            // 输出th
+            sb.append("<th style='height:40px;font-size:16px;'>");
+            if (!names[i]) {
+                sb.append("&nbsp;</th>");
+            } else {
+                sb.append(names[i]);
+                sb.append(colon);
+                sb.append("</th>");
+            }
+
+            // 输出td
+            var colspan = false;
+            if (columnNum == 2 && (i + 1) < count && !names[i + 1]) {
+                // colspan
+                colspan = true;
+                sb.append('<td colspan="3" style="height:40px;font-size:16px;width:60%">');
+            } else {
+                sb.append("<td style='height:40px;font-size:16px;width:60%;'>");
             }
             if (values[i].length == 0) {
                 sb.append("&nbsp;</td>");
