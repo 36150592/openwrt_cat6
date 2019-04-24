@@ -30,7 +30,9 @@
         if(Page.getShowHideByBit(3))
             settingMenu.push(new MenuBody("APN_CONFIG", DOC.apn.setting));
         if(Page.getShowHideByBit(15))
-            settingMenu.push(new MenuBody("ROUTE_SETTING", TAB.advance.route))；
+            settingMenu.push(new MenuBody("ROUTE_SETTING", TAB.advance.route));
+        if(Page.getShowHideByBit(14))
+            settingMenu.push(new MenuBody("TR069_SETTING", TAB.advance.tr069));
         if(Page.getShowHideByBit(7))
             settingMenu.push(new MenuBody("ADVANCED_CONFIG", MENU.setting.advanced));
         menus.push(settingMenu);

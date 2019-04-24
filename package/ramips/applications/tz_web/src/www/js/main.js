@@ -140,7 +140,8 @@ var MenuItem = {
     WLAN_5G_CONFIG: { cmd: RequestCmd.WLAN_5G_CONFIG, url: "html/config/wlan5gConfig.html" },
     ADVANCED_CONFIG: { cmd: RequestCmd.BASIC_CONFIG, url: "html/advance/advancedConfig.html" },
     APN_CONFIG: { cmd: RequestCmd.GET_APN_CONFIG, url: "html/config/apnConfig.html" },
-	ROUTE_SETTING: { cmd: RequestCmd.ROUTE_LIST_GET, url: "html/advance/routeIndex.html" },
+    ROUTE_SETTING: { cmd: RequestCmd.ROUTE_LIST_GET, url: "html/advance/routeIndex.html" },
+	TR069_SETTING: { cmd: RequestCmd.TR069_CONFIG, url: "html/advance/tr069Index.html" },
 	
     SYS_SET: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/sys/sysConfigIndex.html" },
     SYS_LOG: { cmd: RequestCmd.SYS_LOG, url: "html/manage/sysLog.html" },
