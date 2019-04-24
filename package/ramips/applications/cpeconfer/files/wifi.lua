@@ -2032,7 +2032,7 @@ end
 -- input:
 --		wifi_id(number):wifi index get by wifi_get_dev
 -- return:
---		the wifi pin code or  nil --> mean wifi wps pin is disable
+--		the wifi pin code or  disable --> mean wifi wps pin is disable
 function wifi_module.wifi_get_wps_pin(wifi_id)
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
     
@@ -2046,7 +2046,7 @@ function wifi_module.wifi_get_wps_pin(wifi_id)
 
     if nil == code
     then	
-    	return nil
+    	return "disable"
     else
     	return tonumber(code)
     end
