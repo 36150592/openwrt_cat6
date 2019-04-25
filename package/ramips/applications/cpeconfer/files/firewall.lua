@@ -362,18 +362,30 @@ local function format_set_port_redirect_cmd(protocol,dest_addr,dest_port,dest_po
 	if "all" == protocol
 	then
 		local cmd1 ,cmd2
-		if nil == dest_addr
+		if nil == dest_addr or '*' ==  dest_addr
 		then 
-		cmd1 = string.format("echo 'iptables -t nat -I PREROUTING  -p tcp --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
-								 dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end, FIREWALL_CUSTOM_CONFIG_FILE)
+			local count_index=1
+			x:foreach(NETWORK_CONFIG_FILE, NETWORK_UCI_INTERFACE, function(s)
+				if "dhcp" == s["proto"] 
+				then
+					
+					cmd1 = string.format("echo 'iptables -t nat -I PREROUTING  -i %s -p tcp --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##%d' >> %s ;",
+									 s["ifname"],dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end, count_index,FIREWALL_CUSTOM_CONFIG_FILE)
+					count_index = count_index +1
+					cmd2 = string.format("echo 'iptables -t nat -I PREROUTING  -i %s -p udp --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##%d' >> %s ;",
+									s["ifname"],dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end,count_index, FIREWALL_CUSTOM_CONFIG_FILE)
+					count_index = count_index +1
+					os.execute(cmd1 .. "  " .. cmd2)
 
-		cmd2 = string.format("echo 'iptables -t nat -I PREROUTING  -p udp --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
-								 dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end, FIREWALL_CUSTOM_CONFIG_FILE)
+				end
+			end)
+
+			return ""
 		else
-		cmd1 = string.format("echo 'iptables -t nat -I PREROUTING  -p tcp -d %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
+			cmd1 = string.format("echo 'iptables -t nat -I PREROUTING  -p tcp -d %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
 								 dest_addr, dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, dest_port_end, FIREWALL_CUSTOM_CONFIG_FILE)
 
-		cmd2 = string.format("echo 'iptables -t nat -I PREROUTING  -p udp -d %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
+			cmd2 = string.format("echo 'iptables -t nat -I PREROUTING  -p udp -d %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##2' >> %s ;",
 								 dest_addr, dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, dest_port_end, FIREWALL_CUSTOM_CONFIG_FILE)
 		
 		end
@@ -381,17 +393,23 @@ local function format_set_port_redirect_cmd(protocol,dest_addr,dest_port,dest_po
 
 		return string.format("%s%s",cmd1,cmd2)
 	else
-		if nil == dest_addr
+		if nil == dest_addr or '*' ==  dest_addr
 		then
-			return string.format("echo 'iptables -t nat -I PREROUTING  -p %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
-								 protocol, dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end,FIREWALL_CUSTOM_CONFIG_FILE)
-
+			local count_index=1
+			x:foreach(NETWORK_CONFIG_FILE, NETWORK_UCI_INTERFACE, function(s)
+				if "dhcp" == s["proto"] 
+				then
+					
+					local cmd = string.format("echo 'iptables -t nat -I PREROUTING  -i %s -p %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##%d' >> %s ;",
+								 s["ifname"], protocol, dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end,count_index,FIREWALL_CUSTOM_CONFIG_FILE)
+					count_index = count_index +1
+					os.execute(cmd)
+				end
+			end)
+			return ""
 		else
-
-		return string.format("echo 'iptables -t nat -I PREROUTING  -p %s -d %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
+			return string.format("echo 'iptables -t nat -I PREROUTING  -p %s -d %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##1' >> %s ;",
 								 protocol, dest_addr, dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, dest_addr, dest_port,redirect_addr, redirect_port, comment, dest_port_end,FIREWALL_CUSTOM_CONFIG_FILE)
-
-
 		end
 
 	end
