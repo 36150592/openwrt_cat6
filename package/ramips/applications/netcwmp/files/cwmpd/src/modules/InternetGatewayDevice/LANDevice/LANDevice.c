@@ -249,10 +249,13 @@ static int uci_mul_get_wifi_param(const char * name, const char * option, char *
     int index;
     int num;
     char cmdbuf[64] = {0};
-    num = uci_mul_get_wifi_num();
-    printf("jiangyibo %s\n",name);
-    index = get_parameter_index((char *)name, "MultiSSID.", 65535);
     
+    int indata = get_parameter_next_index((char *)name, "WLANConfiguration.", igd_entries.wlan_entry);
+    num = uci_mul_get_wifi_num();
+    
+    index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    printf("jiangyibo quzhi %d %d %s\n",indata,index,name);
+    index = (indata-1)*2 + index;
     if (0 < index && index <= num)
     {
         
@@ -276,8 +279,13 @@ static int uci_mul_set_wifi_param(const char * name, const char * option, char *
     int index;
     int num;
     char cmdbuf[128] = {0};
+
+
+    int indata = get_parameter_next_index((char *)name, "WLANConfiguration.", igd_entries.wlan_entry);
     num = uci_mul_get_wifi_num();
+    
     index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    index = (indata-1)*2 + index;
     if (0 < index && index <= num)
     {
         sprintf(cmdbuf,"uci -q set mutilssid.@wifi-iface[%d].%s=%s&&uci -q commit mutilssid",index - 1,option,value);
@@ -298,8 +306,12 @@ static int uci_mul_get_dhcp_param(const char * name, const char * option, char *
     int index;
     int num;
     char cmdbuf[64] = {0};
+
+    int indata = get_parameter_next_index((char *)name, "WLANConfiguration.", igd_entries.wlan_entry);
     num = uci_mul_get_wifi_num();
+    
     index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    index = (indata-1)*2 + index;
     if (0 < index && index <= num)
     {
         sprintf(cmdbuf,"uci -q get dhcp.lan%d.%s",(index - 1)%2+1,option);
@@ -319,8 +331,11 @@ static int uci_mul_get_ipaddr_param(const char * name, const char * option, char
     int index;
     int num;
     char cmdbuf[64] = {0};
+    int indata = get_parameter_next_index((char *)name, "WLANConfiguration.", igd_entries.wlan_entry);
     num = uci_mul_get_wifi_num();
+    
     index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    index = (indata-1)*2 + index;
     if (0 < index && index <= num)
     {
         sprintf(cmdbuf,"uci -q get network.lan%d.%s",(index - 1)%2+1,option);
@@ -342,8 +357,11 @@ static int uci_mul_set_dhcp_param(const char * name, const char * option, char *
     int index;
     int num;
     char cmdbuf[64] = {0};
+    int indata = get_parameter_next_index((char *)name, "WLANConfiguration.", igd_entries.wlan_entry);
     num = uci_mul_get_wifi_num();
+    
     index = get_parameter_index((char *)name, "MultiSSID.", 65535);
+    index = (indata-1)*2 + index;
     if (0 < index && index <= num)
     {
         sprintf(cmdbuf,"uci -q set dhcp.lan[%d].%s=%s&&uci -q commit dhcp",(index - 1)%2,option,value);
@@ -694,7 +712,7 @@ int cpe_get_igd_NameofLANEth(cwmp_t * cwmp, const char * name, char ** value, po
 {
     //int index =0;
     //index = get_parameter_index((char *)name, "LANEthernetInterfaceConfig.", igd_entries.eth_entry);
-    strcpy(param, "eth0.1");
+    strcpy(param, "br-lan");
     *value = param;
     return FAULT_CODE_OK;
 }
@@ -741,10 +759,10 @@ int cpe_get_igd_StatusOfEth(cwmp_t * cwmp, const char * name, char ** value, poo
 {
     int index = get_parameter_index((char *)name, "LANEthernetInterfaceConfig.", igd_entries.eth_entry);
     char cmdbuf[128];
-    sprintf(cmdbuf,"swconfig dev mt7530 port %d show | grep link |sed 's/:/ /g' | awk '{print $5}'",index - 1);
+    sprintf(cmdbuf,"ifconfig br-lan | grep BROADCAST | awk '{print $1}'");
     read_memory(cmdbuf,param,sizeof(param));
     util_strip_traling_spaces(param);
-    if ( 0 == strcmp(param,"up")) {
+    if ( 0 == strcmp(param,"UP")) {
 	strcpy(param,"Up");
     } 
     else if ( 0 == strcmp(param,"down")) {
@@ -2289,7 +2307,7 @@ int cpe_set_igd_WMMEnable(cwmp_t *cwmp, const char *name, const char *value, int
 
 int cpe_refresh_igd_MultiSSID(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
 {
-    cwmp_refresh_i_parameter(cwmp, param_node, 4);
+    cwmp_refresh_i_parameter(cwmp, param_node, 2);
     cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg); 
 
     return FAULT_CODE_OK;
@@ -2994,7 +3012,8 @@ int cpe_set_igd_MultiSSIDEnable(cwmp_t *cwmp, const char *name, const char *valu
 
 int cpe_get_igd_EnableOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	int res = uci_mul_get_wifi_param(name, "disabled", value);
+
+	int res = uci_mul_get_wifi_param( name, "disabled", value);
     if(FAULT_CODE_OK != res){
         return res;
     }
@@ -3030,6 +3049,7 @@ int cpe_set_igd_EnableOfMultiSSID(cwmp_t *cwmp, const char *name, const char *va
 
 int cpe_get_igd_SSIDOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
+
 	int res = uci_mul_get_wifi_param(name, "ssid", value);
     if(FAULT_CODE_OK != res){
         return res;

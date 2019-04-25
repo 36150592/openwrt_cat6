@@ -72,7 +72,7 @@
 
 
 char param[1024];
-IGD_Entries igd_entries = {4, 1, 3, 1, 1, 1, 1, 1, 1, 1, 10, 0};
+IGD_Entries igd_entries = {1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 10, 0};
 Global_Vars glb_vars;
 
 static char SOAP_ENV[CWMP_NAME_MAX] = {0};
@@ -4841,6 +4841,26 @@ int get_parameter_index(char *name, char *str, int max) {
 		return index;
 	}
 }
+
+int get_parameter_next_index(char *name, char *str, int max) {
+
+    char tempbuf[16];
+	char *p = strstr(name, str);
+	if (p == NULL) {
+		return 1;
+	}
+	memset(tempbuf,0,16);
+    tempbuf[0] = *(p + strlen(str));
+    int index = atoi(tempbuf);
+	if (index <= 0) {
+		return 1;
+	} else if (index > max) {
+		return max;
+	} else {
+		return index;
+	}
+}
+
 
 int parse_wan_index(const char *name)
 {
