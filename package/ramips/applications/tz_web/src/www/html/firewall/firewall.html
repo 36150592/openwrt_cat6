@@ -56,8 +56,8 @@
                         break;
                     case 3:
                         hasEnableLink = false;
-                        customTitles = [DOC.net.ip, DOC.net.portStart,DOC.net.portEnd,DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
-                        customFieldNames = ["dest_addr", "dest_port","dest_port_end", "redirect_addr", "redirect_port", "comment"];
+                        customTitles = [DOC.net.portStart,DOC.net.portEnd,DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
+                        customFieldNames = ["dest_port","dest_port_end", "redirect_addr", "redirect_port", "comment"];
                         break;
                     case 4:
                         customTitles = [DOC.net.ipv46, DOC.net.url,DOC.lbl.advancedOptions, DOC.lbl.remark];
@@ -416,6 +416,7 @@
                 sb.append('<input type="hidden" id="hddLAN" value="null" />');
             }
             sb.append(String.format('<input type="hidden" id="hddItem{0}" value="null" />', pannelIndex));
+
             sb.append(String.format('<input type="hidden" id="hddShiftIndex{0}" value="0" />', pannelIndex));
             sb.append(String.format('<span style="display:none"><input type="button" id="btnDelegate{0}" value="Delegate" /></span>', pannelIndex));
             sb.append('</th></tr>');
@@ -808,7 +809,7 @@
                     var mappingPort = mappingPortArr.port;
 
                     var item = getCommonItem();
-                    item.dest_addr = location.hostname;
+                    // item.dest_addr = "192.168.3.1";
                     item.dest_port = destport;
                     item.dest_port_end = portend;
                     item.redirect_addr = mappingIp;
