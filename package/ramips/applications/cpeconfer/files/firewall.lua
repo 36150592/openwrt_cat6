@@ -476,6 +476,11 @@ end
 
 local function check_ip(ip)
 
+	if nil == ip
+	then
+		return false
+	end
+
 	if string.match(ip,"%d+%.%d+%.%d+%.%d+") == nil
 	then
 		debug("check ip fail")
@@ -1791,7 +1796,7 @@ function firewall_module.firewall_set_dmz(enable, host_ip)
 		return false
 	end
 
-	if check_ip(host_ip) == false
+	if '1' == enable and check_ip(host_ip) == false
 	then
 		debug("bad ip")
 		return false
@@ -1801,7 +1806,10 @@ function firewall_module.firewall_set_dmz(enable, host_ip)
 	x:set(TOZED_CONFIG_FILE,TOZED_DMZ_SECTION,"value")
 	local ret = x:set(TOZED_CONFIG_FILE, TOZED_DMZ_SECTION, "TZ_DMZ_ENABLE", enable)
 
-	x:set(TOZED_CONFIG_FILE, TOZED_DMZ_SECTION, "TZ_DMZ_HOST_IP", host_ip)
+	if nil ~= host_ip
+	then
+		x:set(TOZED_CONFIG_FILE, TOZED_DMZ_SECTION, "TZ_DMZ_HOST_IP", host_ip)
+	end
 
 	return x:commit(TOZED_CONFIG_FILE)
 
