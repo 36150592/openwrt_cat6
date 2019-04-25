@@ -183,14 +183,9 @@ turn_on_remote_ping(){
 set_dmz(){
 	
 	local host_ip=`cfg -g TZ_DMZ_HOST_IP --section dmz`	
-        for wan in $wan_interfaces
+    for wan in $wan_interfaces
 	do	
-		
-		local ip=`ifconfig $wan | grep 'inet addr' | awk '{print $2}' | awk -F ':'  '{print $2}'`
-		if [ $ip"" == "" ];then
-			continue;
-		fi
-		iptables -t nat -I PREROUTING -d $ip -j DNAT --to-destination $host_ip
+		iptables -t nat -I PREROUTING -i $wan -j DNAT --to-destination $host_ip
 	done
 }
 
