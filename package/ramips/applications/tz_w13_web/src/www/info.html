@@ -8,7 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <title>Router</title>
     <link rel="stylesheet" type="text/css" href="css/main.css?t=000000">
-
+    <link rel="icon" href="data:;base64,=">
     <script type="text/javascript" src="js/json2.js"></script>
     <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="js/jquery.form.js"></script>
@@ -30,101 +30,6 @@
                     Page.initPage(true);
                 });
 
-                var $languageSelect = $('#languageSelect');
-                $languageSelect.html(Page.getLanguageList(Page.language)).change(function () {
-                    Page.changeLanguage($languageSelect);
-                });
-
-                var $username = $('#username').focus(),
-                    $passwd = $('#passwd'),
-                    $btnLogin = $('#btnLogin');
-                var MaxFailNum = 2;
-                sessionStorage['loginFail'] = sessionStorage['loginFail'] ? sessionStorage['loginFail'] : 0;
-                sessionStorage['failTime'] = sessionStorage['loginFail'] ? sessionStorage['loginFail'] : "";
-                // var loginText = $btnLogin.val();
-                $btnLogin.click(function () {
-                    var timestamp = (new Date()).getTime();
-                    if(sessionStorage['failTime'] != ""){
-                        var second  = parseInt((timestamp - parseInt(sessionStorage['failTime']))/1000);
-                        if(second < 60){
-                            var lockMsg = PROMPT.status.lockFailTimes;
-                            AlertUtil.alertMsg(lockMsg.format(60-second));
-                            return;
-                        }
-                        sessionStorage['failTime'] = "";
-                    }
-                    var username = $username.val(), passwd = $passwd.val();
-                    if (username == "") {
-                        AlertUtil.alertMsg(CHECK.required.username);
-                        $username.focus();
-                        return false;
-                    }
-
-                    if (passwd == "") {
-                        AlertUtil.alertMsg(CHECK.required.passwd);
-                        $passwd.focus();
-                        return false;
-                    }
-
-                    //     $btnLogin.disable();
-                    var loginSuccess = false;
-                    var sessionId = getSessionId();
-
-
-                    Page.postJSON({
-                        json: {
-                            cmd: RequestCmd.LOGIN,
-                            method: JSONMethod.POST,
-                            sessionId: sessionId,
-                            username: username,
-                            passwd: Md5.md5(passwd)
-                        },
-                        success: function(data) {
-                            loginSuccess = data.success;
-                            sessionStorage['sessionId'] = data.sessionId;
-                            sessionStorage['loginName'] = username;
-                            sessionStorage['auth'] = data.auth;
-							sessionStorage['level'] = data.level;
-                            sessionStorage['loginFail'] = 0;
-                            sessionStorage['failTime'] = "";
-                            location.href = Page.getUrl("index.html");
-                        },
-                        fail: function(data) {
-                               var failMsg = PROMPT.status.loginFail;
-                               AlertUtil.alertMsg(failMsg.format(3-parseInt(sessionStorage['loginFail'])));
-
-                               if(MaxFailNum >= parseInt(sessionStorage['loginFail'])){
-                                   sessionStorage['loginFail'] = parseInt(sessionStorage['loginFail']) + 1;
-                               }else {
-                                   sessionStorage['failTime'] = timestamp;
-                                   sessionStorage['loginFail'] = 0;
-                               }
-
-                                //AlertUtil.alertMsg(PROMPT.status.loginFail);
-
-
-                        },
-                        complete: function() {
-                            //  if (!loginSuccess) {
-                            //      $btnLogin.enable();
-                            //  }
-                        }
-                    });
-                });
-
-                $username.keydown(function (e) {
-                    if (e.which == 13) {
-                        $passwd.focus();
-                    }
-                });
-
-                $passwd.keydown(function (e) {
-                    if (e.which == 13) {
-                        if (!$btnLogin.attr("disabled")) {
-                            $btnLogin.click();
-                        }
-                    }
-                });
 
                 function getSessionId() {
                     return Md5.md5(Math.random().toString());
@@ -177,29 +82,6 @@
             <div id="login_container">
                 <script type="text/template" id="login_template">
                     <table>
-                        <tr class="tr_login tr_language">
-                            <th><%- login.language %><%- colon %></th>
-                        </tr>
-                        <tr class="tr_login tr_language">
-                            <td><select id="languageSelect" name="languageSelect" class="ddl"></select></td>
-                        </tr>
-
-                        <tr class="tr_login">
-                            <th><%- login.username %><%- colon %></th>
-                        </tr>
-                        <tr class="tr_login">
-                            <td><input type="text" id="username" name="username" class="txt" maxlength="20" /></td>
-                        </tr>
-
-                        <tr class="tr_login">
-                            <th><%- login.passwd %><%- colon %></th>
-                        </tr>
-                        <tr class="tr_login">
-                            <td><input type="password" id="passwd" name="passwd" class="txt" maxlength="20" /></td>
-                        </tr>
-                        <tr class="tr_login">
-                            <td style="padding-top:5px"><input type="button" id="btnLogin" class="btn" value="<%- btn.login %>" /></td>
-                        </tr>
                     </table>
                 </script>
             </div>
