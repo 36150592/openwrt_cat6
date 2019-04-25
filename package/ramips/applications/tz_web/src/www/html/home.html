@@ -23,7 +23,7 @@
         
         var settingMenu = new MenuHead("setting_menu", MENU.setting.head);
         settingMenu.push(new MenuBody("NETWORK_CONFIG", MENU.setting.dhcp));
-        if(Page.getShowHideByBit(0))
+        // if(Page.getShowHideByBit(0))
             settingMenu.push(new MenuBody("WIRELESS_CONFIG", MENU.settingWifi.wifi));
         if(Page.getShowHideByBit(1))
             settingMenu.push(new MenuBody("WLAN_5G_CONFIG", MENU.settingWifi.wifi5g));
@@ -47,7 +47,8 @@
 		fwMenu.push(new MenuBody("FW_URL_FILTER", MENU.fw.urlFilter));
 		fwMenu.push(new MenuBody("FW_IP_MAC_BINDING", MENU.fw.ipMacBinding));
 		fwMenu.push(new MenuBody("FW_ACL_FILTER", MENU.fw.aclFilter));
-		fwMenu.push(new MenuBody("FW_SPEED_LIMIT", MENU.fw.speedLimit));
+        fwMenu.push(new MenuBody("FW_SPEED_LIMIT", MENU.fw.speedLimit));
+		fwMenu.push(new MenuBody("FW_DMZ", "DMZ"));
 
 
         menus.push(fwMenu);

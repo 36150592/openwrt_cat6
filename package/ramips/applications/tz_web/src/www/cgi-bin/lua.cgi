@@ -2513,17 +2513,38 @@ function restore_factory()
 	print(result_json)
 
 end
-function get_wps_function()
+
+function get_dmz_data()
 	local tz_answer = {}
-	tz_answer["cmd"] = 225
+	tz_answer["cmd"] = 226
 	local data_array = {}
-	data_array["pin"] = wifi.wifi_get_wps_pin1()
-	data_array["pbc"] = wifi.wifi_get_wps_pbc_enable_status()
 	
 	tz_answer["success"] = true
-	tz_answer["data"] = data_array
+	tz_answer["enable"],tz_answer["ip"] = firewall.firewall_get_dmz()
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
+
+
+end
+function set_dmz_data()
+	local ret 
+	local tz_answer = {}
+	local enable = tz_req["enable"]
+	local ip = tz_req["ip"]
+	if(nil ~= enable)
+		then
+		ret = firewall.firewall_set_dmz(enable,ip)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 225
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+
 
 end
 
@@ -2609,7 +2630,9 @@ local switch = {
 	 [222] = set_open_auto_dial,
 	 [223] = set_close_auto_dial,
 	 [224] = restore_factory,
-	 [225] = get_wps_function,
+	 [225] = set_dmz_data,
+	 [226] = get_dmz_data,
+
 
  }
  

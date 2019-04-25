@@ -125,7 +125,9 @@ var RequestCmd = {
     GET_AUTO_DIAL:221,
     GET_OPEN_AUTO_DIAL:222,
     GET_CLOSE_AUTO_DIAL:223,
-    RESTORE_DEFAULT:224
+    RESTORE_DEFAULT:224,
+    SET_DMZ:225,
+    GET_DMZ:226
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
@@ -159,7 +161,8 @@ var MenuItem = {
     FW_URL_FILTER: { cmd: RequestCmd.URL_FILTER, url: "html/firewall/firewall.html" },
     FW_PORT_MAPPING: { cmd: RequestCmd.OTHER_FILTER, url: "html/firewall/firewall.html" },
 	FW_ACL_FILTER: { cmd: RequestCmd.ACL_FILTER, url: "html/firewall/firewall.html" },
-    FW_SPEED_LIMIT: { cmd: RequestCmd.SPEED_LIMIT, url: "html/firewall/firewall.html" }
+    FW_SPEED_LIMIT: { cmd: RequestCmd.SPEED_LIMIT, url: "html/firewall/firewall.html" },
+    FW_DMZ: { cmd: RequestCmd.GET_DMZ, url: "html/firewall/dmzIndex.html" }
     
 };
 
