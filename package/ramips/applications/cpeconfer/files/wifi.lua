@@ -2002,7 +2002,7 @@ end
 -- set the wifi wps pin 
 -- input :
 --		wifi_id(number):wifi index get by wifi_get_dev
---		wifi_pin_code(number):the number of the device ramdom generate, must  8 digit, if nil or ""  will disable wps pin
+--		wifi_pin_code(number):the number of the device ramdom generate, must  8 digit
 -- return:
 --		true if success   false if fail
 function wifi_module.wifi_set_wps_pin(wifi_id, wifi_pin_code)
@@ -2016,9 +2016,8 @@ function wifi_module.wifi_set_wps_pin(wifi_id, wifi_pin_code)
 
 	if nil == wifi_pin_code or "" == wifi_pin_code  or type(wifi_pin_code) ~= "number"
 	then
-		debug("disable wps pin")
-		x:set(WIFI_CONFIG_FILE, section_name, "wps", "")
-    	x:set(WIFI_CONFIG_FILE, section_name, "pin", "")
+		debug("error pin code")
+		return flase
     else
     	x:set(WIFI_CONFIG_FILE, section_name, "wps", "pin")
     	x:set(WIFI_CONFIG_FILE, section_name, "pin", wifi_pin_code)
@@ -2032,7 +2031,7 @@ end
 -- input:
 --		wifi_id(number):wifi index get by wifi_get_dev
 -- return:
---		the wifi pin code or  disable --> mean wifi wps pin is disable
+--		the wifi pin code or  ""
 function wifi_module.wifi_get_wps_pin(wifi_id)
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
     
@@ -2046,14 +2045,20 @@ function wifi_module.wifi_get_wps_pin(wifi_id)
 
     if nil == code
     then	
-    	return "disable"
+    	return ""
     else
     	return tonumber(code)
     end
 
 end
 
-function wifi_module.wifi_enable_wps_pbc(wifi_id)
+-- set the wifi wps type
+-- input:
+--		wifi_id(number):wifi index get by wifi_get_dev
+--		wps_type:pbc  or pin
+-- return:
+--		true if success or false if fail
+function wifi_module.wifi_set_wps_type(wifi_id,wps_type)
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
     
 	if nil == section_name or "" == section_name
@@ -2062,13 +2067,25 @@ function wifi_module.wifi_enable_wps_pbc(wifi_id)
 		return false
 	end
 
-	x:set(WIFI_CONFIG_FILE, section_name, "wps", "pbc")
+	if "pbc" ~= wps_type and "pin" ~= wps_type
+	then
+		debug("error switch")
+		return false
+	end
+
+	x:set(WIFI_CONFIG_FILE, section_name, "wps", wps_type)
    
     return x:commit(WIFI_CONFIG_FILE)
 
 end
 
-function wifi_module.wifi_disable_wps_pbc(wifi_id)
+-- get the wifi wps type
+-- input:
+--		wifi_id(number):wifi index get by wifi_get_dev
+--		wps_type:pbc  or pin
+-- return:
+--		pbc or pin or false 
+function wifi_module.wifi_get_wps_type(wifi_id)
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
     
 	if nil == section_name or "" == section_name
@@ -2077,35 +2094,64 @@ function wifi_module.wifi_disable_wps_pbc(wifi_id)
 		return false
 	end
 
-	x:set(WIFI_CONFIG_FILE, section_name, "wps", "")
+	return x:get(WIFI_CONFIG_FILE, section_name, "wps")
+end 
+
+
+-- set the wifi wps switch
+-- input:
+--		wifi_id(number):wifi index get by wifi_get_dev
+--		enable:enable  or disable
+-- return:
+--		true if success or false if fail
+function wifi_module.wifi_set_wps_switch(wifi_id,enable)
+	local section_name = common_get_ifame_section_name_by_index(wifi_id)
+    
+	if nil == section_name or "" == section_name
+	then
+		debug("error wifi_id")
+		return false
+	end
+
+	if "disable" ~= enable and "enable" ~= enable
+	then
+		debug("error enable")
+		return false
+	end
+
+	if "disable" == enable
+	then
+		x:delete(WIFI_CONFIG_FILE, section_name, "wps")
+		x:delete(WIFI_CONFIG_FILE, section_name, "pin")
+	end
    
     return x:commit(WIFI_CONFIG_FILE)
 
 end
 
--- get wifi wps pbc enable or disable
+-- get the wifi wps switch
 -- input:
 --		wifi_id(number):wifi index get by wifi_get_dev
 -- return:
---		1:enable
---		0:disable
-function wifi_module.wifi_get_wps_pbc_enable_status(wifi_id)
+--		disable or enable or false 
+function wifi_module.wifi_get_wps_switch(wifi_id)
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
     
 	if nil == section_name or "" == section_name
 	then
 		debug("error wifi_id")
-		return false
+		return "disable"
 	end
 
-	local pbc = x:get(WIFI_CONFIG_FILE, section_name, "wps")
-
-	if "pbc" == pbc
+	local enable =  x:get(WIFI_CONFIG_FILE, section_name, "wps")
+	if nil == enable or "" == enable
 	then
-		return 1
+		return "disable"
 	else
-		return 0
+		return "enable"
 	end
-end
+
+end 
+ 
 
 return wifi_module
