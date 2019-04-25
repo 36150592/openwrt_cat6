@@ -268,11 +268,11 @@ int main(int argc, char **argv)
 
 NETWORK_IS_OK:
 
-    cwmp_log_init("/tmp/cwmpd.log", CWMP_LOG_DEBUG);
+    //cwmp_log_init("/tmp/cwmpd.log", CWMP_LOG_DEBUG);
     //cwmp_log_init("/tmp/cwmpd.log", CWMP_LOG_DEBUG);
     //cwmp_log_init(NULL, CWMP_LOG_ERROR);
     //cwmp_log_init(NULL, CWMP_LOG_DEBUG);
-    //cwmp_log_init(NULL, get_cwmp_log_level());
+    cwmp_log_init(NULL, get_cwmp_log_level());
 	
     cwmp_global_pool = pool_create(POOL_DEFAULT_SIZE);
     cwmp = pool_palloc(cwmp_global_pool, sizeof(cwmp_t));

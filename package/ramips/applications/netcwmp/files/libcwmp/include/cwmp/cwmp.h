@@ -30,7 +30,7 @@
 
 
 #define CWMP_CPE_MF	"Shenzhen Tozed Technologies Co., Ltd"
-#define CWMP_EVENT_FILENAME "/mnt/cwmpevent.bin"
+#define CWMP_EVENT_FILENAME "/etc/cwmpevent.bin"
 #define CWMP_CA_FILENAME "/mnt/ssl/private/ca.pem"
 #define CWMP_CA_PASSWORD "123456"
 #define CWMP_HTTP_TIMEOUT 60
