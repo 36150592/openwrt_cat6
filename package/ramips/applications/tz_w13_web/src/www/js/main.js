@@ -133,6 +133,7 @@ var JSONMethod = {
 
 var Url = {
     LOGIN: '/login.html',
+    INFO: '/info.html',
     INDEX: '/index.html',
     PASSWD: '/html/changePasswd.html',
 
