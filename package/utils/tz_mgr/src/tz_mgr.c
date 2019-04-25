@@ -55,6 +55,7 @@
 #define TZ_FIRMWARE_INLINE_VERSION "inline_soft_version"
 #define TZ_CONFIG_VERSION 	"config_version"
 #define TZ_MGR_RESTART_COUNT_FILE "/tmp/.tz_mgr_restart_count"//记录程序的重启次数，从而计算连接不上室外机的时间
+#define TZ_RESTORE_NO_RESPONE_COUNT_FILE "/tmp/.tz_mgr_restore_no_respone_count"//记录发送恢复出厂指令没收到回复的次数，若超过5次视为与室外机失联，清除出厂标志，即不通知室外机恢复出厂
 #define TZ_MGR_ENABLE_DHCP_FLAG_FILE "/tmp/.tz_mgr_dhcp_enable"//如果存在此文件，则启动dhcp服务
 #define TZ_DHCP_SERVER_ALIVE_FLAG_FILE "/tmp/.tz_mgr_dhcp_alive"//记录dhcp启动状态，防止重复启动
 #define AFTER_KEY_RESTORE_FLAG_FILE "/etc/.flag_after_key_restore_factory"//通过按键恢复出厂后创建，如果存在此文件，通知室外机恢复出厂
@@ -552,9 +553,12 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 					//室内机主动（按键）恢复出厂后，要求室外机也回复出厂，发送CMD_TYPE_RESTORE_SYNC命令至室外机后，收到室外机的回复
 					//这里实际上因为室内机已经是恢复出厂后的状态，下面无需恢复出厂，重启(与室外机同步)即可。
 					//send reboot sync ack message
+					print("receive CMD_TYPE_RESTORE_SYNC_ACK ,send CMD_TYPE_RESTORE_ACK now....");
 					util_client_send_restore_ack_frame();
 					//wait for the frame is sent
 					print("%s","CMD_TYPE_RESTORE_SYNC_ACK------------>restore factory and reboot!");
+					shell_recv(NULL,0,"rm -f %s", AFTER_KEY_RESTORE_FLAG_FILE);
+					sleep(2);//做足延时，防止没发完就重启
 					shell_recv(NULL,0,"(sleep 1 && reboot)&");
 					
 				}
@@ -1860,7 +1864,7 @@ void process_1s_signal(void)
 			print("%s","---------------reboot after restore---------------------");
 			//start to reboot
 			#ifndef __i386__
-			system("reboot");
+			//system("reboot");
 			#endif
 		}
 		else
@@ -1979,11 +1983,11 @@ void process_1s_signal(void)
 	if( file_exists( AFTER_KEY_RESTORE_FLAG_FILE ) )
 	{
 		reboot_timer_started=FALSE;
-		restore_settings_timer_started=TRUE;
+		//restore_settings_timer_started=TRUE;
 		reboot_timer_counter=0;
-		shell_recv(NULL,0,"rm -f %s",AFTER_KEY_RESTORE_FLAG_FILE);
 		print("%s","-----Send restore cmd!-----");
 		util_client_send_restore_sync_frame();
+		tz_check_restore_no_respone_count();
 	}
 }
 
@@ -2386,5 +2390,41 @@ int get_interface_mac(char const* interface_name,OUT unsigned char* mac_buf)
 	close(fd);
 	memcpy(mac_buf, interface.ifr_hwaddr.sa_data,6);
 	return 0;
+}
+
+void tz_check_restore_no_respone_count(void)
+{
+	char no_respone_count[32];
+	memset(no_respone_count, '\0',sizeof(no_respone_count));
+	shell_recv(no_respone_count, sizeof(no_respone_count),"touch %s && cat %s", TZ_RESTORE_NO_RESPONE_COUNT_FILE,TZ_RESTORE_NO_RESPONE_COUNT_FILE);
+	if(strlen(no_respone_count) != 0)
+	{
+		int count = -1;
+		count = atoi(no_respone_count);
+		if(count <= 0)
+		{
+			print("Can not transform string %s",no_respone_count);
+			shell_recv(NULL,0,"echo 1 > %s", TZ_RESTORE_NO_RESPONE_COUNT_FILE);
+		}
+		else if(count > 0 && count < 6)
+		{
+			count++;
+			shell_recv(NULL,0,"echo %d > %s", count, TZ_RESTORE_NO_RESPONE_COUNT_FILE);
+		}
+		else if(count >=6 && count < 65534)//长时间没收到回复，清除恢复出厂标志
+		{
+			shell_recv(NULL,0,"rm -f %s", AFTER_KEY_RESTORE_FLAG_FILE);
+			shell_recv(NULL,0,"echo 1 > %s", TZ_RESTORE_NO_RESPONE_COUNT_FILE);//重置计数
+		}
+		else//重置计数
+		{
+			shell_recv(NULL,0,"echo 1 > %s", TZ_RESTORE_NO_RESPONE_COUNT_FILE);
+		}
+	}
+	else
+	{
+		print("Start counting..");
+		shell_recv(NULL,0,"echo 1 > %s", TZ_RESTORE_NO_RESPONE_COUNT_FILE);
+	}
 }
 
