@@ -109,7 +109,10 @@ static void mac_rule_calc(const char* source_mac,char* target_mac, int offset)
 	strcpy(target_mac, source_mac);
 	int s_number = target_mac[9] - '0';
 	int t_number = (s_number + offset) % 16;
-	target_mac[9] = '0' + t_number;
+	if(t_number < 10)
+		target_mac[9] = '0' + t_number;
+	else
+		target_mac[9] = 'A' + t_number - 10;
 }
 
 static void set_mac(const char* mac_name, const char* mac_addr)
@@ -144,7 +147,7 @@ static void mac_handle(char* get_buf, char* set_buf)
 		}
 		else
 		{
-			sprintf(set_buf, "%s fail\n",t_receive_buf);
+			sprintf(set_buf, "%s\n",t_receive_buf);
 		}
 	}
 	else
@@ -163,10 +166,10 @@ static void mac_handle(char* get_buf, char* set_buf)
 
 		for(i = 0; i < 17; i ++)
 		{
-			wifi_24g_mac[i] = get_buf[4+i];
+			wifi_24g_mac[i] = get_buf[22+i];
 		}
 
-		//print("");
+		print("will write mac %s\n",wifi_24g_mac);
 
 		mac_rule_calc(wifi_24g_mac, wifi_58g_mac, 4);
 		mac_rule_calc(wifi_24g_mac, lan_mac, 8);
