@@ -1,0 +1,15 @@
+Index: linux-3.18.23/drivers/net/ethernet/ralink/esw_rt3052.c
+===================================================================
+--- linux-3.18.23.orig/drivers/net/ethernet/ralink/esw_rt3052.c
++++ linux-3.18.23/drivers/net/ethernet/ralink/esw_rt3052.c
+@@ -1353,7 +1353,9 @@ static const struct switch_dev_ops esw_o
+ static struct rt305x_esw_platform_data rt3050_esw_data = {
+ 	/* All ports are LAN ports. */
+ 	.vlan_config            = RT305X_ESW_VLAN_CONFIG_NONE,
+-	.reg_initval_fct2       = 0x00d6500c,
++// The following modification by Tom Rodinger
++//	.reg_initval_fct2       = 0x00d6500c,  // old value
++	.reg_initval_fct2       = 0x000e500c,  // fixed value to allow IPv6 multicasts to get to the CPU
+ 	/*
+ 	 * ext phy base addr 31, enable port 5 polling, rx/tx clock skew 1,
+ 	 * turbo mii off, rgmi 3.3v off
