@@ -184,36 +184,37 @@
                 }
             });
         });
-		
+		$("#wpsEnble").change(function(){
+            if($(this).prop("checked")){
+                $(".wpsSettingHide").show();
+            }else{
+                $(".wpsSettingHide").hide();
+            }
+        });
+        $("input[name=wpsMode]").on("click",function(){
+        if($(this).val() == "pbc"){
+            $("#wpsPin").attr("disabled",true);
+        }else{
+            $("#wpsPin").attr("disabled",false);
+        }
+        })
+       
 		$btnSaveWps.click(function () {
-            $(this).attr("disabled",true);
-            var count = 0;
-            var $form = $('#wpsForm');
-            var json = JSON.parmsToJSON($form);
-
-            json.wpsEnble = json.wpsEnble ? '1' : '0';
-            if(json.wpsEnble ==  $("#wpsEnble").attr('old')){
-                delete json["wpsEnble"];
-                count++;
-            }
-            if(json.wpsPin ==  $("#wpsPin").attr('old')){
-                delete json["wpsPin"];
-                count++;
-            }else {
-                if(json.wpsPin.length == 0){
-                    json.wpsPin = '0';
-                }else if(json.wpsPin.length != 8){
-                    AlertUtil.alertMsg(CHECK.required.wpsLength);
-                    $(this).attr("disabled",false);
-                    return false;
-                }
-            }
-            if(count == 2){
-                AlertUtil.alertMsg(CHECK.required.noChanges);
-                $(this).attr("disabled",false);
-                return false;
+            // $(this).attr("disabled",true);
+            var json = new Object();
+            
+            if($("#wpsEnble").prop("checked")){
+                json.wpsEnble = "enable";
+                json.wpsMode =$("input[name='wpsMode']:checked").val();
+            if($("input[name='wpsMode']:checked").val() == "pin"){
+                json.wpsPin = $("#wpsPin").val();
             }
 
+            }else{
+                json.wpsEnble = "disable";
+            }
+                       
+            json.method = JSONMethod.POST;
             json.cmd = RequestCmd.WPS_PIN_SET;
             Page.postJSON({
                 json: json,
@@ -370,13 +371,23 @@
                         },
                         success: function(datas) {
 							 var data = datas.data;
-                            if(data.status == 0){
-                                $('#wpsEnble').prop('checked', false);
-                            }else {
-                                $('#wpsEnble').prop('checked', true);
+                            if(data.switch == "enable"){
+                                $("#wpsEnble").prop("checked",true);
+                                $(".wpsSettingHide").show();
+                            }else{
+                                $("#wpsEnble").prop("checked",false);
+                                $(".wpsSettingHide").hide();
                             }
-                            $('#wpsEnble').attr('old',data.status);
-                            Page.setFormFieldValue2("wpsPin", data.pin);
+                            $("#wpsPin").val(data.pin);
+                            if(data.type == "pin"){
+                                $("input[value='pin']").attr("checked",true);
+                            }else if(data.type == "pbc"){
+                                $("#wpsPin").attr("disabled",true);
+                                $("input[value='pbc']").attr("checked",true);
+                            }else{
+                                 $("input[name='wpsMode']").attr("checked",false);
+                            }
+                            
                         }
                     });
                     $('.helper_box').hide();
@@ -961,7 +972,14 @@
                                 </td>
                             </tr>
 
-                            <tr>
+                            <tr class="wpsSettingHide" style="display:none;">
+                                <th><%- lbl.wpsMode %><%- colon %></th>
+                                <td>
+                                    <input type="radio" id="wpsPinEnale" name="wpsMode"  value="pin"/>PIN
+                                    <input type="radio" id="wpsPbcEnable" name="wpsMode" value="pbc"/>PBC
+                                </td>
+                            </tr>
+                            <tr class="wpsSettingHide" style="display:none;">
                                 <th><%- lbl.wpsPin %><%- colon %></th>
                                 <td>
                                     <input type="text" id="wpsPin" name="wpsPin"  class="normal"/>

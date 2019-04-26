@@ -1967,7 +1967,8 @@ function get_wpsSet()
 		end
 	end
 	
-	data_array["status"] = wifi.wifi_get_wps_pbc_enable_status(id)
+	data_array["switch"] = wifi.wifi_get_wps_switch(id)
+	data_array["type"] = wifi.wifi_get_wps_type(id) or ''
 	data_array["pin"] = wifi.wifi_get_wps_pin(id) or ''
 
 	
@@ -1993,9 +1994,19 @@ function set_wpsSet()
 		end
 	end
 
-   	local wpsEnble = tonumber(tz_req["wpsEnble"])
+   	local wpsEnble = tz_req["wpsEnble"]
 	local wpsPin = tonumber(tz_req["wpsPin"])
-		
+	local wpsMode = tz_req["wpsMode"]
+
+	if(nil ~= wpsMode)
+		then
+			ret = wifi.wifi_set_wps_type(id,wpsMode)
+			if(not ret)
+				then
+				tz_answer["setwpsMode"] = false
+			end
+	end		
+	
 	if(nil ~= wpsPin)
 	 then
 	    if(0 == wpsPin)
@@ -2015,23 +2026,12 @@ function set_wpsSet()
     end
 	
 	if(nil ~= wpsEnble)
-	 then
-		if(1 == wpsEnble)
-		 then
-	       ret = wifi.wifi_enable_wps_pbc(id)
-		    if(not ret)
-			  then
-			  tz_answer["enablewps"] = false
-		    end
-		elseif(0 == wpsEnble)
 		  then
-			ret = wifi.wifi_disable_wps_pbc(id)
-			 print(ret)
+			ret = wifi.wifi_set_wps_switch(id,wpsEnble)
 			  if(not ret)
 		        then
 			     tz_answer["disablewps"] = false
-              end
-	   end
+	   		end
 	end
 	
 	wifi.wifi_restart(id)
