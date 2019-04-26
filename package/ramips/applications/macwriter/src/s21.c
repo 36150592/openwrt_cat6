@@ -101,10 +101,88 @@ static void imei_handle(char* get_buf, char* set_buf)
 	}
 }
 
+static void mac_rule_calc(const char* source_mac,char* target_mac, int offset)
+{
+	strcpy(target_mac, source_mac);
+	int s_number = target_mac[9] - '0';
+	int t_number = (s_number + offset) % 16;
+	target_mac[9] = '0' + t_number;
+}
+
+static void set_mac(const char* mac_name, const char* mac_addr)
+{
+	char cmdline[64] = "";
+	char t_mac[24] = "";
+
+	strcpy(t_mac, mac_addr);
+	t_mac[2] = 0;
+	t_mac[5] = 0;
+	t_mac[8] = 0;
+	t_mac[11] = 0;
+	t_mac[14] = 0;
+	t_mac[17] = 0;
+
+	sprintf(cmdline,"eth_mac w %s %s %s %s %s %s %s", mac_name, t_mac, t_mac+3, t_mac+6, t_mac+9, t_mac+12, t_mac+15);
+	system(cmdline);
+
+}
+
+static void mac_handle(char* get_buf, char* set_buf)
+{
+	char t_receive_buf[128] = "";
+	//get 2.4g wifi mac
+	if(strlen(get_buf) < 5)
+	{
+		read_memory("eth_mac r wlan",t_receive_buf, sizeof(t_receive_buf));
+		util_strip_traling_spaces(t_receive_buf);
+		if(strlen(t_receive_buf) < 17)
+		{
+			strcpy(set_buf, "fail: read wifi mac fail\n");
+		}
+		else
+		{
+			sprintf(set_buf, "%s fail\n",t_receive_buf);
+		}
+	}
+	else
+	{
+		// set 2.4g mac , 5.8g mac, lan mac, wan mac
+		char wifi_24g_mac[24] = "";
+		char wifi_58g_mac[24] = "";
+		char lan_mac[24] = "";
+		char wan_mac[24] = "";
+		int i = 0;
+		if(strlen(get_buf) < 21)
+		{
+			strcpy(set_buf, "fail: mac error format\n");
+			return ;
+		}
+
+		for(i = 0; i < 17; i ++)
+		{
+			wifi_24g_mac[i] = get_buf[4+i];
+		}
+
+		mac_rule_calc(wifi_24g_mac, wifi_58g_mac, 4);
+		mac_rule_calc(wifi_24g_mac, lan_mac, 8);
+		mac_rule_calc(wifi_24g_mac, wan_mac, 12);
+
+		set_mac("wlan", wifi_24g_mac);
+		set_mac("wlan_5g", wifi_58g_mac);
+		set_mac("lan", lan_mac);
+		set_mac("wan", wan_mac);
+
+		strcpy(set_buf, "ok\n");
+
+	}
+}
+
 int s21_precess(char* receive_buf, char* send_message)
 {
 	if(strstr(receive_buf,"imei"))
 		imei_handle(receive_buf,send_message);
+	if(strstr(receive_buf,"mac"))
+		mac_handle(receive_buf,send_message);
 	else
 		return FALSE;
 }
