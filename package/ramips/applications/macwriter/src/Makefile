@@ -1,5 +1,5 @@
 EXEC=macwriter  
-SRC=macwriter.c cmdlib.c des.c des3.c
+SRC=macwriter.c cmdlib.c des.c des3.c utility.c s21.c
 
 all: $(EXEC)
 

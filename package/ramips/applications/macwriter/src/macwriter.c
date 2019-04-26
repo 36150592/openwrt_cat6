@@ -16,14 +16,8 @@
 #include <netdb.h>
 #include "des3.h"
 #include "des.h"
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
+#include "utility.h"
+#include "s21.h"
 
 #ifndef __i386__
 //WEXITSTATUS(status) 当WIFEXITED返回非零值时，我们可以用这个宏来提取子进程的返回值，如果子进程调用exit(5)退出，
@@ -45,8 +39,18 @@ static unsigned char socket_receive_buffer_backup[ SOCKET_BUFFER_SIZE+SOCKET_BUF
 //进行数据发送的buffer
 static char socket_send_buffer[ SOCKET_BUFFER_SIZE+SOCKET_BUFFER_SIZE ];
 
+
+//device type
+typedef enum{
+	DEVICE_S21,
+	DEVICE_NONE,
+}DEVICE_TYPE;
+
+int device_type;
+
 //可用密钥的数目
 #define AVAILABLE_KEY_COUNT 5
+
 
 //初始密钥
 static const unsigned char sys_initial_key[24]=
@@ -178,6 +182,8 @@ void execute_cmd( int socket_fd,char* received_buffer )
 	FILE *stream;
 	int error_code;
 
+	int had_been_process = FALSE;
+
 	memset( socket_send_buffer,0,sizeof(socket_send_buffer) );
 
 	printf(received_buffer);
@@ -247,92 +253,101 @@ void execute_cmd( int socket_fd,char* received_buffer )
 	The pclose() function returns -1 if wait4(2) returns an error, or some other error is detected.
 	*/
 	//run reset do not in popen
-	if(strcmp( received_buffer, MAC_RESTORE_COMMAND ) == 0)
+
+	//check the device type
+	/*
+	if == s21
+	in s21.c
+	*/
+
+	if(device_type == DEVICE_S21)
+		had_been_process = s21_precess(received_buffer, socket_send_buffer);
+	else
+		had_been_process = FALSE;
+
+	if(had_been_process == FALSE)
 	{
-		printf("execute_cmd MAC_RESTORE_COMMAND\n");
-		send( socket_fd,"\r\n\r\n",strlen("\r\n\r\n"),0 );
-		system("sleep 1; killall dropbear uhttpd; sleep 1; jffs2reset -y && reboot");
-		return;
-	}
-	
-	stream = popen(received_buffer, "r");
-	if(stream != NULL)
-	{
-		memset( socket_send_buffer,0,sizeof( socket_send_buffer ) );
-		fread( socket_send_buffer,sizeof(char),sizeof(socket_send_buffer),stream );
-		error_code=pclose(stream);
-		/*
-		3、man中对于system的说明
-
-		RETURN VALUE
-			   The value returned is -1 on error (e.g.  fork() failed), and the return
-			   status  of  the command otherwise.  This latter return status is in the
-			   format specified in wait(2).  Thus, the exit code of the  command  will
-			   be  WEXITSTATUS(status).   In  case  /bin/sh could not be executed, the
-			   exit status will be that of a command that does exit(127).
-		看得很晕吧？
-
-		system函数对返回值的处理，涉及3个阶段：
-		阶段1：创建子进程等准备工作。如果失败，返回-1。
-		阶段2：调用/bin/sh拉起shell脚本，如果拉起失败或者shell未正常执行结束（参见备注1），原因值被写入到status的低8~15比特位中。system的man中只说明了会写了127这个值，但实测发现还会写126等值。
-		阶段3：如果shell脚本正常执行结束，将shell返回值填到status的低8~15比特位中。
-		备注1：
-		只要能够调用到/bin/sh，并且执行shell过程中没有被其他信号异常中断，都算正常结束。
-		比如：不管shell脚本中返回什么原因值，是0还是非0，都算正常执行结束。即使shell脚本不存在或没有执行权限，也都算正常执行结束。
-		如果shell脚本执行过程中被强制kill掉等情况则算异常结束。
-
-		如何判断阶段2中，shell脚本是否正常执行结束呢？系统提供了宏：WIFEXITED(status)。如果WIFEXITED(status)为真，则说明正常结束。
-		如何取得阶段3中的shell返回值？你可以直接通过右移8bit来实现，但安全的做法是使用系统提供的宏：WEXITSTATUS(status)。
-
-
-		由于我们一般在shell脚本中会通过返回值判断本脚本是否正常执行，如果成功返回0，失败返回正数。
-		所以综上，判断一个system函数调用shell脚本是否正常结束的方法应该是如下3个条件同时成立：
-		（1）-1 != status
-		（2）WIFEXITED(status)为真
-		（3）0 == WEXITSTATUS(status)
-
-		注意：
-		根据以上分析，当shell脚本不存在、没有执行权限等场景下时，以上前2个条件仍会成立，此时WEXITSTATUS(status)为127，126等数值。
-		所以，我们在shell脚本中不能将127，126等数值定义为返回值，否则无法区分中是shell的返回值，还是调用shell脚本异常的原因值。shell脚本中的返回值最好多1开始递增。
-
-		*/
-		if( error_code == -1 )
+		print("popen: %s\n\n",received_buffer);
+		stream = popen(received_buffer, "r");
+		if(stream != NULL)
 		{
-			sprintf(socket_send_buffer+strlen( socket_send_buffer )
-					,"\n\r\nERR CODE:%d\r\n"
-					,-1
-					);
-		}
-		//命令非正常结束
-		else if( !WIFEXITED( error_code ) )
-		{
-			sprintf(socket_send_buffer+strlen( socket_send_buffer )
-					,"\n\r\nERR CODE:%d\r\n"
-					,-1
-					);
-		}
-		//WIFEXITED(status) 这个宏用来指出子进程是否为正常退出的，如果是，它会返回一个非零值。
-		//进程正常退出
-		else if( WIFEXITED( error_code ) )
-		{
-			//返回结果码,返回0,执行结束,返回其他,执行失败
-			sprintf(socket_send_buffer+strlen( socket_send_buffer )
-					,"\n\r\nERR CODE:%d\r\n"
-					,WEXITSTATUS( error_code )
-					);
+			memset( socket_send_buffer,0,sizeof( socket_send_buffer ) );
+			fread( socket_send_buffer,sizeof(char),sizeof(socket_send_buffer),stream );
+			error_code=pclose(stream);
+			/*
+			3、man中对于system的说明
+
+			RETURN VALUE
+				   The value returned is -1 on error (e.g.  fork() failed), and the return
+				   status  of  the command otherwise.  This latter return status is in the
+				   format specified in wait(2).  Thus, the exit code of the  command  will
+				   be  WEXITSTATUS(status).   In  case  /bin/sh could not be executed, the
+				   exit status will be that of a command that does exit(127).
+			看得很晕吧？
+
+			system函数对返回值的处理，涉及3个阶段：
+			阶段1：创建子进程等准备工作。如果失败，返回-1。
+			阶段2：调用/bin/sh拉起shell脚本，如果拉起失败或者shell未正常执行结束（参见备注1），原因值被写入到status的低8~15比特位中。system的man中只说明了会写了127这个值，但实测发现还会写126等值。
+			阶段3：如果shell脚本正常执行结束，将shell返回值填到status的低8~15比特位中。
+			备注1：
+			只要能够调用到/bin/sh，并且执行shell过程中没有被其他信号异常中断，都算正常结束。
+			比如：不管shell脚本中返回什么原因值，是0还是非0，都算正常执行结束。即使shell脚本不存在或没有执行权限，也都算正常执行结束。
+			如果shell脚本执行过程中被强制kill掉等情况则算异常结束。
+
+			如何判断阶段2中，shell脚本是否正常执行结束呢？系统提供了宏：WIFEXITED(status)。如果WIFEXITED(status)为真，则说明正常结束。
+			如何取得阶段3中的shell返回值？你可以直接通过右移8bit来实现，但安全的做法是使用系统提供的宏：WEXITSTATUS(status)。
+
+
+			由于我们一般在shell脚本中会通过返回值判断本脚本是否正常执行，如果成功返回0，失败返回正数。
+			所以综上，判断一个system函数调用shell脚本是否正常结束的方法应该是如下3个条件同时成立：
+			（1）-1 != status
+			（2）WIFEXITED(status)为真
+			（3）0 == WEXITSTATUS(status)
+
+			注意：
+			根据以上分析，当shell脚本不存在、没有执行权限等场景下时，以上前2个条件仍会成立，此时WEXITSTATUS(status)为127，126等数值。
+			所以，我们在shell脚本中不能将127，126等数值定义为返回值，否则无法区分中是shell的返回值，还是调用shell脚本异常的原因值。shell脚本中的返回值最好多1开始递增。
+
+			*/
+			if( error_code == -1 )
+			{
+				sprintf(socket_send_buffer+strlen( socket_send_buffer )
+						,"\n\r\nERR CODE:%d\r\n"
+						,-1
+						);
+			}
+			//命令非正常结束
+			else if( !WIFEXITED( error_code ) )
+			{
+				sprintf(socket_send_buffer+strlen( socket_send_buffer )
+						,"\n\r\nERR CODE:%d\r\n"
+						,-1
+						);
+			}
+			//WIFEXITED(status) 这个宏用来指出子进程是否为正常退出的，如果是，它会返回一个非零值。
+			//进程正常退出
+			else if( WIFEXITED( error_code ) )
+			{
+				//返回结果码,返回0,执行结束,返回其他,执行失败
+				sprintf(socket_send_buffer+strlen( socket_send_buffer )
+						,"\n\r\nERR CODE:%d\r\n"
+						,WEXITSTATUS( error_code )
+						);
+			}
+			else
+			{
+				sprintf(socket_send_buffer+strlen( socket_send_buffer )
+						,"\n\r\nERR CODE:%d\r\n"
+						,-1
+						);
+			}
 		}
 		else
 		{
-			sprintf(socket_send_buffer+strlen( socket_send_buffer )
-					,"\n\r\nERR CODE:%d\r\n"
-					,-1
-					);
+			socket_send_buffer[0] = '\0';
 		}
 	}
-	else
-	{
-		socket_send_buffer[0] = '\0';
-	}
+	
 
 	//如果接收的数据长度大于1,直接返回命令的结果,否则返回一个空格
 	if( strlen( socket_send_buffer ) )
@@ -357,6 +372,18 @@ int main(int argc,char **argv)
 	int socket_fd;
 	int new_accepted_socket_fd;
 	int socket_result;
+
+	char receive_cmd[32] = "";
+	read_memory("cat /version | grep type | awk -F '=' '{print $2}'", receive_cmd, sizeof(receive_cmd));
+	if(strstr(receive_cmd,"s21"))
+	{
+		device_type = DEVICE_S21;
+	}
+	else
+	{
+		device_type = DEVICE_NONE;
+	}
+
 
 	//清空数据读取buffer
 	bzero( socket_receive_buffer,sizeof(socket_receive_buffer) );
