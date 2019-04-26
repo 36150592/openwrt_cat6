@@ -378,6 +378,7 @@ int main(int argc,char **argv)
 	if(strstr(receive_cmd,"s21"))
 	{
 		device_type = DEVICE_S21;
+		print("this is s21");
 	}
 	else
 	{

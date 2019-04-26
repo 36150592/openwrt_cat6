@@ -46,21 +46,24 @@ static void imei_handle(char* get_buf, char* set_buf)
 		if(strlen(t_receive_buf) < 30)
 		{
 			strcpy(set_buf, "fail: imei is error");
+			print("fail: imei is error");
 			return ;
 		}
-		bm_format_imei_to_regular_imei(imei_in_modem, t_receive_buf);
+		bm_format_imei_to_regular_imei(t_receive_buf, imei_in_modem);
 
 		memset(t_receive_buf, 0, sizeof(t_receive_buf));
 		read_memory("eth_mac g imei",t_receive_buf, sizeof(t_receive_buf));
 		util_strip_traling_spaces(t_receive_buf);
 
-		if (strncmp (t_receive_buf, imei_in_modem, 15) == 0)
+		if (strncmp(t_receive_buf, imei_in_modem, 15) == 0)
 		{
-			sprintf(set_buf, "%s fail", t_receive_buf);
+			sprintf(set_buf, "%s", t_receive_buf);
 		}
 		else
 		{
 			sprintf(set_buf, "%s %s no same", t_receive_buf, imei_in_modem);
+			print("fail: factory.bin imei = %s\n", t_receive_buf);
+			print("fail: imei in modem = %s\n", imei_in_modem);
 		}
 	}
 	else
@@ -152,7 +155,7 @@ static void mac_handle(char* get_buf, char* set_buf)
 		char lan_mac[24] = "";
 		char wan_mac[24] = "";
 		int i = 0;
-		if(strlen(get_buf) < 21)
+		if(strlen(get_buf) < 38)
 		{
 			strcpy(set_buf, "fail: mac error format\n");
 			return ;
@@ -162,6 +165,8 @@ static void mac_handle(char* get_buf, char* set_buf)
 		{
 			wifi_24g_mac[i] = get_buf[4+i];
 		}
+
+		//print("");
 
 		mac_rule_calc(wifi_24g_mac, wifi_58g_mac, 4);
 		mac_rule_calc(wifi_24g_mac, lan_mac, 8);
@@ -179,10 +184,13 @@ static void mac_handle(char* get_buf, char* set_buf)
 
 int s21_precess(char* receive_buf, char* send_message)
 {
+	print("in s21_precess\n");
 	if(strstr(receive_buf,"imei"))
 		imei_handle(receive_buf,send_message);
-	if(strstr(receive_buf,"mac"))
+	else if(strstr(receive_buf,"mac"))
 		mac_handle(receive_buf,send_message);
 	else
 		return FALSE;
+
+	return TRUE;
 }
