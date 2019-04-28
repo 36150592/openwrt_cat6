@@ -388,31 +388,45 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
    struct gobi_qmimux_hdr *hdr;
 
    skb->dev = priv->real_dev;
-  
-   if(dev->type == ARPHRD_ETHER)
+   if(dev->type == ARPHRD_ETHER)  //net card type is ETHERNET. commented by qiao 2019.4.24
    {
       NETDBG("Remove ETH Header\n");
       NetHex (skb->data, skb->len);
-      skb_pull(skb,ETH_HLEN);
-      hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));
-      len = skb->len - sizeof(struct gobi_qmimux_hdr);
+      skb_pull(skb,ETH_HLEN);  //remove first 14 bit ethernet header. commented by qiao 2019.4.24
+      //gobi_skb_push--remove first 14 bit ethernet header . commented by qiao 2019.4.24
+      hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));       
+      len = skb->len - sizeof(struct gobi_qmimux_hdr); //len == qcmap padding length. commented by qiao 2019.4.24
    }
    else
    {
-	   NETDBG("raw ip mode.\n");
-       hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));
-       NetHex (skb->data, skb->len);
+      hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));
    }
    hdr->pad = 0;
-   hdr->mux_id = priv->mux_id;
-   hdr->pkt_len = cpu_to_be16(len);
+   hdr->mux_id = priv->mux_id;  //private data including mux_id for the specific net card,. commented by qiao 2019.4.24
+   hdr->pkt_len = cpu_to_be16(len);//qcmap padding length
+   skb->dev = priv->real_dev;
    NETDBG("mux_id:0x%x\n",priv->mux_id);
+#if 0   
+   //why should check the hdr header you have settled before, commented by qiao 2019.4.24
+   if(iIsValidQmuxSKB(skb)==0)
+   {
+      NETDBG( "Invalid Packet\n" );
+      return NETDEV_TX_BUSY;
+   }
+   //skb length has settled before,fuck the first writer. commented by qiao 2019.4.24
+   skb = GobiNetDriverQmuxTxFixup( skb, GFP_ATOMIC,priv->mux_id); 
+   if (skb == NULL)
+   {
+      NETDBG( "unable to tx_fixup skb\n" );
+      return NETDEV_TX_BUSY;
+   }
+#endif
    dev->stats.tx_packets++;
    dev->stats.tx_bytes += skb->len;
    #if (LINUX_VERSION_CODE < KERNEL_VERSION( 4,7,0 ))
    dev->trans_start = jiffies;
    #else
-   netif_trans_update(dev);
+   netif_trans_update(dev); //No need to update jiffies in txq->trans_start twice
    #endif
    return dev_queue_xmit(skb);
 }
@@ -420,7 +434,7 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
 static const struct net_device_ops gobi_qmimux_netdev_ops = {
    .ndo_open       = gobi_qmimux_open,
    .ndo_stop       = gobi_qmimux_stop,
-   .ndo_start_xmit = gobi_qmimux_start_xmit,
+   .ndo_start_xmit = gobi_qmimux_start_xmit, //the subnet--bmwan* data trans start here. 
 };
 
 /*=========================================================================*/
@@ -8374,6 +8388,17 @@ void gobi_usb_autopm_put_interface_async(struct usb_interface *intf)
    usb_autopm_put_interface_async(intf);
 }
 
+static void qmimux_setup(struct net_device *dev)
+{
+	dev->header_ops      = NULL;  /* No header */
+	dev->type            = ARPHRD_NONE;
+	dev->hard_header_len = 0;
+	dev->addr_len        = 0;
+	dev->flags           = IFF_POINTOPOINT | IFF_NOARP | IFF_MULTICAST;
+	dev->netdev_ops      = &gobi_qmimux_netdev_ops;
+//	dev->needs_free_netdev = true;
+}
+
 struct net_device* gobi_qmimux_register_device(struct net_device *real_dev,int iNumber, u8 mux_id)
 {
    struct net_device *new_dev;
@@ -8389,12 +8414,13 @@ struct net_device* gobi_qmimux_register_device(struct net_device *real_dev,int i
    new_dev = alloc_netdev(sizeof(struct gobi_qmimux_priv),
                           szName, ether_setup);
    #endif
-   new_dev->netdev_ops = &gobi_qmimux_netdev_ops;
+ //  new_dev->netdev_ops = &gobi_qmimux_netdev_ops;
  //  new_dev->type            = ARPHRD_NONE;
-   new_dev->flags           = IFF_NOARP | IFF_MULTICAST;
-   random_ether_addr(new_dev->dev_addr);
+  // new_dev->flags           = IFF_NOARP | IFF_MULTICAST;
+  // random_ether_addr(new_dev->dev_addr);
    if (!new_dev)
       return NULL;
+   qmimux_setup(new_dev);
    priv = netdev_priv(new_dev);
    priv->mux_id = mux_id;
    priv->real_dev = real_dev;
@@ -8581,8 +8607,8 @@ int iNumberOfQmuxPacket(struct sk_buff *skb,int iDisplay)
    {
       //To Fix Incomming packet larger than expected.
       u32 length = skb->data[2];
-      length = (length<<8) + skb->data[3];
-      if(length==(skb->len-QMUX_HEADER_LENGTH))
+      length = (length<<8) + skb->data[3];//length=qcmap length hdr->pkt_len. commented by qiao 2019.04.24 
+      if(length==(skb->len-QMUX_HEADER_LENGTH))//hdr->pkt_len has setted before send. commented by qiao 2019.04.24
       {
          if(iIsValidQMAPHeaderInSKBData(skb,0)==1)
          {
