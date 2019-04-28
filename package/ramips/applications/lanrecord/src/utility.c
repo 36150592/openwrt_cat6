@@ -196,15 +196,20 @@ void print_lan_list(char* table_name, LAN_LIST_T* lan_list)
 #endif
 }
 
-void print_history_list(char* table_name, MAC_FLOW_LIST* lan_list)
+void print_history_list(char* table_name, LAN_LIST_T* lan_list)
 {
 #ifdef  DEBUG
 	log_info("\n******************************  %s  ******************************\n", table_name);
 	int i = 0;
 	for(i = 0; i < lan_list->cnt; i++)
 	{
-		log_info("%s\t|\t", lan_list->mac_flow_item[i].mac);
-		log_info("%d\t|\t", lan_list->mac_flow_item[i].flow);
+		log_info("%s\t|\t", lan_list->list[i].mac);
+		log_info("%d\t|\t", lan_list->list[i].flow);
+		log_info("%s\t|\t", lan_list->list[i].hostname);
+		log_info("%s\t|\t", lan_list->list[i].interface);
+		log_info("%s\t|\t", lan_list->list[i].expires);
+		log_info("%s\t|\t", lan_list->list[i].interface);
+		log_info("%s\t|\t", lan_list->list[i].ipaddr);
 		log_info("\n");
 	}
 #endif

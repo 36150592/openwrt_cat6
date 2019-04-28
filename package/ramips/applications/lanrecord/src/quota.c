@@ -3,13 +3,13 @@
 #define QUOTA_CHAIN "forwarding_rule"
 
 MAC_IP_MAP_LIST mac_ip_list;
-MAC_FLOW_LIST history_record_mac_flow_list;
+LAN_LIST_T history_record_mac_flow_list;
 
 void restore_quota()
 {
 	log_info("restore_quota\n");
 	memset(&mac_ip_list, 0, sizeof(MAC_IP_MAP_LIST));
-	memset(&history_record_mac_flow_list, 0, sizeof(MAC_FLOW_LIST));
+	memset(&history_record_mac_flow_list, 0, sizeof(LAN_LIST_T));
 	char *table = "filter";
 	struct xtc_handle *handle = NULL;
 	if (NULL == handle)
@@ -95,30 +95,59 @@ static int get_the_flow_depend_ip(char* ipaddr)
 
 }
 
-static void add_to_history_record(char* mac, int flow)
+static void add_to_history_record(LAN_ITEM_T* item, int flow)
 {
-	log_info("add_to_history_record %s %d\n", mac, flow);
+	log_info("add_to_history_record %s %d\n", item->mac, flow);
 	int i = 0;
 	for(i = 0; i < history_record_mac_flow_list.cnt; i++)
 	{
-		if(strcmp(history_record_mac_flow_list.mac_flow_item[i].mac, mac) == 0)
+		if(strcmp(history_record_mac_flow_list.list[i].mac, item->mac) == 0)
 			break;
 	}
 
 	// new record
 	if(i == history_record_mac_flow_list.cnt)
 	{
-		strcpy(history_record_mac_flow_list.mac_flow_item[history_record_mac_flow_list.cnt].mac, mac);
-		history_record_mac_flow_list.mac_flow_item[history_record_mac_flow_list.cnt].flow = flow;
+		log_info("new record to history list\n");
+		
+		strcpy(history_record_mac_flow_list.list[i].mac, item->mac);
+		strcpy(history_record_mac_flow_list.list[i].hostname, item->hostname);
+		strcpy(history_record_mac_flow_list.list[i].expires, item->expires);
+		strcpy(history_record_mac_flow_list.list[i].interface, item->interface);
+		strcpy(history_record_mac_flow_list.list[i].ipaddr, item->ipaddr);
+		strcpy(history_record_mac_flow_list.list[i].ssid, item->ssid);
+		history_record_mac_flow_list.list[i].flow = flow;
 		history_record_mac_flow_list.cnt++;
 	}
 	else
 	{
-		history_record_mac_flow_list.mac_flow_item[i].flow +=flow;
+		strcpy(history_record_mac_flow_list.list[i].expires, item->expires);
+		history_record_mac_flow_list.list[i].flow += flow;
 	}
+	
 }
 
+static void add_to_history_record2(char* mac, int flow)
+{
+	log_info("add_to_history_record2 %s %d\n", mac, flow);
+	int i = 0;
+	for(i = 0; i < history_record_mac_flow_list.cnt; i++)
+	{
+		if(strcmp(history_record_mac_flow_list.list[i].mac,mac) == 0)
+			break;
+	}
 
+	// new record
+	if(i == history_record_mac_flow_list.cnt)
+	{
+		log_info("error:cannot find mac");
+	}
+	else
+	{
+		history_record_mac_flow_list.list[i].flow += flow;
+		strcpy(history_record_mac_flow_list.list[i].expires, "*");
+	}
+}
 
 
 static int check_quota_rule(const char * ipaddr)
@@ -164,16 +193,18 @@ static int check_quota_rule(const char * ipaddr)
 
 }
 
-int check_item_exist(LAN_LIST_T* list, const char* ipaddr)
+LAN_ITEM_T* check_item_exist(LAN_LIST_T* list, const char* ipaddr)
 {
 	int i =0;
 	for(i = 0; i < list->cnt; i++)
 	{
 		if(strcmp(list->list[i].ipaddr, ipaddr) == 0)
-			return 1;
+		{
+			return &(list->list[i]);
+		}
 	}
 
-	return 0;
+	return NULL;
 
 }
 
@@ -343,7 +374,7 @@ static int rm_quota_rule_depend_ip(char* ipaddr)
 }
 
 
-void refresh_quota_rule(LAN_LIST_T* current_lan_list,MAC_FLOW_LIST* history_lan_list)
+void refresh_quota_rule(LAN_LIST_T* current_lan_list,LAN_LIST_T* history_lan_list)
 {	
 	int ret = 0;
 	int i = 0, j = 0;
@@ -372,16 +403,17 @@ void refresh_quota_rule(LAN_LIST_T* current_lan_list,MAC_FLOW_LIST* history_lan_
 		long long flow = get_the_flow_depend_ip(ip);
 
 		log_info("mac_ip_list mac = %s, flow = %d\n", mac, flow);
-		if(check_item_exist(current_lan_list, ip))
+		LAN_ITEM_T* item = NULL;
+		if((item = check_item_exist(current_lan_list, ip)) != NULL)
 		{
-			
-			add_to_history_record(mac,flow);
+			log_info("item mac= %s\n", item->mac);
+			add_to_history_record(item,flow - mac_ip_list.mac_ip[j].flow);
 			continue;
 		}
 
 		ret = rm_quota_rule_depend_ip(ip);
 		log_info("rm ret = %d\n", ret);
-		add_to_history_record(mac,flow);
+		add_to_history_record2(mac,flow - mac_ip_list.mac_ip[j].flow);
 	}
 
 	mac_ip_list.cnt = 0;
@@ -403,8 +435,15 @@ void refresh_quota_rule(LAN_LIST_T* current_lan_list,MAC_FLOW_LIST* history_lan_
 	history_lan_list->cnt = 0;
 	for(j = 0; j < history_record_mac_flow_list.cnt; j++)
 	{		
-		strcpy(history_lan_list->mac_flow_item[j].mac, history_record_mac_flow_list.mac_flow_item[j].mac);
-		history_lan_list->mac_flow_item[j].flow = history_record_mac_flow_list.mac_flow_item[j].flow;
+		LAN_ITEM_T * temp_item = &(history_record_mac_flow_list.list[j]);
+		strcpy(history_lan_list->list[j].mac, temp_item->mac);
+		strcpy(history_lan_list->list[j].hostname, temp_item->hostname);
+		strcpy(history_lan_list->list[j].expires, temp_item->expires);
+		strcpy(history_lan_list->list[j].interface, temp_item->interface);
+		strcpy(history_lan_list->list[j].ipaddr, temp_item->ipaddr);
+		strcpy(history_lan_list->list[j].ssid, temp_item->ssid);
+		history_lan_list->list[j].flow = temp_item->flow;
+		
 		history_lan_list->cnt++;
 	}
 	

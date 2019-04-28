@@ -644,7 +644,7 @@ void get_current_lan_list(LAN_LIST_T* current_lan_list )
 
 
 
-void read_history_lan_list(MAC_FLOW_LIST* history_lan_list)
+void read_history_lan_list(LAN_LIST_T* history_lan_list)
 {
 	log_info("read_history_lan_list\n");
 	FILE* fd;
@@ -659,15 +659,48 @@ void read_history_lan_list(MAC_FLOW_LIST* history_lan_list)
 	history_lan_list->cnt = 0;
 	while(fgets(buffer,256,fd) != NULL)
 	{
-		char *flow = strstr(buffer,"|");
-		log_info("buffer = %s", buffer, strlen(buffer));
-		strncpy(history_lan_list->mac_flow_item[i].mac, buffer, 17);
-		if(flow!= NULL)
-		{
-			history_lan_list->mac_flow_item[i].flow = atoi(flow+1);
-		}
-		log_info("mac = %s, flow = %d\n", history_lan_list->mac_flow_item[i].mac,
-										history_lan_list->mac_flow_item[i].flow);
+	
+		char *temp = NULL;
+		char *delim = " |";
+
+		temp = strtok(buffer, delim);
+		if(temp)
+			strcpy(history_lan_list->list[i].mac, temp);
+		
+		temp = NULL;
+		temp = strtok(NULL, delim);
+		if(temp)
+			strcpy(history_lan_list->list[i].ipaddr, temp);
+
+		temp = NULL;
+		temp = strtok(NULL, delim);
+		if(temp)
+			strcpy(history_lan_list->list[i].hostname, temp);
+
+		temp = NULL;
+		temp = strtok(NULL, delim);
+		if(temp)
+			strcpy(history_lan_list->list[i].interface, temp);
+
+		temp = NULL;
+		temp = strtok(NULL, delim);
+		if(temp)
+			strcpy(history_lan_list->list[i].ssid, temp);
+
+
+		temp = NULL;
+		temp = strtok(NULL, delim);
+		if(temp)
+			strcpy(history_lan_list->list[i].expires, temp);
+			
+		temp = NULL;
+		temp = strtok(NULL, delim);
+		log_info("read from file flow = %s\n", temp); 
+		if(temp)
+			history_lan_list->list[i].flow = atoi(temp);
+
+		log_info("mac = %s, flow = %d\n", history_lan_list->list[i].mac,
+										history_lan_list->list[i].flow);
 		history_lan_list->cnt++;
 		i++;
 	}
@@ -699,7 +732,7 @@ void echo_lan_list_to_file(LAN_LIST_T* lan_list, char* filename)
 	close(fd);
 }
 
-void echo_history_list_to_file(MAC_FLOW_LIST* lan_list, char* filename)
+void echo_history_list_to_file(LAN_LIST_T* lan_list, char* filename)
 {
 	int fd;
 	int i = 0;
@@ -711,12 +744,14 @@ void echo_history_list_to_file(MAC_FLOW_LIST* lan_list, char* filename)
 	{
 		return;
 	}
-	log_info("echo_lan_list_to_file\n");
+	log_info("echo_history_list_to_file\n");
 	
 	for(i = 0; i < lan_list->cnt; i++)
 	{
 		memset(shellcmd, 0, sizeof(shellcmd));
-		sprintf(shellcmd, "%s |%d\n",lan_list->mac_flow_item[i].mac, lan_list->mac_flow_item[i].flow);
+		sprintf(shellcmd, "%s |%s |%s |%s |%s |%s |%d\n",lan_list->list[i].mac, lan_list->list[i].ipaddr, lan_list->list[i].hostname,
+			lan_list->list[i].interface, lan_list->list[i].ssid, lan_list->list[i].expires, lan_list->list[i].flow);
+	
 		write(fd, shellcmd, strlen(shellcmd));
 	}
 

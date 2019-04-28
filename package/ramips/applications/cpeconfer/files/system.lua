@@ -1234,26 +1234,6 @@ function system_module.system_ntp_set_date(date_string)
 	return os.execute(string.format("date -s '%s' > /dev/null", date_string))
 end
 
-
-system_module.lanrecord_history_info = {
-		
-		["mac"] = nil,   -- string  the user mac
-		["flow"] = nil, -- number   the total flow which this mac use  in byte
-}
-
-
-function system_module.lanrecord_history_info:new(o,obj)
-	o = o or {}
-	setmetatable(o, self)
-	self.__index = self
-	if obj == nil then
-		return o
-	end
-		
-	self["mac"] = obj["mac"] or nil
-	self["flow"] = obj["flow"] or nil
-end
-
 system_module.lanrecord_current_info = {
 		
 		["mac"] = nil,   -- string  the user mac
@@ -1330,10 +1310,15 @@ function system_module.system_lanrecord_get_history_info()
 	 
 	 while nil ~= res
 	do
-		local info = system_module.lanrecord_history_info:new(nil,nil)
+		local info = system_module.lanrecord_current_info:new(nil,nil)
 		arr = split(res,' |')
 		info["mac"] = arr[1]
-		info["flow"] = tonumber(arr[2])
+		info["ipaddr"] = arr[2]
+		info["host_name"] = arr[3]
+		info["interface"] = arr[4]
+		info["ssid"] = arr[5]
+		info["lease_time"] = arr[6]
+		info["flow"] = tonumber(arr[7])
 		list[count] = info
 		count = count + 1
  		res = f:read()
