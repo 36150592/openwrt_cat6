@@ -23,11 +23,16 @@ struct Hosts
 	char mac[32];
 	char ip[64];
 	char host_name[64];
+	char leases_ex[24];    
 	int leases;
 	char addr_src;		//0:DHCP; 1:Static;
 	char if_type;		//0:Ethernet; 1:802.11;
 	char stat;			//0:inactive; 1:active;
+    char quota[24]; 	//bytes
 };
+
+
+
 
 typedef struct
 {
@@ -36,7 +41,10 @@ typedef struct
 } HostsInfo;
 
 WlanClientInfo wlan_client;
+
 HostsInfo host_info;
+HostsInfo history_host_info;
+
 typedef struct
 {
 	char Enable[8];
@@ -66,6 +74,12 @@ const char WPAEncryptionModes[3][3][64] = {
     {"CCMP", "AESEncryption", "11i"},
     {"TKIP CCMP", "TKIPandAESEncryption", "WPAand11i"}
 };
+
+typedef struct split_struct
+{
+    char *lp_string;
+    unsigned short length;
+} SPLIT_STRUCT, *LP_SPLIT_STRUCT;
 
 int restart_wifi(void *arg1, void *arg2)
 {
@@ -374,6 +388,148 @@ static int uci_mul_set_dhcp_param(const char * name, const char * option, char *
     }
     return FAULT_CODE_OK;
 }
+
+
+#define CURRENT_LAN_LIST "/tmp/.current_lan_list"
+#define HISTORY_LAN_LIST "/tmp/.history_lan_list"
+
+static unsigned short StringSplit(char *instr, char *tokken, LP_SPLIT_STRUCT lp_out_strs)
+{
+	char *st = instr;
+	char *ed = NULL;
+	int ind = 0;
+
+	if(!instr || !instr[0])
+		return 0;
+
+	ed = strstr(st, tokken);
+	while(ed != 0)
+	{
+		lp_out_strs[ind].lp_string = st;
+		lp_out_strs[ind].length = ed - st;
+
+		ind ++;
+		st = ed + strlen(tokken);
+		
+		ed = strstr(st, tokken);
+	}
+	lp_out_strs[ind].lp_string = st;
+	lp_out_strs[ind].length = strlen(st);
+
+	return ind + 1;
+}
+
+
+static int get_hosts_info_depend_file(HostsInfo *info, char* fileName)
+{
+	char info_buff[160*50] = "";
+	int fd;
+	if(!cmd_file_exist(fileName))
+	{
+		sleep(1);
+	}
+	memset(info, 0, sizeof(HostsInfo));
+	fd = open(fileName, O_RDWR);
+	if( fd == -1 )
+	{
+		return 0;
+	}
+
+	read(fd, info_buff, sizeof(info_buff));
+	//printf(">>>>>>>>>>>>>>>>>>>>>\n");
+	//printf(">>>>>>>>>>>>>>>>>>>>>\n");
+	//printf("%s\n", info_buff);
+	//printf(">>>>>>>>>>>>>>>>>>>>>\n");
+	//printf(">>>>>>>>>>>>>>>>>>>>>\n");
+	close(fd);
+
+	if(info_buff[0] == 0)
+		return 0;
+
+	char* linebegin;
+	char* linenext;
+	
+	char host_item[160];
+	linebegin = info_buff;
+	SPLIT_STRUCT mainStrings[50];
+	memset(mainStrings, 0, sizeof(SPLIT_STRUCT));
+	char tmp_string[64] = "";
+	while(1)
+	{
+		linenext = strstr(linebegin, "\n");
+		if(linenext)
+		{
+			memset(host_item, 0, sizeof(host_item));
+			strncpy(host_item, linebegin, linenext - linebegin);
+			//printf(">>>>>>line: %s\n", host_item);
+			int count = StringSplit(host_item, "|", mainStrings);
+			if(count > 5)
+			{
+				//1. mac
+				strncpy(info->host[info->count].mac, mainStrings[0].lp_string, mainStrings[0].length);
+				util_strip_blank_of_string_end(info->host[info->count].mac);
+				//printf("mac=%s\n",info->host[info->count].mac);
+				
+				//2. ip
+				strncpy(info->host[info->count].ip, mainStrings[1].lp_string, mainStrings[1].length);
+				util_strip_blank_of_string_end(info->host[info->count].ip);
+				//printf("ip=%s\n",info->host[info->count].ip);
+				
+				//3. hostname
+				strncpy(info->host[info->count].host_name, mainStrings[2].lp_string, mainStrings[2].length);
+				util_strip_blank_of_string_end(info->host[info->count].host_name);
+				//printf("hostname=%s\n",info->host[info->count].host_name);
+				
+				//4. interface
+				memset(tmp_string, 0, sizeof(tmp_string));
+				strncpy(tmp_string, mainStrings[3].lp_string, mainStrings[3].length);
+				util_strip_blank_of_string_end(tmp_string);
+				if(strcmp(tmp_string, "eth") == 0)
+				{
+					info->host[info->count].if_type = 0;
+				}
+				else
+				{
+					info->host[info->count].if_type = 1;
+				}
+				//printf("interface=%s\n",tmp_string);
+				
+				//5. lease time
+				strncpy(info->host[info->count].leases_ex, mainStrings[4].lp_string, mainStrings[4].length);
+				util_strip_blank_of_string_end(info->host[info->count].leases_ex);
+				//printf("leases=%s\n",info->host[info->count].leases);
+				
+				//6. quota
+				strncpy(info->host[info->count].quota, mainStrings[5].lp_string, mainStrings[5].length);
+				util_strip_blank_of_string_end(info->host[info->count].quota);
+				//printf("quota=%s\n",info->host[info->count].quota);
+
+				//7 stat
+				info->host[info->count].stat = 1;
+				
+				info->count++;
+
+				
+			}
+			
+		}
+		else
+			break;
+		linebegin = linenext+1;
+	}
+}
+
+
+int get_Hosts_Sta_Info(HostsInfo *info)
+{
+	return get_hosts_info_depend_file(info, CURRENT_LAN_LIST);
+}
+
+int get_History_Hosts_Sta_Info(HostsInfo *info)
+{
+	return get_hosts_info_depend_file(info, HISTORY_LAN_LIST);
+}
+
 
 
 int getHostsInfo(HostsInfo *info)
@@ -688,6 +844,144 @@ int cpe_get_igd_MACAddressOfHost(cwmp_t * cwmp, const char * name, char ** value
 
     return FAULT_CODE_OK;;
 }
+
+
+
+int cpe_get_igd_Quota(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int index = get_parameter_index((char *)name, "Host.", igd_entries.host_entry);
+    strcpy(param, host_info.host[index - 1].quota);
+    if(strlen(param) == 0)
+    	*value = NULL;
+    else
+    	*value = param;
+
+    return FAULT_CODE_OK;
+}
+
+int  cpe_refresh_igd_HostRecord(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
+{
+	get_Hosts_Sta_Info(&history_host_info);
+	igd_entries.history_host_entry = history_host_info.count;
+	cwmp_refresh_i_parameter(cwmp, param_node, igd_entries.history_host_entry);
+    cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg);
+	/*
+	int i = 0; 
+	for(i = 0; i < history_host_info.count; i++)
+	{
+		printf("[%d]--mac=%s\n",i, history_host_info.host[i].mac);
+		printf("[%d]--ip=%s\n",i, history_host_info.host[i].ip);
+		printf("[%d]--host_name=%s\n",i, history_host_info.host[i].host_name);
+		printf("[%d]--leases=%s\n",i, history_host_info.host[i].leases);
+		printf("[%d]--quota=%s\n",i, history_host_info.host[i].quota);
+	}
+    	*/
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_IPAddressRecord(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int index = get_parameter_index((char *)name, "HostRecord.", igd_entries.history_host_entry);
+    strcpy(param, history_host_info.host[index - 1].ip);
+    *value = param;
+
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_AddressSourceOfHostRecord(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int index = get_parameter_index((char *)name, "HostRecord.", igd_entries.history_host_entry);
+    if(history_host_info.host[index - 1].addr_src == 0)
+        strcpy(param, "DHCP");
+    else if(history_host_info.host[index - 1].addr_src == 1)
+        strcpy(param, "Static");
+    else
+        strcpy(param, "AutoIP");
+    *value = param;
+
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_LeaseTimeRemainingOfHostRecord(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int index = get_parameter_index((char *)name, "HostRecord.", igd_entries.history_host_entry);
+    strcpy(param, history_host_info.host[index - 1].leases_ex);
+    *value = param;
+
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_MACAddressOfHostRecord(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int index = get_parameter_index((char *)name, "HostRecord.", igd_entries.history_host_entry);
+    strcpy(param, history_host_info.host[index - 1].mac);
+    *value = param;
+
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_HostNameRecord(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int index = get_parameter_index((char *)name, "HostRecord.", igd_entries.history_host_entry);
+    strcpy(param, history_host_info.host[index - 1].host_name);
+    if(strlen(param) == 0)
+    	*value = NULL;
+    else
+    	*value = param;
+
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_InterfaceTypeRecord(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int index = get_parameter_index((char *)name, "HostRecord.", igd_entries.history_host_entry);
+    if(history_host_info.host[index - 1].if_type == 0)
+        strcpy(param, "Ethernet");
+    else if(history_host_info.host[index - 1].if_type == 1)
+        strcpy(param, "802.11");
+    else
+        strcpy(param, "Other");
+    *value = param;
+    
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_ActiveOfHostRecord(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int index = get_parameter_index((char *)name, "HostRecord.", igd_entries.history_host_entry);
+    if(history_host_info.host[index - 1].stat)
+    	strcpy(param, "true");
+    else
+    	strcpy(param, "false");
+    *value = param;
+
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_QuotaRecord(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    int index = get_parameter_index((char *)name, "HostRecord.", igd_entries.history_host_entry);
+    strcpy(param, history_host_info.host[index - 1].quota);
+    if(strlen(param) == 0)
+    	*value = NULL;
+    else
+    	*value = param;
+
+    return FAULT_CODE_OK;
+}
+int cpe_get_igd_HostNumberOfEntriesRecord(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+    sprintf(param, "%d", igd_entries.history_host_entry);
+    *value = param;
+    
+    return FAULT_CODE_OK;
+}
+
+
+
+
+
+
 
 int  cpe_refresh_igd_LANEthernetInterfaceConfig(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
 {
@@ -3127,7 +3421,7 @@ int cpe_set_igd_EncrypModeOfMultiSSID(cwmp_t *cwmp, const char *name, const char
     if(FAULT_CODE_OK != res){
         return res;
     }
-        cmd_touch(REBOOT_WIFI_MODULE);
+    cmd_touch(REBOOT_WIFI_MODULE);
     callback_reg(cwmp, restart_wifi, NULL, NULL);
 	return FAULT_CODE_OK;
 }
@@ -3290,42 +3584,49 @@ int cpe_get_igd_SecondDNSOfMultiSSID(cwmp_t * cwmp, const char * name, char ** v
 
 int cpe_set_igd_APNSwitchOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
-	char nv_name[16] = {0};
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-	index++;// 2 3
-	sprintf(nv_name,"tz_apn%d_enable", index);
-	if (strlen(value) != 0) {
-		nv_cfg_set(nv_name, value);
-	}
+
     return FAULT_CODE_OK;
 }
 
 int cpe_get_igd_APNSwitchOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-    strcpy(param, "0");
+    strcpy(param, "1");
     *value = param;
     return FAULT_CODE_OK;
 }
 
 int cpe_set_igd_ConfigNameOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
-	char nv_name[16] = {0};
+	int res = -1;
 	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-	index++;// 2, 3
-	sprintf(nv_name,"apn%d_profile_name", index);
-	if (strlen(value) != 0) {
-		nv_cfg_set(nv_name, value);
+    if(index == 1)
+	{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN1_PROFILE_NAME",value);
 	}
+	else{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN2_PROFILE_NAME",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 }
 
 int cpe_get_igd_ConfigNameOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	char nv_name[16] = {0};
-	int ret = -1;
+	int res = -1;
 	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-    strcpy(param, "");
-    *value = param;
+    if(index == 1)
+	{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN1_PROFILE_NAME",value);
+	}
+	else{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN2_PROFILE_NAME",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 
 }
@@ -3333,22 +3634,36 @@ int cpe_get_igd_ConfigNameOfMultiSSID(cwmp_t * cwmp, const char * name, char ** 
 int cpe_set_igd_APNNameOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
 	char nv_name[16] = {0};
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-	index++;// 2, 3
-	sprintf(nv_name,"apn%d_wan", index);
-	if (strlen(value) != 0) {
-		nv_cfg_set(nv_name, value);
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    if(index == 1)
+	{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN1_APN_NAME",value);
 	}
+	else{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN2_APN_NAME",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 }
 
 int cpe_get_igd_APNNameOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	char nv_name[16] = {0};
-	int ret = -1;
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-    strcpy(param, "");
-    *value = param;
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    if(index == 1)
+	{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN1_APN_NAME",value);
+	}
+	else{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN2_APN_NAME",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 
 }
@@ -3356,114 +3671,148 @@ int cpe_get_igd_APNNameOfMultiSSID(cwmp_t * cwmp, const char * name, char ** val
 int cpe_set_igd_UsernameOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
 	char nv_name[16] = {0};
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-	index++;// 2, 3
-	sprintf(nv_name,"apn%d_username", index);
-	if (strlen(value) != 0) {
-	   //	nv_cfg_set(nv_name, value);
-
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    if(index == 1)
+	{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN1_USERNAME",value);
 	}
+	else{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN2_USERNAME",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 }
 
 int cpe_get_igd_UsernameOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	char nv_name[16] = {0};
-	int ret = -1;
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-    strcpy(param, "");
-    *value = param;
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    if(index == 1)
+	{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN1_USERNAME",value);
+	}
+	else{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN2_USERNAME",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 }
 
 int cpe_set_igd_APNPasswordOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
-	char nv_name[16] = {0};
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-	index++;// 2, 3
-	sprintf(nv_name,"apn%d_passwd", index);
-	if (strlen(value) != 0) {
-		nv_cfg_set(nv_name, value);
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    if(index == 1)
+	{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN1_PASSWORD",value);
 	}
+	else{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN2_PASSWORD",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 }
 
 int cpe_get_igd_APNPasswordOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	char nv_name[16] = {0};
-	int ret = -1;
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-    strcpy(param, "");
-    *value = param;
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    if(index == 1)
+	{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN1_PASSWORD",value);
+	}
+	else{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN2_PASSWORD",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 }
 
 int cpe_set_igd_PDPTypeOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
-	char nv_name[16] = {0};
-	char nv_value[16] = {0};
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-	index++;// 2, 3
-	sprintf(nv_name,"apn%d_type", index);
-	if (strlen(value) != 0) {
-		switch (atoi(value)) {
-			case 1:
-				strcpy(nv_value, "IP");
-				break;
-			case 2:
-				strcpy(nv_value, "IPv6");
-				break;
-			case 3:
-				strcpy(nv_value, "IPv4v6");
-				break;
-			default:
-				cwmp_log_debug("Set PDP type error! value:%s\n", value);
-				return FAULT_CODE_9002;
-				break;
-		}
-		nv_cfg_set(nv_name, nv_value);
+
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    if(index == 1)
+	{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN1_IP_STACK_MODE",value);
 	}
+	else{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN2_IP_STACK_MODE",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 }
 
 int cpe_get_igd_PDPTypeOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	char nv_name[16] = {0};
-	int ret = -1;
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-    strcpy(param, "");
-    *value = param;
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    if(index == 1)
+	{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN1_IP_STACK_MODE",value);
+	}
+	else{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN2_IP_STACK_MODE",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 }
 
 int cpe_get_igd_ApnWanIpOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	char nv_name[16] = {0};
-	int ret = -1;
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-    strcpy(param, "");
-    *value = param;
-    return FAULT_CODE_OK;
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	char buff[128];
+	sprintf(buff,"ifconfig bmwan%d | grep \"inet addr\"|awk -F ':' '{print $2}'|awk '{print $1}'", index-1);
+	read_memory(buff,param,sizeof(param));
+	util_strip_traling_spaces(param);
+	*value = param;
+	return FAULT_CODE_OK;
+
 }
 
 int cpe_get_igd_ApnPrimaryDNSOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	char nv_name[16] = {0};
-	int ret = -1;
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-    strcpy(param, "");
-    *value = param;
-    return FAULT_CODE_OK;
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	char buff[128];
+	sprintf(buff,"cat /tmp/resolv.auto |grep nameserver|awk  '{print $2}'", index);
+	read_memory(buff,param,sizeof(param));
+	util_strip_traling_spaces(param);
+	*value = param;
+	return FAULT_CODE_OK;
 }
 
 int cpe_get_igd_ApnSecondDNSOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
 	char nv_name[16] = {0};
-	int ret = -1;
-	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
-    strcpy(param, "");
-    *value = param;
-    return FAULT_CODE_OK;
+    int res = -1;
+    int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+	char buff[128];
+	sprintf(buff,"cat /tmp/resolv.auto |grep nameserver|awk  '{print $2}'", index);
+	read_memory(buff,param,sizeof(param));
+	util_strip_traling_spaces(param);
+	*value = param;
+	return FAULT_CODE_OK;
 }
 
 

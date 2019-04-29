@@ -758,6 +758,7 @@ typedef struct
 	unsigned int dhcpstatic_entry;
     unsigned int wlan_client_entry;
 	unsigned int wps_device_entry;
+	unsigned int history_host_entry;
 } IGD_Entries;
 
 typedef struct

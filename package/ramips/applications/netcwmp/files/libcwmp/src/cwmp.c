@@ -72,7 +72,7 @@
 
 
 char param[1024];
-IGD_Entries igd_entries = {1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 10, 0};
+IGD_Entries igd_entries = {1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 10, 0, 0};
 Global_Vars glb_vars;
 
 static char SOAP_ENV[CWMP_NAME_MAX] = {0};

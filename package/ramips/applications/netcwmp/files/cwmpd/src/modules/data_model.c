@@ -98,7 +98,22 @@ model_func_t ModelFunction[] =
     {"cpe_get_IPAddress", cpe_get_IPAddress},
     {"cpe_get_AddressSourceOfHost", cpe_get_AddressSourceOfHost},
     {"cpe_get_LeaseTimeRemainingOfHost", cpe_get_LeaseTimeRemainingOfHost},
-    {"cpe_get_igd_MACAddressOfHost", cpe_get_igd_MACAddressOfHost},
+    {"cpe_get_igd_MACAddressOfHost", cpe_get_igd_MACAddressOfHost},    
+    {"cpe_get_igd_Quota", cpe_get_igd_Quota},    
+
+    {"cpe_get_igd_HostNumberOfEntriesRecord", cpe_get_igd_HostNumberOfEntriesRecord},
+    {"cpe_refresh_igd_HostRecord", cpe_refresh_igd_HostRecord},
+    {"cpe_get_IPAddressRecord", cpe_get_IPAddressRecord},
+    {"cpe_get_AddressSourceOfHostRecord", cpe_get_AddressSourceOfHostRecord},
+    {"cpe_get_LeaseTimeRemainingOfHostRecord", cpe_get_LeaseTimeRemainingOfHostRecord},
+    {"cpe_get_igd_MACAddressOfHostRecord", cpe_get_igd_MACAddressOfHostRecord},
+    {"cpe_get_igd_HostNameRecord", cpe_get_igd_HostNameRecord},
+    {"cpe_get_igd_InterfaceTypeRecord", cpe_get_igd_InterfaceTypeRecord},
+    {"cpe_get_igd_ActiveOfHostRecord", cpe_get_igd_ActiveOfHostRecord},
+    {"cpe_get_igd_QuotaRecord", cpe_get_igd_QuotaRecord},
+
+
+
 	{"cpe_get_igd_di_X_CMCC_PLMN", cpe_get_igd_di_X_CMCC_PLMN},
 	{"cpe_get_igd_di_X_CMCC_SignalQuality", cpe_get_igd_di_X_CMCC_SignalQuality},
 	{"cpe_get_igd_di_X_CMCC_RSSI", cpe_get_igd_di_X_CMCC_RSSI},

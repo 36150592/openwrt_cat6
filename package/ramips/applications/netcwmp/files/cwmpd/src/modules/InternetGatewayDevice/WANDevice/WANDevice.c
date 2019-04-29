@@ -308,7 +308,7 @@ int cpe_get_idg_Layer1DownstreamMaxBitRate(cwmp_t * cwmp, const char * name, cha
 
 int  cpe_refresh_X_TOZED_APN_PROFILE(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
 {
-	igd_entries.apn_entry = 3;
+	igd_entries.apn_entry = 1;
     cwmp_refresh_i_parameter(cwmp, param_node, igd_entries.apn_entry);
     cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg);
 
@@ -340,6 +340,86 @@ static int uci_apn_get_wifi_param(const char * name, const char * option, char *
         return FAULT_CODE_9005;
     }
     printf("jiangyibo %d\n",index);
+    return FAULT_CODE_OK;
+}
+
+static int uci_mul_apn_get_wifi_param(const char * name, const char * option, char ** value)
+{
+    int index;
+    int num;
+    char cmdbuf[64] = {0};
+    num = 4;
+    printf("jiangyibo %s\n",name);
+    index = get_parameter_index((char *)name, "APN.", 3);
+    
+    if (0 < index && index < num)
+    {
+        
+        sprintf(cmdbuf,"uci -q get tozed.modem.%s",option);
+        printf("jiangyibo 88 %s\n",cmdbuf);
+        read_memory(cmdbuf, param, sizeof(param));
+        printf("jiangyibo 88 %s\n",param);
+        util_strip_traling_spaces(param);
+        *value = param;
+    }
+    else
+    {   
+        return FAULT_CODE_9005;
+    }
+    printf("jiangyibo %d\n",index);
+    return FAULT_CODE_OK;
+}
+
+static int uci_apn_set_wifi_param(const char * name, const char * option, char * value)
+{
+    int index;
+    int num;
+    char cmdbuf[64] = {0};
+    num = 4;
+
+    index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", 3);
+	if(option==NULL||value==NULL)
+	{
+		return FAULT_CODE_OK;
+	}
+    
+    if (0 < index && index < num)
+    {
+      
+        sprintf(cmdbuf,"uci -q set tozed.modem.%s=%s&&uci -q commit tozed",option,value);
+        read_memory(cmdbuf, param, sizeof(param));
+    }
+    else
+    {   
+        return FAULT_CODE_9005;
+    }
+    return FAULT_CODE_OK;
+}
+
+
+static int uci_mul_apn_set_wifi_param(const char * name, const char * option, char * value)
+{
+    int index;
+    int num;
+    char cmdbuf[64] = {0};
+    num = 4;
+    printf("jiangyibo %s\n",name);
+    index = get_parameter_index((char *)name, "APN.", 3);
+	if(option==NULL||value==NULL)
+	{
+		return FAULT_CODE_OK;
+	}
+    
+    if (0 < index && index < num)
+    {
+      
+        sprintf(cmdbuf,"uci -q set tozed.modem.%s=%s&&uci -q commit tozed",option,value);
+        read_memory(cmdbuf, param, sizeof(param));
+    }
+    else
+    {   
+        return FAULT_CODE_9005;
+    }
     return FAULT_CODE_OK;
 }
 
@@ -479,7 +559,7 @@ int cpe_get_PPPUserNameOfAPN(cwmp_t * cwmp, const char * name, char ** value, po
 	if(index == 1)
 	{
 		res = uci_apn_get_wifi_param(name, "TZ_DIALTOOL2_PPP_USERNAME",value);
-	}else if(index == 1)
+	}else if(index == 2)
 	{
 		res = uci_apn_get_wifi_param(name, "TZ_MUTILAPN1_APN_NAME",value);
 	}

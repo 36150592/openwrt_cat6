@@ -179,7 +179,7 @@ void *allow_acs_ping_handler(void *param)
 						host, rt, ipv4);
 		return NULL;
 	}
-
+/*
 	sprintf(buff, "iptables -t nat -D PREROUTING -i eth0.2 -p icmp -s %s -j ACCEPT", ipv4);
 	system(buff);
 	cwmp_log_debug("allow_acs_ping_handler remove old rule: %s\n", buff);
@@ -187,7 +187,7 @@ void *allow_acs_ping_handler(void *param)
 	sprintf(buff, "iptables -t nat -I PREROUTING 1 -i eth0.2 -p icmp -s %s -j ACCEPT", ipv4);
 	system(buff);
 	cwmp_log_debug("allow_acs_ping_handler add new rule: %s\n", buff);
-
+*/
 	return NULL;
 }
 
