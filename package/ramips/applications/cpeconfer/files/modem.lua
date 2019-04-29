@@ -812,6 +812,7 @@ function modem_module.modem_set_lte_lock_cell(pci, earfcn)
 	then
 		x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_PCI_LOCK", pci)
 		x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_LTE_EARFCN_LOCK", earfcn)
+		os.execute("sendat -e at+bmpcilock=1,2,"..earfcn..","..pci)
 	else
 		debug("input error")
 		return false

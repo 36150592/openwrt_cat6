@@ -32,7 +32,6 @@
 #include <rt_mmap.h>
 #include <spi_api.h>
 #include <nand_api.h>
-
 DECLARE_GLOBAL_DATA_PTR;
 #undef DEBUG
 
@@ -887,6 +886,70 @@ __attribute__((nomips16)) void board_init_f(ulong bootflag)
 #define SEL_LOAD_BOOT_WRITE_FLASH       9
 
 
+
+static u32 skip_atoi(const char **s)
+{
+#define is_digit(c)	((c) >= '0' && (c) <= '9')
+	u32 i=0;
+
+	while (is_digit(**s))
+		i = i*10 + *((*s)++) - '0';
+	return i;
+}
+typedef int word_type __attribute__ ((mode (__word__)));
+
+int reset_4g_module()
+{
+	u32 value;
+	char *enable = getenv("reset4genable");
+	printf("enable = %s\n", enable);
+	if(strcmp(enable,"1") != 0)
+	{
+		printf("reset_4g_module: disable\n");
+		return 0;
+	}
+	char *port = getenv("reset4ggpio");
+	u32 port_number = skip_atoi(&port);
+	//u32 port_number = 8;
+	printf("port_number = %u\n", port_number);
+  //set spi/gpio share pin to gpio mode
+  value = 0;
+  value = le32_to_cpu(*(volatile u_long *)RT2880_GPIOMODE_REG);
+  value |= (1 << 1);
+  *(volatile u_long *)(RT2880_GPIOMODE_REG) = cpu_to_le32(value);
+
+  value = 0;
+  //Set Gpio pin 8 to output
+  value = le32_to_cpu(*(volatile u_long *)(RALINK_PIO_BASE + 0X24));
+  //printf("value = %u\n", value);
+  value |= (1 << port_number);
+    //printf("value = %u\n", value);
+  *(volatile u_long *)((RALINK_PIO_BASE + 0X24)) = cpu_to_le32(value);
+
+  //Set Gpio pin 8 to low
+  value = 0;
+  value = le32_to_cpu(*(volatile u_long *)(RALINK_PIO_BASE + 0X24));
+  //printf("value = %u\n", value);
+  value &= ~(1 << port_number);
+   //printf("value = %u\n", value);
+  *(volatile u_long *)(RALINK_PIO_BASE + 0X24) = cpu_to_le32(value);
+  
+  udelay(500000);
+  //Set Gpio pin 8 to high
+  value = 0;
+  value = le32_to_cpu(*(volatile u_long *)(RALINK_PIO_BASE + 0X24));
+  value |= (1 << port_number);
+  *(volatile u_long *)((RALINK_PIO_BASE + 0X24)) = cpu_to_le32(value);
+
+  value = 0;
+  value = le32_to_cpu(*(volatile u_long *)RT2880_GPIOMODE_REG);
+  value &= ~(1 << 1);
+  *(volatile u_long *)(RT2880_GPIOMODE_REG) = cpu_to_le32(value);
+
+  return 0;
+}
+
+
 void OperationSelect(void)
 {
 	printf("\nPlease choose the operation fengyz: \n");
@@ -1118,6 +1181,7 @@ int debug_mode(void)
 
 	return 0;
 }
+
 
 #define MAX_TRY_TIMES 3
 int check_image_validation(void)
@@ -1372,7 +1436,6 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 
 	//gd = id;
 	gd->flags |= GD_FLG_RELOC;	/* tell others: relocation done */
-
 	Init_System_Mode(); /*  Get CPU rate */
 
 #if defined(MT7628_ASIC_BOARD)	/* Enable WLED share pin */
@@ -1820,6 +1883,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	{
 	printf("============================================ \n");
 	printf("Ralink UBoot Version: %s\n", RALINK_LOCAL_VERSION);
+	printf("TZ Version: 2019-04-28\n");
 	printf("-------------------------------------------- \n");
 #ifdef RALINK_DUAL_CORE_FUN	
 	printf("%s %s %s %s\n", CHIP_TYPE, RALINK_REG(RT2880_CHIP_REV_ID_REG)>>16&0x1 ? "MT7621A" : "MT7621N", "DualCore", GMAC_MODE);
@@ -1954,6 +2018,10 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 #ifdef DUAL_IMAGE_SUPPORT
 	check_image_validation();
 #endif
+
+printf("reset 4g module\n");
+reset_4g_module();
+
 /*config bootdelay via environment parameter: bootdelay */
 	{
 	    char * s;
@@ -1961,13 +2029,13 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	    timer1 = s ? (int)simple_strtol(s, NULL, 10) : CONFIG_BOOTDELAY;
 	}
     
-    printf("please select your keyboad, fengyz \n");
+    printf("please select your keyboad \n");
     //udelay(500*10000);
    // if((my_tmp = tstc()) != 0)  
     {
            //if(getc() == 0x1B) //ESC
         {
-        printf("before OperationSelect, fengyz\n\n");
+        printf("before OperationSelect\n\n");
 	     OperationSelect();   
 	     while (timer1 > 0) 
              {
@@ -2286,7 +2354,7 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 			do_bootm(cmdtp, 0, 1, argv);
 			break;            
 		} /* end of switch */   
-
+		
 		do_reset(cmdtp, 0, argc, argv);
             }
 	 } /* end of else */

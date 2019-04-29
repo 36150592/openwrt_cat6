@@ -88,6 +88,12 @@ uchar default_environment[] = {
 #ifdef	CONFIG_ETHADDR
 	"ethaddr="	MK_STR(CONFIG_ETHADDR)		"\0"
 #endif
+#ifdef CONFIG_ETHADDR
+	"reset4ggpio="	MK_STR(CONFIG_4g_GPIO)		"\0"
+#endif
+#ifdef CONFIG_RESET_4G_MODULE
+	"reset4genable="	MK_STR(CONFIG_RESET_4G_MODULE)		"\0"
+#endif
 #ifdef	CONFIG_ETH1ADDR
 	"eth1addr="	MK_STR(CONFIG_ETH1ADDR)		"\0"
 #endif
