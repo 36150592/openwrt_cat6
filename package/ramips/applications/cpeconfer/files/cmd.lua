@@ -122,52 +122,6 @@ function firewall_set_static_route()
 
 end
 
-
-function firewall_get_lan_network()
-	local list = firewall.firewall_get_lan_network()
-
-	if nil == list 
-	then
-		print("nil list")
-		return
-	end
-
-	for k,v in pairs(list)
-	do
-		print(v)
-	end
-
-end
-
-function firewall_set_mutil_nat()
-	print("in firewall_set_mutil_nat")
-	local mutil_nat = {arg[2], arg[3],arg[4]}
-	local ret = firewall.firewall_set_mutil_nat(mutil_nat)
-
-	if ret
-	then
-		print("set success")
-	else
-		print("set fail")
-	end
-
-end
-
-function firewall_get_mutil_nat()
-	print("in firewall_get_mutil_nat")
-	local ret = firewall.firewall_get_mutil_nat(arg[2])
-
-	if 1 == ret
-	then
-		print(arg[2] .. " nat on")
-	elseif 0 == ret
-	then
-		print(arg[2] .. " nat off")
-	else
-		print("get error")
-	end
-end
-
 function firewall_remote_get_web_login()
 	print("in firewall_remote_get_web_login")
 	local ret = firewall.firewall_remote_get_web_login()
@@ -1010,9 +964,9 @@ end
 function modem_set_mutilapn_config()
 
 	local list = {
-{["profile_name"]="main_apn",["apn_name"]="",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
-{["profile_name"]="apn1",["apn_name"]="ctlte",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
-{["profile_name"]="apn2",["apn_name"]="ctnet",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
+{["profile_name"]="main_apn",["apn_name"]="",["nat"]="enable",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
+{["profile_name"]="apn1",["apn_name"]="ctlte",["nat"]="enable",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
+{["profile_name"]="apn2",["apn_name"]="ctnet",["nat"]="enable",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
 
 }
 
@@ -2463,9 +2417,6 @@ local api_func = {
 	["firewall_remote_get_ping"] = firewall_remote_get_ping,
 	["firewall_remote_get_ping_list"] = firewall_remote_get_ping_list,
 	["firewall_remote_set_ping_list"] = firewall_remote_set_ping_list,
-	["firewall_set_mutil_nat"] = firewall_set_mutil_nat,
-	["firewall_get_mutil_nat"] = firewall_get_mutil_nat,
-	["firewall_get_lan_network"] = firewall_get_lan_network,
 	["firewall_set_static_route"] = firewall_set_static_route,
 	["firewall_get_static_route"] = firewall_get_static_route,
 	["firewall_get_dmz"] = firewall_get_dmz,
