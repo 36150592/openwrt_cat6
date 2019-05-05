@@ -94,12 +94,25 @@ int restart_wifi(void *arg1, void *arg2)
 #define REBOOT_DNSMASQ_MODULE "/tmp/.reboot_dnsmasq_module"
 #endif
 
+#ifndef REBOOT_APN_MODULE
+#define REBOOT_APN_MODULE "/tmp/.reboot_apn_module"
+#endif
+
+
 int restart_dnsmasq(void *arg1,void *arg2)
 {
     if(cmd_file_exist(REBOOT_DNSMASQ_MODULE))
     {
         system("/etc/init.d/dnsmasq restart >/dev/null 2>&1");
         cmd_rm(REBOOT_FIREWALL_MODULE);
+    }
+}
+
+int restart_apn(void *arg1,void *arg2)
+{
+    if(cmd_file_exist(REBOOT_APN_MODULE))
+    {
+        //system("reboot");
     }
 }
 
@@ -391,7 +404,7 @@ static int uci_mul_set_dhcp_param(const char * name, const char * option, char *
 
 
 #define CURRENT_LAN_LIST "/tmp/.current_lan_list"
-#define HISTORY_LAN_LIST "/tmp/.history_lan_list"
+#define HISTORY_LAN_LIST "/etc/history_lan_list"
 
 static unsigned short StringSplit(char *instr, char *tokken, LP_SPLIT_STRUCT lp_out_strs)
 {
@@ -744,8 +757,8 @@ int cpe_get_igd_HostNumberOfEntries(cwmp_t * cwmp, const char * name, char ** va
 
 int  cpe_refresh_igd_Host(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
 {
-    //getHostsInfo(&host_info);
-    get_hosts_info(&host_info);
+    get_Hosts_Sta_Info(&host_info);
+//    get_hosts_info(&host_info);
     igd_entries.host_entry = host_info.count;
     cwmp_refresh_i_parameter(cwmp, param_node, igd_entries.host_entry);
     cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg);
@@ -861,7 +874,7 @@ int cpe_get_igd_Quota(cwmp_t * cwmp, const char * name, char ** value, pool_t * 
 
 int  cpe_refresh_igd_HostRecord(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
 {
-	get_Hosts_Sta_Info(&history_host_info);
+	get_History_Hosts_Sta_Info(&history_host_info);
 	igd_entries.history_host_entry = history_host_info.count;
 	cwmp_refresh_i_parameter(cwmp, param_node, igd_entries.history_host_entry);
     cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg);
@@ -3585,13 +3598,39 @@ int cpe_get_igd_SecondDNSOfMultiSSID(cwmp_t * cwmp, const char * name, char ** v
 int cpe_set_igd_APNSwitchOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
 
+	int res = -1;
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    if(index == 1)
+	{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN1_ENABLE",value);
+	}
+	else{
+		res = uci_mul_apn_set_wifi_param(name, "TZ_MUTILAPN2_ENABLE",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    cmd_touch(REBOOT_APN_MODULE);
+    callback_reg(cwmp, restart_apn, NULL, NULL);
     return FAULT_CODE_OK;
 }
 
 int cpe_get_igd_APNSwitchOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-    strcpy(param, "1");
-    *value = param;
+    
+	char nv_name[16] = {0};
+	int res = -1;
+	int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
+    if(index == 1)
+	{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN1_ENABLE",value);
+	}
+	else{
+		res = uci_mul_apn_get_wifi_param(name, "TZ_MUTILAPN2_ENABLE",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
     return FAULT_CODE_OK;
 }
 
@@ -3609,6 +3648,8 @@ int cpe_set_igd_ConfigNameOfMultiSSID(cwmp_t *cwmp, const char *name, const char
     if(FAULT_CODE_OK != res){
         return res;
     }
+    cmd_touch(REBOOT_APN_MODULE);
+    callback_reg(cwmp, restart_apn, NULL, NULL);
     return FAULT_CODE_OK;
 }
 
@@ -3795,7 +3836,7 @@ int cpe_get_igd_ApnPrimaryDNSOfMultiSSID(cwmp_t * cwmp, const char * name, char 
     int res = -1;
     int index = get_parameter_index((char *)name, "MultiSSID.", MAX_MULTI_SSID_COUNT);
 	char buff[128];
-	sprintf(buff,"cat /tmp/resolv.auto |grep nameserver|awk  '{print $2}'", index);
+	sprintf(buff,"cat /tmp/resolv.config.auto 2>/dev/null|grep nameserver|awk  '{print $2}'", index);
 	read_memory(buff,param,sizeof(param));
 	util_strip_traling_spaces(param);
 	*value = param;

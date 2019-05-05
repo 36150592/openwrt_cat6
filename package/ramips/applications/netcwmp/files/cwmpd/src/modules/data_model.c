@@ -708,6 +708,8 @@ model_func_t ModelFunction[] =
     {"cpe_set_PPPPasswdOfAPN", cpe_set_PPPPasswdOfAPN},
     {"cpe_get_AuthTypeOfAPN", cpe_get_AuthTypeOfAPN},
     {"cpe_set_AuthTypeOfAPN", cpe_set_AuthTypeOfAPN},
+    {"cpe_get_PDPTypeOfAPN", cpe_get_PDPTypeOfAPN},
+    {"cpe_set_PDPTypeOfAPN", cpe_set_PDPTypeOfAPN},    
 
     {"cpe_get_WANAccessType", cpe_get_WANAccessType},
     {"cpe_refresh_ConnectionOfWANCommonInterface", cpe_refresh_ConnectionOfWANCommonInterface},

@@ -348,6 +348,7 @@ static int uci_mul_apn_get_wifi_param(const char * name, const char * option, ch
     int index;
     int num;
     char cmdbuf[64] = {0};
+		char tempcmdbuf[64] = {0};
     num = 4;
     printf("jiangyibo %s\n",name);
     index = get_parameter_index((char *)name, "APN.", 3);
@@ -375,8 +376,10 @@ static int uci_apn_set_wifi_param(const char * name, const char * option, char *
     int index;
     int num;
     char cmdbuf[64] = {0};
+	char tempcmdbuf[64] = {0};
     num = 4;
 
+    printf("jiangyibo set apn %s %s\n",option,value);
     index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", 3);
 	if(option==NULL||value==NULL)
 	{
@@ -387,7 +390,7 @@ static int uci_apn_set_wifi_param(const char * name, const char * option, char *
     {
       
         sprintf(cmdbuf,"uci -q set tozed.modem.%s=%s&&uci -q commit tozed",option,value);
-        read_memory(cmdbuf, param, sizeof(param));
+        read_memory(cmdbuf, tempcmdbuf, sizeof(tempcmdbuf));
     }
     else
     {   
@@ -402,6 +405,7 @@ static int uci_mul_apn_set_wifi_param(const char * name, const char * option, ch
     int index;
     int num;
     char cmdbuf[64] = {0};
+	char tempcmdbuf[64] = {0};
     num = 4;
     printf("jiangyibo %s\n",name);
     index = get_parameter_index((char *)name, "APN.", 3);
@@ -414,7 +418,7 @@ static int uci_mul_apn_set_wifi_param(const char * name, const char * option, ch
     {
       
         sprintf(cmdbuf,"uci -q set tozed.modem.%s=%s&&uci -q commit tozed",option,value);
-        read_memory(cmdbuf, param, sizeof(param));
+        read_memory(cmdbuf, tempcmdbuf, sizeof(tempcmdbuf));
     }
     else
     {   
@@ -491,31 +495,15 @@ int cpe_set_CurrentProfileOfAPN(cwmp_t *cwmp, const char *name, const char *valu
 int cpe_get_ProfileNameOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {  
 	int res ;
-	int   index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", 3);
-	if(index == 1)
-	{
-		res = uci_apn_get_wifi_param(name, "TZ_DIALTOOL2_APN_NAME",value);
-	}else if(index == 1)
-	{
-		res = uci_apn_get_wifi_param(name, "TZ_MUTILAPN1_PROFILE_NAME",value);
-	}
-	else{
-		res = uci_apn_get_wifi_param(name, "TZ_MUTILAPN2_PROFILE_NAME",value);
-	}
-	
-    if(FAULT_CODE_OK != res){
-        return res;
-    }
-    return FAULT_CODE_OK;
+    strcpy(param, "mainapn");
+    *value = param;
+
+    return FAULT_CODE_OK;   
+
 }
 
 int cpe_set_ProfileNameOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {	
-	char config[64];
-    int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
-    sprintf(config, "TZ_APN_PROFILE_NAME%d", index);
-	set_single_config_attr(config, value);
-
 	return FAULT_CODE_OK;
 }
 
@@ -526,13 +514,13 @@ int cpe_get_APNNameOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_t
 	int   index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", 3);
 	if(index == 1)
 	{
-		res = uci_apn_get_wifi_param(name, "TZ_DIALTOOL2_PPP_USERNAME",value);
-	}else if(index == 1)
+		res = uci_apn_get_wifi_param(name, "TZ_DIALTOOL2_APN_NAME",value);
+	}else if(index == 2)
 	{
-		res = uci_apn_get_wifi_param(name, "TZ_MUTILAPN1_APN_NAME",value);
+		res = uci_apn_get_wifi_param(name, "TZ_DIALTOOL2_APN_NAME",value);
 	}
 	else{
-		res = uci_apn_get_wifi_param(name, "TZ_MUTILAPN2_APN_NAME",value);
+		res = uci_apn_get_wifi_param(name, "TZ_DIALTOOL2_APN_NAME",value);
 	}
 
     if(FAULT_CODE_OK != res){
@@ -544,9 +532,18 @@ int cpe_get_APNNameOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_t
 int cpe_set_APNNameOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {	
 	char config[64];
+	int res = -1;
     int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
-    sprintf(config, "TZ_CONFIG_APN_NAME%d", index);
-	set_single_config_attr(config, value);	
+    if(index == 1)
+	{
+		res = uci_apn_set_wifi_param(name, "TZ_DIALTOOL2_APN_NAME",value);
+	}
+	else{
+		res = uci_apn_set_wifi_param(name, "TZ_DIALTOOL2_APN_NAME",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
 
 	return FAULT_CODE_OK;
 }
@@ -575,10 +572,19 @@ int cpe_get_PPPUserNameOfAPN(cwmp_t * cwmp, const char * name, char ** value, po
 int cpe_set_PPPUserNameOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {	
 	char config[64];
+	int res = -1;
     int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
-    sprintf(config, "TZ_PPP_USERNAME%d", index);
-	set_single_config_attr(config, value);	
-	
+    if(index == 1)
+	{
+		res = uci_apn_set_wifi_param(name, "TZ_DIALTOOL2_PPP_USERNAME",value);
+	}
+	else{
+		res = uci_apn_set_wifi_param(name, "TZ_DIALTOOL2_PPP_USERNAME",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+
 	return FAULT_CODE_OK;
 }
 
@@ -606,10 +612,20 @@ int cpe_get_PPPPasswdOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool
 int cpe_set_PPPPasswdOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {	
 	char config[64];
+	int res = -1;
+	printf("jiangyibo set %s\n",name);
     int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
-    sprintf(config, "TZ_PPP_PASSWORD%d", index);
-	set_single_config_attr(config, value);	
-	
+    if(index == 1)
+	{
+		res = uci_apn_set_wifi_param(name, "TZ_DIALTOOL2_PPP_PASSWORD",value);
+	}
+	else{
+		res = uci_apn_set_wifi_param(name, "TZ_DIALTOOL2_PPP_PASSWORD",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+
 	return FAULT_CODE_OK;
 }
 
@@ -620,8 +636,8 @@ int cpe_get_AuthTypeOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_
 	int   index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", 3);
 	if(index == 1)
 	{
-		res = uci_apn_get_wifi_param(name, "TZ_MUTILAPN1_AUTH_TYPE",value);
-	}else if(index == 1)
+		res = uci_apn_get_wifi_param(name, "TZ_DIALTOOL2_PPP_AUTH_TYPE",value);
+	}else if(index == 2)
 	{
 		res = uci_apn_get_wifi_param(name, "TZ_MUTILAPN1_MTU",value);
 	}
@@ -638,12 +654,62 @@ int cpe_get_AuthTypeOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_
 int cpe_set_AuthTypeOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {	
 	char config[64];
+	int res = -1;
     int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
-    sprintf(config, "TZ_PPP_AUTH_TYPE%d", index);
-	set_single_config_attr(config, value);	
-	
-	return FAULT_CODE_OK;
+    if(index == 1)
+	{
+		res = uci_apn_set_wifi_param(name, "TZ_DIALTOOL2_PPP_AUTH_TYPE",value);
+	}
+	else{
+		res = uci_apn_set_wifi_param(name, "TZ_DIALTOOL2_PPP_AUTH_TYPE",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+
+    return FAULT_CODE_OK;
+
 }
 
+int cpe_get_PDPTypeOfAPN(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+
+		   int res ;
+	int   index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", 3);
+	if(index == 1)
+	{
+		res = uci_apn_get_wifi_param(name, "TZ_DIALTOOL2_IP_STACK_MODE",value);
+	}else if(index == 2)
+	{
+		res = uci_apn_get_wifi_param(name, "TZ_DIALTOOL2_IP_STACK_MODE",value);
+	}
+	else{
+		res = uci_apn_get_wifi_param(name, "TZ_DIALTOOL2_IP_STACK_MODE",value);
+	}
+
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_PDPTypeOfAPN(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
+{	
+	char config[64];
+	int res = -1;
+    int index = get_parameter_index((char *)name, "X_TGT_APN_PROFILE.", igd_entries.apn_entry);
+    if(index == 1)
+	{
+		res = uci_apn_set_wifi_param(name, "TZ_DIALTOOL2_IP_STACK_MODE",value);
+	}
+	else{
+		res = uci_apn_set_wifi_param(name, "TZ_DIALTOOL2_IP_STACK_MODE",value);
+	}    
+    if(FAULT_CODE_OK != res){
+        return res;
+    }
+
+	return FAULT_CODE_OK;
+}
 
 

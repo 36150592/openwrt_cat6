@@ -4778,8 +4778,8 @@ void read_wan_info(){
 	close(sock);
     }
 }
-/*
-void read_wan_info() {
+
+void read_wan_info_1() {
 
 	strcpy(wan_info.Enable, "1");
 	strcpy(wan_info.AddressingType, "DHCP");
@@ -4824,7 +4824,7 @@ void read_wan_info() {
 		strcat(pdns, dns);
 	}
 }
-*/
+
 int get_parameter_index(char *name, char *str, int max) {
 
 	char *p = strstr(name, str);
@@ -5992,7 +5992,7 @@ void load_params(void)
         read_imei_info( SYSTEM_INFO_STATIC,&system_version_info );
     }
 	
-	read_wan_info();
+	read_wan_info_1();
 	// read_ppp_users();
 
     // if( cmd_file_exist( RC_SYSTEM_CONFIG_FILE ) )
