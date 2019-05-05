@@ -12,6 +12,8 @@ local TOZED_UCI_SECTION="cfg"
 local TOZED_REMOTE_CONTROL_SECTION="remote_control"
 local TOZED_UCI_OPTION_STATIC_ROUTE="TZ_STATIC_ROUTE"
 local TOZED_DMZ_SECTION="dmz"
+local TOZED_ARP_BIND_SECTION="arp_bind"
+local TOZED_ARP_UCI_LIST="TZ_ARP_ITEM"
 
 local FIREWALL_MAC_FILTER_PREX="MAC-FILTER"
 local FIREWALL_URL_FILTER_PREX="URL-FILTER"
@@ -22,6 +24,7 @@ local FIREWALL_IP_MAC_BIND_FILTER_PREX="IP-MAC-BIND-FILTER"
 local FIREWALL_SPEED_LIMIT_FILTER_PREX="SPEED-LIMIT-FILTER"
 local FIREWALL_PORT_REDIRECT_PREX="PORT-REDIRECT"
 local FIREWALL_UCI_ZONE="zone"
+
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
@@ -1730,6 +1733,100 @@ function firewall_module.firewall_get_dmz()
 end
 
 
+-- get arp bind list
+-- input:none
+-- return:the array of struct ip_mac_bind_filter
+function firewall_module.firewall_get_arp_bind_list()
+
+	local data = x:get(TOZED_CONFIG_FILE,TOZED_ARP_BIND_SECTION, TOZED_ARP_UCI_LIST)
+	local ipmac_list = {}
+	local j = 1
+	if nil == data
+	then
+		debug("execute get  mac filter cmd fail")
+		return nil
+	end
+
+
+
+	for i = 1, table.maxn(data)
+	do
+		
+		local array = split(data[i], "-")
+		local temp = firewall_module.ipmac_bind_filter:new(nil,nil)
+		if nil ~= string.find(array[1],"#")
+		then
+			local len = string.len(array[1])
+			temp["ipaddr"] = string.sub(array[1], 2, len)
+			temp["iswork"] = false
+		else
+			temp["ipaddr"] = array[1]
+			temp["iswork"] = true
+		end
+
+		temp["mac"] = array[2]
+		ipmac_list[j] = temp
+		j = j+1
+		
+
+	end
+
+	return ipmac_list
+end
+
+-- set arp bind list
+-- input:the array of struct ip_mac_bind_filter
+-- 		input example
+--[[
+local macs={
+		{["mac"]='aa:bb:cc:11:22:33', ["ipaddr"]='192.168.2.1', ["iswork"]=true},
+		{["mac"]='aa:bb:cc:11:22:34', ["ipaddr"]='192.168.2.2', ["iswork"]=false}
+		}
+]]--
+-- return true if success false if fail
+-- note : restart system to take effect
+function firewall_module.firewall_set_arp_bind_list(filter_list)
+
+	if type(filter_list) ~= 'table'
+	then
+		debug("filter list is empty or not a table")
+		return false
+	end
+
+
+	if table.maxn(filter_list) <= 0
+	then
+		x:delete(TOZED_CONFIG_FILE,TOZED_ARP_BIND_SECTION, TOZED_ARP_UCI_LIST)
+		return x:commit(TOZED_CONFIG_FILE)
+	end
+
+	x:delete(TOZED_CONFIG_FILE,TOZED_ARP_BIND_SECTION, TOZED_ARP_UCI_LIST)
+	x:set(TOZED_CONFIG_FILE,TOZED_ARP_BIND_SECTION,"value")
+
+	local list = {}
+	local i = 1
+	for i=1,table.maxn(filter_list)
+	do
+		local temp = filter_list[i]
+		if check_ip(temp["ipaddr"]) and check_mac(temp["mac"]) 
+		then	
+			local str = nil	
+			if temp["iswork"] == false
+			then
+				str = "#" .. temp["ipaddr"] .. "-" .. temp["mac"]
+			else
+				str =  temp["ipaddr"] .. "-" .. temp["mac"]
+			end
+			 
+			list[i] = str
+			i = i +1
+		end
+	end
+
+	x:set(TOZED_CONFIG_FILE,TOZED_ARP_BIND_SECTION, TOZED_ARP_UCI_LIST,list)
+	
+	return x:commit(TOZED_CONFIG_FILE)
+end
 
 
 

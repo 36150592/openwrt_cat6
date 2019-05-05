@@ -7,6 +7,7 @@ local TZ_REMOTE_LOGIN_LIST=`cfg -g  TZ_REMOTE_LOGIN_LIST --section remote_contro
 local TZ_REMOTE_PING=`cfg -g  TZ_REMOTE_PING --section remote_control`
 local TZ_REMOTE_PING_LIST=`cfg -g  TZ_REMOTE_PING_LIST --section remote_control`
 local TZ_DMZ_ENABLE=`cfg -g TZ_DMZ_ENABLE --section dmz`
+local TZ_ARP_LIST=`cfg -g TZ_ARP_ITEM --section arp_bind`
 if [ $REMOTE_MINI_HTTP_LISTEN_PORT'' == '' ];then
         REMOTE_MINI_HTTP_LISTEN_PORT=80
 fi
@@ -290,6 +291,24 @@ set_user_static_route(){
 
 } 
 
+arp_bind(){
+
+    for var  in $TZ_ARP_LIST
+    do
+	local en=${var:0:1}
+	local ip=${var%%-*}        
+	local mac=${var#*-}    
+	if [ $en == "#" ];then
+		continue
+	fi   
+#	echo ip=$ip
+#	echo mac=$mac
+	/sbin/arp -s $ip $mac
+    done
+
+}
+
+
 load_interface
 
 redirect_lan
@@ -312,6 +331,8 @@ if [ $TZ_DMZ_ENABLE"" == "1" ];then
 	set_dmz
 
 fi
+
+arp_bind
 
 echo -n 
 

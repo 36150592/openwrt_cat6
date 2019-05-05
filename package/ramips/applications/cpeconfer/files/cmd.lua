@@ -496,6 +496,43 @@ function firewall_set_ipmac_bind_filter()
 		end
 end
 
+function firewall_get_arp_bind()
+
+	print("in firewall_get_arp_bind")
+	local info = firewall.firewall_get_arp_bind_list()
+
+	if nil == info 
+	then
+		print("info is nil")
+		return
+	end
+
+	for k,v in pairs(info) do 
+			for key,value in pairs(v) do
+				print(key,"=",value)
+			end
+	end
+
+end
+
+
+
+function firewall_set_arp_bind()
+		print("in firewall_set_arp_bind")
+		local macs={
+		{["mac"]='aa:bb:cc:11:22:33', ["ipaddr"]='192.168.2.158', ["iswork"]=true},
+		{["mac"]='aa:bb:cc:11:22:34', ["ipaddr"]='192.168.2.159', ["iswork"]=true},
+		{["mac"]='aa:bb:cc:11:22:44', ["ipaddr"]='192.168.2.150', ["iswork"]=false},
+		}
+
+		if firewall.firewall_set_arp_bind_list(macs)
+		then
+			print("set success")
+		else
+			print("set fail")
+		end
+end
+
 
 function firewall_get_mac_filter()
 
@@ -2421,6 +2458,8 @@ local api_func = {
 	["firewall_get_static_route"] = firewall_get_static_route,
 	["firewall_get_dmz"] = firewall_get_dmz,
 	["firewall_set_dmz"] = firewall_set_dmz,
+	["firewall_get_arp_bind"] = firewall_get_arp_bind,
+	["firewall_set_arp_bind"] = firewall_set_arp_bind,
 
 	--led
 	["led_set_normal"] = led_set_normal,
