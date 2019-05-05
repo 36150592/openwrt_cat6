@@ -357,7 +357,7 @@ local function format_get_port_filter_cmd()
 	return string.format("cat %s | grep %s", FIREWALL_CUSTOM_CONFIG_FILE, FIREWALL_PORT_FILTER_PREX) 
 end
 
-
+-- port redirect cannot exist with dmz
 local function format_set_port_redirect_cmd(protocol,dest_addr,dest_port,dest_port_end,redirect_addr,redirect_port,comment)
 	if "all" == protocol
 	then
@@ -376,6 +376,40 @@ local function format_set_port_redirect_cmd(protocol,dest_addr,dest_port,dest_po
 									s["ifname"],dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end,count_index, FIREWALL_CUSTOM_CONFIG_FILE)
 					count_index = count_index +1
 					os.execute(cmd1 .. "  " .. cmd2)
+
+					local nat_lookback = nil
+					local pub_ip = nil
+					local pub_f = io.popen("ifconfig "..s['ifname'].."| grep 'inet addr' | awk '{print $2}' | awk -F':'  '{print $2}'")
+					
+					if pub_f == nil
+					then
+						print("pub_f is nil")
+					end
+					pub_ip = pub_f:read();
+					io.close(pub_f)
+
+					if s[".name"] == "4g"
+					then
+						nat_lookback=x:get(TOZED_CONFIG_FILE,"modem", "TZ_DIALTOOL2_NAT_LOOKBACK")
+					elseif s[".name"] == "4g1"
+					then
+						nat_lookback=x:get(TOZED_CONFIG_FILE,"modem", "TZ_MUTILAPN1_NAT_LOOKBACK")
+					elseif s[".name"]  == "4g2"
+					then
+						nat_lookback=x:get(TOZED_CONFIG_FILE,"modem", "TZ_MUTILAPN2_NAT_LOOKBACK")
+					end
+
+					if nat_lookback ~= "disable" and pub_ip ~= nil
+					then
+						local cmd3,cmd4
+						cmd3 = string.format("echo 'iptables -t nat -I PREROUTING  -i br-%s -d %s -p tcp --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##%d' >> %s ;",
+								 s["route_lan_section"],pub_ip,dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end, count_index,FIREWALL_CUSTOM_CONFIG_FILE)
+						count_index = count_index +1
+						cmd4 = string.format("echo 'iptables -t nat -I PREROUTING  -i br-%s -d %s -p udp --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##%d' >> %s ;",
+										s["route_lan_section"],pub_ip,dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end,count_index, FIREWALL_CUSTOM_CONFIG_FILE)
+						count_index = count_index +1
+						os.execute(cmd3 .. "  " .. cmd4)
+					end
 
 				end
 			end)
@@ -404,6 +438,38 @@ local function format_set_port_redirect_cmd(protocol,dest_addr,dest_port,dest_po
 								 s["ifname"], protocol, dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end,count_index,FIREWALL_CUSTOM_CONFIG_FILE)
 					count_index = count_index +1
 					os.execute(cmd)
+
+
+					local nat_lookback = nil
+					local pub_ip = nil
+					local pub_f = io.popen("ifconfig "..s['ifname'].."| grep 'inet addr' | awk '{print $2}' | awk -F':'  '{print $2}'")
+					pub_ip = pub_f:read();
+					if pub_f == nil
+					then
+						print("pub_f is nil")
+					end
+					io.close(pub_f)
+					
+					if s[".name"] == "4g"
+					then
+						nat_lookback=x:get(TOZED_CONFIG_FILE,"modem", "TZ_DIALTOOL2_NAT_LOOKBACK")
+					elseif s[".name"] == "4g1"
+					then
+						nat_lookback=x:get(TOZED_CONFIG_FILE,"modem", "TZ_MUTILAPN1_NAT_LOOKBACK")
+					elseif s[".name"]  == "4g2"
+					then
+						nat_lookback=x:get(TOZED_CONFIG_FILE,"modem", "TZ_MUTILAPN2_NAT_LOOKBACK")
+					end
+
+					if nat_lookback ~= "disable" and pub_ip ~= nil
+					then
+						local cmd3
+						cmd3 = string.format("echo 'iptables -t nat -I PREROUTING  -i br-%s -d %s -p %s --dport %s:%s -j DNAT --to %s:%s ##%s##%s##%s##%s##%s##%s##%s##%s##%d' >> %s ;",
+								 s["route_lan_section"],pub_ip,protocol,dest_port, dest_port_end, redirect_addr, redirect_port, FIREWALL_PORT_REDIRECT_PREX, protocol, "*", dest_port,redirect_addr, redirect_port, comment, dest_port_end, count_index,FIREWALL_CUSTOM_CONFIG_FILE)
+						count_index = count_index +1
+						
+						os.execute(cmd3)
+					end
 				end
 			end)
 			return ""

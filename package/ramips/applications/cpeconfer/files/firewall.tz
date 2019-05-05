@@ -182,11 +182,65 @@ turn_on_remote_ping(){
 
 set_dmz(){
 	
+#iptables -I PREROUTING -t nat -i  br-lan -d 10.23.16.11 -j DNAT --to-destination 192.168.2.111
+#iptables -I POSTROUTING -d 192.168.2.111  -j MASQUERADE
+
 	local host_ip=`cfg -g TZ_DMZ_HOST_IP --section dmz`	
+    [ $host_ip"" == "" ] && return 
     for wan in $wan_interfaces
 	do	
 		iptables -t nat -I PREROUTING -i $wan -j DNAT --to-destination $host_ip
 	done
+
+
+
+    for wan in $wan_sections
+    do
+        if [ $wan"" == "4g" ];then
+            local en=`cfg -g TZ_DIALTOOL2_NAT_LOOKBACK --section modem`
+            if [ $en"" != "disable" ];then
+                config_get ifname $wan ifname
+                config_get route_lan_section $wan route_lan_section
+                local ip=`ifconfig $ifname | grep "inet addr" | awk '{print $2}' | awk -F':'  '{print $2}'`
+
+                [ $ip"" == "" -o $route_lan_section"" == "" ] && continue
+
+                iptables -I PREROUTING -t nat -i  br-${route_lan_section} -d $ip -j DNAT --to-destination $host_ip 
+                #iptables -I POSTROUTING -t nat -d $host_ip -j MASQUERADE
+            fi
+
+
+        elif [ $wan"" == "4g1" ];then
+            local en=`cfg -g TZ_MUTILAPN1_NAT_LOOKBACK --section modem`
+            if [ $en"" != "disable" ];then
+                config_get ifname $wan ifname
+                config_get route_lan_section $wan route_lan_section
+                local ip=`ifconfig $ifname | grep "inet addr" | awk '{print $2}' | awk -F':'  '{print $2}'`
+
+                [ $ip"" == "" -o $route_lan_section"" == "" ] && continue
+
+                iptables -I PREROUTING -t nat -i  br-${route_lan_section} -d $ip -j DNAT --to-destination $host_ip 
+                #iptables -I POSTROUTING -t nat -d $host_ip -j MASQUERADE
+            fi
+
+        elif [ $wan"" == "4g2" ];then
+            local en=`cfg -g TZ_MUTILAPN2_NAT_LOOKBACK --section modem`
+            if [ $en"" != "disable" ];then
+                config_get ifname $wan ifname
+                config_get route_lan_section $wan route_lan_section
+                local ip=`ifconfig $ifname | grep "inet addr" | awk '{print $2}' | awk -F':'  '{print $2}'`
+
+                [ $ip"" == "" -o $route_lan_section"" == "" ] && continue
+
+                iptables -I PREROUTING -t nat -i  br-${route_lan_section} -d $ip -j DNAT --to-destination $host_ip 
+                #iptables -I POSTROUTING -t nat -d $host_ip  -j MASQUERADE
+            fi
+        fi
+
+
+    done
+
+    iptables -I POSTROUTING -t nat -d $host_ip  -j MASQUERADE
 }
 
 

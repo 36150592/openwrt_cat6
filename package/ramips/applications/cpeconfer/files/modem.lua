@@ -851,6 +851,7 @@ modem_module.modem_mutilapn_config = {
 	["auth_type"] = nil,			--number 0:NONE 1:PAP 2:CHAP 3:PAP&CHAP
 	["mtu"] = nil,					--number 
 	["nat"] = nil,				--string enable/disable   mutil nat config
+	["nat_lookback"] = nil,     --string nat lookback
 	["enable"] = nil,				--number 0:disable 1:enable
 }
 
@@ -871,6 +872,7 @@ function modem_module.modem_mutilapn_config:new(o,obj)
 	self["auth_type"]  = obj["auth_type"] or  nil
 	self["mtu"]  = obj["mtu"] or  nil
 	self["nat"]  = obj["nat"] or  nil
+	self["nat_lookback"] = obj["nat_lookback"] or nil
 	self["enable"]  = obj["enable"] or  nil
 end
 
@@ -887,10 +889,11 @@ function modem_module.modem_get_mutilapn_config()
 	primary_apn["apn_name"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_APN_NAME")
 	primary_apn["username"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PPP_USERNAME")
 	primary_apn["password"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PPP_PASSWORD")
-	primary_apn["ip_stack"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_IP_STACK_MODE")
-	primary_apn["auth_type"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PPP_AUTH_TYPE"))
-	primary_apn["mtu"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_MTU_USB0"))
-	primary_apn["nat"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_NAT")
+	primary_apn["ip_stack"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_IP_STACK_MODE") or "IP"
+	primary_apn["auth_type"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PPP_AUTH_TYPE") or 3)
+	primary_apn["mtu"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_MTU_USB0") or 1500)
+	primary_apn["nat"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_NAT") or "enable"
+	primary_apn["nat_lookback"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_NAT_LOOKBACK") or "enable"
 	primary_apn["enable"] = 1
 
 	ar[1] = primary_apn
@@ -899,11 +902,12 @@ function modem_module.modem_get_mutilapn_config()
 	primary_apn1["apn_name"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_APN_NAME")
 	primary_apn1["username"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_USERNAME")
 	primary_apn1["password"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_PASSWORD")
-	primary_apn1["ip_stack"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_IP_STACK_MODE")
-	primary_apn1["auth_type"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_AUTH_TYPE"))
-	primary_apn1["mtu"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_MTU"))
+	primary_apn1["ip_stack"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_IP_STACK_MODE") or "IP"
+	primary_apn1["auth_type"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_AUTH_TYPE") or 3)
+	primary_apn1["mtu"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_MTU") or 1500)
 	primary_apn1["enable"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_ENABLE"))
-	primary_apn1["nat"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_NAT")
+	primary_apn1["nat"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_NAT") or "enable"
+	primary_apn1["nat_lookback"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_NAT_LOOKBACK") or "enable"
 
 	ar[2] = primary_apn1
 
@@ -911,11 +915,12 @@ function modem_module.modem_get_mutilapn_config()
 	primary_apn2["apn_name"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_APN_NAME")
 	primary_apn2["username"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_USERNAME")
 	primary_apn2["password"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_PASSWORD")
-	primary_apn2["ip_stack"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_IP_STACK_MODE")
-	primary_apn2["auth_type"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_AUTH_TYPE"))
-	primary_apn2["mtu"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_MTU"))
+	primary_apn2["ip_stack"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_IP_STACK_MODE") or "IP"
+	primary_apn2["auth_type"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_AUTH_TYPE") or 3)
+	primary_apn2["mtu"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_MTU") or 1500)
 	primary_apn2["enable"] = tonumber(x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_ENABLE"))
-	primary_apn2["nat"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_NAT")
+	primary_apn2["nat"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_NAT") or "enable"
+	primary_apn2["nat_lookback"] = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_NAT_LOOKBACK") or "enable"
 	ar[3] = primary_apn2
 
 	return ar
@@ -947,6 +952,7 @@ end
 -- set mutil apn config
 -- input:the array of modem_mutilapn_config . the No.0 is the primary apntrue 
 -- return:true if success OR false if fail
+-- note:firewall restart needed
 function modem_module.modem_set_mutilapn_config(apn_list)
 
 	local apns = apn_list[1]
@@ -964,6 +970,7 @@ function modem_module.modem_set_mutilapn_config(apn_list)
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_PPP_AUTH_TYPE",apns["auth_type"] or 3)
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_MTU_USB0",apns["mtu"] or 1500)
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_NAT",apns["nat"] or "enable")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_NAT_LOOKBACK",apns["nat_lookback"] or "enable")
 	--apns["enable"] = 1
 
 	if "disable" ~= apns["nat"]
@@ -993,6 +1000,7 @@ function modem_module.modem_set_mutilapn_config(apn_list)
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_MTU",apns["mtu"] or 1500)
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_ENABLE",apns["enable"] or 0)
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_NAT",apns["nat"] or "enable")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN1_NAT_LOOKBACK",apns["nat_lookback"] or "enable")
 
 	if "disable" ~= apns["nat"]
 	then
@@ -1019,6 +1027,7 @@ function modem_module.modem_set_mutilapn_config(apn_list)
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_MTU",apns["mtu"] or 1500)
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_ENABLE",apns["enable"] or 0)
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_NAT",apns["nat"] or "enable")
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_MUTILAPN2_NAT_LOOKBACK",apns["nat_lookback"] or "enable")
 
 	if "disable" ~= apns["nat"]
 	then

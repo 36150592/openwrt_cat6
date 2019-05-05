@@ -964,9 +964,9 @@ end
 function modem_set_mutilapn_config()
 
 	local list = {
-{["profile_name"]="main_apn",["apn_name"]="",["nat"]="enable",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
-{["profile_name"]="apn1",["apn_name"]="ctlte",["nat"]="enable",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
-{["profile_name"]="apn2",["apn_name"]="ctnet",["nat"]="enable",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
+{["profile_name"]="main_apn",["apn_name"]="",["nat"]="enable",["nat_lookback"]="enable",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
+{["profile_name"]="apn1",["apn_name"]="ctlte",["nat"]="disable",["nat_lookback"]="enable",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
+{["profile_name"]="apn2",["apn_name"]="ctnet",["nat"]="enable",["nat_lookback"]="disable",["username"]="aaa",["password"]="bbb",["ip_stack"]="IP",["auth_type"]=3,["mtu"]=1500,["enable"]=1},
 
 }
 
