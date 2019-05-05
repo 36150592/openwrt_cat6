@@ -127,7 +127,8 @@ var RequestCmd = {
     GET_CLOSE_AUTO_DIAL:223,
     RESTORE_DEFAULT:224,
     SET_DMZ:225,
-    GET_DMZ:226
+    GET_DMZ:226,
+    QUICK_SETTINGS:227
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
@@ -143,7 +144,8 @@ var MenuItem = {
     ADVANCED_CONFIG: { cmd: RequestCmd.BASIC_CONFIG, url: "html/advance/advancedConfig.html" },
     APN_CONFIG: { cmd: RequestCmd.GET_APN_CONFIG, url: "html/config/apnConfig.html" },
     ROUTE_SETTING: { cmd: RequestCmd.ROUTE_LIST_GET, url: "html/advance/routeIndex.html" },
-	TR069_SETTING: { cmd: RequestCmd.TR069_CONFIG, url: "html/advance/tr069Index.html" },
+    TR069_SETTING: { cmd: RequestCmd.TR069_CONFIG, url: "html/advance/tr069Index.html" },
+	QUICK_SETTINGS: { cmd: RequestCmd.QUICK_SETTINGS, url: "html/advance/quickSettingsIndex.html" },
 	
     SYS_SET: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/sys/sysConfigIndex.html" },
     SYS_LOG: { cmd: RequestCmd.SYS_LOG, url: "html/manage/sysLog.html" },

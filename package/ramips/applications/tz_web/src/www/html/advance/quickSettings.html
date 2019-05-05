@@ -1,0 +1,166 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+        var flag1=0,flag2=0;
+         Page.postJSON({
+                        json: { cmd: RequestCmd.WIFI_INFO },
+                        success: function(datas) {
+                            var data = datas.data;
+                            if(data.hidden_ssid == "0"){
+                              $("input[value='0']").prop("checked",true);
+                            }else{
+                              $("input[value='1']").prop("checked",true);
+                            }
+
+                            $("#ssid").val(data.ssid);
+                            var encryp = data.encryption.split("+")[0];
+                            $("#authenticationType2").val(encryp);
+                            $("#key2").val(data.key);
+
+                        }
+                    });
+
+         $("#next1").on("click",function(){
+            flag1++;
+            if(flag1 == 1){
+              $("#btnSave1").hide();
+              $(".first1").hide();
+              $(".first2").show();
+              $("#previous1").show();
+            }
+            if(flag1 == 2){
+              $("#btnSave1").show();
+              $(".showData1").show();
+              $(".first1").hide();
+              $(".first2").hide();
+              $("#next1").hide();
+              if($("input[name='broadcast']:checked").val() == "0"){
+                $("#ssidBd").text(wirelessconfightml.form1.open);
+              }else{
+                $("#ssidBd").text(DOC.status.disable);
+
+              }
+              $("#ssidName").text($("#ssid").val());
+              if($("#authenticationType2").val() == "psk"){
+                  $("#authenticationTypeValue").text(wirelessconfightml.form1.wpa_psk);
+              }else if($("#authenticationType2").val() == "psk2"){
+                  $("#authenticationTypeValue").text(wirelessconfightml.form1.wpa2_psk);
+              }else if($("#authenticationType2").val() == "mixed"){
+                  $("#authenticationTypeValue").text(wirelessconfightml.form1.wpa_wpa2_psk);
+              }else{
+                $("#authenticationTypeValue").text(wirelessconfightml.form1.openSys);
+              }
+              
+            }
+             flag2 = flag1;
+         });
+
+         $("#previous1").on("click",function(){
+            flag2--;
+            if(flag2 == 1){
+              $("#btnSave1").hide();
+              $(".showData1").hide();
+              $(".first1").hide();
+              $(".first2").show();
+              $("#next1").show();
+            }else if(flag2 == 0){
+              $(".first1").show();
+              $("#btnSave1").hide();
+              $(".first2").hide();
+              $("#previous1").hide();
+            }
+            flag1 = flag2;
+         });
+         $("#btnSave1").on("click",function(){
+          var json = new Object();
+            json.ssid = $("#ssid").val();
+            json.broadcast = $("input[name='broadcast']:checked").val();
+            json.key = $("#key2").val();
+            json.authenticationType = $("#authenticationType2").val();
+            json.cmd = RequestCmd.WIRELESS_CONFIG;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $lis.eq(0).click();
+                },
+                complete: function(){
+                    $('#btnSave').attr("disabled",false);
+                }
+            });
+
+         });
+    });
+     function showPsw(id){
+        var demoInput = document.getElementById("key"+id);
+        if (demoInput.type == "password") {
+            demoInput.type = "text";
+            $('#passwordImg'+id).attr('src','/images/open.png');
+        }else {
+            demoInput.type = "password";
+            $('#passwordImg'+id).attr('src','/images/close.png');
+        }
+      }
+</script>
+
+<div class="tab_boxes" id="child_container">
+
+    <script type="text/template" id="child_template">
+    <form id="form" style="width:60%;">
+         <table class="detail" cellspacing="0" id="apn_box">
+            <tr class="first1">
+                  <th><%- wirelessconfightml.form1.ssidBd %></th>
+                  <td>
+                      <input type="radio" id="broadcast1" name="broadcast" value="0"/><%- wirelessconfightml.form1.open %>
+                      <input type="radio" id="broadcast2" name="broadcast" value="1"/><%- DOC.status.disable  %>
+                  </td>
+              </tr>
+             <tr class="first1">
+                <th><%-  wirelessconfightml.form1.ssid %></th>
+                <td><input type="text" id="ssid" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
+            </tr>
+           
+          <tr class="first2" style="display:none;">
+              <th><%- wirelessconfightml.form1.authenticationType %></th>
+              <td>
+                  <select name="authenticationType" id="authenticationType2">
+                      <option value="none"><%- wirelessconfightml.form1.openSys %></option>
+                      <option value="psk"><%- wirelessconfightml.form1.wpa_psk %></option>
+                      <option value="psk2"><%- wirelessconfightml.form1.wpa2_psk %></option>
+                      <option value="mixed"><%- wirelessconfightml.form1.wpa_wpa2_psk %></option>
+                  </select>
+              </td>
+          </tr>
+      <tr class="first2" style="display:none;">
+      <th><%- wirelessconfightml.form1.key %></th>
+      <td>
+        <input type="password" name="key" maxlength="63" id="key2"/>
+        <img id="passwordImg2" class="passwordImg" onclick="showPsw(2)" src="/images/close.png">
+      </td>
+      </tr>
+      <tr class="showData1" style="display:none;">
+        <th><%- wirelessconfightml.form1.ssidBd %><th/>
+        <td id="ssidBd"><td/>  
+      <tr/>
+      <tr class="showData1" style="display:none;">
+        <th><%-  wirelessconfightml.form1.ssid %><th/>
+        <td id="ssidName"><td/>  
+      <tr/>
+      <tr class="showData1" style="display:none;"> 
+        <th><%- wirelessconfightml.form1.authenticationType %><th/>
+        <td id="authenticationTypeValue"><td/>  
+      <tr/>
+       <tr>
+        <th> &nbsp;<th/>
+        <td><input type="button" value="<%- DOC.pager.previous %>" id="previous1" style="display:none;"/> <input type="button" value="<%- DOC.pager.next %>" id="next1" /> <input type="button" id="btnSave1" value="<%- networktoolhtml.form5.btnSetting %>"  style="display:none;"/></td>
+     
+       </tr>
+
+   </table>
+    </form>
+     </script>
+</div>
+

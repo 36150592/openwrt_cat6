@@ -1,0 +1,25 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var tabs = DOC.apn;
+
+        var items = [];
+        
+        items.push({title:MENU.setting.quick2g, url: 'html/advance/quickSettings.html'});
+        items.push({title:MENU.setting.quick5g, url: 'html/advance/5gquickSettings.html'});
+    
+        $('#detail_container').pannel({
+            items: items,
+            init: function($lis) {
+                $lis.eq(0).click();
+            }
+        });
+    });
+</script>
+
+<div class="detail_box" id="detail_container"></div>
+

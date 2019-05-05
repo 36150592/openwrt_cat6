@@ -33,6 +33,7 @@
             settingMenu.push(new MenuBody("ROUTE_SETTING", TAB.advance.route));
         if(Page.getShowHideByBit(14))
             settingMenu.push(new MenuBody("TR069_SETTING", TAB.advance.tr069));
+        settingMenu.push(new MenuBody("QUICK_SETTINGS", MENU.setting.quick));
         if(Page.getShowHideByBit(7))
             settingMenu.push(new MenuBody("ADVANCED_CONFIG", MENU.setting.advanced));
         menus.push(settingMenu);
