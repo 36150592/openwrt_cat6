@@ -1,0 +1,75 @@
+1.
+接口名称
+	modem_set_mutilapn_config()
+
+存在路径
+	modem.lua
+
+场景说明
+	配置多路apn
+
+接口说明
+	无
+
+接收参数
+	一个结构体modem_mutilapn_config 的数组
+	modem_mutilapn_config结构体说明：
+	
+	modem_mutilapn_config = {
+		["profile_name"]  = nil,      	--string 当前配置的名称，可由用户自定义
+		["apn_name"]  = nil,		--string apn名称，由运营商给出，例如ctlte、cmnet等
+		["username"]  = nil,		--string 认证用户名
+		["password"]  = nil,		--string 认证密码
+		["ip_stack"]  = nil,		--string IP协议族累着 取值为 IP、IPV6、IPV4V6 默认 IP
+		["auth_type"] = nil,		--number 认证方式: 取值为 0:NONE 1:PAP 2:CHAP 3:PAP&CHAP 默认 3
+		["mtu"] = nil,			--number 网口MTU值 默认1500
+		["nat"] = nil,			--string 多NAT 配置  取值为： enable 或者 disable 默认 enable（无值的时候 认定为enable）
+		["nat_lookback"] = nil,     	--string nat lookback 取值为： enable 或者 disable（无值的时候 认定为enable）
+		["enable"] = nil,		--number 是否使用该配置  0:使用 1:不使用 不可为空
+	}
+
+返回值
+	boolean 类型:
+		true:设置成功
+		false:设置失败
+
+注意事项
+	接收的数组的次序:第 1 个元素为主APN，第2 个为 副APN1  第3 个为 副APN2 ， 次序是固定，主APN的enable值无法设置永远都是enable， 数组长度必须为3
+	该接口需要重启系统生效
+<------------------------------------------------------------------------------------------------------------------------------------>
+2.
+接口名称
+	modem_get_mutilapn_config()
+
+存在路径
+	modem.lua
+
+场景说明
+	获取多路apn配置
+
+接口说明
+	无
+
+接收参数
+	无
+
+返回值
+	一个结构体modem_mutilapn_config 的数组
+	modem_mutilapn_config结构体说明：
+	
+	modem_mutilapn_config = {
+		["profile_name"]  = nil,      	--string 当前配置的名称，可由用户自定义
+		["apn_name"]  = nil,		--string apn名称，由运营商给出，例如ctlte、cmnet等
+		["username"]  = nil,		--string 认证用户名
+		["password"]  = nil,		--string 认证密码
+		["ip_stack"]  = nil,		--string IP协议族累着 取值为 IP、IPV6、IPV4V6 默认 IP
+		["auth_type"] = nil,		--number 认证方式: 取值为 0:NONE 1:PAP 2:CHAP 3:PAP&CHAP 默认 3
+		["mtu"] = nil,			--number 网口MTU值 默认1500
+		["nat"] = nil,			--string 多NAT 配置  取值为： enable 或者 disable 默认 enable（无值的时候 认定为enable）
+		["nat_lookback"] = nil,     	--string nat lookback 取值为： enable 或者 disable（无值的时候 认定为enable）
+		["enable"] = nil,		--number 是否使用该配置  0:使用 1:不使用 不可为空
+	}
+
+注意事项
+	接收的数组的次序:第 1 个元素为主APN，第2 个为 副APN1  第3 个为 副APN2 ， 次序是固定，主APN的enable值无法设置永远都是enable，数组长度必须为3
+<------------------------------------------------------------------------------------------------------------------------------------>

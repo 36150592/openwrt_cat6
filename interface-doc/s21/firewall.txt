@@ -1,0 +1,68 @@
+1.
+接口名称
+	firewall_set_arp_bind_list()
+
+存在路径
+	firewall.lua
+
+场景说明
+	配置ARP绑定
+
+接口说明
+	该接口接收一个ip 与 mac 的对应的数组，每次设置都会直接覆盖之前的数据，
+	如果想修改或者删除某条记录，必须用firewall_get_arp_bind_list先获取到当前的数组，
+	再在此基础做删除修改操作，最后再调用该接口进行设置
+
+接收参数
+	一个结构体ipmac_bind_filter 的数组
+	结构体ipmac_bind_filter说明:
+	ipmac_bind_filter = {
+		
+		["mac"] = nil,	   --string MAC 地址
+		["ipaddr"] = nil,  --string ip 地址
+		["comment"] = nil, --string 用户备注 默认不设置
+		["iswork"] = nil   --boolean 是否生效 true:生效  false:不生效
+	}
+	
+	若数组为空，代表清空当前所有的记录
+返回值
+	boolean 类型:
+		true:设置成功
+		false:设置失败
+
+注意事项
+	该接口需要重启系统生效
+<------------------------------------------------------------------------------------------------------------------------------------>
+2.
+接口名称
+	firewall_get_arp_bind_list()
+
+存在路径
+	firewall.lua
+
+场景说明
+	获取ARP绑定的记录
+
+接口说明
+	无
+
+接收参数
+	无
+
+返回值
+	一个结构体ipmac_bind_filter 的数组
+	结构体ipmac_bind_filter说明:
+	ipmac_bind_filter = {
+		
+		["mac"] = nil,	   --string MAC 地址
+		["ipaddr"] = nil,  --string ip 地址
+		["comment"] = nil, --string 用户备注 默认不设置
+		["iswork"] = nil   --boolean 是否生效 true:生效  false:不生效
+	}
+	
+	若数组为空，代表无记录
+
+注意事项
+	无
+<------------------------------------------------------------------------------------------------------------------------------------>
+
