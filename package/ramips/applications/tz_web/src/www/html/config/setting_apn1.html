@@ -19,6 +19,11 @@
                         $("#apnDisable").attr("checked",true);
                    }
                    $("#selectType").val(apnData.ip_stack);
+                    if(apnData.nat == "enable"){
+                         $("input[value='enable']").attr("checked",true);
+                   }else{
+                         $("input[value='disable']").attr("checked",true);
+                   }
                    // $("#apn_profile").val(apnData.profile_name);
                    $("#selectAuthentication").val(apnData.auth_type);
                    $("#apn_user_name").val(apnData.username);
@@ -45,47 +50,44 @@
       });
 
       $("#btnSave").on("click",function(){
-        var apnEnable,selectType,apn_profile,selectAuthentication,apn_user_name,apn_user_password,apn_name;
+        var apnEnable,selectType,apn_profile,selectAuthentication,apn_user_name,apn_user_password,apn_name,apn_apnNat;
             if($("#apnEnable").is(":checked")){
                 apnEnable = 1;
             }else{
                 apnEnable = 0;
             }
             selectType =  $("#selectType").val();
-            // apn_profile =  $("#apn_profile").val();
             selectAuthentication =  $("#selectAuthentication").val();
             apn_user_name =  $("#apn_user_name").val();
             apn_user_password =  $("#apn_user_password").val();
             apn_name =  $("#apn_name").val();
+            apn_apnNat = $("input[name='apnNat']:checked").val();
           $form = $("#form");
            if(selectAuthentication == "0"){
               apn_user_name = "";
               apn_user_password = "";
            }else{
-            // if(apn_profile == ""){
-          //       AlertUtil.alertMsg(CHECK.format.profileName2);
-          //       return false;
-          // }
-           if(apn_user_name == ""){
+          if($('#apn_user_name').is(":hidden") == false){
+            if(apn_user_name == ""){
                 AlertUtil.alertMsg(CHECK.format.apnUserName2);
                 return false;
-          }
-          if(apn_user_password == ""){
-                AlertUtil.alertMsg(CHECK.format.apnPassword2);
-                return false;
-          }
-          // if(!CheckUtil.checkApnName(apn_profile)) {
-          //       AlertUtil.alertMsg(CHECK.format.profileName);
-          //       return false;
-          //   }
+            }
             if(!CheckUtil.checkApnName(apn_user_name)) {
                 AlertUtil.alertMsg(CHECK.format.apnUserName);
                 return false;
             }
-         if(!CheckUtil.checkApnPassword(apn_user_password)) {
+          }
+
+          if($('#apn_user_password').is(":hidden") == false){
+            if(apn_user_password == ""){
+                AlertUtil.alertMsg(CHECK.format.apnPassword2);
+                return false;
+          }
+          if(!CheckUtil.checkApnPassword(apn_user_password)) {
                 AlertUtil.alertMsg(CHECK.format.apnPassword);
                 return false;
             }
+          }   
            }
           
           var json={},json2= new Object();
@@ -97,6 +99,7 @@
           json.mtu = 1500;
           json.password = apn_user_password;
           json.apn_name = apn_name;
+          json.nat = apn_apnNat;
           ApnList.splice(1,1,json);
 
           json2.apnList = ApnList;
@@ -127,6 +130,16 @@
                 <td>
                     <input type="radio" name="apnEnable" value="1" id="apnEnable"><span><%-DOC.apn.open %></span> &nbsp;&nbsp;&nbsp;&nbsp;
                     <input type="radio" name="apnEnable" value="0" id="apnDisable"><span><%-DOC.apn.close %></span>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label><%-DOC.apn.nat %><%- colon %></label> 
+                </th>
+                <td>
+
+                    <input type="radio" name="apnNat" value="enable"><span><%-DOC.status.enable %></span>&nbsp;&nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="apnNat" value="disable"><span><%-DOC.status.disable %></span> 
                 </td>
             </tr>
             <tr id="apn_type">

@@ -18,6 +18,12 @@
                    }else{
                         $("#apnDisable").attr("checked",true);
                    }
+                   // $("input[name='apnNat']").val(apnData.nat);
+                   if(apnData.nat == "enable"){
+                         $("input[value='enable']").attr("checked",true);
+                   }else{
+                         $("input[value='disable']").attr("checked",true);
+                   }
                    $("#selectType").val(apnData.ip_stack);
                    $("#apn_profile").val(apnData.profile_name);
                    $("#selectAuthentication").val(apnData.auth_type);
@@ -48,7 +54,7 @@
 
 
       $("#btnSave").on("click",function(){
-        var apnEnable,selectType,apn_profile,selectAuthentication,apn_user_name,apn_user_password,apn_name;
+        var apnEnable,selectType,apn_profile,selectAuthentication,apn_user_name,apn_user_password,apn_name,apn_apnNat;
             if($("#apnEnable").is(":checked")){
                 apnEnable = 1;
             }else{
@@ -60,27 +66,34 @@
             apn_user_name =  $("#apn_user_name").val();
             apn_user_password =  $("#apn_user_password").val();
             apn_name =  $("#apn_name").val();
+            apn_apnNat = $("input[name='apnNat']:checked").val();
           $form = $("#form");
           if(selectAuthentication == "0"){
               apn_user_name = "";
               apn_user_password = "";
           }else{
+            if($('#apn_user_name').is(":hidden") == false){
               if(apn_user_name == ""){
                 AlertUtil.alertMsg(CHECK.format.apnUserName2);
                 return false;
-          }
-          if(apn_user_password == ""){
-                AlertUtil.alertMsg(CHECK.format.apnPassword2);
-                return false;
-          }
-         if(!CheckUtil.checkApnName(apn_user_name)) {
+            }; 
+          if(!CheckUtil.checkApnName(apn_user_name)) {
                 AlertUtil.alertMsg(CHECK.format.apnUserName);
                 return false;
             }
-         if(!CheckUtil.checkApnPassword(apn_user_password)) {
+            };
+          if($('#apn_user_password').is(":hidden") == false){
+              if(apn_user_password == ""){
+                AlertUtil.alertMsg(CHECK.format.apnPassword2);
+                return false;
+          }
+         
+              if(!CheckUtil.checkApnPassword(apn_user_password)) {
                 AlertUtil.alertMsg(CHECK.format.apnPassword);
                 return false;
             }
+          };
+          
 
           }
           
@@ -94,6 +107,7 @@
           json.apn_name = apn_name;
           json.mtu = 1500;
           json.password = apn_user_password;
+          json.nat = apn_apnNat;
           ApnList.splice(0,1,json);
 
           json2.apnList = ApnList;
@@ -116,6 +130,16 @@
     <script type="text/template" id="child_template">
     <form id="form" style="width:60%;">
          <table class="detail" cellspacing="0" id="apn_box">
+           <tr>
+                <th>
+                    <label><%-DOC.apn.nat %><%- colon %></label> 
+                </th>
+                <td>
+
+                    <input type="radio" name="apnNat" value="enable"><span><%-DOC.status.enable %></span>&nbsp;&nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="apnNat" value="disable"><span><%-DOC.status.disable %></span> 
+                </td>
+            </tr>
             <tr id="apn_type">
                 <th>
                     <%-DOC.apn.type %><%- colon %>
