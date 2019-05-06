@@ -63,3 +63,13 @@
     1.2 使用kermit连接串口
     1.3 启动出现uboot菜单的时候，选择7使用串口下载uboot 选择0使用串口下载Firewall
     1.4 按下 Ctrl + \  然后在输入c ,cd 到IMAGE 所在的目录 使用send  imagename 发送image 到串口
+
+3、flashcp 烧写system
+  在系统正常起来之后，使用网口连接设备，使用scp 或者tftp 把BIN文件传输到设备/tmp 目录下，然后使用如下命令烧写kernel镜像
+  flashcp -v /tmp/bin文件 /dev/mtd3
+  然后重启设备，即完成烧写kernel镜像
+
+4、单一模块编译
+  正常情况下使用  make package/ramips/application/模块名称/{clean,prepare,compile}  V=99 编译上层应用模块
+  但是也有一些模块并不在package/ramips/application 下，只要把路径替换就可以了
+  编译好的输出文件在build_dir/target-mipsel_1004kc+dsp_uClibc-0.9.33.2 下对应的文件夹中
