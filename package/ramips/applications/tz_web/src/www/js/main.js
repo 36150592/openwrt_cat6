@@ -128,7 +128,9 @@ var RequestCmd = {
     RESTORE_DEFAULT:224,
     SET_DMZ:225,
     GET_DMZ:226,
-    QUICK_SETTINGS:227
+    QUICK_SETTINGS:227,
+    STATIC_ARP_BINDING:228,
+    SET_STATIC_ARP_BINDING:229
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
@@ -164,6 +166,7 @@ var MenuItem = {
     FW_PORT_MAPPING: { cmd: RequestCmd.OTHER_FILTER, url: "html/firewall/firewall.html" },
 	FW_ACL_FILTER: { cmd: RequestCmd.ACL_FILTER, url: "html/firewall/firewall.html" },
     FW_SPEED_LIMIT: { cmd: RequestCmd.SPEED_LIMIT, url: "html/firewall/firewall.html" },
+    STATIC_ARP_BINDING: { cmd: RequestCmd.STATIC_ARP_BINDING, url: "html/firewall/staticArpBindingIndex.html" },
     FW_DMZ: { cmd: RequestCmd.GET_DMZ, url: "html/firewall/dmzIndex.html" }
     
 };

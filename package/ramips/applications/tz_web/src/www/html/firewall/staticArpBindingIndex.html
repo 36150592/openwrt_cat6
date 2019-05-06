@@ -1,0 +1,25 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var tabs = TAB.advance;
+
+        var items = [];
+        
+		items.push({title: MENU.sys.staticArp, url: 'html/firewall/staticArpBinding.html'});
+       
+
+        $('#detail_container').pannel({
+            items: items,
+            init: function($lis) {
+                $lis.eq(0).click();
+            }
+        });
+    });
+</script>
+
+<div class="detail_box" id="detail_container"></div>
+

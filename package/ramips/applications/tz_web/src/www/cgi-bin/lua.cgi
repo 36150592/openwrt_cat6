@@ -2548,6 +2548,44 @@ function set_dmz_data()
 
 end
 
+function get_arp_data()
+	local tz_answer = {}
+	tz_answer["cmd"] = 228
+	local data_array = {}
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = firewall.firewall_get_arp_bind_list()
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+
+end
+
+
+function set_arp_data()
+	
+	local ret 
+	local tz_answer = {}
+	local routeList = tz_req["routeList"]
+	if(nil ~= routeList)
+		then
+		ret =firewall.firewall_set_arp_bind_list(routeList)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 229
+	tz_answer["data"] = data_array
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+
+
 local switch = {
      [0] = get_sysinfo,
 	 [1] = get_systime,
@@ -2632,6 +2670,8 @@ local switch = {
 	 [224] = restore_factory,
 	 [225] = set_dmz_data,
 	 [226] = get_dmz_data,
+	 [228] = get_arp_data,
+	 [229] = set_arp_data,
 
 
  }
