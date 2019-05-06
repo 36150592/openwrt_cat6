@@ -582,6 +582,7 @@ DOC.apn.password = "密码";
 DOC.apn.open = "开启 APN";
 DOC.apn.close = "关闭 APN";
 DOC.apn.nat = "Nat";
+DOC.apn.natLookBack = "Nat Look Back";
 DOC.networkMode.cmt = "(选择前请先点击搜索)";
 DOC.networkMode.csps = "CS/(E)PS业务模式";
 DOC.networkMode.csps0 = "EPS only, 数据优先";

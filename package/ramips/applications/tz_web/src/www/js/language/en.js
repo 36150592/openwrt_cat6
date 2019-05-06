@@ -584,6 +584,7 @@ DOC.apn.password = "User Password";
 DOC.apn.open = "Open APN";
 DOC.apn.close = "Close APN";
 DOC.apn.nat = "Nat";
+DOC.apn.natLookBack = "Nat Look Back";
 DOC.networkMode.cmt = "(Please search before choosing)";
 DOC.networkMode.csps = "CS/(E)PS Preferred";
 DOC.networkMode.csps0 = "EPS only, data centric";

@@ -19,10 +19,15 @@
                         $("#apnDisable").attr("checked",true);
                    }
                    $("#selectType").val(apnData.ip_stack);
-                    if(apnData.nat == "enable"){
-                         $("input[value='enable']").attr("checked",true);
+                   if(apnData.nat == "enable"){
+                         $("#apnNat1").attr("checked",true);
                    }else{
-                         $("input[value='disable']").attr("checked",true);
+                         $("#apnNat2").attr("checked",true);
+                   }
+                   if(apnData.nat_lookback == "enable"){
+                         $("#apnNatLookBack1").attr("checked",true);
+                   }else{
+                         $("#apnNatLookBack2").attr("checked",true);
                    }
                    // $("#apn_profile").val(apnData.profile_name);
                    $("#selectAuthentication").val(apnData.auth_type);
@@ -100,6 +105,7 @@
           json.password = apn_user_password;
           json.apn_name = apn_name;
           json.nat = apn_apnNat;
+          json.nat_lookback = $("input[name='apnNatLookBack']:checked").val();
           ApnList.splice(1,1,json);
 
           json2.apnList = ApnList;
@@ -138,8 +144,18 @@
                 </th>
                 <td>
 
-                    <input type="radio" name="apnNat" value="enable"><span><%-DOC.status.enable %></span>&nbsp;&nbsp;&nbsp;&nbsp;
-                    <input type="radio" name="apnNat" value="disable"><span><%-DOC.status.disable %></span> 
+                    <input type="radio" name="apnNat" id="apnNat1" value="enable"><span><%-DOC.status.enable %></span>&nbsp;&nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="apnNat" id="apnNat2" value="disable"><span><%-DOC.status.disable %></span> 
+                </td>
+            </tr>
+             <tr>
+                <th>
+                    <label><%-DOC.apn.natLookBack %><%- colon %></label> 
+                </th>
+                <td>
+
+                    <input type="radio" name="apnNatLookBack"  id="apnNatLookBack1" value="enable"><span><%-DOC.status.enable %></span>&nbsp;&nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="apnNatLookBack" id="apnNatLookBack2" value="disable"><span><%-DOC.status.disable %></span> 
                 </td>
             </tr>
             <tr id="apn_type">
