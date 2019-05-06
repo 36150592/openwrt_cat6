@@ -1,0 +1,40 @@
+Index: mt76x2e-3.0.4.0/rlt_wifi/common/cmm_info.c
+===================================================================
+--- mt76x2e-3.0.4.0.orig/rlt_wifi/common/cmm_info.c
++++ mt76x2e-3.0.4.0/rlt_wifi/common/cmm_info.c
+@@ -1462,7 +1462,9 @@ INT	Set_WscGenPinCode_Proc(
+     PWSC_CTRL   pWscControl = NULL;
+     POS_COOKIE  pObj = (POS_COOKIE) pAd->OS_Cookie;
+     UCHAR	    apidx = pObj->ioctl_if;
+-    
++    struct file *filePtr;
++    char buffer[512] = {0};
++
+ #ifdef CONFIG_AP_SUPPORT
+ 	IF_DEV_CONFIG_OPMODE_ON_AP(pAd)
+ 	{
+@@ -1512,7 +1514,23 @@ INT	Set_WscGenPinCode_Proc(
+ 
+ 
+ 	DBGPRINT(RT_DEBUG_TRACE, ("Set_WscGenPinCode_Proc:: Enrollee PinCode\t\t%08u\n", pWscControl->WscEnrolleePinCode));
+-
++	printk("Set_WscGenPinCode_Proc:: Enrollee PinCode\t\t%08u\n", pWscControl->WscEnrolleePinCode);
++	if(4 == pWscControl->WscEnrolleePinCodeLen )
++	  sprintf(buffer,"%04u\n",pWscControl->WscEnrolleePinCode);
++	else
++	  sprintf(buffer,"%08u\n",pWscControl->WscEnrolleePinCode);
++	
++	filePtr = filp_open("/tmp/.pincode", O_TRUNC|O_CREAT, 0644);
++	if (IS_ERR(filePtr))
++	{
++	  printk("open /tmp/.pincode error\n");
++	} 
++	else
++	{
++	  filePtr->f_op->write(filePtr, buffer, strlen(buffer), &filePtr->f_pos);
++	  filp_close(filePtr, NULL);
++	}
++	
+ 	return TRUE;
+ }
+ 

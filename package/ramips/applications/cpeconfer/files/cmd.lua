@@ -1986,6 +1986,19 @@ function wifi_get_wps_switch()
 	
 end
 
+function wifi_get_wps_random_pin_code()
+	print("wifi_get_wps_random_pin_code")
+	local ret = wifi.wifi_get_wps_random_pin_code()
+	print(ret)
+end
+
+function wifi_create_wps_random_pin_code()
+	print("wifi_create_wps_random_pin_code")
+	local ret = wifi.wifi_create_wps_random_pin_code(tonumber(arg[2]))
+	print(ret)
+	
+end
+
 function dhcp_get_reserve_ip()
 	print("in dhcp_get_reserve_ip")
 	local list = dhcp.dhcp_get_reserve_ip()
@@ -2342,6 +2355,8 @@ local api_func = {
 	["wifi_get_wps_switch"] = wifi_get_wps_switch,
 	["wifi_get_wps_type"] = wifi_get_wps_type,
 	["wifi_set_wps_type"] = wifi_set_wps_type,
+	["wifi_create_wps_random_pin_code"] = wifi_create_wps_random_pin_code,
+	["wifi_get_wps_random_pin_code"] = wifi_get_wps_random_pin_code,
 
 	--dhcp
 	["dhcp_get_server_ip"]=dhcp_get_server_ip,

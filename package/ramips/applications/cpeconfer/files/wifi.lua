@@ -2152,6 +2152,52 @@ function wifi_module.wifi_get_wps_switch(wifi_id)
 	end
 
 end 
- 
+
+-- create a random pin code to access 
+-- input:
+--		wifi_id(number):wifi index get by wifi_get_dev
+-- return:
+--		true if success or false if fail
+function wifi_module.wifi_create_wps_random_pin_code(wifi_id)
+	local section_name = common_get_ifame_section_name_by_index(wifi_id)
+
+	if nil == section_name or "" == section_name
+	then
+		debug("error wifi_id")
+		return false
+	end
+
+	local ifname =  x:get(WIFI_CONFIG_FILE, section_name, "ifname")
+
+	local ret0 = os.execute("iwpriv ".. ifname .." set WscStop=1")
+	local ret1 = os.execute("iwpriv ".. ifname .." set WscConfMode=7")
+	local ret2 = os.execute("iwpriv ".. ifname .." set WscConfStatus=1")
+	local ret3 = os.execute("iwpriv ".. ifname .." set WscMode=1")
+	local ret4 = os.execute("iwpriv ".. ifname .." set WscGenPinCode=1")
+	local ret5 = os.execute("iwpriv ".. ifname .." set WscGetConf=1")
+
+	if 0 == ret1 and 0 == ret2 and 0 == ret3 and 0 == ret4 and 0 == ret5 and 0 == ret0 
+	then
+		return true
+	end
+
+	return false
+end
+
+-- get the random pin
+-- input:none
+-- return:
+--		string:pin code
+--		nil:if pin code do not exist
+function wifi_module.wifi_get_wps_random_pin_code()
+	local f = io.popen("cat /tmp/.pincode")
+	if nil ~= f
+	then
+		local res = f:read()
+		return res;
+	end
+
+	return nil
+end
 
 return wifi_module
