@@ -504,12 +504,12 @@ function wifi_module.wifi_start(wifi_id)
 	then
 		debug("start fail for dev_type unknown")
 	end
-    return os.execute("wifi start " .. dev_type .. " 2>/dev/null 1>/dev/null &")
+    return 0 == os.execute("wifi start " .. dev_type .. " 2>/dev/null 1>/dev/null &")
 end
 
 -- wifi must be enable status when use this interface
 function wifi_module.wifi_start_all()
-     return os.execute("wifi   2>/dev/null 1>/dev/null &")
+     return 0 == os.execute("wifi   2>/dev/null 1>/dev/null &")
 end
 
 -- wifi must be enable status when use this interface
@@ -520,11 +520,11 @@ function wifi_module.wifi_restart(wifi_id)
 	then
 		debug("start fail for dev_type unknown")
 	end
-    return os.execute("wifi down " .. dev_type .. " 2>/dev/null 1>/dev/null  && " .. "wifi start " .. dev_type .. " 2>/dev/null 1>/dev/null &")
+    return 0 == os.execute("wifi down " .. dev_type .. " 2>/dev/null 1>/dev/null  && " .. "wifi start " .. dev_type .. " 2>/dev/null 1>/dev/null &")
 end
 
 function wifi_module.wifi_restart_all()
-    return os.execute("wifi down  2>/dev/null 1>/dev/null && wifi  2>/dev/null 1>/dev/null &")
+    return 0 == os.execute("wifi down  2>/dev/null 1>/dev/null && wifi  2>/dev/null 1>/dev/null &")
 end
 
 function wifi_module.wifi_stop(wifi_id)
@@ -534,11 +534,11 @@ function wifi_module.wifi_stop(wifi_id)
 	then
 		debug("start fail for dev_type unknown")
 	end
-    return os.execute("wifi down " .. dev_type .. " 2>/dev/null 1>/dev/null  &")
+    return 0 == os.execute("wifi down " .. dev_type .. " 2>/dev/null 1>/dev/null  &")
 end
 
 function wifi_module.wifi_stop_all()
-   	return os.execute("wifi  down  2>/dev/null 1>/dev/null &")
+   	return 0 == os.execute("wifi  down  2>/dev/null 1>/dev/null &")
 end
 
 -- enable wifi self boot 

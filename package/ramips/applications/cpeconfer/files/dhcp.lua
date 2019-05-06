@@ -14,26 +14,26 @@ local sleep=util.sleep
 
 
 function dhcp_module.dhcp_start()
-	return os.execute("/etc/init.d/dnsmasq start ")
+	return 0 == os.execute("/etc/init.d/dnsmasq start ")
 end
 
 function dhcp_module.dhcp_stop()
-	return os.execute("/etc/init.d/dnsmasq stop ")
+	return 0 == os.execute("/etc/init.d/dnsmasq stop ")
 end
 
 function dhcp_module.dhcp_restart()
-	return os.execute("/etc/init.d/dnsmasq restart ")
+	return 0 == os.execute("/etc/init.d/dnsmasq restart ")
 end
 
 
 -- enable dhcp server
 function dhcp_module.dhcp_enable()
-	return os.execute("/etc/init.d/dnsmasq enable")
+	return 0 == os.execute("/etc/init.d/dnsmasq enable")
 end
 
 -- disable dhcp server
 function dhcp_module.dhcp_disable()
-	return os.execute("/etc/init.d/dnsmasq disable ")
+	return 0 == os.execute("/etc/init.d/dnsmasq disable ")
 end
 
 -- enable mutil dhcp config by name

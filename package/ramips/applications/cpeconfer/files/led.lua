@@ -35,21 +35,21 @@ local function led_on(path)
 	local ret1 = os.execute(string.format("echo none > %s/trigger", path))
 	local ret2 = os.execute(string.format("echo 1 > %s/brightness", path))
 
-	return ret1 and ret2
+	return 0 == ret1 and 0 == ret2
 end
 
 local function led_off(path)
 	local ret1 = os.execute(string.format("echo none > %s/trigger", path))
 	local ret2 = os.execute(string.format("echo 0 > %s/brightness", path))
 
-	return re1 and ret2
+	return 0 == re1 and 0 == ret2
 end
 
 local function led_blink_slow(path)
 
 	local ret = os.execute(string.format("echo timer > %s/trigger", path))
 
-	return ret
+	return 0 == ret
 end
 
 local function led_blink_fast(path)
@@ -57,7 +57,7 @@ local function led_blink_fast(path)
 	local ret1 = os.execute(string.format("echo timer > %s/trigger", path))
 	local ret2 = os.execute(string.format("echo 200 > %s/delay_on", path))
 	local ret3 = os.execute(string.format("echo 200 > %s/delay_off", path))
-	return ret1 and ret2 and ret3
+	return 0 == ret1 and 0 == ret2 and 0 == ret3
 end
 
 

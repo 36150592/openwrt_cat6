@@ -1092,7 +1092,7 @@ local timezone_location = {
 	 ["Pacific/Wallis"]= "WFT-12",
  }
 local function reload_config()
-	return os.execute("/etc/init.d/system restart")
+	return 0 == os.execute("/etc/init.d/system restart")
 end
 
 -- get ntp time sync enable or disable
@@ -1231,7 +1231,7 @@ function system_module.system_ntp_set_date(date_string)
 		return false
 	end
 
-	return os.execute(string.format("date -s '%s' > /dev/null", date_string))
+	return 0 == os.execute(string.format("date -s '%s' > /dev/null", date_string))
 end
 
 system_module.lanrecord_current_info = {

@@ -377,7 +377,7 @@ local function send_dialtool_socket_cmd(cmd)
 end
 
 function modem_module.modem_reload_config()
-	return os.execute("/etc/init.d/dialtool2 restart")
+	return 0 == os.execute("/etc/init.d/dialtool2 restart")
 end
 
 

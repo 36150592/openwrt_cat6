@@ -45,7 +45,7 @@ function sim_module.sim_status:new(o,obj)
 end
 
 local function clear_file(path)
-	return os.execute(string.format("> %s", path))
+	return 0 == os.execute(string.format("> %s", path))
 end
 
 local function format_enable_pin_lock_at_cmd(pin_passwd)return string.format('AT+CLCK="SC",1,"%s"\n', pin_passwd) end
