@@ -2584,6 +2584,40 @@ function set_arp_data()
 
 end
 
+function system_export_config()
+	
+	local tz_answer = {}
+	tz_answer["cmd"] = 230
+	local data_array = {}
+	local data_array = tz_req[""]
+	tz_answer["success"] = true
+	tz_answer["data"] = system.system_export_config("/tz_www/html/export_config")
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function system_import_config()
+	local ret 
+	local tz_answer = {}
+	tz_answer["cmd"] = 231
+	local configFile = tz_req["configFile"]
+	if(nil ~= configFile)
+		then
+		ret =system.system_import_config(configFile)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		else
+			tz_answer["success"] = true
+		end 
+	end
+	
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
 
 
 local switch = {
@@ -2672,8 +2706,8 @@ local switch = {
 	 [226] = get_dmz_data,
 	 [228] = get_arp_data,
 	 [229] = set_arp_data,
-
-
+	 [230] = system_export_config,
+	 [231] = system_import_config,
  }
  
 cmdid = uti.get_env_cmdId(envv)

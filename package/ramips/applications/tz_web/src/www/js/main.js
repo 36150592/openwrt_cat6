@@ -15,18 +15,18 @@ var ProgressTime = {
 
 var RequestCmd = {
     SYS_INFO: 0,
-	GET_SYSTEM_TIME: 1,
+    GET_SYSTEM_TIME: 1,
     WIRELESS_CONFIG: 2,
     NETWORK_CONFIG: 3,
     SYS_UPDATE: 5,
-	SYS_REBOOT: 6,
-	
-	BASIC_CONFIG: 9,
-	GET_DATETIME:10,
+    SYS_REBOOT: 6,
+    
+    BASIC_CONFIG: 9,
+    GET_DATETIME:10,
     SET_DATETIME: 11,
-	
+    
     SYS_LOG: 17,
-	SYS_AT:19,
+    SYS_AT:19,
 
     APPLY_FILTER: 20,
     PORT_FILTER: 21,
@@ -44,14 +44,14 @@ var RequestCmd = {
     DEVICE_VERSION_INFO: 43,
     INIT_PAGE: 80,
     CHANGE_LANGUAGE: 97,
-	LOGOUT: 99,
+    LOGOUT: 99,
     LOGIN: 100,
 
     WIFI_INFO: 101,
     DHCP_INFO:102,
     DHCPCLIENT_INFO:103,
 
-	UPDATE_PARTIAL: 106,
+    UPDATE_PARTIAL: 106,
     GET_SYS_STATUS: 113,
 
     WIFI_CONTROL_INFO: 117,
@@ -59,52 +59,52 @@ var RequestCmd = {
 
     SSIDLIST_INFO:120,
     SSIDLIST_CONFIG:121,
-	
-	MAC_ACCESS_CONTROL:123,
-	SET_MAC_CONTROL:124,
-	
-	WIFI5_MAC_CONTROL:125,
+    
+    MAC_ACCESS_CONTROL:123,
+    SET_MAC_CONTROL:124,
+    
+    WIFI5_MAC_CONTROL:125,
     SET_WIFI5_MAC_CONTROL:126,
 
     ROUTER_INFO: 133,
-	QUERY_SIM_STATUS: 134,
-	SET_PIN_STATUS:135,
+    QUERY_SIM_STATUS: 134,
+    SET_PIN_STATUS:135,
 
     CHANGE_PASSWD: 144,
     NETWORK_TOOL: 145,
-	SYS_TIME:146,
+    SYS_TIME:146,
 
-    LOCK_PHY_CELL: 160,	
-	LOCK_ONE_CELL: 162,
-	
-	NETWORKSET_GET:163,
-	NETWORKSET_SET:164,
-	
-	LOCK_BAND_GET: 165,
+    LOCK_PHY_CELL: 160, 
+    LOCK_ONE_CELL: 162,
+    
+    NETWORKSET_GET:163,
+    NETWORKSET_SET:164,
+    
+    LOCK_BAND_GET: 165,
     LOCK_BAND_SET: 166,
-	
-	REMOTE_LOGIN_GET:167,
+    
+    REMOTE_LOGIN_GET:167,
     REMOTE_LOGIN_SET:168,
-	
-	LOCK_PLMN_GET:169,
+    
+    LOCK_PLMN_GET:169,
     LOCK_PLMN_SET:170,
-	
-	WPS_PIN_GET:171,
+    
+    WPS_PIN_GET:171,
     WPS_PIN_SET:172,
-	
-	REMOTE_PIN_GET:173,
+    
+    REMOTE_PIN_GET:173,
     REMOTE_PIN_SET:174,
-	
-	TR069_CONFIG: 175,
-	
-	WPS5_PIN_GET:176,
+    
+    TR069_CONFIG: 175,
+    
+    WPS5_PIN_GET:176,
     WPS5_PIN_SET:177,
-	
-	CONFIG_UPDATE: 184,
+    
+    CONFIG_UPDATE: 184,
 
     WIFI5_INFO: 201,
     WIRELESS5_CONFIG: 202,
-	LAN_INFO: 203,
+    LAN_INFO: 203,
     SOCKETAT_GET: 204,
     SOCKETAT_SET: 205,
     SET_DHCP_IP_MAC:206,
@@ -130,7 +130,9 @@ var RequestCmd = {
     GET_DMZ:226,
     QUICK_SETTINGS:227,
     STATIC_ARP_BINDING:228,
-    SET_STATIC_ARP_BINDING:229
+    SET_STATIC_ARP_BINDING:229,
+    CONFIG_EXPORT:230,
+    CONFIG_IMPORT:231
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
@@ -147,24 +149,24 @@ var MenuItem = {
     APN_CONFIG: { cmd: RequestCmd.GET_APN_CONFIG, url: "html/config/apnConfig.html" },
     ROUTE_SETTING: { cmd: RequestCmd.ROUTE_LIST_GET, url: "html/advance/routeIndex.html" },
     TR069_SETTING: { cmd: RequestCmd.TR069_CONFIG, url: "html/advance/tr069Index.html" },
-	QUICK_SETTINGS: { cmd: RequestCmd.QUICK_SETTINGS, url: "html/advance/quickSettingsIndex.html" },
-	
+    QUICK_SETTINGS: { cmd: RequestCmd.QUICK_SETTINGS, url: "html/advance/quickSettingsIndex.html" },
+    
     SYS_SET: { cmd: RequestCmd.CHANGE_PASSWD, url: "html/sys/sysConfigIndex.html" },
     SYS_LOG: { cmd: RequestCmd.SYS_LOG, url: "html/manage/sysLog.html" },
-    SYS_UPDATE:	{ cmd: RequestCmd.SYS_UPDATE, url: "html/update/sysUpdate.html" },
-	CONFIG_UPDATE:	{ cmd: RequestCmd.CONFIG_UPDATE, url: "html/update/configUpdate.html" },
-	SYS_AT: { cmd: RequestCmd.SYS_AT, url: "html/manage/sysAt.html" },
-	NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
-	SYS_TIME:{ cmd: RequestCmd.SYS_TIME, url: "html/sys/timeSetting.html" },
-	SYS_REBOOT: { cmd: RequestCmd.SYS_REBOOT, url: "" },
-	
-	FE_DEFAULT: { cmd: RequestCmd.DEFAULT_FILTER, url: "html/firewall/firewall.html" },
-	FW_RULE: { cmd: RequestCmd.PORT_FILTER, url: "html/firewall/firewall.html" },
+    SYS_UPDATE: { cmd: RequestCmd.SYS_UPDATE, url: "html/update/sysUpdate.html" },
+    CONFIG_UPDATE:  { cmd: RequestCmd.CONFIG_UPDATE, url: "html/update/configUpdate.html" },
+    SYS_AT: { cmd: RequestCmd.SYS_AT, url: "html/manage/sysAt.html" },
+    NETWORK_TOOL: { cmd: RequestCmd.NETWORK_TOOL, url: "html/manage/networkTool.html" },
+    SYS_TIME:{ cmd: RequestCmd.SYS_TIME, url: "html/sys/timeSetting.html" },
+    SYS_REBOOT: { cmd: RequestCmd.SYS_REBOOT, url: "" },
+    
+    FE_DEFAULT: { cmd: RequestCmd.DEFAULT_FILTER, url: "html/firewall/firewall.html" },
+    FW_RULE: { cmd: RequestCmd.PORT_FILTER, url: "html/firewall/firewall.html" },
     FW_MAC_FILTER: { cmd: RequestCmd.MAC_FILTER, url: "html/firewall/firewall.html" },
     FW_IP_MAC_BINDING: { cmd: RequestCmd.IP_MAC_BINDING, url: "html/firewall/firewall.html" },
     FW_URL_FILTER: { cmd: RequestCmd.URL_FILTER, url: "html/firewall/firewall.html" },
     FW_PORT_MAPPING: { cmd: RequestCmd.OTHER_FILTER, url: "html/firewall/firewall.html" },
-	FW_ACL_FILTER: { cmd: RequestCmd.ACL_FILTER, url: "html/firewall/firewall.html" },
+    FW_ACL_FILTER: { cmd: RequestCmd.ACL_FILTER, url: "html/firewall/firewall.html" },
     FW_SPEED_LIMIT: { cmd: RequestCmd.SPEED_LIMIT, url: "html/firewall/firewall.html" },
     STATIC_ARP_BINDING: { cmd: RequestCmd.STATIC_ARP_BINDING, url: "html/firewall/staticArpBindingIndex.html" },
     FW_DMZ: { cmd: RequestCmd.GET_DMZ, url: "html/firewall/dmzIndex.html" }
@@ -415,7 +417,7 @@ var SysUtil = {
             "top": parseInt(((h || document.documentElement.clientHeight -600) - $box.height()) / 2, 10) + "px"
         });
     },
-	rebootDevice: function(msg) {
+    rebootDevice: function(msg) {
         if (!AlertUtil.confirm(msg)) {
             return;
         }
@@ -476,7 +478,7 @@ var SysUtil = {
                 if (ratio >= 3) count += 3;
                 else if (ratio >= 2) count += 2;
                 //else if (ratio > 1 && maxCount - count > delayCount) count++;
-				else  count++;
+                else  count++;
             }
             if (count <= maxCount) {
                 $info.text(message + DOC.comma + PROMPT.status.progress+" " + parseInt((100 * count) / maxCount) + "%");
@@ -492,7 +494,7 @@ var SysUtil = {
     upload: function($form, $file, command, callback) {
         var url = String.format("{0}?cmd={1}&method=POST",  '/cgi-bin/lua.cgi', RequestCmd.SYS_UPDATE);
         
-		var datas = null;
+        var datas = null;
         $form.ajaxSubmit({
             url: url,
             type: 'POST',
@@ -515,10 +517,11 @@ var SysUtil = {
                             return datas != null;
                         },
                         function() {
-					      if (datas.success) {
+                            console.log(datas);
+                          if (datas.success) {
                             AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
                           } else {
-                    	    SysUtil.processMsg(datas.message);
+                            SysUtil.processMsg(datas.message);
                           }
                           if ($.isFunction(callback)) {
                                 callback(updateFileName);
@@ -535,12 +538,81 @@ var SysUtil = {
             },
             success: function(data) {
                datas = data;
+
             },
             error: function(responseText) {
                datas = { success: false, message: responseText };
             }
         });
-    }
+    },
+    upload2: function($form, $file, command, callback) {
+        var url = String.format("{0}?cmd={1}&method=POST",  '/cgi-bin/lua.cgi', RequestCmd.SYS_UPDATE);
+        var updateFileName = $file.val();
+        var datas = null;
+        $form.ajaxSubmit({
+            url: url,
+            type: 'POST',
+            dataType: 'json',
+            beforeSubmit: function() {
+                
+                if (updateFileName.length == 0) {
+                    AlertUtil.alertMsg(CHECK.required.uploadFile);
+                    return false;
+                }
+
+                if(/[\\\/]/.test(updateFileName)) {
+                    var matchs = updateFileName.match(/(.*)?[\\\/](.*)/);
+                    updateFileName = matchs[2];
+                }
+
+                if(confirm(PROMPT.confirm.uploadFile + updateFileName)){
+                    SysUtil.showProgress(ProgressTime.UPLOAD_FILE, PROMPT.status.uploading,
+                        function() {
+                            return datas != null;
+                        },
+                        function() {
+                            console.log(datas);
+                          if (datas.success) {
+                            AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
+                          } else {
+                            SysUtil.processMsg(datas.message);
+                          }
+                          if ($.isFunction(callback)) {
+                                callback(updateFileName);
+                           }
+                        }
+                    );
+
+                    return true;
+
+                }else {
+                    return false;
+                }
+
+            },
+            success: function(data) {
+                var updateFileName2 = "/tz_www/html/" + updateFileName;
+                 try {
+                        
+                        Page.postJSON({
+                                json: { cmd: RequestCmd.CONFIG_IMPORT, configFile: updateFileName2},
+                                success: function(data) {
+                                    datas = data;
+                                },
+                                fail: function(data) {
+                                    datas = data;
+                                }
+                            });
+                        
+                    } catch(ex) {
+                        datas = { success: false, message: PROMPT.status.parseJsonFail };
+                    }
+            },
+            error: function(responseText) {
+               datas = { success: false, message: responseText };
+            }
+        });
+    },
 };
 
 var StatusUtil = {
@@ -698,12 +770,12 @@ var CheckUtil = {
 
         return validate.form();
     },
-	checkPwd: function(pwd) {
+    checkPwd: function(pwd) {
         var asciiReg = /^[\x00-\xff]{8,63}$/;
         var hexReg = /^[0-9A-F]{64}$/;
         return asciiReg.test(pwd) || hexReg.test(pwd);
     },
-	checkIp: function(ip, isIpv6) {
+    checkIp: function(ip, isIpv6) {
         if(isIpv6 != "IPV6"){
             var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
             return reg.test(ip);
@@ -722,7 +794,7 @@ var CheckUtil = {
         var exp=/^(254|252|248|240|224|192|128|0)\.0\.0\.0|255\.(254|252|248|240|224|192|128|0)\.0\.0|255\.255\.(254|252|248|240|224|192|128|0)\.0|255\.255\.255\.(254|252|248|240|224|192|128|0)$/; 
         return exp.test(mask);
     },
-	checkMac: function(mac) {
+    checkMac: function(mac) {
         var reg = /^([0-9a-f]{2}[\:|\-]){5}[0-9a-f]{2}$/i;
         return reg.test(mac);
     },
@@ -738,7 +810,7 @@ var CheckUtil = {
         var reg = /^[0-9a-zA-Z!#$&()*\+,\-\.\/%:;<=>?@\[\]^_\{|\}~ ]*$/;
         return reg.test(password);
     },
-	checkPort: function(port) {
+    checkPort: function(port) {
         var thePort = parseInt(port, 10);
         if (isNaN(thePort) || thePort < 0 || thePort > 65535) return { isValid : false };
         return { isValid : true, port: thePort};
@@ -755,8 +827,8 @@ var CheckUtil = {
 var Page = {
     AUTH:"",
     isShowLangu:"",
-	Level:"",
-	menuItem: null,
+    Level:"",
+    menuItem: null,
     isNULLToSpace: false,
     currentId: 0,
     sessionId: "",
@@ -942,15 +1014,15 @@ var Page = {
 
         $(containerId).html(_.template($(templateId).html(), datas));
     },
-	getPreHostname: function() {
-    	var hostname = FormatUtil.formatField(location.hostname);
-    	var lastIndex = hostname.lastIndexOf('.');
-    	if (lastIndex > 0) {
-    		hostname = hostname.substring(0, lastIndex + 1);
-    	} else {
-    		hostname = "192.168.0.";
-    	}
-    	return hostname;
+    getPreHostname: function() {
+        var hostname = FormatUtil.formatField(location.hostname);
+        var lastIndex = hostname.lastIndexOf('.');
+        if (lastIndex > 0) {
+            hostname = hostname.substring(0, lastIndex + 1);
+        } else {
+            hostname = "192.168.0.";
+        }
+        return hostname;
     },
     setStripeTable: function(id) {
         var $tab = $(id || 'table.detail');
@@ -1114,12 +1186,12 @@ var Page = {
         if(!json.language){
             json.language = Page.language;
         }
-		
-		if(!json.sessionId){
+        
+        if(!json.sessionId){
             json.sessionId = Page.sessionId;
         }
-		
-		var asyns;
+        
+        var asyns;
         if(isIE()){
             asyns = false;
         }else {
@@ -1180,8 +1252,8 @@ var Page = {
         timeout: 0,
         returnHtml: false,
         success: function(){},
-		fail: function() {
-		  $('#logout').click();
+        fail: function() {
+          $('#logout').click();
           location.href = Page.getUrl(Url.LOGIN);
         },
         complete: function(){}
@@ -1376,7 +1448,7 @@ function getOpenInfo() {
             success: function(datas) {
                 theRouterInfo = datas.data;
 
-                //	getLteInfo(routerInfo);
+                //  getLteInfo(routerInfo);
                 createTable(theRouterInfo);
             },
             fail: function() {
