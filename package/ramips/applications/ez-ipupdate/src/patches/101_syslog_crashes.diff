@@ -1,0 +1,58 @@
+--- ez-ipupdate-3.0.11b8.orig/ez-ipupdate.c
++++ ez-ipupdate-3.0.11b8/ez-ipupdate.c
+@@ -704,6 +707,10 @@
+   }
+ #endif
+ 
++#if HAVE_SYSLOG_H
++  closelog();
++#endif
++
+   exit(1);
+ }
+ RETSIGTYPE generic_sig_handler(int sig)
+@@ -798,7 +805,7 @@
+     sprintf(buf, "message incomplete because your OS sucks: %s\n", fmt);
+ #endif
+ 
+-    syslog(LOG_NOTICE, buf);
++    syslog(LOG_NOTICE, "%s", buf);
+   }
+   else
+   {
+@@ -4519,23 +4526,25 @@
+       if(fork() > 0) { exit(0); } /* parent */
+     }
+ 
++#  if HAVE_SYSLOG_H
++    openlog(program_name, LOG_PID, LOG_DAEMON );
++    //options |= OPT_QUIET;
++#  endif
++    show_message("version %s, interface %s, host %s, server %s, service %s\n",
++        VERSION, N_STR(interface), N_STR(host), server, service->title);
++
+ #if HAVE_GETPID
+     if(pid_file && pid_file_create(pid_file) != 0)
+     {
+-      fprintf(stderr, "exiting...\n");
++      show_message("could not create pid file %s (%s), exiting\n",
++                   pid_file, strerror(errno));
++#if HAVE_SYSLOG_H
++      closelog();
++#endif
+       exit(1);
+     }
+ #endif
+ 
+-#  if HAVE_SYSLOG_H
+-    openlog(program_name, LOG_PID, LOG_USER );
+-    options |= OPT_QUIET;
+-#  endif
+-    show_message("ez-ipupdate Version %s, Copyright (C) 1998-2001 Angus Mackay.\n", 
+-        VERSION);
+-    show_message("%s started for interface %s host %s using server %s and service %s\n",
+-        program_name, N_STR(interface), N_STR(host), server, service->title);
+-
+     memset(&sin, 0, sizeof(sin));
+ 
+     if(cache_file)

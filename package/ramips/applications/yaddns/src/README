@@ -1,0 +1,69 @@
+    Yaddns
+==============
+
+Compilation/Installation
+-------------------------------------------
+
+ ./configure
+ make
+ make install
+
+Usage
+-------------------------------------------
+
+ - You can find full documentation on yaddns usage here:
+
+    https://github.com/yaddns/yaddns/wiki/How-to-use-yaddns
+
+ - For those in a hurry, here the 2 things to do to bring yaddns up:
+  * Edit yaddns.conf file
+  * Launch yaddns like this:
+     /usr/bin/yaddns -f /etc/yaddns.conf -p /var/run/yaddns.pid
+
+ - Reload config in runtime:
+     killall -SIGHUP yaddns
+
+ - Wake up yaddns and go proper action now in runtime:
+     killall -SIGUSR1 yaddns
+
+ - Unfreeze services (in case of freeze
+   following temporary dyndns server errors) in runtime:
+     killall -SIGUSR2 yaddns
+
+Compilation tricks for developpers
+-------------------------------------------
+
+ - Generate ./configure and other tools for the compilation:
+    ./autogen.sh
+
+ - To have -g and -DDEBUG CFLAGS:
+    ./configure --enable-debug
+
+ - To have extra debug messages:
+    ./configure --enable-debug-log
+
+ - If you want to compile and execute test programs from tests/ directory, type:
+    make check
+
+License
+-------------------------------------------
+
+ View COPYING file
+
+Wiki/Docs/Bug reports
+-------------------------------------------
+
+ https://github.com/yaddns/yaddns/
+
+Source repository
+-------------------------------------------
+
+ git://github.com/yaddns/yaddns.git
+
+ - If you want to collaborate to this project, sign up to github.com
+   and go to https://github.com/yaddns/yaddns
+
+Contact
+-------------------------------------------
+
+ * Anthony Viallard <avd@patatrac.info>

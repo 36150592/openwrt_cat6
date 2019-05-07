@@ -1,0 +1,1 @@
+/home/fengyz/code/9x07_bm817c/oe-core/build/tmp-glibc/sysroots/x86_64-linux/usr/share/aclocal/ltversion.m4

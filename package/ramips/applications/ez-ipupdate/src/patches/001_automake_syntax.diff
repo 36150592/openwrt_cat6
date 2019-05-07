@@ -1,0 +1,45 @@
+Index: ez-ipupdate-3.0.11b8/Makefile.am
+===================================================================
+--- ez-ipupdate-3.0.11b8.orig/Makefile.am	2007-03-08 16:14:29.000000000 +0100
++++ ez-ipupdate-3.0.11b8/Makefile.am	2007-03-08 16:15:43.000000000 +0100
+@@ -1,8 +1,12 @@
+ 
+ bin_PROGRAMS = ez-ipupdate
+-ez_ipupdate_SOURCES = ez-ipupdate.c conf_file.c conf_file.h md5.c md5.h cache_file.c cache_file.h error.h pid_file.c pid_file.h dprintf.h @EXTRASRC@
+-ez_ipupdate_LDADD = @EXTRAOBJ@
++ez_ipupdate_SOURCES = ez-ipupdate.c conf_file.c conf_file.h md5.c md5.h cache_file.c cache_file.h error.h pid_file.c pid_file.h dprintf.h $(extrasrc)
+ 
+-EXTRA_DIST = getpass.c ez-ipupdate.lsm example.conf example-pgpow.conf example-dhs.conf example-dyndns.conf example-ods.conf example-tzo.conf example-gnudip.conf example-easydns.conf example-justlinux.conf example-dyns.conf CHANGELOG mkbinary example-heipv6tb.conf
++EXTRA_DIST = ez-ipupdate.lsm example.conf example-pgpow.conf example-dhs.conf example-dyndns.conf example-ods.conf example-tzo.conf example-gnudip.conf example-easydns.conf example-justlinux.conf example-dyns.conf CHANGELOG mkbinary example-heipv6tb.conf
+ 
+ AUTOMAKE_OPTIONS=foreign
++
++if HAVE_GETPASS
++extrasrc = getpass.c
++endif
++
+Index: ez-ipupdate-3.0.11b8/configure.in
+===================================================================
+--- ez-ipupdate-3.0.11b8.orig/configure.in	2007-03-08 16:14:29.000000000 +0100
++++ ez-ipupdate-3.0.11b8/configure.in	2007-03-08 16:15:57.000000000 +0100
+@@ -88,9 +88,8 @@
+   AC_MSG_ERROR(getopt is needed for this program to work)
+ fi
+ 
+-AC_CHECK_FUNC(getpass, AC_DEFINE(HAVE_GETPASS),
+-    [EXTRASRC="$EXTRASRC \$(srcdir)/getpass.c"]
+-    [EXTRAOBJ="$EXTRAOBJ \$(srcdir)/getpass.o"] )
++AC_CHECK_FUNC(getpass, AC_DEFINE(HAVE_GETPASS))
++AM_CONDITIONAL(HAVE_GETPASS, test "$ac_cv_func_getpass" != yes)
+ 
+ dnl Get system canonical name
+ AC_CANONICAL_HOST
+@@ -150,8 +149,5 @@
+ 	      [ AC_DEFINE(USE_MD5)
+                 AC_MSG_RESULT(no) ]   )
+ 
+-AC_SUBST(EXTRASRC)
+-AC_SUBST(EXTRAOBJ)
+-
+ AC_OUTPUT(Makefile)
+ 

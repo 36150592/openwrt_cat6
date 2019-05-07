@@ -1,0 +1,39 @@
+--- ../ez-ipupdate-3.0.11b8/cache_file.c        2003-04-17 13:31:04.000000000 -0400
++++ cache_file.c        2005-08-18 14:47:20.417859984 -0400
+@@ -133,7 +133,9 @@ int read_cache_file(char *file, time_t *
+     ipstr = p;
+ 
+     *date = strtoul(datestr, NULL, 10);
+-    *ipaddr = strdup(ipstr);
++
++    if (strcmp(ipstr,"(null)")!=0)
++      *ipaddr = strdup(ipstr);
+   }
+   else
+   {
+--- ../ez-ipupdate-3.0.11b8/ez-ipupdate.c       2006-04-09 15:24:03.000000000 -0400
++++ ez-ipupdate.c       2005-08-18 14:44:31.510537800 -0400
+@@ -1615,7 +1615,13 @@ int get_if_addr(int sock, char *name, st
+   struct ifreq ifr;
+ 
+   memset(&ifr, 0, sizeof(ifr));
+-  strcpy(ifr.ifr_name, name);
++
++  if (name == NULL) {
++    dprintf((stderr, "get_if_addr called with name == NULL\n"));
++  } else {
++    strcpy(ifr.ifr_name, name);
++  }
++
+   /* why does this need to be done twice? */
+   if(ioctl(sock, SIOCGIFADDR, &ifr) < 0) 
+   { 
+@@ -4748,7 +4754,7 @@ int main(int argc, char **argv)
+       if(ipstr != NULL)
+       {
+ 
+-        if(address == NULL || *address == '\0')
++        if((address == NULL || *address == '\0') && interface != NULL)
+         {
+ #ifdef IF_LOOKUP
+           struct sockaddr_in sin;

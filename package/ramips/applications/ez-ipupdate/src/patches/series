@@ -1,0 +1,13 @@
+000_missing_headers.diff
+001_automake_syntax.diff
+002_am_maintainer_mode.diff
+010_rebootstrap.diff
+100_portability.diff
+101_syslog_crashes.diff
+102_misc_crashes.diff
+103_protocol.diff
+104_misc_crashes.diff -p0
+150_cosmetic.diff
+200_default_config.diff
+201_upstream_changelog.diff
+300_pubyun_3322.diff

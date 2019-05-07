@@ -1,0 +1,54 @@
+--- ez-ipupdate-3.0.11b8.orig/ez-ipupdate.c
++++ ez-ipupdate-3.0.11b8/ez-ipupdate.c
+@@ -3392,7 +3399,7 @@
+ 
+   // send an offline request if address 0.0.0.0 is used
+   // otherwise, we ignore the address and send an update request
+-  gnudip_request[0] = strcmp(address, "0.0.0.0") == 0 ? '1' : '0';
++  gnudip_request[0] = address && strcmp(address, "0.0.0.0") == 0 ? '1' : '0';
+   gnudip_request[1] = '\0';
+ 
+   // find domainname
+@@ -4215,8 +4222,6 @@
+ 
+   switch(ret)
+   {
+-    char *p;
+-
+     case -1:
+       if(!(options & OPT_QUIET))
+       {
+@@ -4456,13 +4463,13 @@
+     dprintf((stderr, "user_name: %s\n", user_name));
+     dprintf((stderr, "password: %s\n", password));
+   }
+-  if(*user_name == '\0')
++  if(*user_name == '\0' && !(options & OPT_DAEMON))
+   {
+     printf("user name: ");
+     fgets(user_name, sizeof(user_name), stdin);
+     chomp(user_name);
+   }
+-  if(*password == '\0')
++  if(*password == '\0' && !(options & OPT_DAEMON))
+   {
+     strncpy(password, getpass("password: "), sizeof(password));
+   }
+@@ -4560,7 +4569,7 @@
+           strftime(timebuf, sizeof(timebuf), "%Y/%m/%d %H:%M", ts);
+           show_message("got last update %s on %s from cache file\n", ipstr, timebuf);
+         }
+-        else
++        else if(ipstr||ipdate)
+         {
+           show_message("malformed cache file: %s\n", cache_file);
+         }
+@@ -4840,7 +4849,7 @@
+       {
+         char ipbuf[64];
+ 
+-        if(address == NULL || *address == '\0')
++        if((address == NULL || *address == '\0') && interface != NULL)
+         {
+ #ifdef IF_LOOKUP
+           struct sockaddr_in sin;

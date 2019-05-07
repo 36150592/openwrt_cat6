@@ -1,0 +1,212 @@
+--- ez-ipupdate-3.0.11b8.orig/example.conf
++++ ez-ipupdate-3.0.11b8/example.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+--- ez-ipupdate-3.0.11b8.orig/example-pgpow.conf
++++ ez-ipupdate-3.0.11b8/example-pgpow.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+@@ -10,8 +10,8 @@
+ host=mydomain.penguinpowered.com
+ interface=eth1
+ 
+-# if you use run-as ensure the user has permission to write this file
+-cache-file=/tmp/ez-ipupdate.cache
++run-as-user=ez-ipupd
++cache-file=/var/cache/ez-ipupdate/default-cache
+ 
+ # uncomment this once you have everything working how you want and you are
+ # ready to have ez-ipupdate running in the background all the time. to stop it
+--- ez-ipupdate-3.0.11b8.orig/example-dhs.conf
++++ ez-ipupdate-3.0.11b8/example-dhs.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+@@ -10,8 +10,8 @@
+ host=mydomain.whatever.com
+ interface=eth1
+ 
+-# if you use run-as ensure the user has permission to write this file
+-cache-file=/tmp/ez-ipupdate.cache
++run-as-user=ez-ipupd
++cache-file=/var/cache/ez-ipupdate/default-cache
+ 
+ # uncomment this once you have everything working how you want and you are
+ # ready to have ez-ipupdate running in the background all the time. to stop it
+--- ez-ipupdate-3.0.11b8.orig/example-dyndns.conf
++++ ez-ipupdate-3.0.11b8/example-dyndns.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+@@ -12,14 +12,9 @@
+ interface=eth1
+ max-interval=2073600
+ 
+-# please create this file and ensure that the user that ez-ipupdate is running
+-# as has write permissions to it then uncomment this line, if you don't your
+-# dyndns account will probably get banned. if you run ez-ipupdate as root (bad
+-# idea, use "run-as-user") then you can just uncomment this line.
+-#cache-file=/etc/ez-ipupdate.cache.eth1
+-
+-# for the mean time we'll just use a cache file in the temp directory
+-cache-file=/tmp/ez-ipupdate.cache
++# if you don't use a cache file your dyndns account will probably get banned.
++run-as-user=ez-ipupd
++cache-file=/var/cache/ez-ipupdate/default-cache
+ 
+ # uncomment this once you have everything working how you want and you are
+ # ready to have ez-ipupdate running in the background all the time. to stop it
+--- ez-ipupdate-3.0.11b8.orig/example-ods.conf
++++ ez-ipupdate-3.0.11b8/example-ods.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+@@ -10,8 +10,8 @@
+ host=mydomain.ods.org
+ interface=eth1
+ 
+-# if you use run-as ensure the user has permission to write this file
+-cache-file=/tmp/ez-ipupdate.cache
++run-as-user=ez-ipupd
++cache-file=/var/cache/ez-ipupdate/default-cache
+ 
+ # uncomment this once you have everything working how you want and you are
+ # ready to have ez-ipupdate running in the background all the time. to stop it
+--- ez-ipupdate-3.0.11b8.orig/example-tzo.conf
++++ ez-ipupdate-3.0.11b8/example-tzo.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+@@ -14,8 +14,8 @@
+ max-interval=2073600
+ interface=eth1
+ 
+-# if you use run-as ensure the user has permission to write this file
+-cache-file=/tmp/ez-ipupdate.cache
++run-as-user=ez-ipupd
++cache-file=/var/cache/ez-ipupdate/default-cache
+ 
+ # uncomment this once you have everything working how you want and you are
+ # ready to have ez-ipupdate running in the background all the time. to stop it
+--- ez-ipupdate-3.0.11b8.orig/example-gnudip.conf
++++ ez-ipupdate-3.0.11b8/example-gnudip.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+@@ -14,8 +14,8 @@
+ # any other value is ignored
+ #address=0.0.0.0
+ 
+-# if you use run-as ensure the user has permission to write this file
+-cache-file=/tmp/ez-ipupdate.cache
++run-as-user=ez-ipupd
++cache-file=/var/cache/ez-ipupdate/default-cache
+ 
+ # uncomment this once you have everything working how you want and you are
+ # ready to have ez-ipupdate running in the background all the time. to stop it
+--- ez-ipupdate-3.0.11b8.orig/example-easydns.conf
++++ ez-ipupdate-3.0.11b8/example-easydns.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+@@ -10,8 +10,8 @@
+ host=mydomain.whatever.com
+ interface=eth1
+ 
+-# if you use run-as ensure the user has permission to write this file
+-cache-file=/tmp/ez-ipupdate.cache
++run-as-user=ez-ipupd
++cache-file=/var/cache/ez-ipupdate/default-cache
+ 
+ # uncomment this once you have everything working how you want and you are
+ # ready to have ez-ipupdate running in the background all the time. to stop it
+--- ez-ipupdate-3.0.11b8.orig/example-justlinux.conf
++++ ez-ipupdate-3.0.11b8/example-justlinux.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+@@ -10,8 +10,8 @@
+ host=mydomain.penguinpowered.com
+ interface=eth1
+ 
+-# if you use run-as ensure the user has permission to write this file
+-cache-file=/tmp/ez-ipupdate.cache
++run-as-user=ez-ipupd
++cache-file=/var/cache/ez-ipupdate/default-cache
+ 
+ # uncomment this once you have everything working how you want and you are
+ # ready to have ez-ipupdate running in the background all the time. to stop it
+--- ez-ipupdate-3.0.11b8.orig/example-dyns.conf
++++ ez-ipupdate-3.0.11b8/example-dyns.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+@@ -10,8 +10,8 @@
+ host=myhost
+ #interface=eth1
+ 
+-# if you use run-as ensure the user has permission to write this file
+-#cache-file=/tmp/ez-ipupdate.cache
++run-as-user=ez-ipupd
++cache-file=/var/cache/ez-ipupdate/default-cache
+ 
+ # uncomment this once you have everything working how you want and you are
+ # ready to have ez-ipupdate running in the background all the time. to stop it
+--- ez-ipupdate-3.0.11b8.orig/example-heipv6tb.conf
++++ ez-ipupdate-3.0.11b8/example-heipv6tb.conf
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/ez-ipupdate -c
++#!/usr/sbin/ez-ipupdate -c
+ #
+ # example config file for ez-ipupdate
+ #
+@@ -11,14 +11,9 @@
+ interface=eth1
+ max-interval=2073600
+ 
+-# please create this file and ensure that the user that ez-ipupdate is running
+-# as has write permissions to it then uncomment this line, if you don't your
+-# dyndns account will probably get banned. if you run ez-ipupdate as root (bad
+-# idea, use "run-as-user") then you can just uncomment this line.
+-#cache-file=/etc/ez-ipupdate.cache.eth1
+-
+-# for the mean time we'll just use a cache file in the temp directory
+-cache-file=/tmp/ez-ipupdate.cache
++# if you don't use a cache file your account will probably get banned.
++run-as-user=ez-ipupd
++cache-file=/var/cache/ez-ipupdate/default-cache
+ 
+ # uncomment this once you have everything working how you want and you are
+ # ready to have ez-ipupdate running in the background all the time. to stop it

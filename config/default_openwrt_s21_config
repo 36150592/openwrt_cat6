@@ -2921,6 +2921,7 @@ CONFIG_PACKAGE_ated=y
 CONFIG_PACKAGE_cpeconfer=y
 CONFIG_PACKAGE_dialtool2=y
 CONFIG_PACKAGE_eth_mac=y
+CONFIG_PACKAGE_ez-ipupdate=y
 # CONFIG_PACKAGE_gpio is not set
 # CONFIG_PACKAGE_handover is not set
 # CONFIG_PACKAGE_i2ctest is not set
@@ -2938,6 +2939,7 @@ CONFIG_PACKAGE_netcwmp=y
 # CONFIG_PACKAGE_nfc is not set
 # CONFIG_PACKAGE_nvram is not set
 # CONFIG_PACKAGE_pcmtest is not set
+CONFIG_PACKAGE_phddns=y
 # CONFIG_PACKAGE_reg is not set
 # CONFIG_PACKAGE_samba-server is not set
 CONFIG_PACKAGE_sendat=y
@@ -2954,6 +2956,7 @@ CONFIG_PACKAGE_unzip=y
 # CONFIG_PACKAGE_wapid is not set
 # CONFIG_PACKAGE_watchdog is not set
 # CONFIG_PACKAGE_wpa-supplicant-20 is not set
+CONFIG_PACKAGE_yaddns=y
 
 #
 # Drivers

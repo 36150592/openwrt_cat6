@@ -1,0 +1,168 @@
+Index: ez-ipupdate-3.0.11b8/ez-ipupdate.c
+===================================================================
+--- ez-ipupdate-3.0.11b8.orig/ez-ipupdate.c
++++ ez-ipupdate-3.0.11b8/ez-ipupdate.c
+@@ -62,6 +62,12 @@
+ #define DYNDNS_STAT_REQUEST "/nic/update"
+ #define DYNDNS_MAX_INTERVAL (25*24*3600)
+ 
++#define QDNS_DEFAULT_SERVER "members.3322.org"
++#define QDNS_DEFAULT_PORT "80"
++#define QDNS_REQUEST "/dyndns/update"
++#define QDNS_STAT_REQUEST "/dyndns/update"
++#define QDNS_MAX_INTERVAL (25*24*3600)
++
+ #define ODS_DEFAULT_SERVER "update.ods.org"
+ #define ODS_DEFAULT_PORT "7070"
+ #define ODS_REQUEST "update"
+@@ -517,6 +523,26 @@ struct service_t services[] = {
+     HEIPV6TB_DEFAULT_PORT,
+     HEIPV6TB_REQUEST
+   },
++  { "qdns",
++    { "qdns", 0, 0, },
++    DYNDNS_init,
++    DYNDNS_update_entry,
++    DYNDNS_check_info,
++    DYNDNS_fields_used,
++    QDNS_DEFAULT_SERVER,
++    QDNS_DEFAULT_PORT,
++    QDNS_REQUEST
++  },
++  { "qdns-static",
++    { "qdns-static", 0, 0, },
++    DYNDNS_init,
++    DYNDNS_update_entry,
++    DYNDNS_check_info,
++    DYNDNS_STAT_fields_used,
++    QDNS_DEFAULT_SERVER,
++    QDNS_DEFAULT_PORT,
++    QDNS_STAT_REQUEST
++  },
+ };
+ 
+ static struct service_t *service = NULL;
+@@ -1921,7 +1947,8 @@ int DYNDNS_update_entry(void)
+   snprintf(buf, BUFFER_SIZE, "GET %s?", request);
+   output(buf);
+ 
+-  if(is_in_list("dyndns-static", service->names))
++  if(is_in_list("dyndns-static", service->names) || 
++          is_in_list("qdns-static", service->names))
+   {
+     snprintf(buf, BUFFER_SIZE, "%s=%s&", "system", "statdns");
+     output(buf);
+Index: ez-ipupdate-3.0.11b8/qdns.conf
+===================================================================
+--- /dev/null
++++ ez-ipupdate-3.0.11b8/qdns.conf
+@@ -0,0 +1,46 @@
++#!./ez-ipupdate -c
++#
++# example config file for ez-ipupdate
++#
++# this file is actually executable!
++#
++
++#下面动态域名和静态域名选一个
++
++#动态域名
++service-type=qdns
++#静态域名
++#service-type=qdns-static
++
++#设置用户名和密码
++user=myuserid:mypassword
++
++#你需要更新的域名
++host=mydomain.whatever.com
++
++#你的网络端口
++interface=ppp0
++
++#如果使用通配符，请将下面的注释去掉
++#wildcard
++
++#如果使用邮件服务器(mx)
++#mx=mx.abc.com
++
++
++max-interval=2073600
++
++# please create this file and ensure that the user that ez-ipupdate is running
++# as has write permissions to it then uncomment this line, if you don't your
++# dyndns account will probably get banned. if you run ez-ipupdate as root (bad
++# idea, use "run-as-user") then you can just uncomment this line.
++#cache-file=/etc/ez-ipupdate.cache.eth1
++
++# for the mean time we'll just use a cache file in the temp directory
++cache-file=/tmp/ez-ipupdate.cache
++
++# uncomment this once you have everything working how you want and you are
++# ready to have ez-ipupdate running in the background all the time. to stop it
++# you can use "killall -QUIT ez-ipupdate" under linux.
++#daemon
++
+Index: ez-ipupdate-3.0.11b8/README.3322
+===================================================================
+--- /dev/null
++++ ez-ipupdate-3.0.11b8/README.3322
+@@ -0,0 +1,58 @@
++"ez-ipupdate"
++
++Ez-ipupdate 是一个动态域名更新程序，可以更新希网的动态域名。
++
++申请希网动态域名，请到：
++
++http://www.3322.org
++
++希网的动态域名系统更新时，service-type 参数应该选择：
++
++１、对于动态域名(DYNDNS)，service-type参数应该选择 qdns
++２、对于静态域名(STATDNS)，service-type参数应该选择 qdns-static
++
++Ez-ipupdate的帮助可以使用以下命令参看：
++
++ez-ipupdate -H
++
++安装和使用方法：
++
++将ez-ipupdate 拷贝到/usr/local/bin目录
++
++Ez-ipupdate可以运行在以下两种方式：
++
++１、命令行方式, 如
++
++/usr/local/bin/ez-ipupdate -i tun0 -h test.3322.org -S qdns -u test:pass
++
++详细参数请看 ez-ipupdate -H
++
++２、参数文件方式
++
++编辑qdns.conf文件，并将qdns.conf文件的属性改成可执行：
++chmod 700 qdns.conf
++
++运行 qdns.conf 文件，就可以完成更新
++
++qdns.conf 里面可以使用的详细参数，可以使用 "echo help | ./ez-ipupdate -c -"来查看
++
++FAQ(常见问题): 
++
++问：在Linux拨号以后，如果自动更新动态域名？
++答: 在 redhat 和 debian下面，修改 /etc/ppp/ip-up 文件，在后面加入这一行：
++
++/usr/local/bin/ez-ipupdate -i tun0 -h test.3322.org -S qdns -u test:pass
++
++注意使用你的参数，并且如果在 redhat 下面，一定要将这一行加入到 "exit 0" 的前面
++
++问：在FreeBSD以后，如何自动更新动态域名？
++答：修改 /etc/ppp/ppp.linkup文件，加入自动运行的行：
++
++adsl:
++iface clear 
++!bg /usr/local/bin/ez-ipupdate -i tun0 -h test.3322.org -S qdns -u test:pass
++
++注意使用你的参数
++
++
++http://www.3322.org

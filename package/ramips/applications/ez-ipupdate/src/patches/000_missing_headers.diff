@@ -1,0 +1,15 @@
+--- ez-ipupdate-3.0.11b8.orig/configure.in
++++ ez-ipupdate-3.0.11b8/configure.in
+@@ -58,10 +58,12 @@
+ dnl Checks for header files.
+ AC_CHECK_HEADERS( arpa/inet.h \
+ 		  sys/types.h \
++		  time.h \
+ 		  sys/time.h \
+ 		  sys/stat.h \
+ 		  fcntl.h \
+ 		  signal.h \
++		  string.h \
+ 		  syslog.h \
+ 		  pwd.h \
+ 		  stdarg.h \

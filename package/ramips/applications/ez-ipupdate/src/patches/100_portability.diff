@@ -1,0 +1,21 @@
+--- ez-ipupdate-3.0.11b8.orig/ez-ipupdate.c
++++ ez-ipupdate-3.0.11b8/ez-ipupdate.c
+@@ -139,6 +139,9 @@
+ #if HAVE_SIGNAL_H
+ #  include <signal.h>
+ #endif
++#if HAVE_TIME_H
++#  include <time.h>
++#endif
+ #if HAVE_SYS_TIME_H
+ #  include <sys/time.h>
+ #endif
+@@ -165,7 +168,7 @@
+ #endif
+ 
+ 
+-#if __linux__ || __SVR4 || __OpenBSD__ || __FreeBSD__ || __NetBSD__
++#if __GLIBC__ || __SVR4 || __OpenBSD__ || __FreeBSD__ || __NetBSD__
+ #  define IF_LOOKUP 1
+ #  include <sys/ioctl.h>
+ #  include <net/if.h>

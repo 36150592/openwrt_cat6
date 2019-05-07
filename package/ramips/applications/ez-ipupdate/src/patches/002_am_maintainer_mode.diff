@@ -1,0 +1,12 @@
+Index: ez-ipupdate-3.0.11b8/configure.in
+===================================================================
+--- ez-ipupdate-3.0.11b8.orig/configure.in	2007-03-08 16:34:25.000000000 +0100
++++ ez-ipupdate-3.0.11b8/configure.in	2007-03-08 16:34:38.000000000 +0100
+@@ -3,6 +3,7 @@
+ AC_INIT(ez-ipupdate.c)
+ AM_CONFIG_HEADER(config.h)
+ AM_INIT_AUTOMAKE(ez-ipupdate,3.0.11b8)
++AM_MAINTAINER_MODE
+ 
+ 
+ dnl Checks for programs.

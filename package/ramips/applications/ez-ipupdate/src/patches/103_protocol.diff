@@ -1,0 +1,11 @@
+--- ez-ipupdate-3.0.11b8.orig/ez-ipupdate.c
++++ ez-ipupdate-3.0.11b8/ez-ipupdate.c
+@@ -1683,7 +1690,7 @@
+       close(client_sockfd);
+       return(-1);
+     }
+-    if(strstr(buf, "\r\n") > 0)
++    if(strstr(buf, "\n") != NULL)
+     {
+       break;
+     }

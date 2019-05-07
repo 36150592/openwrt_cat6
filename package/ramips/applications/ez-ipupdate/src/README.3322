@@ -1,0 +1,58 @@
+"ez-ipupdate"
+
+Ez-ipupdate 是一个动态域名更新程序，可以更新希网的动态域名。
+
+申请希网动态域名，请到：
+
+http://www.3322.org
+
+希网的动态域名系统更新时，service-type 参数应该选择：
+
+１、对于动态域名(DYNDNS)，service-type参数应该选择 qdns
+２、对于静态域名(STATDNS)，service-type参数应该选择 qdns-static
+
+Ez-ipupdate的帮助可以使用以下命令参看：
+
+ez-ipupdate -H
+
+安装和使用方法：
+
+将ez-ipupdate 拷贝到/usr/local/bin目录
+
+Ez-ipupdate可以运行在以下两种方式：
+
+１、命令行方式, 如
+
+/usr/local/bin/ez-ipupdate -i tun0 -h test.3322.org -S qdns -u test:pass
+
+详细参数请看 ez-ipupdate -H
+
+２、参数文件方式
+
+编辑qdns.conf文件，并将qdns.conf文件的属性改成可执行：
+chmod 700 qdns.conf
+
+运行 qdns.conf 文件，就可以完成更新
+
+qdns.conf 里面可以使用的详细参数，可以使用 "echo help | ./ez-ipupdate -c -"来查看
+
+FAQ(常见问题): 
+
+问：在Linux拨号以后，如果自动更新动态域名？
+答: 在 redhat 和 debian下面，修改 /etc/ppp/ip-up 文件，在后面加入这一行：
+
+/usr/local/bin/ez-ipupdate -i tun0 -h test.3322.org -S qdns -u test:pass
+
+注意使用你的参数，并且如果在 redhat 下面，一定要将这一行加入到 "exit 0" 的前面
+
+问：在FreeBSD以后，如何自动更新动态域名？
+答：修改 /etc/ppp/ppp.linkup文件，加入自动运行的行：
+
+adsl:
+iface clear 
+!bg /usr/local/bin/ez-ipupdate -i tun0 -h test.3322.org -S qdns -u test:pass
+
+注意使用你的参数
+
+
+http://www.3322.org

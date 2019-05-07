@@ -1,0 +1,51 @@
+.\" Process this file with
+.\" groff -man -Tascii yaddns.conf.5
+.\"
+.TH yaddns 1 "May 2011" "Yaddns" ""
+.SH NAME
+yaddns - ddns client with multiple services support.
+.SH SYNOPSIS
+.B yaddns [-f cfg_filename] [-p pid_file] [-D] [-L]
+.SH DESCRIPTION
+Yaddns is a small ddns client with multiple ddns servers support (dyndns.org, no-ip, ovh, changeip, dyndns.it, ...) and a high flexibility.
+.SH OPTIONS
+.TP
+\fB-f\fR, \fB--cfg-filename\fR
+Config file to be used
+.TP
+\fB-p\fR, \fB--pid-file\fR
+PID file to be used
+.TP
+\fB-D\fR, \fB--daemonize\fR
+Daemonize yaddns
+.TP
+\fB-L\fR, \fB--use-syslog\fR
+Use this option to send log messages to the syslog instead of stdout. If you daemonize yaddns, implicitly you use this option and log messages will be sent to syslog.
+.TP
+\fB-h\fR, \fB--help\fR
+Display the help
+.TP
+\fB-l\fR, \fB--list-service\fR
+Display the list of available ddns service
+.TP
+\fB-V\fR, \fB--version\fR
+Display the version
+.SH SIGNALS
+\fBSIGHUP\fR
+Reload configuration
+.TP
+\fBSIGUSR1\fR
+Wake up yaddns and go proper action now
+.TP
+\fBSIGUSR1\fR
+Unfreeze services (in case of freeze following temporary dyndns server errors)
+.SH FILES
+.I /etc/yaddns.conf
+.RS
+The configuration file. See
+.BR yaddns.conf (5)
+for further details.
+.SH AUTHOR
+Anthony Viallard <anthony.viallard@patatrac.info>
+.SH "SEE ALSO"
+.BR yaddns.conf (5)
