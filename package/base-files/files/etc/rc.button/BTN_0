@@ -2,10 +2,19 @@
 #
 #fengyz @ tz 
 #the handler script for wlan button
+if [ -e /tmp/.in_peripheral_test ]; then
+	touch /tmp/.wifi_button_press
+fi
+
 [ "${ACTION}" = "released" ] || exit 0
+
 
 logger "$BUTTON pressed for $SEEN seconds"
 
+if [ -e /tmp/.in_peripheral_test ]; then
+	rm /tmp/.wifi_button_press
+	exit
+fi
 
 if [ "$SEEN" -lt 1 ]
 then

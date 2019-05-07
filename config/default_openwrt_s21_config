@@ -2940,6 +2940,7 @@ CONFIG_PACKAGE_netcwmp=y
 # CONFIG_PACKAGE_nvram is not set
 # CONFIG_PACKAGE_pcmtest is not set
 CONFIG_PACKAGE_phddns=y
+CONFIG_PACKAGE_peripheral_macwriter=y
 # CONFIG_PACKAGE_reg is not set
 # CONFIG_PACKAGE_samba-server is not set
 CONFIG_PACKAGE_sendat=y

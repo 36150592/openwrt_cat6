@@ -2,9 +2,18 @@
 #
 # ***************
 #fengyz@tz
+if [ -e /tmp/.in_peripheral_test ]; then
+	touch /tmp/.restore_button_press
+fi
+
 [ "${ACTION}" = "released" ] || exit 0
 
 logger "$BUTTON pressed for $SEEN seconds"
+
+if [ -e /tmp/.in_peripheral_test ]; then
+	rm /tmp/.restore_button_press
+	exit
+fi
 
 #if [ "$SEEN" -lt 1 ]
 #then
@@ -19,6 +28,7 @@ then
 	#jffs2reset -y && reboot &
 	
 	/etc/tozed/tz_restore_factory
+	sync
 
 	reboot
 fi
