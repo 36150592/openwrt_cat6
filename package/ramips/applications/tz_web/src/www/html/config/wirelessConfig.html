@@ -101,6 +101,14 @@
             $mask.hide();
 			$('#macList').val('');
         });
+        $("input[name='wifiOpen']").change(function(){
+            var thisId = this.id.substring(8,);
+            if($(this).prop("checked")){
+                $(".wifi_disable_hide"+thisId).show();
+            }else{
+                $(".wifi_disable_hide"+thisId).hide();
+            }
+        })
 
         $btnSaveMac.click(function () {
             var mac = $('#macList').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
@@ -246,10 +254,12 @@
                                 $wifiOpen.prop('checked', true);
                                 $lis.eq(1).show();
                                 $lis.eq(2).show();
+                                $(".wifi_disable_hide").show();
                             }else {
                                 $wifiOpen.prop('checked', false);
                                 $lis.eq(1).hide();
                                 $lis.eq(2).hide();
+                                $(".wifi_disable_hide").hide();
 
                             }
                             $wifiOpen.attr('old',data.status);
@@ -295,8 +305,10 @@
                             var data = datas.data;
                             for(var i = 1; i <= data.length; i++) {
                                 if(data[i].status == 0){
+                                    $(".wifi_disable_hide" + i).show();
                                     $('#wifiOpen' + i).prop('checked', true);
                                 }else {
+                                    $(".wifi_disable_hide" + i).hide();
                                     $('#wifiOpen' + i).prop('checked', false);
                                 }
                                 $('#wifiOpen' + i).attr('old',data[i].status);
@@ -624,39 +636,39 @@
                                     <input type="checkbox" id="wifiOpen" name="wifiOpen" /><%- open %>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr class="wifi_disable_hide" style="display:none;">
                                 <th><%- ssidBd %></th>
                                 <td>
                                     <input type="checkbox" id="broadcast" name="broadcast" /><%- open %>
                                 </td>
                             </tr>
-                            <tr class="wifi_wmm">
+                            <tr class="wifi_disable_hide wifi_wmm" style="display:none;">
                                 <th><%- wmm %></th>
                                 <td>
                                     <input type="checkbox" id="wmm" name="wmm" /><%- open %>
                                 </td>
                             </tr>
 
-                            <tr>
+                            <tr class="wifi_disable_hide" style="display:none;">
                                 <th><%- ssid %></th>
                                 <td><input type="text" id="ssid" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
                             </tr>
 
-                            <tr>
+                            <tr class="wifi_disable_hide" style="display:none;">
                                 <th><%- txPower %></th>
                                 <td>
                                     <input type="text" id="txPower" name="txPower" maxlength="4" class="txt2" />&nbsp;dBm<span class="cmt">(<%- txPowerCmt %>)</span>
                                 </td>
                             </tr>
 
-                            <tr>
+                            <tr class="wifi_disable_hide" style="display:none;">
                                 <th><%- maxStation %></th>
                                 <td>
                                     <input type="text" id="maxStation" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
                                 </td>
                             </tr>
 
-                            <tr>
+                            <tr class="wifi_disable_hide" style="display:none;">
                                 <!--信道-->
                                 <th><%- channel %></th>
                                 <td><select id="channel" name="channel">
@@ -692,7 +704,7 @@
                             <!--</select></td>-->
                             <!--</tr>-->
 
-                            <tr>
+                            <tr class="wifi_disable_hide" style="display:none;">
                                 <th><%- wifiMode %></th>
                                 <td><select id="wifiWorkMode" name="wifiWorkMode">
                                     <option value="0"  selected="selected">legacy 11b/g mixed</option>
@@ -709,7 +721,7 @@
                                 </select></td>
                             </tr>
 
-                            <tr id="bandWidthTr">
+                            <tr id="bandWidthTr" class="wifi_disable_hide" style="display:none;">
                                 <th><%- bandWidth %></th>
                                 <td>
                                     <select name="ht" id="ht">
@@ -732,7 +744,7 @@
                             <!--</select>-->
                             <!--</td>-->
                             <!--</tr>-->
-                            <tr>
+                            <tr class="wifi_disable_hide" style="display:none;">
                                 <th><%- authenticationType %></th>
                                 <td>
                                     <select name="authenticationType" id="authenticationType">
@@ -743,7 +755,7 @@
                                     </select>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr class="wifi_disable_hide" style="display:none;">
                                 <th><%- encryptAlgorithmTh %></th>
                                 <td>
                                     <label id="encryptAlgorithm">
@@ -758,7 +770,7 @@
                                     </label>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr class="wifi_disable_hide" style="display:none;">
                                 <th><%- key %></th>
                                 <td>
                                     <input type="password" name="key" maxlength="63" id="key"/>
@@ -789,26 +801,26 @@
                                     <input type="checkbox" id="wifiOpen1" name="wifiOpen" /><%- open %>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr style="display:none;" class="wifi_disable_hide1">
                                 <th><%- ssidBd %></th>
                                 <td>
                                     <input type="checkbox" id="broadcast1" name="broadcast" /><%- open %>
                                 </td>
                             </tr>
-                            <tr class="wifi_wmm">
+                            <tr style="display:none;" class="wifi_disable_hide1 wifi_wmm">
                                 <th><%- wmm %></th>
                                 <td>
                                     <input type="checkbox" id="wmm1" name="wmm" /><%- open %>
                                 </td>
                             </tr>
 
-                            <tr>
+                            <tr style="display:none;" class="wifi_disable_hide1">
                                 <th><%- ssid %></th>
                                 <td><input type="text" id="ssid1" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
                             </tr>
 
 
-                            <tr>
+                            <tr style="display:none;" class="wifi_disable_hide1">
                                 <th><%- authenticationType %></th>
                                 <td>
                                     <select name="authenticationType" id="authenticationType1">
@@ -819,7 +831,7 @@
                                     </select>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr style="display:none;" class="wifi_disable_hide1">
                                 <th><%- encryptAlgorithmTh %></th>
                                 <td>
                                     <label id="encryptAlgorithm1">
@@ -834,7 +846,7 @@
                                     </label>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr style="display:none;" class="wifi_disable_hide1">
                                 <th><%- key %></th>
                                 <td>
                                     <input type="password" name="key" maxlength="63" id="key1"/>
@@ -865,25 +877,25 @@
                                     <input type="checkbox" id="wifiOpen2" name="wifiOpen" /><%- open %>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr style="display:none;" class="wifi_disable_hide2">
                                 <th><%- ssidBd %></th>
                                 <td>
                                     <input type="checkbox" id="broadcast2" name="broadcast" /><%- open %>
                                 </td>
                             </tr>
-                            <tr class="wifi_wmm">
+                            <tr style="display:none;" class="wifi_disable_hide2 wifi_wmm">
                                 <th><%- wmm %></th>
                                 <td>
                                     <input type="checkbox" id="wmm2" name="wmm" /><%- open %>
                                 </td>
                             </tr>
 
-                            <tr>
+                            <tr style="display:none;" class="wifi_disable_hide2">
                                 <th><%- ssid %></th>
                                 <td><input type="text" id="ssid2" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
                             </tr>
 
-                            <tr>
+                            <tr style="display:none;" class="wifi_disable_hide2">
                                 <th><%- authenticationType %></th>
                                 <td>
                                     <select name="authenticationType" id="authenticationType2">
@@ -894,7 +906,7 @@
                                     </select>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr style="display:none;" class="wifi_disable_hide2">
                                 <th><%- encryptAlgorithmTh %></th>
                                 <td>
                                     <label id="encryptAlgorithm2">
@@ -909,7 +921,7 @@
                                     </label>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr style="display:none;" class="wifi_disable_hide2">
                                 <th><%- key %></th>
                                 <td>
                                     <input type="password" name="key" maxlength="63" id="key2"/>
