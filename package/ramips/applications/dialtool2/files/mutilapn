@@ -273,7 +273,7 @@ refresh_eth()
 	for temp in $wan_sections
 	do
 
-		local ret=`uci get network.$temp.land_wan`
+		local ret=`uci get network.$temp.land_wan 2>/dev/null`
 
 		if [ $ret"" != "1" ];then
 			continue
@@ -332,7 +332,7 @@ check_4g_network()
 
 add_able_default_route()
 {
-	ping -w 3 8.8.8.8 -I $1
+	ping -w 3 8.8.8.8 -I $1 > /dev/null
 
 	if [ $? == "0" ];then
 
