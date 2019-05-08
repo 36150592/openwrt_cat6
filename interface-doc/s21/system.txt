@@ -1,0 +1,136 @@
+1.
+接口名称
+	system_ddns_get_services()
+
+存在路径
+	system.lua
+
+场景说明
+	列出DDNS的服务提供商时，可以通过此接口获取当前设备支持的DDNS服务提供商
+
+接口说明
+	无
+
+接收参数
+	无
+返回值
+	DDNS服务提供商名称
+
+注意事项
+	无
+<------------------------------------------------------------------------------------------------------------------------------------>
+2.
+接口名称
+	system_ddns_set_config()
+
+存在路径
+	system.lua
+
+场景说明
+	配置DDNS，包括配置DDNS的开关，使用哪个DDNS服务提供商，用户名 密码和域名等
+
+接口说明
+	无
+
+接收参数
+	一个ddns_config的结构体:
+	system_module.ddns_config = {
+		
+		["enable"] = nil,  		-- DDNS 是否开启 0:disable 1:enable 默认disable
+		["service"] = nil,	 	-- DDNS 服务提供商，可通过 system_ddns_get_service获取当前支持的提供商
+		["username"] = nil, 		-- DDNS服务提供商的登录名
+		["password"] = nil,  	        -- DDNS服务提供商的密码
+		["hostname"] = nil,             -- 需要动态DNS解析的域名
+	}
+
+返回值
+	true:设置成功
+	false:设置失败
+
+注意事项
+	无
+<------------------------------------------------------------------------------------------------------------------------------------>
+
+3.
+接口名称
+	system_ddns_get_config()
+
+存在路径
+	system.lua
+
+场景说明
+	获取DDNS的配置，包括配置DDNS的开关，使用哪个DDNS服务提供商，用户名 密码和域名等
+
+接口说明
+	无
+
+接收参数
+	无
+
+返回值
+	一个ddns_config的结构体:
+	system_module.ddns_config = {
+		
+		["enable"] = nil,  		-- DDNS 是否开启 0:disable 1:enable 默认disable
+		["service"] = nil,	 	-- DDNS 服务提供商，可通过 system_ddns_get_service获取当前支持的提供商
+		["username"] = nil, 		-- DDNS服务提供商的登录名
+		["password"] = nil,  	        -- DDNS服务提供商的密码
+		["hostname"] = nil,             -- 需要动态DNS解析的域名
+	}
+
+注意事项
+	无
+<------------------------------------------------------------------------------------------------------------------------------------>
+
+
+4.
+接口名称
+	system_ddns_get_status()
+
+存在路径
+	system.lua
+
+场景说明
+	获取当前DDNS 服务器的状态
+
+接口说明
+	无
+
+接收参数
+	无
+
+返回值
+	状态值（string）如下：
+		okConnected:连接服务器成功
+		--okAuthpassed:认证成功	
+		--okDomainListed:列出当前管理的域名	
+		--okDomainsRegistered:域名已注册
+		--okKeepAliveRecved:连接保持
+		--okConnecting:连接服务器中
+		--okRetrievingMisc:
+		--okRedirecting:
+		--errorConnectFailed:连接服务器失败
+		--errorSocketInitialFailed:
+		--errorDomainListFailed:
+		--errorDomainRegisterFailed:
+		--errorUpdateTimeout:更新IP失败
+		--errorKeepAliveError
+		--errorRetrying,
+		--errorAuthBusy
+		--errorStatDetailInfoFailed
+		--okNormal
+		--okNoData				
+		--okServerER	
+		--errorOccupyReconnect
+		--errorNull:DDNS 客户端未运行
+		--errorAuthFailed:认证失败
+		--errorOccupy:未知错误
+		--errorNotYourDomain:域名未在当前管理范围
+		--errorServerBlock:服务器阻塞
+		--ipNotUpdate:ip 未更新
+		--noNeedUpdate:ip 不需要更新
+
+注意事项
+	无
+<------------------------------------------------------------------------------------------------------------------------------------>
+

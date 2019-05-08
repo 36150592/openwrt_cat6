@@ -156,6 +156,74 @@ add_dns(){
 	done
 }
 
+setup_ddns(){
+
+	local enable=`cfg -g enable --section ddns`
+	local service=`cfg -g service --section ddns`
+	local is_running=`pgrep $service | wc -l`
+
+	if [ $enable == "1" ];then
+		local username=`cfg -g username --section ddns`
+		local password=`cfg -g password --section ddns`
+		local hostname=`cfg -g hostname --section ddns`
+		local primary_apn_if
+		for temp in $wan_sections;do
+			config_get primary_apn $temp primary_apn
+
+			if [ $primary_apn"" == "1" ];then
+				config_get primary_apn_if $temp ifname
+			fi
+		done
+
+		if [ $service"" == "phddns"  -a  $is_running -eq 0 ];then
+
+cat > /etc/phddns.conf <<EOF
+[settings]
+szHost = phddns60.oray.net
+szUserID = $username
+szUserPWD = $password
+nicName = $primary_apn_if
+szLog = /var/log/phddns.log
+
+EOF
+		phddns -c /etc/phddns.conf &
+		elif [ $service"" == "yaddns" -a  $is_running -eq 0 ];then
+cat > /etc/yaddns.conf <<EOF
+wanifname = "$primary_apn_if"
+mode = "direct"
+# accounts
+account {
+        name = "no-ip test"
+        service = "no-ip"
+        username = "$username"
+        password = "$password"
+        hostname = "$hostname"
+}
+EOF
+
+		yaddns -f /etc/yaddns.conf &
+		elif [ $service"" == "ez-ipupdate" -a  $is_running -eq 0 ];then
+cat > /etc/ez-ipupdate.conf <<EOF
+#!./ez-ipupdate -c
+service-type=qdns
+user=${username}:${password}
+host=$hostname
+#..................
+interface=$primary_apn_if
+max-interval=2073600
+cache-file=/tmp/ez-ipupdate.cache
+
+#daemon
+
+EOF
+		ez-ipupdate -c /etc/ez-ipupdate.conf &
+		fi
+	else
+		if [ $is_running -gt 0 ];then
+			killall -9 $service
+		fi
+	fi
+}
 
 setup_interface () {
 	proto_init_update "*" 1
@@ -201,8 +269,10 @@ setup_interface () {
 				ip route del $target
 			done
 		fi 
-	elif [ $interface"" == $primary_apn_if ]; then
+	elif [ $interface"" == $primary_apn_if ];then
 		local ret=`route | grep default | grep $land_wan_if | wc -l`
+
+		setup_ddns
 		if [ $ret"" != "0" ];then
 			ping -w 3 8.8.8.8
 			

@@ -765,6 +765,37 @@ function system_network_tool()
 
 end
 
+function system_ddns_get_services()
+	local ret = system.system_ddns_get_services()
+	for k,v in pairs(ret)
+	do
+		print(v)
+	end
+end
+
+function system_ddns_get_config()
+	local ret = system.system_ddns_get_config()
+
+	for k,v in pairs(ret)
+	do
+		print(k .. " = " .. v)
+	end
+
+end
+
+function system_ddns_set_config()
+
+	local config = {["enable"] = 1, ["service"] = "noip", ["username"] = "sztozedtest", ["password"] = "123456", ["hostname"] = "sztozed.ddns.net"}
+	local ret = system.system_ddns_set_config(config)
+
+	print(ret)
+end
+
+function system_ddns_get_status()
+	local ret = system.system_ddns_get_status()
+	print(ret)
+end
+
 function sim_reload()
 	print("in sim_reload")
 	local ret = sim.sim_reload()
@@ -2432,6 +2463,10 @@ local api_func = {
 	["system_lanrecord_get_current_info"] = system_lanrecord_get_current_info,
 	["system_export_config"] = system_export_config,
 	["system_import_config"] = system_import_config,
+	["system_ddns_get_services"] = system_ddns_get_services,
+	["system_ddns_get_config"]  = system_ddns_get_config,
+	["system_ddns_set_config"]  = system_ddns_set_config,
+	["system_ddns_get_status"]  = system_ddns_get_status,
 
  	--device
 	["device_get_info"] = device_get_info,

@@ -21,6 +21,7 @@ local GET_MEM_CACHE_CMD="cat /proc/meminfo | awk '{print $2}' | sed -n  5p"
 local GET_CPU_AVG1_CMD="cat /proc/loadavg | awk '{print $1}'"
 local GET_CPU_AVG5_CMD="cat /proc/loadavg | awk '{print $2}'"
 local GET_CPU_AVG15_CMD="cat /proc/loadavg | awk '{print $3}'"
+local TOZED_DDNS_SECTION="ddns"
 
 system_module.sys_info = {
 		
@@ -1329,7 +1330,199 @@ function system_module.system_lanrecord_get_history_info()
 	return list
 end
 
+local ddns_services = {
+["oray"]="phddns", -- https://hsk.oray.com/ ygl921 123456 phddns60.oray.net
+["pubyun"]="ez-ipupdate", -- http://www.pubyun.com ygl921 123456 sztozedtest.f3322.net
+["noip"]="yaddns" --https://www.noip.com/  sztozedtest 123456 sztozed.ddns.net
+}
+
+local function check_ddns_service(name)
+
+	for k,v in pairs(ddns_services)
+	do
+		if k == name
+		then
+			return true
+		end
+
+	end
+
+	return false
+end
+local function get_ddns_application_name(name)
+	for k,v in pairs(ddns_services)
+	do
+		if k == name
+		then
+			return v
+		end
+
+	end
+
+	return nil
+end
+
+local function get_ddns_service_name(name)
+	for k,v in pairs(ddns_services)
+	do
+		if v == name
+		then
+			return k
+		end
+
+	end
+
+	return nil
+end
+-- get ddns service offers which our device support
+-- input:none
+-- return:an array of ddns service offers' name
+function system_module.system_ddns_get_services()
+	
+	local service_name = {}
+	local i =  1
+	for k,v in pairs(ddns_services)
+	do
+		service_name[i] = k
+		i = i + 1
+	end
+
+	return service_name
+end
+
+system_module.ddns_config = {
+		
+	["enable"] = nil,  		-- ddns enable status value 0:disable 1:enable
+	["service"] = nil,	 	-- ddns service offer,get by system_ddns_get_service
+	["username"] = nil, 	-- service uesrname id
+	["password"] = nil,  	-- service password
+	["hostname"] = nil,     -- the hostname which the ddns need to translate
+}
+
+function system_module.ddns_config:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+		
+	self["enable"] = obj["enable"] or nil
+	self["service"] = obj["service"] or nil 
+	self["username"] = obj["username"] or nil
+	self["password"] = obj["password"] or nil
+	self["hostname"] = obj["hostname"] or nil
+end
+
+-- config ddns 
+-- input:the struct of ddns_config 
+-- return:true if success  false if fail
+function system_module.system_ddns_set_config(config)
+
+	if nil == config or nil == config["enable"]
+	then
+		debug("error input")
+		return false
+	end
+
+	if 0 == config["enable"]
+	then
+		x:set(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"value")
+		x:set(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION, "enable", 0)
+		return x:commit(TOZED_CONFIG_FILE)
+	end
+
+	if not check_ddns_service(config["service"]) or 1 ~= config["enable"]
+	then
+		debug("input:error service or error enable ")
+		return false
+	end
+
+	x:set(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"value")
+	x:set(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"enable", 1)
+	x:set(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"service",get_ddns_application_name(config["service"]))
+	x:set(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"username",config["username"])
+	x:set(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"password",config["password"])
+	x:set(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"hostname",config["hostname"])
+
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
+-- get ddns config  
+-- input:none
+-- return:the struct of ddns_config 
+function system_module.system_ddns_get_config()
+	local config = system_module.ddns_config:new(nil,nil)
+	config["enable"] = x:get(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"enable")
+	config["service"] = x:get(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"service")
+	config["username"] = x:get(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"username")
+	config["password"] = x:get(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"password")
+	config["hostname"] = x:get(TOZED_CONFIG_FILE,TOZED_DDNS_SECTION,"hostname")
+
+	if nil ~= config["service"]
+	then
+		config["service"] = get_ddns_service_name(config["service"])
+	end
+
+	if nil == config["enable"]
+	then
+		config["enable"] = 0
+	end
+	return config
+end
 
 
+-- get the ddns service status
+-- input:none
+-- return: one of the following string:
+--okConnected 			
+--okAuthpassed 			
+--okDomainListed,		
+--okDomainsRegistered
+--okKeepAliveRecved
+--okConnecting
+--okRetrievingMisc
+--okRedirecting
+--errorConnectFailed
+--errorSocketInitialFailed
+--errorDomainListFailed
+--errorDomainRegisterFailed
+--errorUpdateTimeout
+--errorKeepAliveError
+--errorRetrying,
+--errorAuthBusy
+--errorStatDetailInfoFailed
+--okNormal
+--okNoData				
+--okServerER	
+--errorOccupyReconnect
+--errorNull
+--errorAuthFailed
+--errorOccupy
+--errorNotYourDomain
+--errorServerBlock
+--ipNotUpdate
+--noNeedUpdate
+function system_module.system_ddns_get_status()
+
+	local f = io.popen("cat /tmp/.ddns_status")
+
+	if nil == f
+	then
+		debug("no status ")
+		return "errorNull"
+	end
+
+	local res = f:read()
+
+	if nil == res
+	then
+		debug("no status")
+		return "errorNull"
+	end
+
+	io.close(f)
+	return res
+end
 return system_module
 
