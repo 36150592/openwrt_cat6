@@ -69,32 +69,7 @@
             apn_name =  $("#apn_name").val();
              apn_apnNat = $("input[name='apnNat']:checked").val();
           $form = $("#form");
-          if(selectAuthentication == "0"){
-              apn_user_name = "";
-              apn_user_password = "";
-           }else{
-          if($('#apn_user_name').is(":hidden") == false){
-            if(apn_user_name == ""){
-                AlertUtil.alertMsg(CHECK.format.apnUserName2);
-                return false;
-            }
-            if(!CheckUtil.checkApnName(apn_user_name)) {
-                AlertUtil.alertMsg(CHECK.format.apnUserName);
-                return false;
-            }
-          }
-
-          if($('#apn_user_password').is(":hidden") == false){
-            if(apn_user_password == ""){
-                AlertUtil.alertMsg(CHECK.format.apnPassword2);
-                return false;
-          }
-          if(!CheckUtil.checkApnPassword(apn_user_password)) {
-                AlertUtil.alertMsg(CHECK.format.apnPassword);
-                return false;
-            }
-          }   
-           }
+          
           var json={},json2= new Object();
           json.enable = parseInt(apnEnable,10);
           json.ip_stack = selectType;
@@ -157,6 +132,12 @@
                     <input type="radio" name="apnNatLookBack" id="apnNatLookBack2" value="disable"><span><%-DOC.status.disable %></span> 
                 </td>
             </tr>
+            <tr>
+                <th><%-TAB.basic.apn %><%- colon %></th>
+                <td>
+                    <input type="text" name="apnName" id="apn_name">
+                </td>
+            </tr>
             <tr id="apn_type">
                 <th>
                     <%-DOC.apn.type %><%- colon %>
@@ -180,12 +161,6 @@
                         <option value="2">CHAP</option>
                         <option value="3">PAP&CHAP</option>
                     </select>
-                </td>
-            </tr>
-             <tr>
-                <th><%-TAB.basic.apn %><%- colon %></th>
-                <td>
-                    <input type="text" name="apnName" id="apn_name">
                 </td>
             </tr>
             <tr class="hideNone"  style="display:none;">
