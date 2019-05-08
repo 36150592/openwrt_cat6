@@ -477,6 +477,13 @@
             }
             var json = JSON.parmsToJSON($form);
             json.dhcpServer = json.dhcpServer ? '1' : '0';
+            var ipBeginLast = json.ipBegin.substring(json.ipBegin.lastIndexOf(".")+1,json.ipBegin.length);
+            var ipEndLast = json.ipEnd.substring(json.ipEnd.lastIndexOf(".")+1,json.ipEnd.length);
+            if(parseInt(ipEndLast,10) < parseInt(ipBeginLast,10)){
+                 AlertUtil.alertMsg(DOC.apn.rule);
+                $('#btnSaveLan'+id).attr("disabled",false);
+                return false;
+            }
             if(json.dhcpServer == DHCPServer.OPENED){
                 if(!CheckUtil.checkNetSegment(json.lanIp, json.netMask, json.ipBegin)){
                     AlertUtil.alertMsg(showText.ipCheckMsg4);
@@ -718,7 +725,7 @@
                              <tr class="nat dhcp1">
                                 <th><%- th7 %></th>
                                 <td>
-                                    <input type="text" id="vice_dns1" name="vice_dns" class="txt4 inputs_lan"/>
+                                    <input type="text" id="vice_dns1" name="vice_dns1" class="txt4 inputs_lan"/>
                                 </td>
                             </tr>
                             <tr class="nat dhcp1">
@@ -774,7 +781,7 @@
                              <tr class="nat dhcp2">
                                 <th><%- th7 %></th>
                                 <td>
-                                    <input type="text" id="vice_dns2" name="vice_dns" class="txt4 inputs_lan"/>
+                                    <input type="text" id="vice_dns2" name="vice_dns2" class="txt4 inputs_lan"/>
                                 </td>
                             </tr>
                             <tr class="nat dhcp2">

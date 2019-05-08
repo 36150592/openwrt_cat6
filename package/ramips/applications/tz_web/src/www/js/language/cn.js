@@ -583,6 +583,7 @@ DOC.apn.open = "开启 APN";
 DOC.apn.close = "关闭 APN";
 DOC.apn.nat = "Nat";
 DOC.apn.isWork = "是否工作";
+DOC.apn.rule = "DHCP地址池范围取值错误";
 DOC.apn.natLookBack = "Nat Loopback";
 DOC.networkMode.cmt = "(选择前请先点击搜索)";
 DOC.networkMode.csps = "CS/(E)PS业务模式";

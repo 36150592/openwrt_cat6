@@ -585,6 +585,7 @@ DOC.apn.open = "Open APN";
 DOC.apn.close = "Close APN";
 DOC.apn.nat = "Nat";
 DOC.apn.isWork = "isWork";
+DOC.apn.rule = "DHCP address pool range error";
 DOC.apn.natLookBack = "Nat Loopback";
 DOC.networkMode.cmt = "(Please search before choosing)";
 DOC.networkMode.csps = "CS/(E)PS Preferred";
