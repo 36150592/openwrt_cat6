@@ -2271,6 +2271,7 @@ function set_ping_list()
 
 	tz_answer["success"] = true
 	tz_answer["cmd"] = 215
+	execute_cmd("/etc/init.d/firewall restart")
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
@@ -2345,6 +2346,7 @@ function set_web_list()
 
 	tz_answer["success"] = true
 	tz_answer["cmd"] = 218
+	execute_cmd("/etc/init.d/firewall restart")
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
@@ -2541,6 +2543,7 @@ function set_dmz_data()
 	end
 	tz_answer["success"] = true
 	tz_answer["cmd"] = 225
+	execute_cmd("/etc/init.d/firewall restart")
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
