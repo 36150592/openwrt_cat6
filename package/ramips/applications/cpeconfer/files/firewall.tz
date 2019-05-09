@@ -281,11 +281,11 @@ set_user_static_route(){
                 local target_netmask=`echo $item | awk '{print $5}'`
                 local next_ip=`echo $item | awk '{print $6}'`  
 
+		local target_prefix=`ipcalc.sh $target_ip $target_netmask | grep NETMASK | cut -d'=' -f 2`
 
 
-
-                ip route add ${target_ip}/${target_netmask} table user_static_route via $next_ip dev $ifname 
-                ip rule add  to  ${target_ip}/${target_netmask} table user_static_route pref 100
+                ip route add ${target_ip}/${target_prefix} table user_static_route via $next_ip dev $ifname 
+                ip rule add  to  ${target_ip}/${target_prefix} table user_static_route pref 100
 
         done 
 
