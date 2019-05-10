@@ -517,7 +517,6 @@ var SysUtil = {
                             return datas != null;
                         },
                         function() {
-                            console.log(datas);
                           if (datas.success) {
                             AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
                           } else {
@@ -571,7 +570,6 @@ var SysUtil = {
                             return datas != null;
                         },
                         function() {
-                            console.log(datas);
                           if (datas.success) {
                             AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
                           } else {

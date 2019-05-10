@@ -10,7 +10,6 @@
                     $id: $btnExportConfig,
                     json: { cmd: RequestCmd.CONFIG_EXPORT },
                     success: function(data) {
-                        console.log(data);
                         var url = '/html/export_config';
                         $('#exportDelegate').text(DOC.link.clickMeDownload).prop("href", url).show();
                     }
