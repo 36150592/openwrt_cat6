@@ -170,7 +170,7 @@ local status_keys = {
 	"ps_cs_status",                                            
 	"2g_register_status",                                      
 	"3g_register_status",                                      
-	"4g_register_stauts",                                      
+	"4g_register_status",                                      
 	"roam_status",                                             
 	"network_type_num",                                        
 	"network_type_str",                                        

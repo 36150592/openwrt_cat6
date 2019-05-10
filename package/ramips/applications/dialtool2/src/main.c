@@ -367,7 +367,7 @@ int write_sysinfo_dynamic(GDV* p)
 		fprintf(f,"is_sim_exist:%d\n",p->is_sim_exist);
 		fprintf(f,"2g_register_status:%d\n",p->reg_status);
 		fprintf(f,"3g_register_status:%d\n",p->greg_status);
-		fprintf(f,"4g_register_stauts:%d\n",p->ereg_status);
+		fprintf(f,"4g_register_status:%d\n",p->ereg_status);
 		fprintf(f,"roam_status:%d\n",p->roam_status);
 		fprintf(f,"pin_left_times:%d\n",p->pin_left_times);
 		fprintf(f,"puk_left_times:%d\n",p->puk_left_times);
