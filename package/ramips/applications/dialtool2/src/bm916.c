@@ -507,33 +507,54 @@ static int check_cpin_num = 0;
 
 int down_udhcpc(char *card_name)
 {
-	  	FILE *pstr; char cmd[128],buff[512];
-		int num = 0;
-		memset(cmd,0,sizeof(cmd));
-		
-		log_info("card_name = %s", card_name);
-		sprintf(cmd, "pgrep -f udhcpc.*%s",card_name);
-		pstr=popen(cmd, "r");
-		
-		if(pstr==NULL)
-			return 1; 
-		memset(buff,0,sizeof(buff));
-		fgets(buff,512,pstr);
-		pclose(pstr);
-		log_info("buff = %s", buff);
-		if(strlen(buff)==0)
-			return 1; 
-		log_info("num: %d\n",atoi(buff));
-		
-		if((num=atoi(buff))>=0)
-		{
+	FILE* pstr; char cmd[128],buff[512],pidfile[128];
+	memset(pidfile,0,sizeof(pidfile));
+    sprintf(pidfile, "/var/run/udhcpc-%s.pid",card_name);
+    if(check_file_exist(pidfile))
+    {
+      FILE *file = NULL;
+      file = fopen(pidfile,"r");
+      if(NULL == file)
+        return 1;
+
+      memset(buff,0,sizeof(buff));
+      fgets(buff,512,file);
+      log_info("buff = %s", buff);
+	  fclose(file);
+      if(strlen(buff)==0)
+        return 1; 
+
+      memset(cmd,0,sizeof(cmd));
+      snprintf(cmd,sizeof(cmd),"kill -9 %s", buff);
+      int ret = system(cmd);
+      log_info("down udhcpc ret: %d\n",ret);
+
+	  if(ret != 0)
+	  {
 			memset(cmd,0,sizeof(cmd));
-			snprintf(cmd,sizeof(cmd),"kill -9 %d", num);
-			system(cmd);
-			sleep(3);
-		}
-		
-		return 0;
+			log_info("card_name = %s", card_name);
+			sprintf(cmd, "pgrep -f udhcpc.*%s",card_name);
+			pstr=popen(cmd, "r");
+
+			if(pstr==NULL)
+			  return 1; 
+			memset(buff,0,sizeof(buff));
+			fgets(buff,512,pstr);
+			pclose(pstr);
+			log_info("buff = %s", buff);
+			if(strlen(buff)==0)
+			  return 1; 
+
+			memset(cmd,0,sizeof(cmd));
+			snprintf(cmd,sizeof(cmd),"kill -9 %s", buff);
+			ret = system(cmd);	
+			log_info("down udhcpc ret: %d\n",ret);
+	  }
+
+	  sleep(3);
+    }
+
+	return 0;
 }
 
 

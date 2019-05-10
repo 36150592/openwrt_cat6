@@ -232,7 +232,6 @@ setup_interface () {
     	#ifconfig $interface $ip ${subnet:-255.255.255.0}
 
 	# TODO: apply $broadcast
-
 	load_interface
 	local land_wan_if
 	local primary_apn_if
@@ -291,13 +290,13 @@ setup_interface () {
 			fi
 		else
 			local ret=`route | grep default | awk '{print $8}'`
-			if [ $ret"" != "" ];then
+			#if [ $ret"" != "" ];then
 			
-				for target in `ip route | grep $ret | awk '{print $1}'`
-				do
-					ip route del $target
-				done
-			fi 
+				#for target in `ip route | grep $ret | awk '{print $1}'`
+				#do
+				#	ip route del $target
+				#done
+			#fi 
 		fi
 	else
 		for dns in $dns; do
