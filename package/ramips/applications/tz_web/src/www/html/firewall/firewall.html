@@ -56,8 +56,8 @@
                         break;
                     case 3:
                         hasEnableLink = false;
-                        customTitles = [DOC.net.portStart,DOC.net.portEnd,DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
-                        customFieldNames = ["dest_port","dest_port_end", "redirect_addr", "redirect_port", "comment"];
+                        customTitles = [DOC.net.ip,DOC.net.portStart,DOC.net.portEnd,DOC.net.mappingIp, DOC.net.mappingPort, DOC.lbl.remark];
+                        customFieldNames = ["dest_addr","dest_port","dest_port_end", "redirect_addr", "redirect_port", "comment"]
                         break;
                     case 4:
                         customTitles = [DOC.net.ipv46, DOC.net.url,DOC.lbl.advancedOptions, DOC.lbl.remark];
@@ -394,7 +394,7 @@
             } else {
                 options.requiredSave = true;
             }
-
+            
             var sb = new StringBuilder();
             sb.append('<table class="list" cellspacing="0">');
             sb.append(String.format('<tr><th>{0}</th><th>{1}</th><th class="index">{2}</th>',
@@ -403,7 +403,8 @@
             var titles = options.customTitles;
             var pannelIndex = options.pannelIndex;
             for (var i = 0; i < titles.length; i++) {
-                sb.append(String.format('<th>{0}</th>', titles[i]));
+                if(titles[i] != "IP")
+                    sb.append(String.format('<th>{0}</th>', titles[i]));
             }
 
             var hasEnableLink = options.hasEnableLink;
@@ -434,6 +435,7 @@
 
             var fieldNames = options.customFieldNames;
             for(var i = 0; i < length; i++) {
+
                 var item = datas[i];
                 if (item == null) continue;
 
@@ -446,7 +448,8 @@
                 sb.append(String.format('<td>{0}</td>', i + 1));
 
                 for (var j = 0; j < fieldNames.length; j++) {
-                    sb.append(String.format('<td>{0}</td>', eval("item." + fieldNames[j]) || ""));
+                    if(fieldNames[j] != "dest_addr")
+                        sb.append(String.format('<td>{0}</td>', eval("item." + fieldNames[j]) || ""));
                 }
 
                 if (hasEnableLink) {
@@ -809,7 +812,7 @@
                     var mappingPort = mappingPortArr.port;
 
                     var item = getCommonItem();
-                    // item.dest_addr = "192.168.3.1";
+                    item.dest_addr = location.hostname;
                     item.dest_port = destport;
                     item.dest_port_end = portend;
                     item.redirect_addr = mappingIp;
