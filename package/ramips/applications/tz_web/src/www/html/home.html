@@ -2,6 +2,7 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+        StatusUtil.getSysStatus();
         Page.render('#container', '#index_template', DOC);
 		
 		var Pageauth = Page.AUTH;
@@ -221,10 +222,7 @@
             return Y+M+D+h+m+s;
         }
 		
-
-
-        // 获取是否为入库版本
-        StatusUtil.getSysStatus();
+      
         $('#menu h3').eq(0).next().find("a").eq(0).click();
         $('#container').show();
 		showSysTime();

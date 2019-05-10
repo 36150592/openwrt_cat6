@@ -1095,8 +1095,17 @@ end
 function get_sysstatus()
 	local data_array = {}
 	local data_wifi = {}
-	data_array["sim"] = sim.sim_get_status() or ''
-	data_array["modem"] = modem.modem_get_status() or ''
+	local sim_status = sim.sim_get_status()
+	local modem_status = modem.modem_get_status()
+	data_array["is_sim_exist"] =  sim_status["is_sim_exist"] or ''
+	data_array["card_status"] =  sim_status["card_status"] or ''
+	data_array["2g_register_status"] =  modem_status["2g_register_status"] or ''
+	data_array["3g_register_status"] =  modem_status["3g_register_status"] or ''
+	data_array["4g_register_status"] =  modem_status["4g_register_status"] or ''
+	data_array["rsrp"] = modem_status["rsrp"]
+	data_array["signal_lvl"] = modem_status["signal_lvl"]
+	data_array["network_link_stauts"] = modem_status["network_link_stauts"]
+
 	data_array["ethInter"] = network.network_get_interface_up_down_status() or ''
 	local array = wifi.wifi_get_dev()
 	for k,v in pairs(array) do

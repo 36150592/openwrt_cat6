@@ -712,26 +712,24 @@ var StatusUtil = {
                 },
                 complete: function() {
                     var wifiStatus = sysStatus.wifi;
-                    var simStatus = sysStatus.sim;
-                    var modemStatus = sysStatus.modem;
                     var interStatus = sysStatus.ethInter;
                     $('#wifiInfo').html(StatusUtil.formatWiFiInfo(wifiStatus.status));
                     $('#wifiInfo5g').html(StatusUtil.format5gWiFiInfo(wifiStatus.status5));
-                    $('#simInfo').html(StatusUtil.formatSimInfo(simStatus.is_sim_exist));
+                    $('#simInfo').html(StatusUtil.formatSimInfo(sysStatus.is_sim_exist));
                     $('#lan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[0], "Lan1"));
                     $('#lan2').html(StatusUtil.formatNetInterfaceInfo(interStatus[1], "Lan2"));
                     $('#lan3').html(StatusUtil.formatNetInterfaceInfo(interStatus[2], "Lan3"));
                     $('#wan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[3], "Wan"));
-                    sessionStorage["2g_register_status"] = modemStatus["2g_register_status"];
-                    sessionStorage["3g_register_status"] = modemStatus["3g_register_status"];
-                    sessionStorage["4g_register_status"] = modemStatus["4g_register_stauts"];
-                    sessionStorage["rsrp"] = modemStatus.rsrp;
-                    sessionStorage["signal_lvl"] = modemStatus.signal_lvl;
+                    sessionStorage["2g_register_status"] = sysStatus["2g_register_status"];
+                    sessionStorage["3g_register_status"] = sysStatus["3g_register_status"];
+                    sessionStorage["4g_register_status"] = sysStatus["4g_register_status"];
+                    sessionStorage["rsrp"] = sysStatus.rsrp;
+                    sessionStorage["signal_lvl"] = sysStatus.signal_lvl;
                     sessionStorage["wifi_status"] = wifiStatus.status;
                     sessionStorage["wifi5_status"] = wifiStatus.status5;
-                    sessionStorage["network_link_stauts"] = modemStatus.network_link_stauts;
-                    if(simStatus.card_status == 0)                    {
-                        var singalLevel = modemStatus.signal_lvl;
+                    sessionStorage["network_link_stauts"] = sysStatus.network_link_stauts;
+                    if(sysStatus.card_status == 0)                    {
+                        var singalLevel = sysStatus.signal_lvl;
                         var netInfo = StatusUtil.formatSingalLevel(singalLevel);
                         $('#netInfo').html(netInfo);
                     }else{
