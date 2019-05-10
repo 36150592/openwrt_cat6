@@ -624,6 +624,9 @@ var StatusUtil = {
         if(isNaN(theSignalLevel) || theSignalLevel > 5 || theSignalLevel < 0){
             theSignalLevel = 0;
         }
+        if(theSignalLevel == 0){
+            theSignalLevel = 6;
+        }
         var title = DOC.lte.signalLevel + DOC.colon + signals[theSignalLevel];
 
         return String.format("<div class=\"singal singal{0}\" title=\"{1}\">{2}</div>", (preCss || "") + theSignalLevel, title, content || "");
