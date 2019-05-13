@@ -255,23 +255,50 @@ end
 
 local function format_set_speed_filter_cmd(ip ,speed, comment)
 		
-	local target_speed = math.ceil(speed/100) 
+	speed = speed/4 -- translate to Kb 
+	local target_speed = math.ceil(speed/10) 
+	local target_counter = math.ceil((speed/100))
 	if target_speed < 1
 	then
 		target_speed = 1
+	end
+
+	if target_counter < 1
+	then
+		target_counter = 1
+	end
+
+	local i = 0 
+	while target_counter > 40 
+	do
+		target_counter = math.ceil((target_counter/2)) 
+		i = i + 1
+	end
+
+	if target_counter > 30 and target_counter <= 40
+	then
+		target_counter = target_counter - 15 + i*3
+	elseif target_counter > 20 and  target_counter <= 30
+	then 
+		target_counter = target_counter - 10 + i*3
+	end
+
+	if target_counter <= 10
+	then
+		target_counter = math.ceil((target_counter*2))
 	end
 
 	local cmd1 = string.format("echo 'iptables -I FORWARD -s %s -j DROP  ##%s##%s##%s##%s##1'  >> %s;",
 									ip, FIREWALL_SPEED_LIMIT_FILTER_PREX, ip, speed, comment,FIREWALL_CUSTOM_CONFIG_FILE)
 
 	local cmd2 = string.format("echo 'iptables -I FORWARD -m limit -s %s --limit %f/s --limit-burst %d -j ACCEPT  ##%s##%s##%s##%s##2'  >> %s;",
-									ip,target_speed,target_speed, FIREWALL_SPEED_LIMIT_FILTER_PREX, ip, speed, comment,FIREWALL_CUSTOM_CONFIG_FILE)
+									ip,target_speed,target_counter, FIREWALL_SPEED_LIMIT_FILTER_PREX, ip, speed, comment,FIREWALL_CUSTOM_CONFIG_FILE)
 
 	local cmd3 = string.format("echo 'iptables -I FORWARD -d %s -j DROP  ##%s##%s##%s##%s##3'  >> %s;",
 									ip, FIREWALL_SPEED_LIMIT_FILTER_PREX, ip, speed, comment,FIREWALL_CUSTOM_CONFIG_FILE)
 
 	local cmd4 = string.format("echo 'iptables -I FORWARD -m limit -d %s --limit %f/s --limit-burst %d -j ACCEPT  ##%s##%s##%s##%s##4'  >> %s;",
-									ip,target_speed,target_speed, FIREWALL_SPEED_LIMIT_FILTER_PREX, ip, speed, comment,FIREWALL_CUSTOM_CONFIG_FILE)
+									ip,target_speed,target_counter, FIREWALL_SPEED_LIMIT_FILTER_PREX, ip, speed, comment,FIREWALL_CUSTOM_CONFIG_FILE)
 
 
 	return string.format("%s%s%s%s", cmd1,cmd2,cmd3,cmd4)
