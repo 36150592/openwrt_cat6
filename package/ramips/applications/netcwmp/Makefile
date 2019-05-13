@@ -17,7 +17,7 @@ define Package/netcwmp
 	SECTION:=MTK Properties
 	CATEGORY:=MTK Properties
 	TITLE:=Netcwmp(Tr069) FQa MTK7628 device
-	DEPENDS:=+lua +libpthread
+	DEPENDS:=+lua +libpthread +libopenssl
 	SUBMENU:=Applications
 endef
 
@@ -50,6 +50,7 @@ define Package/netcwmp/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/script/json.lua $(1)/usr/lib/lua/json.lua
 	$(INSTALL_DIR) $(1)/etc/
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/cwmp.conf $(1)/etc/
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/tr069_client.pem $(1)/etc/	
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/device.xml $(1)/etc/
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/device_dialog_lk.xml $(1)/etc/
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/conf/device_slt_lk.xml $(1)/etc/

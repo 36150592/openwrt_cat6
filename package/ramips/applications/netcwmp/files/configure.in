@@ -88,7 +88,9 @@ CPPFLAGS="-D_GNU_SOURCE $save_CPPFLAGS"
 LDFLAGS="$save_LDFALGS"
 
 #CPPFLAGS="$CPPFLAGS -DUSE_CWMP_OPENSSL"
-OPENSSL_DIR=no
+OPENSSL_DIR="no"
+CPPFLAGS="$CPPFLAGS -DUSE_CWMP_OPENSSL"	
+LDFLAGS="$LDFLAGS -lssl -lcrypto"
 
 AC_ARG_WITH(openssl, --with-openssl=<path>     sets path to temp directory, OPENSSL_DIR=$withval, OPENSSL_DIR=no)
 
