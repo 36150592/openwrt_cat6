@@ -41,6 +41,12 @@ for section in $inter_sections
 do
         config_get wps $section wps
         config_get ifname $section ifname
+        config_get device $section device
+        config_get band $device band
+
+        if [ $1'' != $band'' ];then
+            continue
+        fi
 
         if [ $ifname'' == "" ];then
                 continue;

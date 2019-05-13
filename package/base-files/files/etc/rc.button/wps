@@ -14,7 +14,13 @@ if [ -e /tmp/.in_peripheral_test ]; then
 	exit
 fi
 
-/sbin/wps_handler
+if [ "$SEEN" -gt 5 ];then
+	/sbin/wps_handler "2.4G"
+else
+	/sbin/wps_handler "5G"
+fi
+
+
 
 echo "wps key pressed " > /dev/console
 
