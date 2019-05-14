@@ -452,7 +452,7 @@
             ipBegin : {required: true, ipnozero: true},
             ipEnd : {required: true, ipnozero: true},
             main_dns : {required: true, ip: true},
-            vice_dns : {required: true, ip: true},
+            vice_dns : {ip: true},
             expireTime : {required: true, digits: true, min: 1}
         };
 
@@ -462,7 +462,7 @@
             ipBegin : {required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3},
             ipEnd : {required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3},
             main_dns : {required: CHECK.format.dns2, ip: CHECK.format.dns},
-            vice_dns : {required: CHECK.format.dns2, ip: CHECK.format.dns},
+            vice_dns : {ip: CHECK.format.dns},
             expireTime : {required: showText.timeCheckMsg1, digits: showText.timeCheckMsg2, min: showText.timeCheckMsg3}
         };
 
@@ -725,7 +725,7 @@
                              <tr class="nat dhcp1">
                                 <th><%- th7 %></th>
                                 <td>
-                                    <input type="text" id="vice_dns1" name="vice_dns1" class="txt4 inputs_lan"/>
+                                    <input type="text" id="vice_dns1" name="vice_dns" class="txt4 inputs_lan"/>
                                 </td>
                             </tr>
                             <tr class="nat dhcp1">
@@ -781,7 +781,7 @@
                              <tr class="nat dhcp2">
                                 <th><%- th7 %></th>
                                 <td>
-                                    <input type="text" id="vice_dns2" name="vice_dns2" class="txt4 inputs_lan"/>
+                                    <input type="text" id="vice_dns2" name="vice_dns" class="txt4 inputs_lan"/>
                                 </td>
                             </tr>
                             <tr class="nat dhcp2">
