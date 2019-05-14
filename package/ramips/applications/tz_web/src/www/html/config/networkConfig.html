@@ -393,14 +393,18 @@
                     });
                     Page.getHelperPage('html/config/networkConfig.html');
                     $('.helper_box').show();
+                    $('#helperContainer').show();
                     break;
                 case 1:
                     $('.helper_box').show();
+                    $('#helperContainer').show();
                     break;
                 case 2:
                     $('.helper_box').show();
+                    $('#helperContainer').show();
                     break;
                 case 3:
+                    $('#helperContainer').hide();
                     if (firstRequest) {
                         Page.postJSON({
                             json: {cmd: RequestCmd.DHCPCLIENT_INFO},
