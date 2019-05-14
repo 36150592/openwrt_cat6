@@ -59,6 +59,7 @@ boot() {
 
 	if [ -f /etc/.flag_factory_config ]; then
 		/etc/tozed/tz_form_network
+		/etc/tozed/tz_form_system
 	fi
 
 	#/etc/config/dhcp

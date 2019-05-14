@@ -1,0 +1,17 @@
+#!/bin/sh
+
+FORM_CONFIG_STATION=/tmp/form_config/
+SYSTEM_CONFIG_LOAD_FILE=${FORM_CONFIG_STATION}/system
+FACTORY_CONFIG_FILE=/etc/tozed_param
+
+mkdir -p ${FORM_CONFIG_STATION}
+cat ${FACTORY_CONFIG_FILE} | grep TZSYSTEM_ > ${SYSTEM_CONFIG_LOAD_FILE}
+chmod 777 ${SYSTEM_CONFIG_LOAD_FILE}
+. ${SYSTEM_CONFIG_LOAD_FILE}
+
+if [ "${TZSYSTEM_SNTP_TIMEZONE}" != "" ]; then
+	uci set  system.@system[0].timezone=${TZSYSTEM_SNTP_TIMEZONE}
+else
+	uci set  system.@system[0].timezone=8
+fi
+uci commit
