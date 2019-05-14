@@ -1605,7 +1605,7 @@ wirelessconfightml.helper.item10 = "<li>1、MAC:不可编辑.</li><li>2、IP: �
 wirelessconfightml.helper.item2 = "选中时开启SSID广播,其他无线设备可以通过搜索网络搜索到本机的SSID；不选中时关闭SSID广播,不能搜索到本机的SSID,但是通过手工输入SSID,其他客户端可以连接上.默认开启.";
 wirelessconfightml.helper.item3 = "SSID可以简单理解为无线网络的名称,机身及包装标识可见此SSID默认名称.SSID名称由最多不超过32个字符的字母和数字组成,区分大小写.";
 wirelessconfightml.helper.item4 = "设置无线路由器使用的信道,默认为“自动”,无线路由器将自动搜索当前可用的最佳信道.您也可以指定无线网络工作的信道,可选的信道中,优先选择1、6、11（与相邻信道重叠最小）.";
-wirelessconfightml.helper.item5 = "设置无线路由器使用的Wi-Fi工作模式,默认为“802.11bgn”,无线路由器将自动匹配最佳模式,一般无需更改.";
+wirelessconfightml.helper.item5 = "设置无线路由器使用的Wi-Fi工作模式,默认为“11gn mixed”,无线路由器将自动匹配最佳模式,一般无需更改.";
 wirelessconfightml.helper.item6 = "<li>1、无:无加密</li><li>2、WPA-PSK[TKIP]:使用预共享密钥的Wi-Fi保护访问,采用加密类型为TKIP的WPA-PSK标准加密</li><li>3、WPA-PSK[AES]:使用预共享密钥的Wi-Fi保护访问,采用加密类型为AES的WPA-PSK标准加密(注意: Wi-Fi工作模式包含802.11n模式时才可以设置此项)</li><li>4、WPA2-PSK[AES]:使用预共享密钥的Wi-Fi保护访问,采用加密类型为AES的WPA2-PSK标准加密<span class=\"fail\">(推荐)</span></li><li>5、WPA-PSK[TKIP]/WPA2-PSK[AES]:允许客户端使用WPA-PSK[TKIP]或WPA2-PSK[AES]</li><li>6、WEP:允许客户端使用WEP标准加密</li>";
 wirelessconfightml.helper.item7 = "设置无线连接的网络密码,密码长度为8~63个字符.";
 wirelessconfightml.helper.item8 = "专业人员设置项,用户一般不用更改.";

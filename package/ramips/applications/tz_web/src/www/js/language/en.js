@@ -1634,7 +1634,7 @@ wirelessconfightml.helper.item10 = "<li>1. MAC: Not editable<li>2. IP: Editable,
 wirelessconfightml.helper.item2 = "Enable SSID broadcasting, other wireless devices can search SSID ; Disabled SSID broadcast, you can not search SSID, but by manual input SSID to connected,  default enabled.";
 wirelessconfightml.helper.item3 = "SSID can be simply understood as the name of the wireless network, the fuselage and packaging logo visible this default SSID name. SSID name consists of a maximum of 32 characters consisting of letters and numbers, case-sensitive.";
 wirelessconfightml.helper.item4 = "Settings the channel used by the wireless router, the default is auto, an optional channel, Select 1,6,11 (minimal overlap with adjacent channel).";
-wirelessconfightml.helper.item5 = "The default is \"802.11bgn\", generally do not need to be changed.";
+wirelessconfightml.helper.item5 = "The default is \"11gn mixed\", generally do not need to be changed.";
 wirelessconfightml.helper.item6 = "<li>1. None:No Encryption</li><li>2. WPA-PSK[TKIP]</li><li>3. WPA-PSK[AES](Required 802.11n mode)</li><li>4. WPA2-PSK[AES]<span class=\"fail\">(Recommend)</span></li><li>5. WPA-PSK[TKIP]/WPA2-PSK[AES]</li><li>6. WEP</li>";
 wirelessconfightml.helper.item7 = "Set a wireless network password, the password length is 8~63 characters.";
 wirelessconfightml.helper.item8 = "Professionals settings, users generally do not change.";
