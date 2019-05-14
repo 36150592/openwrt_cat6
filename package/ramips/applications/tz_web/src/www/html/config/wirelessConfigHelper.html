@@ -2,8 +2,8 @@
 
 <script type="text/javascript">
     $(document).ready(function(){
-        var helper = $.extend({}, wirelessconfightml.helper, wirelessconfightml.form1);
-        TempUtil.render('helperContainer-template', 'helperContainer', helper);
+        var helper = $.extend({}, wlan5ghtml.helper, wlan5ghtml.form1);
+        TempUtil.render('helperContainer-template', 'helperContainer',helper);
 
     });
 </script>
@@ -21,8 +21,8 @@
                 <%= item2 %>
             </div>
 
-            <div class="helper_name wifi_wmm"><%= wmmTh %></div>
-            <div class="helper_desc wifi_wmm">
+            <div class="helper_name"><%= wmmTh %></div>
+            <div class="helper_desc">
                 <%= wmmTd %>
             </div>
 
@@ -31,39 +31,48 @@
                 <%= item3 %>
             </div>
 
-            <div class="helper_name" ><%= title8 %></div>
-            <div class="helper_desc" >
-                <%= item8 %>
-            </div>
-			
-			<div class="helper_name"><%= title8_2 %></div>
+             <div class="helper_name"><%= title11 %></div>
             <div class="helper_desc">
-                <%= item8_2 %>
+                <%= item11 %>
             </div>
+
+            <!-- <div class="helper_name"><%= title8 %></div>
+            <div class="helper_desc">
+            <%= item8 %>
+            </div> -->
+
+            <!-- <div class="helper_name"><%= title8_2 %></div>
+            <div class="helper_desc">
+            <%= item8_2 %>
+            </div> -->
 
             <div class="helper_name"><%= title4 %></div>
-            <div class="helper_desc" id="channel_desc">
+            <div class="helper_desc">
                 <%= item4 %>
             </div>
-
 
             <div class="helper_name"><%= title5 %></div>
             <div class="helper_desc">
                 <%= item5 %>
             </div>
 
-			 <div class="helper_name"><%= title6 %></div>
+            <div class="helper_name"><%= title6 %></div>
             <div class="helper_desc">
                 <ul>
                     <%= item6 %>
                 </ul>
             </div>
-
-            <div class="helper_name wpa"><%= title7 %></div>
-            <div class="helper_desc wpa">
-                <%= item7 %>
+            <div class="helper_name"><%= title6_2 %></div>
+            <div class="helper_desc">
+                <ul>
+                    <%= item6_2 %>
+                </ul>
             </div>
 
+            <div class="helper_name"><%= title7 %></div>
+            <div class="helper_desc">
+                <%= item7 %>
+            </div>
         </div>
     </script>
 </div>

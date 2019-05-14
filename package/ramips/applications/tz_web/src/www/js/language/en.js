@@ -1799,7 +1799,8 @@ wlan5ghtml.helper.item10 = '<li>1. MAC: Not editable' +
 '<li>3. SSID: Editable(not less than 4 characters), defaults to the outdoor device of SSID</li>' +
 '<li>4. Channel: Selectable, defaults to the outdoor device of Channel</li>'	 +
 '<li>5. TX Power: Editable(Range:1~23), defaults to the outdoor device of TX Power</li>';
-
+wlan5ghtml.helper.title11 = "TX Power";
+wlan5ghtml.helper.item11 = "Professionals settings, users generally do not change.";
 
 
 LANGUAGE_FLUX_MOUNT = "Month Usage";

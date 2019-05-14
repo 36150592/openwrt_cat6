@@ -1770,6 +1770,7 @@ wlan5ghtml.helper.item10 = '<li>1、MAC:不可编辑.</li>' +
     '<li>3、SSID: 可编辑(不能少于4个字符), 默认采用主机的SSID</li>' +
     '<li>4、信道: 可选择, 默认采用主机的信道</li>'	+
     '<li>5、发射功率: 可编辑(取值范围1-23), 默认采用主机的发射功率</li>';
-
+wlan5ghtml.helper.title11 = "发射功率";
+wlan5ghtml.helper.item11 = "专业人员设置项,用户一般不用更改.";
 
 LANGUAGE_FLUX_MOUNT = "本月流量";
