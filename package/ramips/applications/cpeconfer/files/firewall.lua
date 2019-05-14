@@ -255,7 +255,7 @@ end
 
 local function format_set_speed_filter_cmd(ip ,speed, comment)
 		
-	speed = speed*4 -- translate to Kb 
+	speed = speed*8 -- translate to Kb 
 	local target_speed = math.ceil(speed/10) 
 	local target_counter = math.ceil((speed/100))
 	if target_speed < 1
