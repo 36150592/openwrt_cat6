@@ -997,6 +997,16 @@ var Page = {
         $helper.load(url);
         Page.setHelperStyle($helper);
     },
+    getHelperPage2: function(url) {
+        if (!url) {
+            url = Page.menuItem.url;
+        }
+        url = url.replace(".html", "Helper2.html");
+
+        var $helper = $('#helper');
+        $helper.load(url);
+        Page.setHelperStyle($helper);
+    },
     setFormFieldValue2:function (eleId, value) {
         if(typeof(value) == undefined || !eleId){
             return;

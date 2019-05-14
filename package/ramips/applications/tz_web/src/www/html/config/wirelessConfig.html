@@ -243,6 +243,17 @@
             var pannelIndex = $lis.index(this);
             $boxes.eq(pannelIndex).show().siblings().hide();
             $('#helper' + pannelIndex).show().siblings().hide();
+            if(pannelIndex == "0"){
+                 $('.helper_box').show();
+                 $('.helper_box2').hide();
+            }else if(pannelIndex == "1" || pannelIndex == "2"){
+                $('.helper_box').hide();
+                $('.helper_box2').show();
+            }else{
+                $('.helper_box2').hide();
+            }
+
+
 
             switch (pannelIndex) {
                 case 0:
@@ -298,6 +309,7 @@
                     $('.helper_box').show();
                     break;
                 case 1:
+                    Page.getHelperPage2('html/config/wirelessConfig.html');
                 case 2:
                     Page.postJSON({
                         json: { cmd: RequestCmd.SSIDLIST_INFO,wifiId: $wifiId.val() },
@@ -1012,6 +1024,9 @@
 </div>
 <div class="helper_box" >
     <div id="helper"></div>
+</div>
+<div class="helper_box2">
+    <div id="helper2"></div>
 </div>
 
 <div id="edit_box" style="width: 400px;height: 100px" >
