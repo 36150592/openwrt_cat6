@@ -719,7 +719,7 @@ var StatusUtil = {
                     $('#lan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[0], "Lan1"));
                     $('#lan2').html(StatusUtil.formatNetInterfaceInfo(interStatus[1], "Lan2"));
                     $('#lan3').html(StatusUtil.formatNetInterfaceInfo(interStatus[2], "Lan3"));
-                    $('#wan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[3], "Wan"));
+                    $('#wan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[3], "Lan/Wan"));
                     sessionStorage["2g_register_status"] = sysStatus["2g_register_status"];
                     sessionStorage["3g_register_status"] = sysStatus["3g_register_status"];
                     sessionStorage["4g_register_status"] = sysStatus["4g_register_status"];
