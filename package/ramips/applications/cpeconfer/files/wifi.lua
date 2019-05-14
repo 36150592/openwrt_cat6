@@ -694,7 +694,7 @@ function wifi_module.wifi_set_channel(wifi_id,channel)
 	
 		if "auto" == channel or "0" == channel or "1" == channel or "2" == channel or "3" == channel or
 			"4" == channel or "5" == channel or "6" == channel or "7" == channel or "8" == channel or
-			"9" == channel or "10" == channel or "11" == channel or "12" == channel or "13" == channel 
+			"9" == channel or "10" == channel or "11" == channel or "12" == channel or "13" == channel or "auto"
 		then
 			return common_config_set(wifi_id, "channel", "Channel", channel)
 		end
@@ -704,7 +704,7 @@ function wifi_module.wifi_set_channel(wifi_id,channel)
 		if
 			"36" == channel or "40" == channel or "44" == channel or "48" == channel or "52" == channel or
 			"56" == channel or "60" == channel or "64" == channel or "149" == channel or "153" == channel or
-			"157" == channel or "161" == channel or "165" == channel 
+			"157" == channel or "161" == channel or "165" == channel or "auto"
 		then
 			return common_config_set(wifi_id, "channel", "Channel", channel)
 		end
