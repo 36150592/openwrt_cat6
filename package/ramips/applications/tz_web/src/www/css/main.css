@@ -1374,6 +1374,7 @@ ul.tabs a.current {
     z-index: 999;
     border: solid 8px #999;
     background: #fff;
+    top:0px !important;
 }
 #edit_title {
     float: left;
