@@ -1291,6 +1291,7 @@ function getOpenInfo() {
         if (supportedLte) {
             var status = routerInfo.status;
             var divice = routerInfo.divice;
+            var software_version = routerInfo.softVersion;
             var system = routerInfo.system;
             var wifidate = routerInfo.wifi;
             var network = routerInfo.network;
@@ -1349,14 +1350,14 @@ function getOpenInfo() {
 
         names = [];
         names.push(DOC.lbl.runtime);
-        names.push(DOC.device.firmwareVersion);
+        names.push(DOC.device.softwarVersion);
         names.push(DOC.device.modemVersion);
 
         values = [];
         var runtime = ConvertUtil.timeStamp(system.runtime || 0);
         values.push(runtime);
         //values.push(FormatUtil.formatField(Page.getDeviceVersion(routerInfo.name, routerInfo.version) || loading));certificationVer
-        values.push(divice.hardware|| loading);
+        values.push(software_version.software_version || loading);
         values.push(divice.type || loading);
 
         html = Page.createTable(DOC.title.router, names, values, names.length, 1);

@@ -1138,6 +1138,7 @@ function get_routerinfo()
 	data_array["divice"] = modem.modem_get_info() or ''
 	data_array["system"]  = system.system_get_status() or ''
 	data_array["network"] = network.network_get_wan_info()
+	data_array["softVersion"] = system.system_get_tozed_system_info() or ''
 	if nil == data_array["network"]
     	then
     	   data_array["network"] = network.network_get_4g_net_info() or ''
