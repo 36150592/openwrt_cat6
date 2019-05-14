@@ -39,8 +39,57 @@ bitcomposite表示使用位进行组合的配置字段
 		<default value="0"/>
 	</config>
 
-	<config name="TZSYSTEM_SNTP_TIMEZONE" type="text" description="时区" detail="时区(-12~12, 如5.5、-4.5、8)" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
-        	<default value="8" />
+	<config name="TZSYSTEM_SNTP_TIMEZONE" type="select" description="时区" detail="时区(-12~12, 如5.5、-4.5、8)" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<option value="CST-0" description="中时区" />
+			<option value="CST-0.5" description="东0.5区" />
+			<option value="CST-1" description="东1区" />
+			<option value="CST-1.5" description="东1.5区" />
+			<option value="CST-2" description="东2区" />
+			<option value="CST-2.5" description="东2.5区" />
+			<option value="CST-3" description="东3区" />
+			<option value="CST-3.5" description="东3.5区" />
+			<option value="CST-4" description="东4区" />
+			<option value="CST-4.5" description="东4.5区" />
+			<option value="CST-5" description="东5区" />
+			<option value="CST-5.5" description="东5.5区" />
+			<option value="CST-6" description="东6区" />
+			<option value="CST-6.5" description="东6.5区" />
+			<option value="CST-7" description="东7区" />
+			<option value="CST-7.5" description="东7.5区" />
+			<option value="CST-8" description="东8区" />
+			<option value="CST-8.5" description="东8.5区" />
+			<option value="CST-9" description="东9区" />
+			<option value="CST-9.5" description="东9.5区" />
+			<option value="CST-10" description="东10区" />
+			<option value="CST-10.5" description="东10.5区" />
+			<option value="CST-11" description="东11区" />
+			<option value="CST-11.5" description="东11.5区" />
+			<option value="CST-12" description="东12区" />
+			<option value="CST+0.5" description="西0.5区" />
+			<option value="CST+1" description="西1区" />
+			<option value="CST+1.5" description="西1.5区" />
+			<option value="CST+2" description="西2区" />
+			<option value="CST+2.5" description="西2.5区" />
+			<option value="CST+3" description="西3区" />
+			<option value="CST+3.5" description="西3.5区" />
+			<option value="CST+4" description="西4区" />
+			<option value="CST+4.5" description="西4.5区" />
+			<option value="CST+5" description="西5区" />
+			<option value="CST+5.5" description="西5.5区" />
+			<option value="CST+6" description="西6区" />
+			<option value="CST+6.5" description="西6.5区" />
+			<option value="CST+7" description="西7区" />
+			<option value="CST+7.5" description="西7.5区" />
+			<option value="CST+8" description="西8区" />
+			<option value="CST+8.5" description="西8.5区" />
+			<option value="CST+9" description="西9区" />
+			<option value="CST+9.5" description="西9.5区" />
+			<option value="CST+10" description="西10区" />
+			<option value="CST+10.5" description="西10.5区" />
+			<option value="CST+11" description="西11区" />
+			<option value="CST+11.5" description="西11.5区" />
+			<option value="CST+12" description="西12区" />
+			<default value="CST-8" />
 	</config>
 
 	<config name="TZSYSTEM_REMOTE_LOGIN" type="select" description="远程登录开关" detail="远程EWB登录开关" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
@@ -989,31 +1038,34 @@ class_name="MODEM_CONFIG_FIELD">
 	 </config>
 
 	<config name="TZMODEM_NETWORK_MODE" type="select"  description="设备网络模式" detail="设备网络模式，默认4g优先" class_name="MODEM_CONFIG_FIELD">
-		<option value="1" description="仅4g网络"/>
-		<option value="2" description="4g 优先"/>
+		<option value="1" description="仅4G模式"/>
+		<option value="2" description="4G模式优先"/>
+		<option value="3" description="仅3G模式"/>
+		<option value="4" description="3G模式优先"/>
+		<option value="0" description="3G/2G模式"/>
 	 	<default value="2"/>
 	 </config>
 
-	<config name="TZMODEM_APN0_NAME" type="text"  description="主apn 名称" detail="主apn 名称" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN0_NAME" type="text"  description="主apn APN" detail="主apn 名称" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
-	<config name="TZMODEM_APN0_PROFILE" type="text"  description="主apn配置名 " detail="主apn配置名" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN0_PROFILE" type="text"  description="主apn 配置名 " detail="主apn配置名" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
 	<config name="TZMODEM_APN0_USERNAME" type="text"  description="主apn 用户名" detail="主apn 用户名" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
-	<config name="TZMODEM_APN0_PASSWORD" type="text"  description="主apn密码" detail="主apn密码" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN0_PASSWORD" type="text"  description="主apn 密码" detail="主apn密码" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
-	<config name="TZMODEM_APN0_AUTH_TYPE" type="select"  description="主apn 认证方式" detail="主apn 认证方式0:NONE 1:PAP 2:CHAP 3:PAP and CHAP" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN0_AUTH_TYPE" type="select"  description="主apn 鉴权方式" detail="主apn 认证方式0:NONE 1:PAP 2:CHAP 3:PAP and CHAP" class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="NONE"/>
 		<option value="1" description="PAP"/>
 		<option value="2" description="CHAP"/>
 		<option value="3" description="CHAP and PAP"/>
 	  	<default value="3"/>
 	 </config>
-	<config name="TZMODEM_APN0_IP_STACK" type="select"  description="主apn 协议类型" detail="主apn 协议类型" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN0_IP_STACK" type="select"  description="主apn PDP类型" detail="主apn 协议类型" class_name="MODEM_CONFIG_FIELD">
 	 	<option value="IP" description="IPv4"/>
 		<option value="IPV6" description="IPV6"/>
 		<option value="IPV4V6" description="IPV4 and IPV6"/>
@@ -1022,29 +1074,39 @@ class_name="MODEM_CONFIG_FIELD">
 	<config name="TZMODEM_APN0_MTU" type="text"  description="主apn MTU" detail="主apn MTU" class_name="MODEM_CONFIG_FIELD">
 	  <default value="1500"/>
 	 </config>
+	 <config name="TZMODEM_APN0_NAT" type="select"  description="主apn NAT 开关" detail="主apn NAT 开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="disable" description="关闭"/>
+		<option value="enable" description="开启"/>
+	 	<default value="enable"/>
+	</config>
+	<config name="TZMODEM_APN0_NATLOOKBACK" type="select"  description="主apn NATLOOKBACK 开关" detail="主apn NATLOOKBACK 开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="disable" description="关闭"/>
+		<option value="enable" description="开启"/>
+	 	<default value="disable"/>
+	</config>
 	
 
 
-	<config name="TZMODEM_APN1_NAME" type="text"  description="副apn1 名称" detail="副apn1 名称" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN1_NAME" type="text"  description="副apn1 APN" detail="副apn1 APN" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
-	<config name="TZMODEM_APN1_PROFILE" type="text"  description="副apn1配置名 " detail="副apn1 配置名" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN1_PROFILE" type="text"  description="副apn1 配置名 " detail="副apn1 配置名" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
 	<config name="TZMODEM_APN1_USERNAME" type="text"  description="副apn1 用户名" detail="副apn1 用户名" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
-	<config name="TZMODEM_APN1_PASSWORD" type="text"  description="副apn1密码" detail="副apn1密码" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN1_PASSWORD" type="text"  description="副apn1 密码" detail="副apn1密码" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
-	<config name="TZMODEM_APN1_AUTH_TYPE" type="select"  description="副apn1认证方式" detail="副apn1 认证方式0:NONE 1:PAP 2:CHAP 3:PAP and CHAP" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN1_AUTH_TYPE" type="select"  description="副apn1 鉴权方式" detail="副apn1 认证方式0:NONE 1:PAP 2:CHAP 3:PAP and CHAP" class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="NONE"/>
 		<option value="1" description="PAP"/>
 		<option value="2" description="CHAP"/>
 		<option value="3" description="CHAP and PAP"/>
 	  	<default value="3"/>
 	 </config>
-	<config name="TZMODEM_APN1_IP_STACK" type="select"  description="副apn1 协议类型" detail="副apn1 协议类型" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN1_IP_STACK" type="select"  description="副apn1 PDP类型" detail="副apn1 协议类型" class_name="MODEM_CONFIG_FIELD">
 	 	<option value="IP" description="IPv4"/>
 		<option value="IPV6" description="IPV6"/>
 		<option value="IPV4V6" description="IPV4 and IPV6"/>
@@ -1053,6 +1115,16 @@ class_name="MODEM_CONFIG_FIELD">
 	<config name="TZMODEM_APN1_MTU" type="text"  description="副apn1 MTU" detail="副apn1 MTU" class_name="MODEM_CONFIG_FIELD">
 	  <default value="1500"/>
 	 </config>
+	<config name="TZMODEM_APN1_NAT" type="select"  description="副apn1 NAT 开关" detail="副apn1 NAT 开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="disable" description="关闭"/>
+		<option value="enable" description="开启"/>
+	 	<default value="enable"/>
+	</config>
+	<config name="TZMODEM_APN1_NATLOOKBACK" type="select"  description="副apn1 NATLOOKBACK 开关" detail="副apn1 NATLOOKBACK 开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="disable" description="关闭"/>
+		<option value="enable" description="开启"/>
+	 	<default value="disable"/>
+	</config>
 	<config name="TZMODEM_APN1_ENABLE" type="select"  description="副apn1 开关" detail="副apn1 开关" class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="关闭"/>
 		<option value="1" description="开启"/>
@@ -1060,7 +1132,7 @@ class_name="MODEM_CONFIG_FIELD">
 	 </config>
 
 
-	<config name="TZMODEM_APN2_NAME" type="text"  description="副apn2  名称" detail="副apn2  名称" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN2_NAME" type="text"  description="副apn2  APN" detail="副apn2  名称" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
 	<config name="TZMODEM_APN2_PROFILE" type="text"  description="副apn2 配置名 " detail="副apn2  配置名" class_name="MODEM_CONFIG_FIELD">
@@ -1072,14 +1144,14 @@ class_name="MODEM_CONFIG_FIELD">
 	<config name="TZMODEM_APN2_PASSWORD" type="text"  description="副apn2 密码" detail="副apn2 密码" class_name="MODEM_CONFIG_FIELD">
 	  <default value=""/>
 	 </config>
-	<config name="TZMODEM_APN2_AUTH_TYPE" type="select"  description="副apn2 认证方式" detail="副apn2  认证方式0:NONE 1:PAP 2:CHAP 3:PAP and CHAP" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN2_AUTH_TYPE" type="select"  description="副apn2 鉴权方式" detail="副apn2  认证方式0:NONE 1:PAP 2:CHAP 3:PAP and CHAP" class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="NONE"/>
 		<option value="1" description="PAP"/>
 		<option value="2" description="CHAP"/>
 		<option value="3" description="CHAP and PAP"/>
 	  	<default value="3"/>
 	 </config>
-	<config name="TZMODEM_APN2_IP_STACK" type="select"  description="副apn2  协议类型" detail="副apn2  协议类型" class_name="MODEM_CONFIG_FIELD">
+	<config name="TZMODEM_APN2_IP_STACK" type="select"  description="副apn2  PDP类型" detail="副apn2  协议类型" class_name="MODEM_CONFIG_FIELD">
 	 	<option value="IP" description="IPv4"/>
 		<option value="IPV6" description="IPV6"/>
 		<option value="IPV4V6" description="IPV4 and IPV6"/>
@@ -1088,6 +1160,16 @@ class_name="MODEM_CONFIG_FIELD">
 	<config name="TZMODEM_APN2_MTU" type="text"  description="副apn2  MTU" detail="副apn2  MTU" class_name="MODEM_CONFIG_FIELD">
 	  <default value="1500"/>
 	 </config>
+	<config name="TZMODEM_APN2_NAT" type="select"  description="副apn2 NAT 开关" detail="副apn2 NAT 开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="disable" description="关闭"/>
+		<option value="enable" description="开启"/>
+	 	<default value="enable"/>
+	</config>
+	<config name="TZMODEM_APN2_NATLOOKBACK" type="select"  description="副apn2 NATLOOKBACK 开关" detail="副apn2 NATLOOKBACK 开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="disable" description="关闭"/>
+		<option value="enable" description="开启"/>
+	 	<default value="disable"/>
+	</config>
 	<config name="TZMODEM_APN2_ENABLE" type="select"  description="副apn2 开关" detail="副apn2  开关" class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="关闭"/>
 		<option value="1" description="开启"/>
