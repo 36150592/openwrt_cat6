@@ -222,9 +222,9 @@ config wifi-device      mt7612e
 	option bw	2
 	option aregion  0
 	option country	CN
-	option channel  149
+	option channel  auto
 	option autoch   0
-	option mode     14
+	option mode     11
     
 config wifi-iface
 	option device   mt7612e
