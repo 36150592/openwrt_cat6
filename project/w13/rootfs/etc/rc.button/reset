@@ -11,6 +11,11 @@ logger "$BUTTON pressed for $SEEN seconds"
 #	reboot
 #elif [ "$SEEN" -gt 5 ]
 
+if [ "$SEEN" -lt 1 ]
+then
+	echo "ok" > /tmp/reset_button_test_result
+fi
+
 
 if [ "$SEEN" -gt 3 ]
 then
