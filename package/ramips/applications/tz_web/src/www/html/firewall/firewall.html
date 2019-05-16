@@ -47,16 +47,16 @@
                 var customTitles = [], customFieldNames = [];
                 switch (pannelIndex) {
                     case 0:
-                        customTitles = [DOC.net.ipv46, DOC.net.protocol, DOC.net.port, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "protocol", "port", "comment"];
+                        customTitles = [DOC.net.protocol, DOC.net.port, DOC.lbl.remark];
+                        customFieldNames = [ "protocol", "port", "comment"];
                         break;
                     case 1:
-                        customTitles = [DOC.net.ipv46, DOC.net.protocol, DOC.net.ip, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "protocol", "ipaddr", "comment"];
+                        customTitles = [ DOC.net.protocol, DOC.net.targeAddr, DOC.lbl.remark];
+                        customFieldNames = ["protocol", "ipaddr", "comment"];
                         break;
                     case 2:
-                        customTitles = [DOC.net.ipv46, DOC.net.mac, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "mac", "comment"];
+                        customTitles = [ DOC.net.mac, DOC.lbl.remark];
+                        customFieldNames = ["mac", "comment"];
                         break;
                     case 3:
                         hasEnableLink = false;
@@ -64,22 +64,22 @@
                         customFieldNames = ["dest_port","dest_port_end", "redirect_addr", "redirect_port", "comment"]
                         break;
                     case 4:
-                        customTitles = [DOC.net.ipv46, DOC.net.url,DOC.lbl.advancedOptions, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "url","interface", "comment"];
+                        customTitles = [DOC.net.url,DOC.lbl.advancedOptions, DOC.lbl.remark];
+                        customFieldNames = ["url","interface", "comment"];
                         break;
                     case 5:
                         hasEnableLink = false;
-                        customTitles = [DOC.net.ipv46, DOC.net.ip, DOC.net.mac, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "ipaddr", "mac", "comment"];
+                        customTitles = [DOC.net.targeAddr, DOC.net.mac, DOC.lbl.remark];
+                        customFieldNames = ["ipaddr", "mac", "comment"];
                         break;
                     case 6:
                         hasEnableLink = false;
-                        customTitles = [DOC.net.ipv46, DOC.net.ip, DOC.net.maxSpeed, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "ipaddr", "speed", "comment"];
+                        customTitles = [ DOC.net.targeAddr, DOC.net.maxSpeed, DOC.lbl.remark];
+                        customFieldNames = [ "ipaddr", "speed", "comment"];
                         break;
                     case 7:
-                        customTitles = [DOC.net.ipv46,DOC.net.protocol,DOC.net.sourceAddr,DOC.net.targeAddr, DOC.lbl.remark];
-                        customFieldNames = ["ippro", "protocol","src_ipaddr","dest_ipaddr", "comment"];
+                        customTitles = [DOC.net.protocol,DOC.net.sourceAddr,DOC.net.targeAddr, DOC.lbl.remark];
+                        customFieldNames = [ "protocol","src_ipaddr","dest_ipaddr", "comment"];
                         break;
                     default:
                         break;
