@@ -1168,10 +1168,43 @@ function firewall_restart()
 end
 
 function clear_allrule()
-
+ 
 	local tz_answer = {}
 	tz_answer["cmd"] = 39   
-	tz_answer["success"] = firewall.firewall_clear_all_user_rule()
+	local datas = tz_req["datas"] 
+
+	if nil ~= datas
+	then
+
+		if "portFilter" == datas["param"]
+		then
+			tz_answer["success"] = firewall.firewall_set_port_filter_list({})
+		elseif "ipFilter" == datas["param"]
+		then
+			tz_answer["success"] = firewall.firewall_set_ip_filter_list({})
+		elseif "macFilter" == datas["param"]
+		then
+			tz_answer["success"] = firewall.firewall_set_mac_filter_list({})
+		elseif "portMapping" == datas["param"]
+		then
+			tz_answer["success"] = firewall.firewall_set_port_redirect_list({})
+		elseif "urlFilter" == datas["param"]	
+		then
+			tz_answer["success"] = firewall.firewall_set_url_filter_list({})
+		elseif "ipMacBinding" == datas["param"]
+		then
+			tz_answer["success"] = firewall.firewall_set_ipmac_bind_filter_list({})
+		elseif "speedLimit" == datas["param"]
+		then
+			tz_answer["success"] = firewall.firewall_set_speed_filter_list({})
+		elseif "aclFilter" == datas["param"]
+		then
+			tz_answer["success"] = firewall.firewall_set_acl_filter_list({})
+		end
+	else
+		tz_answer["success"] = firewall.firewall_clear_all_user_rule()
+	end
+
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
