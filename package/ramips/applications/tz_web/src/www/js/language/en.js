@@ -386,6 +386,7 @@ DOC.lbl.imsiPrefix = "IMSI Prefix";
 DOC.lbl.internetAccessRights = "Internet Access Rights";
 DOC.lbl.ipv4FilterRule = "IPv4 default filter rules";
 DOC.lbl.ipv6FilterRule = "IPv6 default filter rules";
+DOC.lbl.ipAllRules = "All Rules"
 DOC.lbl.l3Bridging = "Bridge Mode";
 DOC.lbl.l3BridgingDesc = "Open the router's performance priority mode, the router's speed will enhance, but it will increase power consumption and heat. Non-professionals do not recommend modifying.";
 DOC.lbl.lan = "LAN";

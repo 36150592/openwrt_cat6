@@ -8,8 +8,10 @@
 
         var $detailBox = $('.detail_box').hide();
         var $lis = $("ul.tabs a");
-        var $boxes = $("div.tab_boxes > div"), $btnAdd = $('#btnAdd'), $btnApply = $('#btnApply'), $btnCleanAll = $('#btnCleanAll');
+        var $boxes = $("div.tab_boxes > div"), $btnAdd = $('#btnAdd'), $btnApply = $('#btnApply');// $btnCleanAll = $('#btnCleanAll');
+        var $btnSaveDefault = $('#btnSaveDefault');
         var $btnCleanRules = $('#btnCleanRules');
+        //var $btnApplyAll = $('#btnApplyAll');
         var $box = $('#edit_box'), $mask = $('#mask');
         var $acceptAlls = $('input[name=acceptAll]'),
             $acceptAll6s = $('input[name=acceptAll6]');
@@ -30,16 +32,16 @@
                 $lblShift.hide();
                 $btnShifts.hide();
                 $btnAdd.hide();
-                 $btnCleanRules.hide();
-                 $btnCleanAll.show();
+                $btnApply.hide();
+                $btnCleanRules.hide();
                 //$btnCleanAll.show();
             } else {
                 //$btnCleanAll.hide();
                 $lblShift.show();
                 $btnShifts.show();
                 $btnAdd.show();
+                $btnApply.show();
                 $btnCleanRules.show();
-                $btnCleanAll.hide();
             }
             if (!isPageRequests[pannelIndex]) {
                 isPageRequests[pannelIndex] = true;
@@ -217,7 +219,43 @@
             });
         });
 
-        $btnCleanAll.click(function() {
+       /* $btnApplyAll.click(function() {
+            // AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
+            Page.postJSON({
+                //$id: $btnApply,
+                json: {
+                    cmd: RequestCmd.APPLY_FILTER,
+                    method: JSONMethod.POST
+                },
+                success: function(data) {
+                    if (data.success == "success") {
+                        AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
+                    } else {
+                        AlertUtil.alertMsg(PROMPT.status.applyRuleFail);
+                    }
+                }
+            });
+        });*/
+
+        $btnSaveDefault.click(function() {
+            // AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
+            Page.postJSON({
+                //$id: $btnApply,
+                json: {
+                    cmd: RequestCmd.APPLY_FILTER,
+                    method: JSONMethod.POST
+                },
+                success: function(data) {
+                    if (data.success == "success") {
+                        AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
+                    } else {
+                        AlertUtil.alertMsg(PROMPT.status.applyRuleFail);
+                    }
+                }
+            });
+        });
+
+      /*  $btnCleanAll.click(function() {
             if(!confirm(PROMPT.confirm.clearAllRules)){
                 return false;
             }
@@ -240,7 +278,7 @@
 
                 }
             });
-        });
+        });*/
 
         $btnCleanRules.click(function() {
             if(!confirm(PROMPT.confirm.clearRules)){
@@ -1157,6 +1195,10 @@
                     <div>
                         <input type="radio" name="acceptAll" value="DROP" />&nbsp;<%= lbl.reject %>
                     </div>
+                    <br />
+                    <div class="tab_btns" >
+                        <input id="btnSaveDefault" type="button" value="<%- btn.save %>" />
+                    </div>
                 </fieldset>
                 <fieldset style="width: 60%;padding: 10px 40px;line-height: 25px;display: none;">
                     <legend><%- lbl.ipv6FilterRule %></legend>
@@ -1168,6 +1210,18 @@
                     </div>
                 </fieldset>
                 <br />
+                <br />
+<!--
+                <fieldset style="width: 60%;padding: 10px 40px;line-height: 25px;">
+                <legend><%- lbl.ipAllRules %></legend>
+                <br />
+                <div class="tab_btns" >
+                    <input id="btnApplyAll" type="button" value="<%- btn.applyRules %>" />
+                    <input id="btnCleanAll" type="button" value="<%- btn.clearAllRules %>" />
+                </div>
+                </fieldset>
+                <br />
+                -->
             </script>
         </div>
     </div>
@@ -1183,7 +1237,6 @@
             &nbsp;&nbsp;
             <input id="btnApply" type="button" value="<%- btn.applyRules %>" />
             &nbsp;&nbsp;
-            <input id="btnCleanAll" type="button" value="<%- btn.clearAllRules %>" />
             <input id="btnCleanRules" type="button" value="<%- btn.clearAllRules %>" />
         </script>
     </div>

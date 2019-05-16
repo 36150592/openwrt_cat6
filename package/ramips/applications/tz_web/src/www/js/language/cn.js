@@ -386,6 +386,7 @@ DOC.lbl.imsiPrefix = "IMSI串号";
 DOC.lbl.internetAccessRights = "上网权限";
 DOC.lbl.ipv4FilterRule = "默认IPv4过滤规则";
 DOC.lbl.ipv6FilterRule = "默认IPv6过滤规则";
+DOC.lbl.ipAllRules = "所有规则"
 DOC.lbl.l3Bridging = "桥模式";
 DOC.lbl.l3BridgingDesc = "开启路由器的性能优先模式,开启后路由器的速度将有提升,但同时功耗和发热将增加.非专业人士不建议修改.";
 DOC.lbl.lan = "LAN";
