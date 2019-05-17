@@ -235,11 +235,11 @@ function network_module.network_get_wan_info()
 	info["gateway"] = get_gateway(ifname)
 	info["first_dns"],info["second_dns"] = get_dns("wan")
 	info["interface"] = ifname
-	if nil == info["ipaddr"]
+	--[[if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the wan interface,return nil")
 		return nil
-	end
+	end]]--
 
 	return info
 end
@@ -259,11 +259,11 @@ function network_module.network_get_4g_net_info()
 	info["gateway"] = get_gateway(ifname)
 	info["first_dns"],info["second_dns"] = get_dns("4g")
 	info["interface"] = ifname
-	if nil == info["ipaddr"]
+	--[[if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the 4g interface,return nil")
 		return nil
-	end
+	end]]--
 
 	return info
 end
@@ -283,11 +283,11 @@ function network_module.network_get_4g1_net_info()
 	info["gateway"] = get_gateway(ifname)
 	info["first_dns"],info["second_dns"] = get_dns("4g1")
 	info["interface"] = ifname
-	if nil == info["ipaddr"]
+	--[[if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the 4g interface,return nil")
 		return nil
-	end
+	end]]--
 
 	return info
 end
@@ -307,11 +307,11 @@ function network_module.network_get_4g2_net_info()
 	info["gateway"] = get_gateway(ifname)
 	info["first_dns"],info["second_dns"] = get_dns("4g2")
 	info["interface"] = ifname
-	if nil == info["ipaddr"]
+	--[[if nil == info["ipaddr"]
 	then
 		debug("no ip was assign to the 4g interface,return nil")
 		return nil
-	end
+	end]]--
 
 	return info
 end
