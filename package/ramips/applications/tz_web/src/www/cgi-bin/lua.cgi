@@ -1095,8 +1095,9 @@ end
 function get_sysstatus()
 	local data_array = {}
 	local data_wifi = {}
-	local sim_status = sim.sim_get_status()
-	local modem_status = modem.modem_get_status()
+	local sim_status = sim.sim_get_status() or {}
+	local modem_status = modem.modem_get_status() or {}
+
 	data_array["is_sim_exist"] =  sim_status["is_sim_exist"] or ''
 	data_array["card_status"] =  sim_status["card_status"] or ''
 	data_array["2g_register_status"] =  modem_status["2g_register_status"] or ''
