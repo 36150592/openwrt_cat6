@@ -117,8 +117,9 @@
                 createTableDelegate(Action_Event.Set_Shift_Stat);
             }
         });
-
+    var flags = false;
         $btnShifts.click(function() {
+            flags = true;
             createTableDelegate($btnShifts.index(this));
         });
 
@@ -323,7 +324,6 @@
                 }
             });
         });
-
         function createTableDelegate(shiftIndex) {
             $('#hddShiftIndex' + currentPannelIndex).val(shiftIndex);
             $('#btnDelegate' + currentPannelIndex).click();
@@ -552,13 +552,23 @@
                 sb.append('</tr>');
             }
             sb.append('</table>');
-
             $boxes.eq(pannelIndex).html(sb.toString());
             Page.setStripeTable(String.format('#{0} table', options.getListBoxId()));
 
             $('#btnDelegate' + pannelIndex).click(function() {
 
                 var shiftIndex = parseInt($('#hddShiftIndex' + pannelIndex).val(), 10);
+                if(flags ==  true){
+                    var selectedIndex = options.getSelectedIndex();
+                    var item = datas[selectedIndex];
+                    datas.splice(selectedIndex, 1);
+
+                    selectedIndex = shiftItem(shiftIndex, selectedIndex, datas.length);
+                    datas.splice(selectedIndex, 0, item);
+
+                    options.setApplyButtonStatus(true);
+                    options.setSelectedIndex(selectedIndex);
+                }else{
                 if (shiftIndex  == Action_Event.Add_New_Item) {
                     datas.push(options.getItem());
                     options.setApplyButtonStatus(true);
@@ -579,6 +589,7 @@
 
                     options.setApplyButtonStatus(true);
                     options.setSelectedIndex(selectedIndex);
+                 }
                 }
                 createFilterTable(options);
             });
@@ -725,7 +736,7 @@
                 options.setRowDataInBox(options.rowData);
 
                 $('#' + options.btnSaveId).click(function() {
-				   
+				   flags = false;
                     var item = options.getSavingItem();
                     if (!item) return;
 
