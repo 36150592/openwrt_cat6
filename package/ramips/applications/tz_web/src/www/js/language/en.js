@@ -335,6 +335,27 @@ DOC.isp.unlockImsi = "Please click this button to unlock IMSI";
 DOC.isp.uplinkSpeedLimit = "Uplink speed limit";
 DOC.isp.wanSpeedLimit = "WAN Speed Limit";
 DOC.language = "EN";
+
+DOC.lbl.lockTh = "Lock Physical Cell";
+DOC.lbl.lockCurrent = "Lock Current Physical Cell";
+DOC.lbl.lockSpecific = "Lock Specific Physical Cell";
+DOC.lbl.unlock = "Unlock";
+DOC.lbl.lockedStatus = "Locked Status";
+DOC.lbl.enodeBId = "EnodeB ID";
+DOC.lbl.freqPoint = "EARFCN";
+DOC.lbl.phyCellId = "Physical Cell ID";
+DOC.lbl.btnSave = "Apply";
+DOC.lbl.readFail = "Read failed.";
+
+DOC.lbl.lockSuccess = "Locking success.";
+DOC.lbl.lockFail = "Locking fail.";
+DOC.lbl.unlockSuccess = "Unlocking success.";
+DOC.lbl.unlockFail = "Unlocking fail.";
+DOC.lbl.confirmUnlock = "Are you sure you want to unlock physical cell?";
+DOC.lbl.serverIpEmpty = "The server address is empty, please set the server address in advanced setting page.";
+DOC.lbl.authFail = "You have not rights to lock physical cell.";
+DOC.lbl.only4G = "You must set the network Working Mode as \"Only 4G\" first, please forward to Device Setting->WAN Setting->Network Mode->Working Mode";
+
 DOC.lbl.advancedOptions = "Advanced Options";
 DOC.lbl.accept = "Accept";
 DOC.lbl.all = "All";

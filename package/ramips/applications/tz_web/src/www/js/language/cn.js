@@ -338,6 +338,27 @@ DOC.isp.unlockImsi = "解锁IMSI请按按钮";
 DOC.isp.uplinkSpeedLimit = "上行限速速率";
 DOC.isp.wanSpeedLimit = "WAN端口限速功能";
 DOC.language = "CN";
+
+DOC.lbl.lockTh = "锁物理小区";
+DOC.lbl.lockCurrent = "锁定当前物理小区";
+DOC.lbl.lockSpecific = "锁定指定物理小区";
+DOC.lbl.unlock = "解锁";
+DOC.lbl.lockedStatus = "锁定状态";
+DOC.lbl.enodeBId = "EnodeB ID";
+DOC.lbl.freqPoint = "频点";
+DOC.lbl.phyCellId = "物理小区ID";
+DOC.lbl.btnSave = "确 定";
+DOC.lbl.readFail = "获取数据失败";
+
+DOC.lbl.lockSuccess = "锁定成功!";
+DOC.lbl.lockFail = "锁定失败!";
+DOC.lbl.unlockSuccess = "解锁成功!";
+DOC.lbl.unlockFail = "解锁失败!";
+DOC.lbl.confirmUnlock = "您确定要解锁吗?";
+DOC.lbl.serverIpEmpty = "网管服务器地址为空，请在高级设置页面设置网管服务器地址。";
+DOC.lbl.authFail = "网管服务器禁止锁物理小区，请联系管理员。";
+DOC.lbl.only4G = "您必须将网络工作模式设置为“只在4G模式下工作”，请前往【设备配置】->【WAN 配置】->【选网方式】->【工作模式】进行设置。";
+
 DOC.lbl.advancedOptions = "高级选项";
 DOC.lbl.accept = "凡是不符合已设定过滤规则的数据包，允许通过";
 DOC.lbl.all = "全部";
