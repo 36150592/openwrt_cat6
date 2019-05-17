@@ -228,6 +228,23 @@ function firewall_module.port_redirect:new(o,obj)
 	
 end
 
+local function check_is_ip_range(ip)
+	
+	if nil == ip
+	then
+		return false
+	end
+
+	if string.match(ip,"%d+%.%d+%.%d+%.%d+\-%d+%.%d+%.%d+%.%d+") == nil
+	then
+		debug("check_is_ip_range ip fail")
+		return false
+	end
+	debug("check_is_ip_range true")
+	return true
+
+end
+
 local function reserve_array(array)
 
 	local new_array = {}
@@ -342,12 +359,21 @@ end
 
 local function format_set_ip_filter_cmd(ip,protocol,action,comment)
 
-	local cmd1 = string.format("echo 'iptables  -I FORWARD -p %s -s %s  -j %s ##%s##%s##%s##%s##%s##1' >> %s ;",
-								 protocol,ip, action, FIREWALL_IP_FILTER_PREX, protocol, ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+	if true == check_is_ip_range(ip)
+	then
+		--iptables -I FORWARD -m iprange --src-range 192.168.2.100-192.168.2.200  -j DROP
+		local cmd = string.format("echo 'iptables  -I FORWARD -p %s -m iprange --src-range %s  -j %s ##%s##%s##%s##%s##%s##1' >> %s ;",
+									 protocol,ip, action, FIREWALL_IP_FILTER_PREX, protocol, ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		return cmd
+	else
 
-	local cmd2 = string.format("echo 'iptables  -I FORWARD -p %s -d %s  -j %s ##%s##%s##%s##%s##%s##2' >> %s ;",
-								  protocol,ip, action, FIREWALL_IP_FILTER_PREX,  protocol,ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
-	return string.format("%s%s",cmd1,cmd2)
+		local cmd1 = string.format("echo 'iptables  -I FORWARD -p %s -s %s  -j %s ##%s##%s##%s##%s##%s##1' >> %s ;",
+									 protocol,ip, action, FIREWALL_IP_FILTER_PREX, protocol, ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+
+		local cmd2 = string.format("echo 'iptables  -I FORWARD -p %s -d %s  -j %s ##%s##%s##%s##%s##%s##2' >> %s ;",
+									  protocol,ip, action, FIREWALL_IP_FILTER_PREX,  protocol,ip, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		return string.format("%s%s",cmd1,cmd2)
+	end
 end
 
 local function format_get_ip_filter_cmd() 
@@ -1064,7 +1090,7 @@ function firewall_module.firewall_set_ip_filter_list(filter_list)
 	do
 		local temp = array[i]
 
-		if check_action(temp["action"]) and check_ip(temp["ipaddr"]) and check_protocol(temp["protocol"])
+		if check_action(temp["action"]) and (check_ip(temp["ipaddr"]) or check_is_ip_range(check_ip(temp["ipaddr"])))and check_protocol(temp["protocol"])
 		then
 			execute_cmd(format_set_ip_filter_cmd(temp["ipaddr"],temp["protocol"], temp["action"], temp["comment"]), temp["iswork"])
 		else

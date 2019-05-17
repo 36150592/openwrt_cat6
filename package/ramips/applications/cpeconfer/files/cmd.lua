@@ -337,6 +337,7 @@ function firewall_set_ip_filter()
 		local ips={
 		{["protocol"] = 'tcp', ["ipaddr"]='192.168.3.6', ["action"]='ACCEPT', ["comment"]="test ip filter",["iswork"]=true},
 		{["protocol"] = 'all', ["ipaddr"]='192.168.4.6', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=true},
+		{["protocol"] = 'all', ["ipaddr"]='192.168.4.6-192.168.4.200', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=true},
 		{["protocol"] = 'udp', ["ipaddr"]='192.168.4.8', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=true},
 		{["protocol"] = 'tcp', ["ipaddr"]='192.168.4.9', ["action"]='DROP', ["comment"]="test ip filter",["iswork"]=false},
 		}
