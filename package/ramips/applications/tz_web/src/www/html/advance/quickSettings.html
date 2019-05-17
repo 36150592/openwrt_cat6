@@ -75,10 +75,16 @@
             flag1 = flag2;
          });
          $("#btnSave1").on("click",function(){
+          $('#btnSave1').attr("disabled",true);
           var json = new Object();
             json.ssid = $("#ssid").val();
             json.broadcast = $("input[name='broadcast']:checked").val();
             json.key = $("#key2").val();
+             if (!CheckUtil.checkPwd(json.key)) {
+                  AlertUtil.alertMsg(wirelessconfightml.prompt.keyCkeckMsg);
+                  $('#btnSave1').attr("disabled",false);
+                  return false;
+                }
             json.authenticationType = $("#authenticationType2").val();
             json.cmd = RequestCmd.WIRELESS_CONFIG;
             Page.postJSON({
@@ -88,7 +94,7 @@
                     $lis.eq(0).click();
                 },
                 complete: function(){
-                    $('#btnSave').attr("disabled",false);
+                    $('#btnSave1').attr("disabled",false);
                 }
             });
 
