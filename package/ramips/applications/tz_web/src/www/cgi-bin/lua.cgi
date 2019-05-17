@@ -1205,7 +1205,7 @@ function clear_allrule()
 	else
 		tz_answer["success"] = firewall.firewall_clear_all_user_rule()
 	end
-
+	execute_cmd("/etc/init.d/firewall restart")
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
