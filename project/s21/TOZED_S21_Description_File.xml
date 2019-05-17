@@ -1272,7 +1272,7 @@ class_name="MODEM_CONFIG_FIELD">
 		<default value="0"/>
 	</config>
 
-	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_14" type="select" bit_offset="14" bit_count="1" description="WEB 普通用户显示 高级设置 -> tr069设置 菜单" detail="WEB 普通用户显示 高级设置 -> tr069设置 菜单" class_name="WEB_CONFIG_FIELD">
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_14" type="select" bit_offset="14" bit_count="1" description="WEB 普通用户显示 设备设置 -> tr069设置 菜单" detail="WEB 普通用户显示 设备设置 -> tr069设置 菜单" class_name="WEB_CONFIG_FIELD">
 		<option value="1" description="显示"/>
 		<option value="0" description="隐藏"/>
 		<default value="0"/>
@@ -1388,7 +1388,7 @@ class_name="MODEM_CONFIG_FIELD">
 		<default value="0"/>
 	</config>
 
-	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_14" type="select" bit_offset="14" bit_count="1" description="WEB 高级用户显示 高级设置 -> tr069设置 菜单" detail="WEB 高级用户显示 高级设置 -> tr069设置 菜单" class_name="WEB_CONFIG_FIELD">
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_14" type="select" bit_offset="14" bit_count="1" description="WEB 高级用户显示 设备设置 -> tr069设置 菜单" detail="WEB 高级用户显示 设备设置 -> tr069设置 菜单" class_name="WEB_CONFIG_FIELD">
 		<option value="1" description="显示"/>
 		<option value="0" description="隐藏"/>
 		<default value="0"/>
