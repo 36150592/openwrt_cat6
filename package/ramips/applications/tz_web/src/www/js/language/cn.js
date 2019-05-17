@@ -104,6 +104,9 @@ DOC.antenna.auto = "自动";
 DOC.antenna.buildIn = "内置天线";
 DOC.antenna.external = "外置天线";
 DOC.antenna.mode = "模式";
+
+DOC.test.lockTh = "物理";
+
 DOC.apn.setting_apn = "主APN";
 DOC.apn.setting_apn1 = "APN1";
 DOC.apn.setting_apn2 = "APN2";

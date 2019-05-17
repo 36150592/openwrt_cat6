@@ -73,11 +73,12 @@
     <script type="text/template" id="child_template">
         <div class="detail"><%- title.localUpdate %></div>
         <table class="detail" cellspacing="0">
-            <tr>
                 <th><%- sys.selectUpdateFile %><%- colon %></th>
                 <td>
                     <form id="form1" enctype="multipart/form-data" method="post">
-                        <input type="file" id="fp" name="fp" value="<%- btn.browse %>" size="40" />
+                    	<input type="file" id="fp" name="fp" style="display:none;" onchange=filepath.value=this.value>
+						<input type="textfield" id="filepath">
+						<input type="button" id="filebutton" value="<%- btn.browse %>" onclick="fp.click()">
                         <input type="button" id="btnUpload" value="<%- btn.upload %>"/>
                     </form>
                 </td>

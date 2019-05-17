@@ -42,7 +42,9 @@
                 <tr>
                     <th><%- sys.selectCfgFile %><%- colon %></th>
                     <td>
-                        <input type="file" id="configFile" name="configFile" value="<%- btn.browse %>" size="40" />
+                        <input type="file" id="configFile" name="configFile" style="display:none;" onchange=filepath.value=this.value>
+			            <input type="textfield" id="filepath">
+			            <input type="button" id="filebutton" value="<%- btn.browse %>" onclick="configFile.click()">
                         <input type="button" id="btnLoadConfig" value="<%- btn.loadCfg %>"/>
                     </td>
                 </tr>

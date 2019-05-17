@@ -40,7 +40,8 @@ var LANG = {};
 var DOC = {
 	menu: MENU,
 	prompt: PROMPT,
-	
+
+	test: {},
 	table: {},
 	pager: {},
 	link: {},

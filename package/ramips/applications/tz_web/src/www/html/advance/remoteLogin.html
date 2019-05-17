@@ -6,7 +6,7 @@
         Page.setStripeTable();
         Page.render('#fwHead', '#fwHead_template');
         Page.render('#fwBody', '#fwBody_template');
-        var showText = wirelessconfightml.prompt;
+        var showText = wirelessconfightml.prompt;//{}
 
         var $btnAdd = $('#btnAdd'),$btnAdd2 = $('#btnAdd2'),$btnClose = $('#btnClose'),
             $btnSaveIp = $('#btnSaveIp'),$btnEditIp = $('#btnEditIp'),$box = $('#edit_box'), $mask = $('#mask'),
@@ -102,7 +102,7 @@
             
         }
 
-        if($("#enableRemoteLogin").prop("checked")){
+        if($("#enableRemoteLogin").prop("checked")){//返回值
             enableRemoteLogin = 1;
         }else{
             enableRemoteLogin = 0;
