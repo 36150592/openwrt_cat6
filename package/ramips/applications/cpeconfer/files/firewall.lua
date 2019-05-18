@@ -625,7 +625,7 @@ end
 
 local function check_protocol(protocol)
 
-	if "tcp" == protocol or "udp" == protocol or "all" == protocol
+	if "tcp" == protocol or "udp" == protocol or "all" == protocol or "icmp" == protocol
 	then
 		return true
 	end
