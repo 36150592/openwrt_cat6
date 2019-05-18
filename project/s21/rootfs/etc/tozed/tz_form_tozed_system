@@ -32,5 +32,10 @@ else
 	cfg -a TZ_SYSTEM_TELNET_ENABLE="0" --section system
 fi
 
+if [ "${TZSYSTEM_DEVICE_TYPE}" != "" ];then
+    sed -i s/^type=.*/type=${TZSYSTEM_DEVICE_TYPE}/  /version
+fi
+
+
 cfg -c
 
