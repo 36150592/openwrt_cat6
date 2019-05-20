@@ -72,23 +72,23 @@ docker_run()
 check_ubuntu_version()
 {
 	ubuntu_version=`cat /etc/issue | awk '{print $2}' | awk -F '.' '{print $1}'`
-	#if [ "${ubuntu_version}" != "14" -a "${ubuntu_version}" != "16" ]; then
+	if [ "${ubuntu_version}" != "14" -a "${ubuntu_version}" != "15" -a "${ubuntu_version}" != "16" ]; then
 		get_docker=$(which docker)
 		if [ "$get_docker" = "" ]; then
-            wget ftp://192.168.1.123/sqn3220/docker/get-docker.sh -nv -m -nH --restrict-file-name=nocontrol --cut-dirs=2
-            sudo sh get-docker.sh --mirror Aliyun
+			wget ftp://192.168.1.123/sqn3220/docker/get-docker.sh -nv -m -nH --restrict-file-name=nocontrol --cut-dirs=2
+			sudo sh get-docker.sh --mirror Aliyun
 			sudo usermod -a -G docker `whoami`
-        fi
-        get_images=$(docker images | grep $docker_image_name$docker_image_ver)
-        if [ "$get_images" = "" ]; then
+		fi
+		get_images=$(docker images | grep $docker_image_name$docker_image_ver)
+		if [ "$get_images" = "" ]; then
 			wget $FTPADDR/$docker_image_name$docker_image_ver.tar.gz
 			sudo docker load -i $docker_image_name$docker_image_ver.tar.gz
-        fi
-        docker_run
-        rm -f $docker_image_name$docker_image_ver.tar.gz
-        rm -f get-docker.sh
-        exit
-	#fi
+		fi
+		docker_run
+		rm -f $docker_image_name$docker_image_ver.tar.gz
+		rm -f get-docker.sh
+		exit
+	fi
 }
 
 check_is_docker()
