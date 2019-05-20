@@ -66,7 +66,10 @@
                     values_lte.push(data2.sim.imsi || loading);
                     values_lte.push(data2.sim.iccid || loading);
 					var sn = loading;
-                    if(data2.version.type && data2.sim.imsi){
+                    if(data2.softVersion.device_sn != undefined){
+                        sn = data2.softVersion.device_sn
+                    }
+                    else if(data2.version.type && data2.sim.imsi){
                         sn = data2.version.type + data2.sim.imsi
                     }
 					values_lte.push(sn);

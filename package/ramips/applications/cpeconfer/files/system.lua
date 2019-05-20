@@ -631,6 +631,7 @@ system_module.tozed_system_info = {
 		
 		["config_version"] = nil,   --string
 		["software_version"] = nil,   --string
+		["device_sn"] = nil,-- string
 }
 
 
@@ -644,6 +645,7 @@ function system_module.tozed_system_info:new(o,obj)
 		
 	self["config_version"] = obj["config_version"] or nil
 	self["software_version"] = obj["software_version"] or nil
+	self["device_sn"] = obj["device_sn"] or nil
 
 end
 
@@ -660,6 +662,10 @@ function system_module.system_get_tozed_system_info()
 			info["software_version"] = f:read()
 			io.close(f)
 		end
+
+		local f = io.popen("eth_mac g sn")
+		info["device_sn"]  = f:read()
+		io.close(f)
 
 		return info
 end
@@ -698,7 +704,6 @@ function system_module.system_get_4g_ant()
 	info["sub_ant"] = execute_cmd("cat /sys/class/gpio/gpio3/value")
 	return info
 end
-
 
 local timezone_location = {
 	["Africa/Abidjan"]= "GMT0",
