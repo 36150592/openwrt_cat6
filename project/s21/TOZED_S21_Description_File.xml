@@ -29,10 +29,6 @@ bitcomposite表示使用位进行组合的配置字段
         	<default value="V1.00" />
 	</config>
 
-	<config name="TZSYSTEM_DEVICE_TYPE" type="text" description="客户指定设备类型" detail="客户指定设备类型" maxlength="32" class_name="SYSTEM_CONFIG_FIELD"  >
-        	<default value="s21" />
-	</config>
-
 	<config name="TZSYSTEM_CUSTOMER_SOFT_VERSION" type="text" description="客户指定软件版本" detail="客户指定软件版本" maxlength="32" class_name="SYSTEM_CONFIG_FIELD"  >
         	<default value="" />
 	</config>
