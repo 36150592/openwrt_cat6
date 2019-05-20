@@ -654,6 +654,13 @@ function system_module.system_get_tozed_system_info()
 		info["config_version"] =  x:get("tozed","system","TZ_SYSTEM_CONFIG_VERSION")
 		info["software_version"] =  x:get("tozed","system","TZ_SYSTEM_SOFTWARE_VERSION")
 		
+		if nil == info["software_version"]
+		then
+			local f=io.popen("cat /version  | grep software_version | cut -d'=' -f 2")
+			info["software_version"] = f:read()
+			io.close(f)
+		end
+
 		return info
 end
 
