@@ -243,7 +243,7 @@ int main(int argc, char **argv)
 				{
 				   strcpy(network_dev_name,"eth0.2");
 				}
-				printf("jiangyibo network_dev_name %s\n",network_dev_name);
+			//	printf("jiangyibo network_dev_name %s\n",network_dev_name);
 		while( cmd_netdev_exist( network_dev_name ) )
 		{
 			//check if ipv4 addr exist

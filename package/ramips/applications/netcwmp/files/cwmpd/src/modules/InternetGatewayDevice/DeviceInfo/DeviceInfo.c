@@ -1176,9 +1176,43 @@ int cpe_set_igd_https_Status(cwmp_t * cwmp, const char * name, const char * valu
 	return process_remote_login(is_true_value(value));
 }
 
+
+int https_port_get_form_url(char *acs_url,char *result)
+{
+	char buf[64]={0};
+	int index,num;
+	if (acs_url == NULL)
+	{
+		strcpy(param,"443");
+		return 0;
+	}
+	int length= strlen(acs_url);
+    for(index=0;index<length-1;index++){
+		if(acs_url[index]==':'&&acs_url[index+1]!='/')
+		{
+			for( num=0;num<length-1-index;num++)
+			{
+				if(acs_url[index+num+1]=='/')
+				{
+					break;
+				}
+				buf[num]=acs_url[index+1+num];
+			}
+			break;
+		}
+	}
+	strcpy(result,buf);
+    return 1;
+}
+
 int cpe_get_igd_https_Port(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	strcpy(param,"80");
+	if(strstr(cwmp->acs_url,"https")!=NULL)
+	{
+       https_port_get_form_url(cwmp->acs_url,param);
+	}else{
+	strcpy(param,"443");
+	}
 	*value = param;
 	return FAULT_CODE_OK;
 }
@@ -1207,7 +1241,15 @@ int cpe_get_igd_UploadTransports(cwmp_t * cwmp, const char * name, char ** value
 
 int cpe_get_igd_Time_Enable(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	strcpy(param,"true");
+	read_memory("uci -q get system.ntp.enabled", param, 64); 
+    util_strip_traling_spaces(param);
+	if (strlen(param) == 0) {
+	   strcpy(param,"true");
+	} else if(!strcmp(param,"1")){
+		strcpy(param,"true");
+	}else{
+		strcpy(param,"false");
+	}
 	*value = param;
 	return FAULT_CODE_OK;
 }
@@ -1232,6 +1274,46 @@ int cpe_get_igd_UpdatePort(cwmp_t * cwmp, const char * name, char ** value, pool
 	return FAULT_CODE_OK;
 }
 
+int openwrt_ntp_set_value(int index,char *value)
+{
+	char tempbuf[128];
+	char cmdbuf[256];
+	char ntpserver1[64]={0};
+	char ntpserver2[64]={0};
+	char ntpserver3[64]={0};
+	char ntpserver4[64]={0};
+
+	if ( value == NULL || strlen(value) == 0) {
+		return 0;
+	}
+    read_memory("uci -q get system.ntp.server | awk '{print $1}'", ntpserver1, 64); 
+    read_memory("uci -q get system.ntp.server | awk '{print $2}'", ntpserver2, 64); 
+    read_memory("uci -q get system.ntp.server | awk '{print $3}'", ntpserver3, 64); 		
+	read_memory("uci -q get system.ntp.server | awk '{print $4}'", ntpserver4, 64); 
+    if(index==0)
+	{
+      strcpy(ntpserver1,value);
+	}
+	else  if(index==1)
+	{
+ 		strcpy(ntpserver2,value);
+	}
+	else  if(index==2)
+	{
+		 strcpy(ntpserver3,value);
+	}
+	else  if(index==3)
+	{
+		 strcpy(ntpserver4,value);
+	}
+	else{
+		return 0;
+	}	
+    sprintf(cmdbuf,"uci -q set system.ntp.server='%s %s %s %s';uci -q commit system",ntpserver1,ntpserver2,ntpserver3,ntpserver4);
+    system(cmdbuf);   
+	return 1;
+}
+
 
 int cpe_get_igd_Time_NTPServer0(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
@@ -1249,12 +1331,7 @@ int cpe_get_igd_Time_NTPServer0(cwmp_t * cwmp, const char * name, char ** value,
 
 int cpe_set_igd_Time_NTPServer0(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
-	if ( value == NULL || strlen(value) == 0) {
-		nv_cfg_set("sntp_server0", "");
-	} else {
-		nv_cfg_set("sntp_server0", "Other");
-		nv_cfg_set("sntp_other_server0", value);
-	}
+    openwrt_ntp_set_value(0,value);
 	return FAULT_CODE_OK;
 }
 
@@ -1274,8 +1351,7 @@ int cpe_get_igd_Time_NTPServer1(cwmp_t * cwmp, const char * name, char ** value,
 
 int cpe_set_igd_Time_NTPServer1(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
-
-	set_config_attr("TZ_NTP_SERVER", value);
+    openwrt_ntp_set_value(1,value);
 	return FAULT_CODE_OK;
 }
 
@@ -1297,7 +1373,7 @@ int cpe_get_igd_Time_NTPServer2(cwmp_t * cwmp, const char * name, char ** value,
 
 int cpe_set_igd_Time_NTPServer2(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
-	set_config_attr("TZ_NTP_SERVER2", value);
+    openwrt_ntp_set_value(2,value);
 	return FAULT_CODE_OK;
 }
 
@@ -1317,7 +1393,7 @@ int cpe_get_igd_Time_NTPServer3(cwmp_t * cwmp, const char * name, char ** value,
 
 int cpe_set_igd_Time_NTPServer3(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
-	set_config_attr("TZ_NTP_SERVER3", value);
+    openwrt_ntp_set_value(3,value);
 	return FAULT_CODE_OK;
 }
 
@@ -1337,7 +1413,8 @@ int cpe_get_igd_Time_NTPServer4(cwmp_t * cwmp, const char * name, char ** value,
 
 int cpe_set_igd_Time_NTPServer4(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
-	set_config_attr("TZ_NTP_SERVER4", value);
+
+
 	return FAULT_CODE_OK;
 }
 

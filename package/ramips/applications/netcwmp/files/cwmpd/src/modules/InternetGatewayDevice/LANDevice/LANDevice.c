@@ -116,19 +116,24 @@ int restart_apn(void *arg1,void *arg2)
     }
 }
 
-int getWlanClientInfo(WlanClientInfo *info)
+int getWlanClientInfo(WlanClientInfo *info,int index)
 {
 	int i, j;
 	int count;
 	char cmd[128];
 	char buffer[128];
-
-	sprintf(cmd, "iwinfo ra0 assoclist|grep SNR > /tmp/.wlan_client_list");
+    if(index == 1)
+    {
+	     sprintf(cmd, "iwinfo ra0 assoclist|grep SNR > /tmp/.wlan_client_list");
+    }else{
+         sprintf(cmd, "iwinfo %s assoclist|grep SNR > /tmp/.wlan_client_list","rai0");
+    }
 	if(read_memory(cmd, buffer, sizeof(buffer)) < 0)
 	{
 		info->count = 0;
 		return -1;
 	}
+   
 
 	sprintf(cmd, "cat /tmp/.wlan_client_list | wc -l");
 	if(read_memory(cmd, buffer, sizeof(buffer)) < 0)
@@ -281,15 +286,15 @@ static int uci_mul_get_wifi_param(const char * name, const char * option, char *
     num = uci_mul_get_wifi_num();
     
     index = get_parameter_index((char *)name, "MultiSSID.", 65535);
-    printf("jiangyibo quzhi %d %d %s\n",indata,index,name);
+
     index = (indata-1)*2 + index;
     if (0 < index && index <= num)
     {
         
         sprintf(cmdbuf,"uci -q get mutilssid.@wifi-iface[%d].%s",index - 1,option);
-        printf("jiangyibo 88 %s\n",cmdbuf);
+   
         read_memory(cmdbuf, param, sizeof(param));
-        printf("jiangyibo 88 %s\n",param);
+
         util_strip_traling_spaces(param);
         *value = param;
     }
@@ -297,7 +302,7 @@ static int uci_mul_get_wifi_param(const char * name, const char * option, char *
     {   
         return FAULT_CODE_9005;
     }
-    printf("jiangyibo %d\n",index);
+
     return FAULT_CODE_OK;
 }
 
@@ -342,7 +347,7 @@ static int uci_mul_get_dhcp_param(const char * name, const char * option, char *
     if (0 < index && index <= num)
     {
         sprintf(cmdbuf,"uci -q get dhcp.lan%d.%s",(index - 1)%2+1,option);
-        printf("jiangyibo 8811 %s\n",cmdbuf);
+
         read_memory(cmdbuf, param, sizeof(param));
         util_strip_traling_spaces(param);
         *value = param;
@@ -367,7 +372,7 @@ static int uci_mul_get_ipaddr_param(const char * name, const char * option, char
     {
         sprintf(cmdbuf,"uci -q get network.lan%d.%s",(index - 1)%2+1,option);
         read_memory(cmdbuf, param, sizeof(param));
-        printf("jiangyibo 2222 %s\n",cmdbuf);
+
         util_strip_traling_spaces(param);
         *value = param;
     }
@@ -1338,7 +1343,7 @@ extern int getReservedAddress(char *outText,int sizelen);
 
 int cpe_get_igd_DNSServers(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-    char cmdbuf[256]="uci -q get dhcp.lan.dhcp_option | sed 's/ /\\n/g' | grep -E '6,' | sed 's/6,//g'";
+    char cmdbuf[256]="uci -q get dhcp.lan.main_dns | sed 's/ /\\n/g' | grep -E '6,' | sed 's/6,//g'";
     read_memory(cmdbuf, param, 64);
     util_strip_traling_spaces(param);
     if (0 == strlen(param))
@@ -1351,16 +1356,10 @@ int cpe_get_igd_DNSServers(cwmp_t * cwmp, const char * name, char ** value, pool
 
 int cpe_set_igd_DNSServers(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
-    char cmdbuf[256] = "uci -q get dhcp.lan.dhcp_option | sed 's/ /\\n/g' | grep -E '6,'";
+    char cmdbuf[256] ={0};
     char cmdres[64] = {0};
-    read_memory(cmdbuf, cmdres, sizeof(cmdres));
-    util_strip_traling_spaces(cmdres);
-    if(0 < strlen(cmdres))
-    {
-        sprintf(cmdbuf,"uci -q del_list dhcp.lan.dhcp_option=%s;uci -q commit dhcp", cmdres);
-        system(cmdbuf);
-    }
-    sprintf(cmdbuf,"uci -q add_list dhcp.lan.dhcp_option=6,%s;uci -q commit dhcp", value);
+
+    sprintf(cmdbuf,"uci -q set dhcp.lan.main_dns=%s;uci -q commit dhcp", value);
     system(cmdbuf);
     cmd_touch(REBOOT_DNSMASQ_MODULE);
     callback_reg(cwmp, restart_dnsmasq, NULL, NULL);
@@ -1400,6 +1399,7 @@ int cpe_get_igd_IPRouters(cwmp_t * cwmp, const char * name, char ** value, pool_
 
 int cpe_set_igd_IPRouters(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
+    /*
     char cmdbuf[256] = "uci -q get dhcp.lan.dhcp_option | sed 's/ /\\n/g' | grep -E '3,'";
     char cmdres[64] = {0};
     read_memory(cmdbuf, cmdres, sizeof(cmdres));
@@ -1413,6 +1413,7 @@ int cpe_set_igd_IPRouters(cwmp_t *cwmp, const char *name, const char *value, int
     system(cmdbuf);
     cmd_touch(REBOOT_DNSMASQ_MODULE);
     callback_reg(cwmp, restart_dnsmasq, NULL, NULL);
+    */
     return FAULT_CODE_OK;
 }
 
@@ -1668,7 +1669,7 @@ int cpe_get_igd_SubnetMask(cwmp_t * cwmp, const char * name, char ** value, pool
 	if (strlen(param) == 0) {
 		strcpy(param,"255.255.255.0");
 	} else {
-		strcpy(param,"255.255.255.0");
+	//	strcpy(param,"255.255.255.0");
 	}
 	*value = param;
 	return FAULT_CODE_OK;
@@ -1682,7 +1683,11 @@ int cpe_set_igd_SubnetMask(cwmp_t *cwmp, const char *name, const char *value, in
 
 int  cpe_refresh_igd_AssociatedDevice(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
 {
-	getWlanClientInfo(&wlan_client);
+    int index;
+
+    index = 1;
+
+	getWlanClientInfo(&wlan_client,index);
 	igd_entries.wlan_client_entry = wlan_client.count;
     cwmp_refresh_i_parameter(cwmp, param_node, igd_entries.wlan_client_entry);
     cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg); 
@@ -1822,6 +1827,7 @@ int cpe_set_igd_WEPKey(cwmp_t *cwmp, const char *name, const char *value, int le
 
 int  cpe_refresh_igd_WLANConfiguration(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
 {
+    printf("jiangyibo wifi info\n");
     igd_entries.wlan_entry = uci_get_wifi_num();
     cwmp_refresh_i_parameter(cwmp, param_node, igd_entries.wlan_entry);
     cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg);
@@ -3401,28 +3407,34 @@ int cpe_set_igd_PasswordOfMultiSSID(cwmp_t *cwmp, const char *name, const char *
 }
 int cpe_get_igd_EncrypModeOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	int res = uci_mul_get_wifi_param(name, "encryption", value);
+
+    char *ptmp = NULL;
+    int res = uci_mul_get_wifi_param(name ,"encryption", &ptmp);
     if(FAULT_CODE_OK != res){
-        return res;
+    	*value = NULL;
+    	return res;
     }
-/*	
-	if (!strcmp(buffer, "OPEN")) {
-		
-		strcpy(param, "OPEN");
-	} else if (!strcmp(buffer, "WPA2PSK")){
-	
-		strcpy(param, "WPA2-PSK[AES]");
-		
-	} else if (!strcmp(buffer, "WPAPSKWPA2PSK")){
-	
-		strcpy(param, "WPA-PSK/WPA2-PSK");
-	} else {
-		*value = NULL;
-    	return FAULT_CODE_OK;
-	}
+    if(0 == strcmp(ptmp,"none")){
+        strcpy(param, "None");
+        *value = param;
+        return FAULT_CODE_OK;
+    }
+    if(0 == strcmp(ptmp,"psk2+tkip+ccmp")
+      || 0 == strcmp(ptmp,"psk+tkip+ccmp")
+      || 0 == strcmp(ptmp,"psk+psk2")){
+        strcpy(param, (char *)WPAEncryptionModes[2][1]);
+    }
+    else if(0 == strcmp(ptmp,"psk2+ccmp") || 0 == strcmp(ptmp,"psk+ccmp")){
+        strcpy(param, (char *)WPAEncryptionModes[1][1]);
+    }
+    else if(0 == strcmp(ptmp,"psk2+tkip") || 0 == strcmp(ptmp,"psk+tkip")){
+        strcpy(param, (char *)WPAEncryptionModes[0][1]);
+    }
+    else{
+        //strcpy(param, (char *)WPAEncryptionModes[2][1]);
+        strcpy(param, "None");
+    }
     *value = param;
-*/
-    printf("jiangyibo 111\n");
     return FAULT_CODE_OK;
 }
 
@@ -3430,7 +3442,24 @@ int cpe_set_igd_EncrypModeOfMultiSSID(cwmp_t *cwmp, const char *name, const char
 {
 	
 	int ret = -1;
-	int res = uci_mul_set_wifi_param(name, "encryption", value);
+
+    char ena[32];
+    if(0 == strcmp((char *)WPAEncryptionModes[0][1], value)){
+        strcpy(ena,"psk2+tkip");
+    }
+    else if(0 == strcmp((char *)WPAEncryptionModes[1][1], value)){
+        strcpy(ena,"psk2+ccmp");
+    }
+    else if(0 == strcmp((char *)WPAEncryptionModes[2][1], value)){
+        strcpy(ena,"psk2+tkip+ccmp");
+    }
+    else if(0 == strcmp("None", value)){
+        strcpy(ena,"none");
+    }
+    else{
+        return FAULT_CODE_9007;
+    }
+	int res = uci_mul_set_wifi_param(name, "encryption", ena);
     if(FAULT_CODE_OK != res){
         return res;
     }
