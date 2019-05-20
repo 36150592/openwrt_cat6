@@ -2473,9 +2473,9 @@ function set_tr069_config()
 			tz_answer["success"] = false
 	end
 
-
 	tz_answer["success"] = true
 	tz_answer["cmd"] = 219
+	execute_cmd("/etc/init.d/netcwmp restart")
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
