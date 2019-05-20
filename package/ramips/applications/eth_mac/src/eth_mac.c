@@ -78,7 +78,7 @@ int mtd_read_own(int offset, int size)
 	}
 	
 	lseek(fd, offset, SEEK_SET);
-    if(read(fd, buf, size) != MACADDR_LEN)
+    if(read(fd, buf, size) != size)
     {
         printf("read() failed\n");
         close(fd);
@@ -86,12 +86,9 @@ int mtd_read_own(int offset, int size)
     }
     for (i = 0; i < size; i++)
     {
-        printf("%02X", buf[i]);
-        if (i < MACADDR_LEN-1)
-            printf(":");
-        else
-            printf("\n");
+        printf("%X ", buf[i]);
     }
+	printf("\n");
     close(fd);
 	free(buf);
     return 0;
