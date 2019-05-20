@@ -54,18 +54,18 @@ int main(int argc, char** argv)
 	read_memory(shellcmd, imei, sizeof(imei));
 	util_strip_traling_spaces(imei);
 
-	char lanmac[56] = "";
+	char wifimac[56] = "";
 	memset(shellcmd, 0, sizeof(shellcmd));
-	strcpy(shellcmd, "eth_mac r lan");
-	read_memory(shellcmd, lanmac, sizeof(lanmac));
-	util_strip_traling_spaces(lanmac);
+	strcpy(shellcmd, "eth_mac r wlan");
+	read_memory(shellcmd, wifimac, sizeof(wifimac));
+	util_strip_traling_spaces(wifimac);
 
 	int i = 0, j = 0; 
 	for(i = 0; i < 17; i++)
 	{
-		if(lanmac[i] != ':')
+		if(wifimac[i] != ':')
 		{
-			mac[j] = lanmac[i];
+			mac[j] = wifimac[i];
 			j++;
 		}
 	}
