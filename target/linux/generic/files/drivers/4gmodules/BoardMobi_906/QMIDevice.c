@@ -387,6 +387,7 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
    unsigned int len = skb->len;
    struct gobi_qmimux_hdr *hdr;
 
+#if DEBUG
    skb->dev = priv->real_dev;
    if(dev->type == ARPHRD_ETHER)  //net card type is ETHERNET. commented by qiao 2019.4.24
    {
@@ -398,6 +399,7 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
       len = skb->len - sizeof(struct gobi_qmimux_hdr); //len == qcmap padding length. commented by qiao 2019.4.24
    }
    else
+#endif
    {
       hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));
    }
@@ -406,14 +408,14 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
    hdr->pkt_len = cpu_to_be16(len);//qcmap padding length
    skb->dev = priv->real_dev;
    NETDBG("mux_id:0x%x\n",priv->mux_id);
-#if 0   
+#if DEBUG  
    //why should check the hdr header you have settled before, commented by qiao 2019.4.24
    if(iIsValidQmuxSKB(skb)==0)
    {
       NETDBG( "Invalid Packet\n" );
       return NETDEV_TX_BUSY;
    }
-   //skb length has settled before,fuck the first writer. commented by qiao 2019.4.24
+   //skb length has settled before,commented by qiao 2019.4.24
    skb = GobiNetDriverQmuxTxFixup( skb, GFP_ATOMIC,priv->mux_id); 
    if (skb == NULL)
    {
@@ -8394,7 +8396,7 @@ static void qmimux_setup(struct net_device *dev)
 	dev->type            = ARPHRD_NONE;
 	dev->hard_header_len = 0;
 	dev->addr_len        = 0;
-	dev->flags           = IFF_POINTOPOINT | IFF_NOARP | IFF_MULTICAST;
+	dev->flags           = IFF_NOARP | IFF_MULTICAST;
 	dev->netdev_ops      = &gobi_qmimux_netdev_ops;
 //	dev->needs_free_netdev = true;
 }
