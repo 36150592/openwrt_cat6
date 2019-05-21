@@ -2,57 +2,8 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-    	Page.render();
+        Page.render();
        
-
-        var opts = {
-            cn: {
-                lockTh: '锁物理小区',
-                lockCurrent: '锁定当前物理小区',
-                lockSpecific: '锁定指定物理小区',
-                unlock: '解锁',
-                lockedStatus: {th:'锁定状态', locked:'已锁定', unlocked: '未锁定'},
-                enodeBId: 'EnodeB ID',
-                freqPoint: '频点',
-                phyCellId: '物理小区ID',
-                btnSave: '确 定',
-                readFail: '获取数据失败',
-                pciRange: '取值范围 0~503',
-                earthRange: '取值范围 0~65535',
-                lockSuccess: '锁定成功!',
-                lockFail: '锁定失败!',
-                unlockSuccess: '解锁成功!',
-                unlockFail: '解锁失败!',
-                confirmUnlock: '您确定要解锁吗?',
-                serverIpEmpty: '网管服务器地址为空，请在高级设置页面设置网管服务器地址。',
-                authFail: '网管服务器禁止锁物理小区，请联系管理员。',
-                only4G: '您必须将网络工作模式设置为“只在4G模式下工作”，请前往【设备配置】->【WAN 配置】->【选网方式】->【工作模式】进行设置。'
-            },
-            en: {
-                lockTh: 'Lock Physical Cell',
-                lockCurrent: 'Lock Current Physical Cell',
-                lockSpecific: 'Lock Specific Physical Cell',
-                unlock: 'Unlock',
-                lockedStatus: {th:'Locked Status', locked:'Locked', unlocked: 'Unlocked'},
-                enodeBId: 'EnodeB ID',
-                freqPoint: 'EARFCN',
-                phyCellId: 'Physical Cell ID',
-                btnSave: 'Apply',
-                readFail: 'Read failed.',
-                pciRange: 'Range [0,503]',
-                earthRange: 'Range [0,65535]',
-                lockSuccess: 'Locking success.',
-                lockFail: 'Locking fail.',
-                unlockSuccess: 'Unlocking success.',
-                unlockFail: 'Unlocking fail.',
-                confirmUnlock: 'Are you sure you want to unlock physical cell?',
-                serverIpEmpty: 'The server address is empty, please set the server address in advanced setting page.',
-                authFail: 'You have not rights to lock physical cell.',
-                only4G: 'You must set the network Working Mode as "Only 4G" first, please forward to Device Setting->WAN Setting->Network Mode->Working Mode'
-            }
-        };
-        var lang = MasterPage.init(opts);
-
         var $btnSave = $('#btnSave').disable(),
             $locks = $('.lock').hide(),
             $spanLockedStatus = $('#spanLockedStatus'),
@@ -183,7 +134,7 @@
                 json: json,
                 success: function(data) {
                     AlertUtil.alertMsg(PROMPT.saving.success);
-					$("ul.tabs a").eq(3).click();
+                    $("ul.tabs a").eq(3).click();
                 },
                 complete: function(){
                     $('#btnSave').attr("disabled",false);
@@ -224,13 +175,12 @@
                 </tr>
 
                 <tr class="lock">
-                    
-                    <th><%- freqPoint %><%- colon %></th>
-                    <td><input type="text" id="txtFreqPoint" name="txtFreqPoint" />&nbsp;<span class="cmt">(<%- earthRange%>)</span></td>
+                    <th><%- lbl.freqPoint %><%- colon %></th>
+                    <td><input type="text" id="txtFreqPoint" name="txtFreqPoint" /></td>
                 </tr>
                 <tr class="lock">
-                    <th><%- phyCellId %><%- colon %></th>
-                    <td><input type="text" id="txtPhyCellId" name="txtPhyCellId" />&nbsp;<span class="cmt">(<%- pciRange%>)</span></td>
+                    <th><%- lbl.phyCellId %><%- colon %></th>
+                    <td><input type="text" id="txtPhyCellId" name="txtPhyCellId" /></td>
                 </tr>
                 <tr id="trSave">
                     <th>&nbsp;</th>
