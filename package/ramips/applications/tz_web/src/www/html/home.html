@@ -1,9 +1,8 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <script type="text/javascript">
-    $(document).ready(function() {
-        function init(){
-                    StatusUtil.getSysStatus();
+    $(document).ready(function() {   
+          StatusUtil.getSysStatus();
         Page.render('#container', '#index_template', DOC);
         
         var Pageauth = Page.AUTH;
@@ -228,22 +227,8 @@
         $('#container').show();
         showSysTime();
         listenOperation ();
-        }
-        Page.postJSON({
-            json: {
-                cmd: RequestCmd.GET_LANGUAGE_SELECT
-            },
-            success: function(data) {
-                Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue('6') || "3E");
-                Page.language = data.data.web_language.toUpperCase();
-                $("script[src^='js/language/']").remove();
-                        $("script[src^='js/main']").remove();
-                        $.getScript('js/language/' +  data.data.web_language.toLowerCase() + '.js', function() {
-                        $.getScript('js/main.js', init);
-                        });
-            }
+        
 
-        });
 		
     });
 	

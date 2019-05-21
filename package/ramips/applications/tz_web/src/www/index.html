@@ -43,18 +43,21 @@ $(document).ready(function() {
 		
     }
 
-    Page.postJSON({
-        json: { cmd: RequestCmd.INIT_PAGE },
-        success: function(data) {
-            var ReturnData = data.data;
-            Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue(ReturnData.languageList) || "3E");
-            Page.language = ReturnData.language.toUpperCase();
-            index();
-        }
-    });
+     Page.postJSON({
+            json: {
+                cmd: RequestCmd.GET_LANGUAGE_SELECT
+            },
+            success: function(data) {
+                Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue('6') || "3E");
+                Page.language = data.data.web_language.toUpperCase();
+                $("script[src^='js/language/']").remove();
+                        $("script[src^='js/main']").remove();
+                        $.getScript('js/language/' +  data.data.web_language.toLowerCase() + '.js', function() {
+                        $.getScript('js/main.js', index);
+                        });
+            }
 
-
-
+        });
 });
 
 function closeBox() {

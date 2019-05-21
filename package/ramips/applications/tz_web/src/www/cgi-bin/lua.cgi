@@ -187,11 +187,13 @@ function change_language()
     local newLanguage = string.lower(tz_req["languageSelect"])
 	shellcmd = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/login.html",oldLanguage,newLanguage,WEB_PATH)
 	shellcmd1 = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/index.html",oldLanguage,newLanguage,WEB_PATH)
+	shellcmd2 = string.format("sed -i 's/\"Language\":\"%s\"/\"Language\":\"%s\"/g' %s/config.json",oldLanguage,newLanguage,WEB_PATH)
 	
 	system.system_set_web_language(newLanguage)
 	  
 	os.execute(shellcmd)
 	os.execute(shellcmd1)
+	os.execute(shellcmd2)
 	
     local tz_answer = {};
 	tz_answer["success"] = true;
