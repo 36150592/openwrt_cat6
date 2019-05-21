@@ -220,11 +220,31 @@ static void sn_handle(char* get_buf, char* set_buf)
 	}
 }
 
+int check_md5sum(char *path, char *md5)
+{
+	char cmd[128] = {0};
+	char t_receive_buf[128] = {0};
+	sprintf(cmd, "md5sum %s  | cut -d' ' -f 1", path);
+
+	read_memory(cmd,t_receive_buf, sizeof(t_receive_buf));
+	util_strip_traling_spaces(t_receive_buf);
+
+	if(strcmp(md5, t_receive_buf))
+	{
+		return 1;
+	}
+
+	return 0;
+
+}
+	
 static void upgrade_system_handle(char* get_buf, char* set_buf)
 {
-	//upgrade_system ftp://192.168.3.123/home/system.bin 
+	//upgrade_system ftp://192.168.3.123/home/system.bin md5sum
 	char buf[128] = {0};
 	char *temp = NULL;
+	char md5sum[128] = {0}; 
+	char addr[128] = {0};
 
 	temp = strtok(get_buf, " ");
 	temp = strtok(get_buf, NULL);
@@ -233,6 +253,15 @@ static void upgrade_system_handle(char* get_buf, char* set_buf)
 		strcpy(set_buf, "error:NULL addr\n");
 		return ;
 	}
+	strcpy(addr, temp);
+	
+	temp = strtok(get_buf, NULL);
+	if(!temp)
+	{
+		strcpy(set_buf, "error:NULL md5sum\n");
+		return ;
+	}
+	strcpy(md5sum, temp);
 	
 	sprintf(buf, "wget %s -O /tmp/system.bin", temp);
 	int ret = system(buf);
@@ -243,6 +272,12 @@ static void upgrade_system_handle(char* get_buf, char* set_buf)
 		return ;
 	}
 
+	if(check_md5sum("/tmp/system.bin", md5sum))
+	{
+		strcpy(set_buf, "error:check md5sum fail\n");
+		return ;
+	}
+	
 	ret = system("flashcp -v /tmp/system.bin /dev/mtd3");
 
 	if(ret != 0)
@@ -256,10 +291,13 @@ static void upgrade_system_handle(char* get_buf, char* set_buf)
 
 static void update_config_handle(char* get_buf, char* set_buf)
 {
-	//update_config ftp://192.168.3.123/home/config.zip 
+	//update_config ftp://192.168.3.123/home/config.zip md5sum
 	char buf[128] = {0};
 	char *temp = NULL;
+	char md5sum[128] = {0}; 
+	char addr[128] = {0};
 
+	int ret = -1;
 	temp = strtok(get_buf, " ");
 	temp = strtok(get_buf, NULL);
 	if(!temp)
@@ -267,15 +305,32 @@ static void update_config_handle(char* get_buf, char* set_buf)
 		strcpy(set_buf, "error:NULL addr\n");
 		return ;
 	}
+	strcpy(addr, temp);
 	
-	sprintf(buf, "wget %s -O /tmp/config.zip", temp);
-	int ret = system(buf);
+	temp = strtok(get_buf, NULL);
+	if(!temp)
+	{
+		strcpy(set_buf, "error:NULL md5sum\n");
+		return ;
+	}
+	strcpy(md5sum, temp);
 
+
+	
+	sprintf(buf, "wget %s -O /tmp/config.zip", addr);
+	ret = system(buf);
 	if(ret != 0)
 	{
 		strcpy(set_buf, "error:download config file fail\n");
 		return ;
 	}
+
+	if(check_md5sum("/tmp/config.zip", md5sum))
+	{
+		strcpy(set_buf, "error:check md5sum fail\n");
+		return ;
+	}
+
 
 	ret = system("/etc/tozed/config_update /tmp/config.zip 0");
 
