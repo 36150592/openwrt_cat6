@@ -185,6 +185,111 @@ static void mac_handle(char* get_buf, char* set_buf)
 	}
 }
 
+static void sn_handle(char* get_buf, char* set_buf)
+{
+	char t_receive_buf[128] = "";
+	//get sn
+	if(strlen(get_buf) < 5)
+	{
+		read_memory("eth_mac g sn",t_receive_buf, sizeof(t_receive_buf));
+		util_strip_traling_spaces(t_receive_buf);
+		if(strlen(t_receive_buf) <= 0)
+		{
+			strcpy(set_buf, "does not exist sn in factory section\n");
+		}
+		else
+		{
+			sprintf(set_buf, "%s\n",t_receive_buf);
+		}
+	}
+	else
+	{
+		// set sn
+		char cmdline[64] = "";
+		char target_sn[33] = {0};
+		int i = 0;
+
+		for(i = 0; i < 32 && get_buf[5+i] != 0; i++)
+		{
+			target_sn[i] = get_buf[5+i];
+		}
+
+		sprintf(cmdline,"eth_mac s sn %s", target_sn);
+		system(cmdline);
+		strcpy(set_buf, "ok\n");
+	}
+}
+
+static void upgrade_system_handle(char* get_buf, char* set_buf)
+{
+	//upgrade_system ftp://192.168.3.123/home/system.bin 
+	char buf[128] = {0};
+	char *temp = NULL;
+
+	temp = strtok(get_buf, " ");
+	temp = strtok(get_buf, NULL);
+	if(!temp)
+	{
+		strcpy(set_buf, "error:NULL addr\n");
+		return ;
+	}
+	
+	sprintf(buf, "wget %s -O /tmp/system.bin", temp);
+	int ret = system(buf);
+
+	if(ret != 0)
+	{
+		strcpy(set_buf, "error:download upgrade file fail\n");
+		return ;
+	}
+
+	ret = system("flashcp -v /tmp/system.bin /dev/mtd3");
+
+	if(ret != 0)
+		strcpy(set_buf, "error:upgrade fail\n");
+	else
+		strcpy(set_buf, "upgrade success\n");
+
+//	system("reboot -f")
+	return ;
+}
+
+static void update_config_handle(char* get_buf, char* set_buf)
+{
+	//update_config ftp://192.168.3.123/home/config.zip 
+	char buf[128] = {0};
+	char *temp = NULL;
+
+	temp = strtok(get_buf, " ");
+	temp = strtok(get_buf, NULL);
+	if(!temp)
+	{
+		strcpy(set_buf, "error:NULL addr\n");
+		return ;
+	}
+	
+	sprintf(buf, "wget %s -O /tmp/config.zip", temp);
+	int ret = system(buf);
+
+	if(ret != 0)
+	{
+		strcpy(set_buf, "error:download config file fail\n");
+		return ;
+	}
+
+	ret = system("/etc/tozed/config_update /tmp/config.zip 0");
+
+	if(ret != 0)
+		strcpy(set_buf, "error:update config fail\n");
+	else
+		strcpy(set_buf, "update config success\n");
+
+//	system("reboot -f")
+	return ;
+}
+
+
+
 int s21_precess(char* receive_buf, char* send_message)
 {
 	print("in s21_precess\n");
@@ -192,6 +297,12 @@ int s21_precess(char* receive_buf, char* send_message)
 		imei_handle(receive_buf,send_message);
 	else if(strstr(receive_buf,"mac"))
 		mac_handle(receive_buf,send_message);
+	else if(strstr(receive_buf,"sn"))
+		sn_handle(receive_buf,send_message);
+	else if(strstr(receive_buf,"upgrade_system"))
+		upgrade_system_handle(receive_buf,send_message);
+	else if(strstr(receive_buf,"update_config"))
+		update_config_handle(receive_buf,send_message);
 	else
 		return FALSE;
 
