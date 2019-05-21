@@ -13,7 +13,7 @@ local uti = require "tz.util"
 
 
 local WEB_PATH = "/tz_www"
-print("Contenttype:text/html\n")
+print("Content-type:text/html\n")
 
 local envf = io.popen("env")
 local envv = envf:read("*a")
