@@ -2610,7 +2610,6 @@ function get_arp_data()
 
 end
 
-
 function set_arp_data()
 	
 	local ret 
@@ -2662,6 +2661,47 @@ function system_import_config()
 		end 
 	end
 	
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+
+function get_ddns_data()
+	local tz_answer = {}
+	tz_answer["cmd"] = 232
+	local data_array = {}
+	
+	tz_answer["success"] = true
+	tz_answer["data"] = system.system_ddns_get_config()
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+
+end
+
+function set_ddns_data()
+	local ret 
+	local tz_answer = {}
+	local enabled = tonumber(tz_req["enable"])
+	local username = tz_req["username"]
+	local hostname = tz_req["hostname"]
+	local password = tz_req["password"]
+	local service =  tz_req["service"]
+	tz_answer["cmd"] = 233
+	local config = {["enable"] = enabled, ["service"] = service,["username"] = username, ["password"] = password, ["hostname"] = hostname}
+
+	if(nil ~= config)
+		then
+		ret = system.system_ddns_set_config(config)
+		if(not ret)
+		then
+			tz_answer["success"] = false
+		end
+	end
+
+	tz_answer["success"] = true
+	
+	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
@@ -2757,6 +2797,8 @@ local switch = {
 	 [229] = set_arp_data,
 	 [230] = system_export_config,
 	 [231] = system_import_config,
+	 [232] = get_ddns_data,
+	 [233] = set_ddns_data,
  }
  
 cmdid = uti.get_env_cmdId(envv)
