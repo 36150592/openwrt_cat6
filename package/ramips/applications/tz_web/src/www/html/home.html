@@ -2,10 +2,11 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        StatusUtil.getSysStatus();
+        function init(){
+                    StatusUtil.getSysStatus();
         Page.render('#container', '#index_template', DOC);
-		
-		var Pageauth = Page.AUTH;
+        
+        var Pageauth = Page.AUTH;
         var Infoauth = parseInt(Pageauth.substr(Pageauth.length-2),16).toString(2);
         var Settingauth =  parseInt(Pageauth.substr(Pageauth.length-4,2),16).toString(2);
         var Sysauth = parseInt(Pageauth.substr(Pageauth.length-6,2),16).toString(2);
@@ -39,27 +40,27 @@
             settingMenu.push(new MenuBody("ADVANCED_CONFIG", MENU.setting.advanced));
         menus.push(settingMenu);
 
-		
-		// FW BEGIN 
+        
+        // FW BEGIN 
         var fwMenu = new MenuHead("fw_menu", MENU.fw.head);
-		fwMenu.push(new MenuBody("FE_DEFAULT", TAB.fw.defaultSetting));
+        fwMenu.push(new MenuBody("FE_DEFAULT", TAB.fw.defaultSetting));
         fwMenu.push(new MenuBody("FW_RULE", MENU.fw.filters));
-		fwMenu.push(new MenuBody("FW_MAC_FILTER", MENU.fw.macFilter));
+        fwMenu.push(new MenuBody("FW_MAC_FILTER", MENU.fw.macFilter));
         fwMenu.push(new MenuBody("FW_PORT_MAPPING", MENU.fw.portMapping));
-		fwMenu.push(new MenuBody("FW_URL_FILTER", MENU.fw.urlFilter));
-		fwMenu.push(new MenuBody("FW_IP_MAC_BINDING", MENU.fw.ipMacBinding));
-		fwMenu.push(new MenuBody("FW_ACL_FILTER", MENU.fw.aclFilter));
+        fwMenu.push(new MenuBody("FW_URL_FILTER", MENU.fw.urlFilter));
+        fwMenu.push(new MenuBody("FW_IP_MAC_BINDING", MENU.fw.ipMacBinding));
+        fwMenu.push(new MenuBody("FW_ACL_FILTER", MENU.fw.aclFilter));
         fwMenu.push(new MenuBody("FW_SPEED_LIMIT", MENU.fw.speedLimit));
         fwMenu.push(new MenuBody("FW_DMZ", "DMZ"));
-		fwMenu.push(new MenuBody("STATIC_ARP_BINDING", MENU.sys.staticArp));
+        fwMenu.push(new MenuBody("STATIC_ARP_BINDING", MENU.sys.staticArp));
 
 
         menus.push(fwMenu);
          // FW END 
-		
+        
         var sysMenu = new MenuHead("manage_menu", MENU.sys.manage);
         sysMenu.push(new MenuBody("SYS_SET", MENU.sys.settings));
-	    //sysMenu.push(new MenuBody("SYS_LOG", MENU.sys.sysLog));
+        //sysMenu.push(new MenuBody("SYS_LOG", MENU.sys.sysLog));
         sysMenu.push(new MenuBody("SYS_UPDATE", MENU.sys.firmwareUpdate));
         sysMenu.push(new MenuBody("CONFIG_UPDATE", MENU.sys.configUpdate));
         sysMenu.push(new MenuBody("SYS_TIME", MENU.sys.timeSetting));
@@ -67,13 +68,13 @@
             sysMenu.push(new MenuBody("NETWORK_TOOL", MENU.sys.networkTools));
         if(Page.getShowHideByBit(6))  
             sysMenu.push(new MenuBody("SYS_AT", MENU.sys.at));
-			
+            
         sysMenu.push(new MenuBody("SYS_REBOOT", MENU.sys.reboot));
-			
+            
         menus.push(sysMenu);
         
-			
-		
+            
+        
         $('#menu').html(MenuUtil.create(menus));
 
         /* LANGUAGE BEGIN */
@@ -108,21 +109,21 @@
         });
 
         $('#logout').click(function() {
-			Page.postJSON({
+            Page.postJSON({
                 json: {
                     cmd: RequestCmd.LOGOUT,
                     method: JSONMethod.POST
                 },
                 success: function(data) {
                   sessionStorage['sessionId'] = '';
-				  sessionStorage['loginName'] = '';
-			      sessionStorage['auth'] = '';
-			      sessionStorage['level'] ='';
+                  sessionStorage['loginName'] = '';
+                  sessionStorage['auth'] = '';
+                  sessionStorage['level'] ='';
                   location.href = Page.getUrl(Url.LOGIN);
                 }
             });
 
-			
+            
         });
 
         var apnGuideClick = false;
@@ -133,8 +134,8 @@
            // } else {
             //    $(this).next().find("a").eq(0).click();
            // }
-		   
-		    $(this).next().find("a").eq(0).click();
+           
+            $(this).next().find("a").eq(0).click();
         });
 
         $('#menu li a').bind('click', function(e) {
@@ -171,8 +172,8 @@
             $('#mask').hide();
             $('#progress_box').hide();
         });
-		
-		function listenOperation () {
+        
+        function listenOperation () {
             var maxTime = 20; // seconds
             var time = maxTime;
             $('body').on('keydown mousemove mousedown', function(e){
@@ -188,18 +189,18 @@
 
         }
 
-		function showSysTime() {
+        function showSysTime() {
             Page.postJSON({
                 json: {
                     cmd: RequestCmd.GET_SYSTEM_TIME
                 },
                 success: function(data) {
-				  var timeTo = new Date(parseInt(data.systime)*1000).toLocaleString();
-				  var time = timetrans(data.systime);
+                  var timeTo = new Date(parseInt(data.systime)*1000).toLocaleString();
+                  var time = timetrans(data.systime);
                    $('#sysTime').text(time);
-				 var timestamp = new Date(data.systime1).getTime();
-				var timestamp = (new Date()).getTime();
-				  var systime = data.systime;
+                 var timestamp = new Date(data.systime1).getTime();
+                var timestamp = (new Date()).getTime();
+                  var systime = data.systime;
                     var intervalId2 = setInterval(function () {
                         var time = timetrans(systime);
                         $('#sysTime').text(time);
@@ -208,8 +209,8 @@
                 }
             });
         }
-		
-		function timetrans(date){
+        
+        function timetrans(date){
             var date = new Date(date*1000);//如果date为13位不需要乘1000
             var Y = date.getFullYear() + '-';
             var M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
@@ -217,16 +218,32 @@
             var h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
             var m = (date.getMinutes() <10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
             var s = (date.getSeconds() <10 ? '0' + date.getSeconds() : date.getSeconds()) + ' ';
-			// var a = new Array(DOC.week.item, DOC.week.item1, DOC.week.item2, DOC.week.item3, DOC.week.item4, DOC.week.item5, DOC.week.item6);
+            // var a = new Array(DOC.week.item, DOC.week.item1, DOC.week.item2, DOC.week.item3, DOC.week.item4, DOC.week.item5, DOC.week.item6);
    //          var w = a[date.getDay()];
             return Y+M+D+h+m+s;
         }
-		
+        
       
         $('#menu h3').eq(0).next().find("a").eq(0).click();
         $('#container').show();
-		showSysTime();
-		listenOperation ();
+        showSysTime();
+        listenOperation ();
+        }
+        Page.postJSON({
+            json: {
+                cmd: RequestCmd.GET_LANGUAGE_SELECT
+            },
+            success: function(data) {
+                Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue('6') || "3E");
+                Page.language = data.data.web_language.toUpperCase();
+                $("script[src^='js/language/']").remove();
+                        $("script[src^='js/main']").remove();
+                        $.getScript('js/language/' +  data.data.web_language.toLowerCase() + '.js', function() {
+                        $.getScript('js/main.js', init);
+                        });
+            }
+
+        });
 		
     });
 	

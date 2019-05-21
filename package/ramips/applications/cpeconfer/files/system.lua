@@ -627,6 +627,16 @@ function system_module.system_get_web_info()
 		return info
 end
 
+function system_module.system_set_web_language(name)
+if nil == name or  "" == name
+	then
+		debug("name is nil")
+		return false
+	end
+	x:set(TOZED_CONFIG_FILE, "web", "TZ_WEB_LANGUAGE",name)
+	return x:commit(TOZED_CONFIG_FILE)	
+end
+
 system_module.tozed_system_info = {
 		
 		["config_version"] = nil,   --string

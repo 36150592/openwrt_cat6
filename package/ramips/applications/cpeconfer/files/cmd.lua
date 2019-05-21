@@ -2148,7 +2148,17 @@ function dhcp_set_server_ip()
 	
 end
 
+function system_set_web_language()
+	local ret = system.system_set_web_language(arg[2])
+	
+	if ret
+	then
+		print("system_set_web_language success")
+	else
+		print("system_set_web_language fail")
+	end
 
+end
 function dhcp_get_server_mask()
 
 	print("dhcp_get_server_mask")
@@ -2468,6 +2478,7 @@ local api_func = {
 	["system_ddns_get_config"]  = system_ddns_get_config,
 	["system_ddns_set_config"]  = system_ddns_set_config,
 	["system_ddns_get_status"]  = system_ddns_get_status,
+	["system_set_web_language"]  = system_set_web_language,
 
  	--device
 	["device_get_info"] = device_get_info,

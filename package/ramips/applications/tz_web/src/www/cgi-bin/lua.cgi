@@ -187,11 +187,11 @@ function change_language()
     local newLanguage = string.lower(tz_req["languageSelect"])
 	shellcmd = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/login.html",oldLanguage,newLanguage,WEB_PATH)
 	shellcmd1 = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/index.html",oldLanguage,newLanguage,WEB_PATH)
-	shellcmd2 = string.format("sed -i 's/\"Language\":\"%s\"/\"Language\":\"%s\"/g' %s/config.json",oldLanguage,newLanguage,WEB_PATH)
 	
+	system.system_set_web_language(newLanguage)
+	  
 	os.execute(shellcmd)
 	os.execute(shellcmd1)
-	os.execute(shellcmd2)
 	
     local tz_answer = {};
 	tz_answer["success"] = true;
@@ -2769,7 +2769,7 @@ else
 	data1=io.read();
 	tz_req = cjson.decode(data1)
 	local cmd = tz_req["cmd"]
-	if(cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 113 and cmd ~= 220)
+	if(cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 97 and cmd ~= 113 and cmd ~= 220)
 	  then
 	     local fileName = string.format("/tmp/sessionsave/.%s",tz_req["sessionId"])
 	      if (uti.is_file_exist(fileName) ~= true)
