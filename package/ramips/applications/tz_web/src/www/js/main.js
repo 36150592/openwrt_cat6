@@ -132,7 +132,9 @@ var RequestCmd = {
     STATIC_ARP_BINDING:228,
     SET_STATIC_ARP_BINDING:229,
     CONFIG_EXPORT:230,
-    CONFIG_IMPORT:231
+    CONFIG_IMPORT:231,
+    GET_DDNS_DATA:232,
+    SET_DDNS_DATA:233
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },

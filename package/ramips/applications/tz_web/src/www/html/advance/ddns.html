@@ -1,0 +1,150 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    Page.render();
+
+    var $btnSave = $('#btnSave');
+    var $ddnsIsShow = $('.ddnsIsShow');
+    Page.postJSON({
+        json: {
+            cmd: RequestCmd.GET_DDNS_DATA
+        },
+        success: function (data) {
+            var datas = data.data;
+            if (datas.enable == "1") {
+                $(".ddnsIsShow").show();
+            } else {
+                $(".ddnsIsShow").hide();
+            }
+            $("#ddns").val(datas.enable);
+            $('#userName').val(datas.username)
+            $('#password').val(datas.password)
+            $('#ddnsDomain').val(datas.hostname)
+            $("#ddnsDynamicServer").val(datas.service)
+        }
+    });
+    $("#ddns").change(function () {
+        if ($("#ddns").val() == "1") {
+            $(".ddnsIsShow").show();
+        } else {
+            $(".ddnsIsShow").hide();
+        }
+    })
+
+    function isShowPassWord() {
+        if ($('#ddnsIsShowPassword').prop('checked')) {
+            $('#password').prop('type', 'text')
+        } else {
+            $('#password').prop('type', 'password')
+        }
+    }
+
+    $('#ddnsIsShowPassword').change(function () {
+        isShowPassWord()
+    })
+
+    var rules = {
+        username: { required: true },
+        password: { required: true },
+        hostname: { required: true }
+    },
+        messages = {
+            username: { required: CHECK.format.username },
+            password: { required: CHECK.format.password },
+            hostname: { required: CHECK.format.hostname }
+        };
+
+    $btnSave.bind('click', function () {
+        var $form = $('#childForm');
+        var json = JSON.parmsToJSON($form);
+        json.cmd = RequestCmd.SET_DDNS_DATA;
+        json.method = JSONMethod.POST;
+        if ($('#ddns option:selected').val() == "1") {
+            if (!CheckUtil.checkForm($form, rules, messages)) {
+                return false;
+            }
+            json.enable = parseInt(1, 10);
+            json.service = $('#ddnsDynamicServer option:selected').val();
+            json.username = $('#userName').val();
+            json.password = $('#password').val();
+            json.hostname = $('#ddnsDomain').val();
+        } else {
+            json.enable = parseInt(0, 10);
+            json.service = ''
+            json.username = ''
+            json.password = ''
+            json.hostname = ''
+        }
+        console.log(json);
+        Page.postJSON({
+            $id: $btnSave,
+            json: json,
+            success: function () {
+                AlertUtil.alertMsg(PROMPT.saving.success);
+            }
+        });
+    });
+
+</script>
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="childForm">
+            <table id="childTable" class="detail" cellspacing="0">
+                <tr id="trDdnsStutas">
+                    <th><%- TAB.advance.ddns %></th>
+                    <td>
+                        <select id="ddns" name="enabled">
+                            <option value="1"><%- TAB.advance.ddnsStart %></option>
+                            <option value="0" selected="selected"><%- TAB.advance.ddnsStop %></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr class = "ddnsIsShow" style="display:none;">
+                    <th><%- TAB.advance.ddnsDynamicServer %></th>
+                    <td>
+                        <select id="ddnsDynamicServer" name="service">
+                            <option value="noip"><%- TAB.advance.ddnsDynamicNoip %></option>
+                            <option value="pubyun"><%- TAB.advance.ddnsDynamicPubyun %></option>
+                            <option value="oray"><%- TAB.advance.ddnsDynamicOray %></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr class = "ddnsIsShow" style="display:none;">
+                    <th><%- TAB.advance.ddnsUsername %></th>
+                    <td>
+                        <input type="text" id="userName" name="username" maxlength="30" />
+                    </td>
+                </tr>
+                <tr class = "ddnsIsShow" style="display:none;">
+                    <th><%- TAB.advance.ddnsPassword %></th>
+                    <td>
+                        <input type="password" id="password" name="password" maxlength="30" />
+                    </td>
+                </tr>
+                <tr class = "ddnsIsShow" style="display:none;">
+                    <th>&nbsp;</th>
+                    <td>
+                        <input type="checkbox" id="ddnsIsShowPassword" /><%- TAB.advance.ddnsIsShowPassword %>
+                    </td>
+                </tr>
+                <tr class = "ddnsIsShow" style="display:none;">
+                <th><%- TAB.advance.ddnsDomain %></th>
+                <td>
+                    <input type="text" id="ddnsDomain" name="hostname" maxlength="30" />
+                </td>
+                </tr>
+                <tr class = "ddnsIsShow" style="display:none;">
+                    <th><%- TAB.advance.ddnsStatus %></th>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr id="trSave" >
+                    <th>&nbsp;</th>
+                    <td>
+                        <input type="button" id="btnSave" value="<%- btn.save %>"/>
+                    </td>                   
+                </tr>
+            </table>
+        </form>
+    </script>
+</div>
