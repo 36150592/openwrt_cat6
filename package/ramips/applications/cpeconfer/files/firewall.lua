@@ -14,6 +14,7 @@ local TOZED_UCI_OPTION_STATIC_ROUTE="TZ_STATIC_ROUTE"
 local TOZED_DMZ_SECTION="dmz"
 local TOZED_ARP_BIND_SECTION="arp_bind"
 local TOZED_ARP_UCI_LIST="TZ_ARP_ITEM"
+local TOZED_UPNP_SECTION="upnp"
 
 local FIREWALL_MAC_FILTER_PREX="MAC-FILTER"
 local FIREWALL_URL_FILTER_PREX="URL-FILTER"
@@ -1880,6 +1881,96 @@ function firewall_module.firewall_set_arp_bind_list(filter_list)
 	
 	return x:commit(TOZED_CONFIG_FILE)
 end
+
+firewall_module.upnp_port_mapping = {
+		
+	["protocol"] = nil,   --tcp udp
+	["port"] = nil,       --localhost port
+	["mapping_ip"] = nil, --redirect ip 
+	["mapping_port"] = nil  -- redirect port
+}
+
+function firewall_module.mac_filter:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+		
+	self["protocol"] = obj["protocol"] or nil
+	self["port"] = obj["port"] or nil 
+	self["mapping_ip"] = obj["mapping_ip"] or nil
+	self["mapping_port"] = obj["mapping_port"] or nil
+end
+
+function firewall_module.firewall_upnp_enable()
+
+	x:set(TOZED_CONFIG_FILE,TOZED_UPNP_SECTION,"value")
+	x:set(TOZED_CONFIG_FILE,TOZED_UPNP_SECTION, "enable", 1)
+
+	local ret1 = os.execute("/etc/init.d/miniupnpd enable")
+	os.execute("/etc/init.d/miniupnpd start")
+
+	return ret1 == 0  and x:commit(TOZED_CONFIG_FILE)
+end
+
+function firewall_module.firewall_upnp_disable()
+
+	x:set(TOZED_CONFIG_FILE,TOZED_UPNP_SECTION,"value")
+	x:set(TOZED_CONFIG_FILE,TOZED_UPNP_SECTION, "enable", 0)
+
+	local ret1 = os.execute("/etc/init.d/miniupnpd disable")
+	os.execute("/etc/init.d/miniupnpd stop")
+
+	return ret1 == 0 and x:commit(TOZED_CONFIG_FILE)
+end
+
+function firewall_module.firewall_upnp_get_enable_status()
+	local enable =  x:get(TOZED_CONFIG_FILE, TOZED_UPNP_SECTION, "enable")
+	if  1 == enable
+	then
+		return "enable"
+	else
+		return "disable"
+	end
+end
+
+function firewall_module.firewall_upnp_get_port_mapping_list()
+
+	local f = io.popen("iptables -S -t nat | grep MINIUPNPD | grep DNAT | awk '{print $6 \" \" $8 \" \" $12 }'")
+	local list = {}
+	local i = 1
+	if nil == f
+	then
+		debug("error popen cmd")
+		return nil
+	end
+
+	local res = f:read()
+
+	while res ~= nil 
+	do
+		local ar = split(res," ")
+		local temp = firewall_module.mac_filter:new(nil,nil)
+		temp["protocol"] = ar[1]
+		temp["port"] = ar[2]
+		if nil ~= ar[3]
+		then
+			local ar1 = split(ar[3],":");
+			temp["mapping_ip"] = ar1[1]
+			temp["mapping_port"] = ar1[2]
+		end
+		list[i] = temp
+		i = i + 1
+
+		res = f:read()
+	end
+
+
+	return list
+end
+
 
 
 

@@ -76,6 +76,46 @@ function led_set_phone()
 	end
 end
 
+function firewall_upnp_enable()
+	local ret = firewall.firewall_upnp_enable()
+	print(ret)
+
+end
+
+function firewall_upnp_disable()
+	local ret = firewall.firewall_upnp_disable()
+	print(ret)
+
+end
+
+function firewall_upnp_get_enable_status()
+	local ret = firewall.firewall_upnp_get_enable_status()
+	print(ret)
+
+end
+
+function firewall_upnp_get_port_mapping_list()
+	print("firewall_upnp_get_port_mapping_list")
+	local list = firewall.firewall_upnp_get_port_mapping_list()
+
+	if nil == list
+	then
+		print("empty")
+		return
+	end
+
+	for k,v in pairs(list)
+	do
+		print("protocol = ", v["protocol"])
+		print("port = ", v["port"])
+		print("mapping_ip = ", v["mapping_ip"])
+		print("mapping_port = ", v["mapping_port"])
+	end
+
+
+end
+
+
 function firewall_set_dmz()
 	local ret = firewall.firewall_set_dmz(arg[2], arg[3])
 	print(ret)
@@ -2522,6 +2562,10 @@ local api_func = {
 	["firewall_set_dmz"] = firewall_set_dmz,
 	["firewall_get_arp_bind"] = firewall_get_arp_bind,
 	["firewall_set_arp_bind"] = firewall_set_arp_bind,
+	["firewall_upnp_enable"] = firewall_upnp_enable,
+	["firewall_upnp_disable"] = firewall_upnp_disable,
+	["firewall_upnp_get_enable_status"] = firewall_upnp_get_enable_status,
+	["firewall_upnp_get_port_mapping_list"] = firewall_upnp_get_port_mapping_list,
 
 	--led
 	["led_set_normal"] = led_set_normal,

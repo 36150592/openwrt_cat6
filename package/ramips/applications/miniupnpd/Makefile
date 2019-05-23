@@ -45,6 +45,13 @@ define Package/miniupnpd/install
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/miniupnpd $(1)/bin
 
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/miniupnpd.init $(1)/etc/init.d/miniupnpd
+
+	
+	$(INSTALL_DIR) $(1)/etc/miniupnpd
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/netfilter/*.sh $(1)/etc/miniupnpd
+	
 endef
 
 

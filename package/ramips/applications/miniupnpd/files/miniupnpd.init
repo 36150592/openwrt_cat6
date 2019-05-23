@@ -1,0 +1,33 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2007-2012 OpenWrt.org
+
+START=90
+STOP=85
+start(){
+    /etc/miniupnpd/iptables_init.sh  > /dev/null 
+cat > /tmp/miniupnpd.conf <<EOF
+ext_ifname=`ip route  | grep default | cut -d' ' -f 5`
+#ext_ip=117.136.79.152
+#ext_ip=113.98.195.201
+listening_ip=192.168.2.1
+port=5000
+ext_stun_host=stun.sipgate.net
+ext_perform_stun=yes
+enable_natpmp=yes
+enable_upnp=yes
+secure_mode=no
+system_uptime=yes
+bitrate_down=28672000
+bitrate_up=2867200
+uuid=`cat /proc/sys/kernel/random/uuid`
+allow 1024-65535 0.0.0.0/0 1024-65535
+deny 0-65535 0.0.0.0/0 0-65535
+EOF
+
+    /bin/miniupnpd -f  /tmp/miniupnpd.conf
+}
+
+stop(){
+    killall -9 miniupnpd
+    /etc/miniupnpd/iptables_removeall.sh
+}

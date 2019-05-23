@@ -1052,6 +1052,8 @@ int update_ext_ip_addr_from_stun(int init)
 		return 1;
 	}
 
+	//do not check nat fengyz 2019.05.23
+	restrictive_nat = 0;
 	if ((init || disable_port_forwarding) && !restrictive_nat) {
 		if (addr_is_reserved(&if_addr))
 			syslog(LOG_INFO, "STUN: ext interface %s with IP address %s is now behind unrestricted NAT 1:1 with public IP address %s: Port forwarding is now enabled", ext_if_name, if_addr_str, ext_addr_str);
