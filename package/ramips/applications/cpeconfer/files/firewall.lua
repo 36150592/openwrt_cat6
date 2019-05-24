@@ -1928,7 +1928,7 @@ end
 
 function firewall_module.firewall_upnp_get_enable_status()
 	local enable =  x:get(TOZED_CONFIG_FILE, TOZED_UPNP_SECTION, "enable")
-	if  1 == enable
+	if  "1" == enable
 	then
 		return "enable"
 	else

@@ -2707,8 +2707,51 @@ function set_ddns_data()
 
 end
 
+function firewall_upnp_get_data()
+	local tz_answer = {}
+	tz_answer["cmd"] = 236
+	local data_array = {}
+	local data_data = {}
+	
+	tz_answer["success"] = true
+	data_data["status"] = firewall.firewall_upnp_get_enable_status()
+	data_data["upnuList"] = firewall.firewall_upnp_get_port_mapping_list()
+	tz_answer['data'] = data_data
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
 
+end
 
+function set_firewall_upnp_enable()
+	local ret 
+	local tz_answer = {}
+	ret =firewall.firewall_upnp_enable()
+	if(not ret)
+	then
+		tz_answer["success"] = false
+	end
+
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 234
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
+function set_firewall_upnp_disable()
+	local ret 
+	local tz_answer = {}
+	ret =firewall.firewall_upnp_disable()
+	if(not ret)
+	then
+		tz_answer["success"] = false
+	end
+
+	tz_answer["success"] = true
+	tz_answer["cmd"] = 235
+	result_json = cjson.encode(tz_answer)
+	print(result_json)
+
+end
 local switch = {
      [0] = get_sysinfo,
 	 [1] = get_systime,
@@ -2799,6 +2842,9 @@ local switch = {
 	 [231] = system_import_config,
 	 [232] = get_ddns_data,
 	 [233] = set_ddns_data,
+	 [234] = set_firewall_upnp_enable,
+	 [235] = set_firewall_upnp_disable,
+	 [236] = firewall_upnp_get_data,
  }
  
 cmdid = uti.get_env_cmdId(envv)

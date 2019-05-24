@@ -1,0 +1,102 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+		var upnpList = "";
+		
+        $("#btnSaveUpnpStatus").on("click",function(){
+            var json = {};
+            var broadcast = $('input[name="broadcast"]:checked').val();
+            if(broadcast == "enable"){
+                 json.cmd = RequestCmd.FW_UPNP_ENABLE;
+             }else{
+                 json.cmd = RequestCmd.FW_UPNP_DISABLE;
+             }
+            json.method = JSONMethod.POST;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                   if(data.success == true){
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+                   }
+                }
+            });
+
+
+
+        })
+        function createTable(){
+             Page.postJSON({
+            json: { cmd: RequestCmd.FW_UPNP,asynss:true},
+            success: function(datas){ 
+             if(datas.data.status == "enable"){
+                $("input[value='enable']").prop("checked",true);
+              }else{
+                $("input[value='disable']").prop("checked",true);
+              }
+            upnpList = datas.data.upnuList;
+                 var sb = new StringBuilder();
+            sb.append(String.format('<table class="list" cellspacing="0"  style="margin-top: 0px;"><tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3}</th><th>{4}</th></tr>',
+                DOC.table.rowNo, TAB.fw.upnpprotocol, TAB.fw.upnpport,TAB.fw.mappingip,TAB.fw.mappingport ));
+            if(upnpList != undefined){
+                if(upnpList.length > 0){
+                for (var i = 0; i < upnpList.length; i++) {
+                var item = upnpList[i];
+                sb.append(String.format('<tr><td>{0}</td>', i + 1));
+                sb.append(String.format('<td id="target_interface{0}">{1}</td>', i, item.protocol));
+                sb.append(String.format('<td id="target_ip{0}">{1}</td>', i, item.port))
+                sb.append(String.format('<td id="isWork{0}">{1}</td>', i, item.mapping_ip));
+                sb.append(String.format('<td id="isWork{0}">{1}</td></tr>', i, item.mapping_port));
+            }
+            }
+            }
+            
+            sb.append('</table>');
+
+            $('#routeTh').html(sb.toString());
+                        },
+                        complete:function(){
+           
+                        }
+                    });
+            
+
+        }
+    createTable();
+    });
+</script>
+
+<div class="tab_boxes" id="child_container">
+    <script type="text/template" id="child_template">
+     <form id="form">
+    <div style="margin-top:10px;margin-bottom:30px;">
+         <table class="detail" cellspacing="0">
+            <tr style="margin-bottom:20px;">
+                    <h3> <%- TAB.fw.upnpDescribe %></h3>
+            </tr>
+             <tr>
+                <th><span><%- TAB.fw.upnpStatus %> </span></th>
+                <td>
+                    <input type="radio" id="upnpEnable" name="broadcast" value="enable"/><span style="margin-right:50px;"><%- wirelessconfightml.form1.open %></span>
+                    <input type="radio" id="upnpDisable" name="broadcast" value="disable"/><%- DOC.status.disable  %>
+                </td>
+             </tr> 
+        </table>
+    </div>
+    <h3>
+        <%- TAB.fw.upnpDescribe %>
+    </h3>
+    <div id="routeTh">
+    </div>
+    <div style="margin-top:40px;">
+            <input type="button" id="btnSaveUpnpStatus" value="<%- networktoolhtml.form5.btnSetting %>" style="margin-left:40%;"/>
+    </div> 
+        </script>
+            </div>
+        </div>
+    </form>
+    </script>
+</div>
+

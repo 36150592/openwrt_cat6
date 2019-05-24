@@ -134,7 +134,10 @@ var RequestCmd = {
     CONFIG_EXPORT:230,
     CONFIG_IMPORT:231,
     GET_DDNS_DATA:232,
-    SET_DDNS_DATA:233
+    SET_DDNS_DATA:233,
+    FW_UPNP_ENABLE:234,
+    FW_UPNP_DISABLE:235,
+    FW_UPNP:236,
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
@@ -171,6 +174,7 @@ var MenuItem = {
     FW_ACL_FILTER: { cmd: RequestCmd.ACL_FILTER, url: "html/firewall/firewall.html" },
     FW_SPEED_LIMIT: { cmd: RequestCmd.SPEED_LIMIT, url: "html/firewall/firewall.html" },
     STATIC_ARP_BINDING: { cmd: RequestCmd.STATIC_ARP_BINDING, url: "html/firewall/staticArpBindingIndex.html" },
+    FW_UPNP: { cmd: RequestCmd.FW_UPNP, url: "html/firewall/upnpIndex.html" },
     FW_DMZ: { cmd: RequestCmd.GET_DMZ, url: "html/firewall/dmzIndex.html" }
     
 };
