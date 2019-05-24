@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta http-equiv="Pragma" content="no-cache">
@@ -16,20 +17,23 @@
     <script type="text/javascript" src="js/underscore-min.js"></script>
     <script type="text/javascript" src="js/language_list.js?t=000000"></script>
     <script type="text/javascript" src="js/language.js?t=000000"></script>
-    <script type="text/javascript" src="js/language/cn.js?t=000000"></script>
+    <script type="text/javascript" src="js/language/en.js?t=000000"></script>
     <script type="text/javascript" src="js/helper.js?t=000000"></script>
     <script type="text/javascript" src="js/main.js?t=000000"></script>
 
 
     <script type="text/javascript">
-        $(document).ready(function(){
+        $(document).ready(function () {
+
+            var loading = '-';
+
             function init() {
                 Page.render('#login_container', '#login_template', DOC);
                 Page.initPage(true);
                 $(window).resize(function () {
                     Page.initPage(true);
                 });
-                  var $languageSelect = $('#languageSelect');
+                var $languageSelect = $('#languageSelect');
                 $languageSelect.html(Page.getLanguageList(Page.language)).change(function () {
                     Page.changeLanguage($languageSelect);
                 });
@@ -43,11 +47,11 @@
                 // var loginText = $btnLogin.val();
                 $btnLogin.click(function () {
                     var timestamp = (new Date()).getTime();
-                    if(sessionStorage['failTime'] != ""){
-                        var second  = parseInt((timestamp - parseInt(sessionStorage['failTime']))/1000);
-                        if(second < 60){
+                    if (sessionStorage['failTime'] != "") {
+                        var second = parseInt((timestamp - parseInt(sessionStorage['failTime'])) / 1000);
+                        if (second < 60) {
                             var lockMsg = PROMPT.status.lockFailTimes;
-                            AlertUtil.alertMsg(lockMsg.format(60-second));
+                            AlertUtil.alertMsg(lockMsg.format(60 - second));
                             return;
                         }
                         sessionStorage['failTime'] = "";
@@ -78,32 +82,32 @@
                             username: username,
                             passwd: Md5.md5(passwd)
                         },
-                        success: function(data) {
+                        success: function (data) {
                             loginSuccess = data.success;
                             sessionStorage['sessionId'] = data.sessionId;
                             sessionStorage['loginName'] = username;
-                            sessionStorage['auth'] = parseInt(data.auth,16).toString(2);
-							sessionStorage['level'] = data.level;
+                            sessionStorage['auth'] = parseInt(data.auth, 16).toString(2);
+                            sessionStorage['level'] = data.level;
                             sessionStorage['loginFail'] = 0;
                             sessionStorage['failTime'] = "";
                             location.href = Page.getUrl("index.html");
                         },
-                        fail: function(data) {
-                               var failMsg = PROMPT.status.loginFail;
-                               AlertUtil.alertMsg(failMsg.format(3-parseInt(sessionStorage['loginFail'])));
+                        fail: function (data) {
+                            var failMsg = PROMPT.status.loginFail;
+                            AlertUtil.alertMsg(failMsg.format(3 - parseInt(sessionStorage['loginFail'])));
 
-                               if(MaxFailNum >= parseInt(sessionStorage['loginFail'])){
-                                   sessionStorage['loginFail'] = parseInt(sessionStorage['loginFail']) + 1;
-                               }else {
-                                   sessionStorage['failTime'] = timestamp;
-                                   sessionStorage['loginFail'] = 0;
-                               }
+                            if (MaxFailNum >= parseInt(sessionStorage['loginFail'])) {
+                                sessionStorage['loginFail'] = parseInt(sessionStorage['loginFail']) + 1;
+                            } else {
+                                sessionStorage['failTime'] = timestamp;
+                                sessionStorage['loginFail'] = 0;
+                            }
 
-                                //AlertUtil.alertMsg(PROMPT.status.loginFail);
+                            //AlertUtil.alertMsg(PROMPT.status.loginFail);
 
 
                         },
-                        complete: function() {
+                        complete: function () {
                             //  if (!loginSuccess) {
                             //      $btnLogin.enable();
                             //  }
@@ -133,134 +137,243 @@
                 StatusUtil.getSysStatus();
             }
 
-        Page.postJSON({
-            json: {
-                cmd: RequestCmd.GET_LANGUAGE_SELECT
-            },
-            success: function(data) {
-                Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue('6') || "3E");
-                Page.language = data.data.web_language.toUpperCase();
-                $("script[src^='js/language/']").remove();
-                        $("script[src^='js/main']").remove();
-                        $.getScript('js/language/' +  data.data.web_language.toLowerCase() + '.js', function() {
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.GET_LANGUAGE_SELECT
+                },
+                success: function (data) {
+                    Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue('6') || "3E");
+                    Page.language = data.data.web_language.toUpperCase();
+                    $("script[src^='js/language/']").remove();
+                    $("script[src^='js/main']").remove();
+                    $.getScript('js/language/' + data.data.web_language.toLowerCase() + '.js', function () {
                         $.getScript('js/main.js', init);
-                        });
+                    });
+                }
+
+            });
+
+            function loadDeviceInfo() {
+                Page.postJSON({
+                    json: { cmd: RequestCmd.DEVICE_VERSION_INFO },
+                    success: function (data) {
+                        var names = [],
+                            values = [],
+                            device = DOC.device,
+                            datas = data.data;
+
+                        Page.isNULLToSpace = true;
+
+                        names.push(device.softwarVersion);
+                        names.push(device.configVersion);
+                        names.push(device.imei);
+
+                        values.push(datas.softVersion.software_version || loading);
+                        values.push(datas.softVersion.config_version || loading);
+                        values.push(datas.modem.imei || loading);
+
+                        var device_info_html = Page.createTable(DOC.title.deviceInfo, names, values, names.length, 1).replace("<td>", "<td style=\"width=100px\">");
+                        $('#device_info').html(device_info_html);
+                        Page.setStripeTable();
+                        Page.isNULLToSpace = false;
+                    }
+                });
             }
 
+            function internetChecking() {
+                Page.postJSON({
+                    json: { cmd: RequestCmd.SYS_INFO },
+                    success: function (data) {
+                        var datas = data.data,
+                            data_wan = datas.wan,
+                            data_4g = datas['4g'],
+                            data_4g1 = datas['4g1'],
+                            data_4g2 = datas['4g2'],
+                            names = [],
+                            values = []
+
+                        Page.isNULLToSpace = true;
+
+                        if (!!data_wan.ipaddr) {
+                            names.push(DOC.lbl.connectionNetworkStatus);
+                            names.push(DOC.lbl.netMode);
+                            names.push(DOC.net.wanIp);
+                            names.push(DOC.net.mask);
+                            names.push(DOC.net.gateway);
+                            names.push(DOC.net.dns);
+
+                            values.push(DOC.net.ok);
+                            values.push(DOC.net.wiredMode);
+                            values.push(data_wan.ipaddr || loading);
+                            values.push(data_wan.netmask || loading);
+                            values.push(data_wan.gateway || loading);
+                            values.push(data_wan.first_dns || loading);
+                        }
+
+                        if (!!data_4g.ipaddr || !!data_4g1.ipaddr || !!data_4g2.ipaddr) {
+                            names.push(DOC.lbl.connectionNetworkStatus);
+                            names.push(DOC.lbl.netMode);
+                            names.push(DOC.net.wanIp);
+                            names.push(DOC.net.mask);
+                            names.push(DOC.net.gateway);
+                            names.push(DOC.net.dns);
+
+                            values.push(DOC.net.ok);
+                            values.push(DOC.net.wirelessMode);
+                            values.push(data_wan.ipaddr || loading);
+                            values.push(data_wan.netmask || loading);
+                            values.push(data_wan.gateway || loading);
+                            values.push(data_wan.first_dns || loading);
+                        }
+
+                        if (!data_wan.ipaddr && !data_4g.ipaddr && !data_4g1.ipaddr && !data_4g2.ipaddr) {
+                            names.push(DOC.lbl.connectionNetworkStatus);
+                            names.push(DOC.lbl.netMode);
+                            names.push(DOC.net.wanIp);
+                            names.push(DOC.net.mask);
+                            names.push(DOC.net.gateway);
+                            names.push(DOC.net.dns);
+
+                            values.push(DOC.net.fail);
+                            values.push(DOC.net.noNetwork);
+                            values.push(loading);
+                            values.push(loading);
+                            values.push(loading);
+                            values.push(loading);
+                        }
+
+                        var internet_checking_html = Page.createTable(DOC.title.internetChecking, names, values, names.length, 1).replace("<td>", "<td style=\"width=100px\">");
+                        $('#internet_checking').html(internet_checking_html);
+                        if (!!data_wan.ipaddr || !!data_4g.ipaddr || !!data_4g1.ipaddr || !!data_4g2.ipaddr) {
+                            $('.login_right #internet_checking table tr:first-child td').css("color", "green");
+                        }
+                        if (!data_wan.ipaddr && !data_4g.ipaddr && !data_4g1.ipaddr && !data_4g2.ipaddr) {
+                            $('.login_right #internet_checking table tr:first-child td').css("color", "red");
+                        }
+                        Page.setStripeTable();
+                        Page.isNULLToSpace = false;
+                    }
+                });
+            }
+
+            function fourGInfo() {
+
+                Page.postJSON({
+                    json: { cmd: RequestCmd.SYS_INFO_3 },
+                    success: function (data) {
+                        var names = [],
+                            values = [],
+                            datas = data.data,
+                            data_modem = datas.modem;
+
+                        Page.isNULLToSpace = true;
+
+                        names.push(DOC.lte.rsrp);
+                        names.push(DOC.lte.rssi);
+                        names.push(DOC.lte.rsrq);
+                        names.push(DOC.lte.sinr);
+
+                        values.push(data_modem.rsrp ? FormatUtil.formatField(data_modem.rsrp, 'dBm') : loading);
+                        values.push(data_modem.rssi ? FormatUtil.formatField(data_modem.rssi, 'dBm') : loading);
+                        values.push(data_modem.rsrq ? FormatUtil.formatField(data_modem.rsrq, 'dB') : loading);
+                        values.push(data_modem.sinr ? FormatUtil.formatField(data_modem.sinr, 'dB') : loading);
+
+                        var net_html = Page.createTable(DOC.title.fourGInfo, names, values, names.length, 1).replace("<td>", "<td>");
+                        $('#four_G_info').html(net_html);
+                        Page.setStripeTable();
+                        Page.isNULLToSpace = false;
+                    }
+                })
+            }
+
+            function addFooterHtml() {
+                var copyright = DOC.copyright;
+                $('#copyright').text(copyright)
+            }
+
+            loadDeviceInfo();
+            internetChecking();
+            fourGInfo();
+            addFooterHtml()
         });
-        });
-		
-		function noImage(img){ 
-				img.style.display="none"; 
-		}
+
+        function noImage(img) {
+            img.style.display = "none";
+        }
+
+
     </script>
 </head>
 
-<body>
-<div id="header">
-	<div id="logoDiv"><img src="images/customer.gif" onerror="noImage(this)"></div>
-    <div id="siginfo">
-        <table cellpadding="0" cellspacing="4">
-            <tr>
-                <td id="simInfo"></td>
-                <td id="netInfo"></td>
-                <td id="wifiInfo"></td>
-                <td id="wifiInfo5g"></td>
-                <td id="lteUsbInfo" style="display:none;"></td>
-                <td id="lan1"></td>
-                <td id="lan2"></td>
-                <td id="lan3"></td>
-                <td id="lan4" style="display:none;"></td>
-                <td id="wan1"></td>
-                <td id="smsInfo"></td>
-            </tr>
-        </table>
+<body style="overflow: hidden">
+    <div id="header">
+        <div id="logoDiv"><img src="images/customer.gif" onerror="noImage(this)"></div>
+        <div id="siginfo">
+            <table cellpadding="0" cellspacing="4">
+                <tr>
+                    <td id="simInfo"></td>
+                    <td id="netInfo"></td>
+                    <td id="wifiInfo"></td>
+                    <td id="wifiInfo5g"></td>
+                    <td id="lteUsbInfo" style="display:none;"></td>
+                    <td id="lan1"></td>
+                    <td id="lan2"></td>
+                    <td id="lan3"></td>
+                    <td id="lan4" style="display:none;"></td>
+                    <td id="wan1"></td>
+                    <td id="smsInfo"></td>
+                </tr>
+            </table>
+        </div>
+
     </div>
-
-</div>
-<div id="main">
-    <div id="left">
-        <div id="left_t"><img src=""></div>
-        <div id="left_m">
-            <div id="login_container">
-                <script type="text/template" id="login_template">
-                    <table>
-                        <tr class="tr_login tr_language" style="display:none;">
-                            <th><%- login.language %><%- colon %></th>
-                        </tr>
-                        <tr class="tr_login tr_language" style="display:none;">
-                            <td><select id="languageSelect" name="languageSelect" class="ddl"></select></td>
-                        </tr>
-
-                        <tr class="tr_login">
-                            <th><%- login.username %><%- colon %></th>
-                        </tr>
-                        <tr class="tr_login">
-                            <td><input type="text" id="username" name="username" class="txt" maxlength="20" /></td>
-                        </tr>
-
-                        <tr class="tr_login">
-                            <th><%- login.passwd %><%- colon %></th>
-                        </tr>
-                        <tr class="tr_login">
-                            <td><input type="password" id="passwd" name="passwd" class="txt" maxlength="20" /></td>
-                        </tr>
-                        <tr class="tr_login">
-                            <td style="padding-top:5px"><input type="button" id="btnLogin" class="btn" value="<%- btn.login %>" /></td>
-                        </tr>
-                    </table>
+    <div id="main">
+        <div id="left" class="login_left">
+            <div id="left_t" class="login_left_t"><img src=""></div>
+            <div id="left_m" class="login_left_m">
+                <div id="login_container">
+                    <script type="text/template" id="login_template">
+                        <div class = "<%- DOC.login.backgroundImg %>">
+                                <div class="login_desc">                                      
+                                    <div class="login_desc_username"><%- DOC.login.username %></div>
+                                    <div class="login_desc_password"><%- DOC.login.passwd %></div>
+                                    <div class="login_desc_language"><%- DOC.login.language %></div>
+                                </div>
+                                <table class="login_table">                                                                        
+                                    <tr class="tr_login tr_username">
+                                        <td>                                           
+                                            <input type="text" id="username" name="username" maxlength="20" />
+                                        </td>
+                                    </tr>
+                                    <tr class="tr_login tr_password">
+                                        <td>                       
+                                            <input type="password" id="passwd" name="passwd" maxlength="20" />
+                                        </td>
+                                    </tr>
+                                    <tr class="tr_login tr_language">                         
+                                        <td class="td_language">
+                                            <select id="languageSelect" name="languageSelect"></select>
+                                        </td>  
+                                    </tr> 
+                                    <tr class="tr_login tr_td_btn">
+                                        <td><input type="button" id="btnLogin" value="<%- btn.login %>" /></td>
+                                    </tr>
+                                </table>
+                        </div>                      
                 </script>
+                </div>
             </div>
-            <div id="offical_site_box" style="display:none;"></div>
-            <div id="simple_wifi_box" style="display:none;"></div>
-        </div>
-        <div id="left_b"></div>
-    </div>
-
-    <div id="right" style="overflow:hidden;">
-        <div id="device_check" style="display:none;overflow-y:auto;overflow-x:hidden;">
-
-            <table cellspacing="0" cellpadding="0">
-                <tr><td>
-                    <div id="check_box_left">
-                        <div id="lte_info" class="check_info"></div>
-                        <div id="lte_info_advanced" class="check_info"></div>
-                        <div id="router_info2" class="check_info"></div>
-                        <div id="wlan_info2" class="check_info"></div>
-                    </div>
-                    <div id="check_box_right">
-                        <div id="router_info" class="check_info"></div>
-                        <div id="wlan_info" class="check_info"></div>
-                        <div id="wan_info" class="check_info"></div>
-                    </div>
-                    <span style="clear:both"></span>
-                </td></tr>
-                <tr><td>
-                    <div id="client_info"></div><br />
-                    <div id="client_info_hidden" style="display:none;"></div>
-                </td></tr></table>
-
+            <div id="left_b" class="login_left_b"></div>
         </div>
 
-        <div id="art_check" style="display:none;"></div>
+        <div class="login_right">
+            <div id="device_info"></div>
+            <div id="internet_checking"></div>
+            <div id="four_G_info"></div>
+        </div>
     </div>
 
-</div>
-
-<div id="footer">
-    <script type="text/template" id="footer_template">
-        <span id="spanFooter"><%- copyright %></span>
-    </script>
-</div>
-
-<div id="mask"></div>
-<div id="progress_box">
-    <div id="progress_info"></div>
-    <div id="progress_bar">
-        <div id="progress_status"></div>
-    </div>
-</div>
-<div id="edit_box"></div>
-
+    <p id="copyright"></p>
 </body>
+
 </html>
