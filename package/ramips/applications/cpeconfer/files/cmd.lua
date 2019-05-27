@@ -2359,6 +2359,17 @@ function tozed_get_tozed_system()
 	end
 end
 
+function tozed_get_factory_info()
+	print("tozed_get_factory_info")
+	local ret = system.system_get_tozed_factory_info()
+
+	for key, value in pairs(ret)
+	do
+		print(key,"=",value)
+	end
+end
+
+
 function get_4g_ant()
 	print("get_4g_ant")
 	local ret = system.system_get_4g_ant()
@@ -2584,6 +2595,7 @@ local api_func = {
 
 	["tozed_get_web_config"] = tozed_get_web_config,
 	["tozed_get_tozed_system"] = tozed_get_tozed_system,
+	["tozed_get_factory_info"] = tozed_get_factory_info,
 
 	["get_4g_ant"] = get_4g_ant,
 }

@@ -681,6 +681,37 @@ function system_module.system_get_tozed_system_info()
 end
 
 
+system_module.tozed_factory_info = {
+		
+		["imei"] = nil,   --string
+}
+
+
+function system_module.tozed_factory_info:new(o,obj)
+	o = o or {}
+	setmetatable(o, self)
+	self.__index = self
+	if obj == nil then
+		return o
+	end
+		
+	self["imei"] = obj["imei"] or nil
+
+end
+
+function system_module.system_get_tozed_factory_info()
+
+		local info = system_module.tozed_factory_info:new(nil,nil)
+
+		
+		local f=io.popen("eth_mac g imei")
+		info["imei"] = f:read()
+		io.close(f)
+
+		return info
+end
+
+
 system_module.lte_ant_status = {
 		
 		["main_ant"] = nil,   --string
