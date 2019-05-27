@@ -1,7 +1,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <script type="text/javascript">
-    $(document).ready(function() {
+    $(document).ready(function () {
         var currentId = Page.currentId;
         var count = 0;
         var sysInfo_plmn;
@@ -11,306 +11,267 @@
 
             Page.postJSON({
                 json: { cmd: RequestCmd.SYS_INFO },
-                success: function(datas) {
-                    var data2 = datas.data;   
-                    var data_wan = data2.wan;
-                    var data_4g = data2['4g'];
-                    var data_4g1 = data2['4g1'];
-                    var data_4g2 = data2['4g2'];
-                     var names_run = [],names_sim = [], names_net = [], names_lan = [], names_wan = [],names_lte = [];
-                    var values_run = [], values_sim = [], values_net = [], values_lan = [], values_wan = [], values_lte = [];
+                success: function (datas) {
+                    var data2 = datas.data,
+                        data_wan = data2.wan,
+                        data_4g = data2['4g'],
+                        data_4g1 = data2['4g1'],
+                        data_4g2 = data2['4g2'],
+                        names_wan = [],
+                        values_wan = [],
+                        names_4g = [],
+                        values_4g = [],
+                        names_4g1 = [],
+                        values_4g1 = [],
+                        names_4g2 = [],
+                        values_4g2 = [];
                     Page.isNULLToSpace = true;
+                    if (!!data_wan.ipaddr) {
 
-                    if(data_wan != undefined)
-                    {
-                        if(data_wan.mac != undefined)
-                        {
+                        if (data_wan.mac != undefined) {
                             names_wan.push(DOC.net.mac);
                             values_wan.push(data_wan.mac || loading);
                         }
-                       
-                        if(data_wan.ipaddr != undefined)
-                        {
-                            names_wan.push(DOC.net.ip);
-                            values_wan.push(data_wan.ipaddr || loading);
-                        }
-                        
-                        if(data_wan.netmask != undefined)
-                        {
+
+                        names_wan.push(DOC.net.ip);
+                        values_wan.push(data_wan.ipaddr || loading);
+
+                        if (data_wan.netmask != undefined) {
                             names_wan.push(DOC.net.mask);
                             values_wan.push(data_wan.netmask || loading);
                         }
 
-                        if(data_wan.gateway != undefined)
-                        {
+                        if (data_wan.gateway != undefined) {
                             names_wan.push(DOC.net.gateway);
                             values_wan.push(data_wan.gateway || loading);
                         }
-                        
 
-                        if(data_wan.ipaddr == undefined){
+                        if (data_wan.ipaddr == undefined) {
                             names_wan.push(DOC.net.dns1);
                             names_wan.push(DOC.net.dns2);
                             values_wan.push(data_wan.first_dns || loading);
                             values_wan.push(data_wan.second_dns || loading);
                         }
-                        
-                        if(data_wan.rx_packets != undefined)
-                        {
+
+                        if (data_wan.rx_packets != undefined) {
                             names_wan.push(DOC.net.rxPackets);
                             values_wan.push(data_wan.rx_packets || loading);
                         }
 
-                        if(data_wan.rx_bytes != undefined)
-                        {
+                        if (data_wan.rx_bytes != undefined) {
                             names_wan.push(DOC.net.rxBytes);
                             values_wan.push(data_wan.rx_bytes || loading);
                         }
-                        
-                        if(data_wan.tx_packets != undefined)
-                        {
+
+                        if (data_wan.tx_packets != undefined) {
                             names_wan.push(DOC.net.txPackets);
                             values_wan.push(data_wan.tx_packets || loading);
                         }
 
-                        if(data_wan.tx_bytes != undefined)
-                        {
+                        if (data_wan.tx_bytes != undefined) {
                             names_wan.push(DOC.net.txBytes);
                             values_wan.push(data_wan.tx_bytes || loading);
                         }
 
-                        if(data_wan.interface != undefined)
-                        {
+                        if (data_wan.interface != undefined) {
                             names_wan.push(DOC.net.interface);
                             values_wan.push(data_wan.interface || loading);
                         }
-                       
-                        var wan_html = Page.createTable(DOC.title.wan, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td>");
+
+                        var wan_html = Page.createTable2(DOC.title.wan, names_wan, values_wan, names_wan.length, 1).replace("<td>", "<td>");
                         $('#wan_info').html(wan_html);
 
                     }
-                  
-                    names_wan = [];
-                    values_wan = [];
-                    if(data_4g != undefined)
-                    {
-                        if(data_4g.mac != undefined)
-                        {
-                            names_wan.push(DOC.net.mac);
-                            values_wan.push(data_4g.mac || loading);
-                        }
-                       
-                        if(data_4g.ipaddr != undefined)
-                        {
-                            names_wan.push(DOC.net.ip);
-                            values_wan.push(data_4g.ipaddr || loading);
-                        }
-                        
-                        if(data_4g.netmask != undefined)
-                        {
-                            names_wan.push(DOC.net.mask);
-                            values_wan.push(data_4g.netmask || loading);
+
+                    if (data_4g != undefined) {
+                        if (data_4g.mac != undefined) {
+                            names_4g.push(DOC.net.mac);
+                            values_4g.push(data_4g.mac || loading);
                         }
 
-                        if(data_4g.gateway != undefined)
-                        {
-                            names_wan.push(DOC.net.gateway);
-                            values_wan.push(data_4g.gateway || loading);
-                        }
-                        
-                        if(data_4g.ipaddr != undefined){
-                            names_wan.push(DOC.net.dns1);
-                            names_wan.push(DOC.net.dns2);
-                            values_wan.push(data_4g.first_dns || loading);
-                            values_wan.push(data_4g.second_dns || loading);
-                        }
-                        
-                        if(data_4g.rx_packets != undefined)
-                        {
-                            names_wan.push(DOC.net.rxPackets);
-                            values_wan.push(data_4g.rx_packets || loading);
+                        if (data_4g.ipaddr != undefined) {
+                            names_4g.push(DOC.net.ip);
+                            values_4g.push(data_4g.ipaddr || loading);
                         }
 
-                        if(data_4g.rx_bytes != undefined)
-                        {
-                            names_wan.push(DOC.net.rxBytes);
-                            values_wan.push(data_4g.rx_bytes || loading);
-                        }
-                        
-                        if(data_4g.tx_packets != undefined)
-                        {
-                            names_wan.push(DOC.net.txPackets);
-                            values_wan.push(data_4g.tx_packets || loading);
+                        if (data_4g.netmask != undefined) {
+                            names_4g.push(DOC.net.mask);
+                            values_4g.push(data_4g.netmask || loading);
                         }
 
-                        if(data_4g.tx_bytes != undefined)
-                        {
-                            names_wan.push(DOC.net.txBytes);
-                            values_wan.push(data_4g.tx_bytes || loading);
+                        if (data_4g.gateway != undefined) {
+                            names_4g.push(DOC.net.gateway);
+                            values_4g.push(data_4g.gateway || loading);
                         }
 
-                        if(data_4g.interface != undefined)
-                        {
-                            names_wan.push(DOC.net.interface);
-                            values_wan.push(data_4g.interface || loading);
+                        if (data_4g.ipaddr != undefined) {
+                            names_4g.push(DOC.net.dns1);
+                            names_4g.push(DOC.net.dns2);
+                            values_4g.push(data_4g.first_dns || loading);
+                            values_4g.push(data_4g.second_dns || loading);
                         }
-                       
-                       
-                        var wan_html = Page.createTable(DOC.title.apn, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td>");
+
+                        if (data_4g.rx_packets != undefined) {
+                            names_4g.push(DOC.net.rxPackets);
+                            values_4g.push(data_4g.rx_packets || loading);
+                        }
+
+                        if (data_4g.rx_bytes != undefined) {
+                            names_4g.push(DOC.net.rxBytes);
+                            values_4g.push(data_4g.rx_bytes || loading);
+                        }
+
+                        if (data_4g.tx_packets != undefined) {
+                            names_4g.push(DOC.net.txPackets);
+                            values_4g.push(data_4g.tx_packets || loading);
+                        }
+
+                        if (data_4g.tx_bytes != undefined) {
+                            names_4g.push(DOC.net.txBytes);
+                            values_4g.push(data_4g.tx_bytes || loading);
+                        }
+
+                        if (data_4g.interface != undefined) {
+                            names_4g.push(DOC.net.interface);
+                            values_4g.push(data_4g.interface || loading);
+                        }
+
+                        var wan_html = Page.createTable2(DOC.title.apn, names_4g, values_4g, names_4g.length, 1).replace("<td>", "<td>");
                         $('#4g_info').html(wan_html);
 
                     }
 
+                    Page.postJSON({
+                        json: {
+                            cmd: RequestCmd.GET_APN_CONFIG
+                        },
+                        success: function (data) {
+                            var apnData1 = data.data[1];
+                            var apnData2 = data.data[2];
+                            if (apnData1.enable == "1") {
+                                if (data_4g1 != undefined) {
 
-                    names_wan = [];
-                    values_wan = [];
-                    if(data_4g1 != undefined)
-                    {
+                                    if (data_4g1.mac != undefined) {
+                                        names_4g1.push(DOC.net.mac);
+                                        values_4g1.push(data_4g1.mac || loading);
+                                    }
 
-                        if(data_4g1.mac != undefined)
-                        {
-                            names_wan.push(DOC.net.mac);
-                            values_wan.push(data_4g1.mac || loading);
-                        }
-                       
-                        if(data_4g1.ipaddr != undefined)
-                        {
-                            names_wan.push(DOC.net.ip);
-                            values_wan.push(data_4g1.ipaddr || loading);
-                        }
-                        
-                        if(data_4g1.netmask != undefined)
-                        {
-                            names_wan.push(DOC.net.mask);
-                            values_wan.push(data_4g1.netmask || loading);
-                        }
+                                    if (data_4g1.ipaddr != undefined) {
+                                        names_4g1.push(DOC.net.ip);
+                                        values_4g1.push(data_4g1.ipaddr || loading);
+                                    }
 
-                        if(data_4g1.gateway != undefined)
-                        {
-                            names_wan.push(DOC.net.gateway);
-                            values_wan.push(data_4g1.gateway || loading);
-                        }
-                        
+                                    if (data_4g1.netmask != undefined) {
+                                        names_4g1.push(DOC.net.mask);
+                                        values_4g1.push(data_4g1.netmask || loading);
+                                    }
 
-                        if(data_4g1.ipaddr != undefined){
-                                names_wan.push(DOC.net.dns1);
-                                names_wan.push(DOC.net.dns2);
-                                values_wan.push(data_4g1.first_dns || loading);
-                                values_wan.push(data_4g1.second_dns || loading);
-                        }
-                        
-                        if(data_4g1.rx_packets != undefined)
-                        {
-                            names_wan.push(DOC.net.rxPackets);
-                            values_wan.push(data_4g1.rx_packets || loading);
-                        }
+                                    if (data_4g1.gateway != undefined) {
+                                        names_4g1.push(DOC.net.gateway);
+                                        values_4g1.push(data_4g1.gateway || loading);
+                                    }
 
-                        if(data_4g1.rx_bytes != undefined)
-                        {
-                            names_wan.push(DOC.net.rxBytes);
-                            values_wan.push(data_4g1.rx_bytes || loading);
-                        }
-                        
-                        if(data_4g1.tx_packets != undefined)
-                        {
-                            names_wan.push(DOC.net.txPackets);
-                            values_wan.push(data_4g1.tx_packets || loading);
-                        }
+                                    if (data_4g1.ipaddr != undefined) {
+                                        names_4g1.push(DOC.net.dns1);
+                                        names_4g1.push(DOC.net.dns2);
+                                        values_4g1.push(data_4g1.first_dns || loading);
+                                        values_4g1.push(data_4g1.second_dns || loading);
+                                    }
 
-                        if(data_4g1.tx_bytes != undefined)
-                        {
-                            names_wan.push(DOC.net.txBytes);
-                            values_wan.push(data_4g1.tx_bytes || loading);
-                        }
+                                    if (data_4g1.rx_packets != undefined) {
+                                        names_4g1.push(DOC.net.rxPackets);
+                                        values_4g1.push(data_4g1.rx_packets || loading);
+                                    }
 
-                        if(data_4g1.interface != undefined)
-                        {
-                            names_wan.push(DOC.net.interface);
-                            values_wan.push(data_4g1.interface || loading);
-                        }
+                                    if (data_4g1.rx_bytes != undefined) {
+                                        names_4g1.push(DOC.net.rxBytes);
+                                        values_4g1.push(data_4g1.rx_bytes || loading);
+                                    }
 
-                       
-                       
-                        var wan_html = Page.createTable(DOC.title.apn1, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td>");
-                        $('#4g1_info').html(wan_html);
+                                    if (data_4g1.tx_packets != undefined) {
+                                        names_4g1.push(DOC.net.txPackets);
+                                        values_4g1.push(data_4g1.tx_packets || loading);
+                                    }
 
-                    }
-                  
-                    names_wan = [];
-                    values_wan = [];
-                    if(data_4g2 != undefined )
-                    {
+                                    if (data_4g1.tx_bytes != undefined) {
+                                        names_4g1.push(DOC.net.txBytes);
+                                        values_4g1.push(data_4g1.tx_bytes || loading);
+                                    }
 
-                        if(data_4g2.mac != undefined)
-                        {
-                            names_wan.push(DOC.net.mac);
-                            values_wan.push(data_4g2.mac || loading);
-                        }
-                       
-                        if(data_4g2.ipaddr != undefined)
-                        {
-                            names_wan.push(DOC.net.ip);
-                            values_wan.push(data_4g2.ipaddr || loading);
-                        }
-                        
-                        if(data_4g2.netmask != undefined)
-                        {
-                            names_wan.push(DOC.net.mask);
-                            values_wan.push(data_4g2.netmask || loading);
-                        }
+                                    if (data_4g1.interface != undefined) {
+                                        names_4g1.push(DOC.net.interface);
+                                        values_4g1.push(data_4g1.interface || loading);
+                                    }
 
-                        if(data_4g2.gateway != undefined)
-                        {
-                            names_wan.push(DOC.net.gateway);
-                            values_wan.push(data_4g2.gateway || loading);
-                        }
-                        
+                                    var wan_html = Page.createTable2(DOC.title.apn1, names_4g1, values_4g1, names_4g1.length, 1).replace("<td>", "<td>");
+                                    $('#4g1_info').html(wan_html);
+                                }
+                            }
 
-                        if(data_4g2.ipaddr != undefined){
-                            names_wan.push(DOC.net.dns1);
-                            names_wan.push(DOC.net.dns2);
-                            values_wan.push(data_4g2.first_dns || loading);
-                            values_wan.push(data_4g2.second_dns || loading);
-                        }
-                        
-                        if(data_4g2.rx_packets != undefined)
-                        {
-                            names_wan.push(DOC.net.rxPackets);
-                            values_wan.push(data_4g2.rx_packets || loading);
-                        }
+                            if (apnData2.enable == "1") {
+                                if (data_4g2 != undefined) {
 
-                        if(data_4g2.rx_bytes != undefined)
-                        {
-                            names_wan.push(DOC.net.rxBytes);
-                            values_wan.push(data_4g2.rx_bytes || loading);
-                        }
-                        
-                        if(data_4g2.tx_packets != undefined)
-                        {
-                            names_wan.push(DOC.net.txPackets);
-                            values_wan.push(data_4g2.tx_packets || loading);
-                        }
+                                    if (data_4g2.mac != undefined) {
+                                        names_4g2.push(DOC.net.mac);
+                                        values_4g2.push(data_4g2.mac || loading);
+                                    }
 
-                        if(data_4g2.tx_bytes != undefined)
-                        {
-                            names_wan.push(DOC.net.txBytes);
-                            values_wan.push(data_4g2.tx_bytes || loading);
+                                    if (data_4g2.ipaddr != undefined) {
+                                        names_4g2.push(DOC.net.ip);
+                                        values_4g2.push(data_4g2.ipaddr || loading);
+                                    }
+
+                                    if (data_4g2.netmask != undefined) {
+                                        names_4g2.push(DOC.net.mask);
+                                        values_4g2.push(data_4g2.netmask || loading);
+                                    }
+
+                                    if (data_4g2.gateway != undefined) {
+                                        names_4g2.push(DOC.net.gateway);
+                                        values_4g2.push(data_4g2.gateway || loading);
+                                    }
+
+
+                                    if (data_4g2.ipaddr != undefined) {
+                                        names_4g2.push(DOC.net.dns1);
+                                        names_4g2.push(DOC.net.dns2);
+                                        values_4g2.push(data_4g2.first_dns || loading);
+                                        values_4g2.push(data_4g2.second_dns || loading);
+                                    }
+
+                                    if (data_4g2.rx_packets != undefined) {
+                                        names_4g2.push(DOC.net.rxPackets);
+                                        values_4g2.push(data_4g2.rx_packets || loading);
+                                    }
+
+                                    if (data_4g2.rx_bytes != undefined) {
+                                        names_4g2.push(DOC.net.rxBytes);
+                                        values_4g2.push(data_4g2.rx_bytes || loading);
+                                    }
+
+                                    if (data_4g2.tx_packets != undefined) {
+                                        names_4g2.push(DOC.net.txPackets);
+                                        values_4g2.push(data_4g2.tx_packets || loading);
+                                    }
+
+                                    if (data_4g2.tx_bytes != undefined) {
+                                        names_4g2.push(DOC.net.txBytes);
+                                        values_4g2.push(data_4g2.tx_bytes || loading);
+                                    }
+
+                                    if (data_4g2.interface != undefined) {
+                                        names_4g2.push(DOC.net.interface);
+                                        values_4g2.push(data_4g2.interface || loading);
+                                    }
+
+                                    var wan_html = Page.createTable2(DOC.title.apn2, names_4g2, values_4g2, names_4g2.length, 1).replace("<td>", "<td>");
+                                    $('#4g2_info').html(wan_html);
+
+                                }
+                            }
                         }
+                    })
 
-                        if(data_4g2.interface != undefined)
-                        {
-                            names_wan.push(DOC.net.interface);
-                            values_wan.push(data_4g2.interface || loading);
-                        }
-                       
-                       
-                        var wan_html = Page.createTable(DOC.title.apn2, names_wan, values_wan, names_wan.length, 2).replace("<td>", "<td>");
-                        $('#4g2_info').html(wan_html);
-
-                    }
-                  
-
-                   // Page.setStripeTable();
                     Page.isNULLToSpace = false;
                 }
             });
@@ -318,11 +279,11 @@
 
         }
 
-    
+
         loadPage();
         Page.getHelperPage('html/info/wanInfo.html');
         $('.helper_box').show();
-  
+
     });
 
 
@@ -337,6 +298,6 @@
     <div id="4g2_info" style="margin-left:20px"></div>
 </div>
 
-<div class="helper_box" >
+<div class="helper_box">
     <div id="helper"></div>
 </div>
