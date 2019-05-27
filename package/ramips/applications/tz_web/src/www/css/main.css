@@ -917,6 +917,7 @@ div.main_box {
 div.helper_box {
 	float: left;
 	width: 40%;
+	height: auto;
 	background-color: #ECF1F4;
 	overflow: auto;
 }
@@ -941,6 +942,10 @@ div.helper_desc {
 
 div.helper_desc ul {
 	margin-left: 10px;
+}
+
+div.helper_desc li {
+	padding: 7px 0;
 }
 
 span.strong {
