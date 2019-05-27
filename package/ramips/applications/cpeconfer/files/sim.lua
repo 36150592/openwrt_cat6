@@ -52,6 +52,8 @@ local function format_enable_pin_lock_at_cmd(pin_passwd)return string.format('AT
 local function format_disable_pin_lock_at_cmd(pin_passwd)return string.format('AT+CLCK="SC",0,"%s"\n', pin_passwd) end
 local function format_get_pin_lock_at_cmd()return 'AT+CLCK="SC",2,""\n' end
 local function format_pin_unlock_at_cmd(pin_passwd)return string.format('AT+CPIN=%s\n', pin_passwd) end
+local function format_pin_change_at_cmd(pin_passwd,new_pin)return string.format('AT+CPWD="SC","%s","%s"\n', pin_passwd, new_pin) end
+local function format_puk_unlock_at_cmd(puk,new_pin)return string.format('AT+CPIN="%s","%s"\n', puk, new_pin) end
 local function format_get_rev_cmd(file)return string.format('cat %s | grep OK | wc -l', file) end
 
 local function send_at_cmd(cmd)
@@ -235,6 +237,40 @@ function sim_module.sim_pin_unlock(pin_passwd)
 
 end
 
+--change pin code, restart cfun to take effecct
+--input:
+--		pin_passwd:string ,the usim pin code like 1234
+--		new_pin:string , the new pin you want to set like 1234
+--return:true if success OR false if fail
+function sim_module.sim_pin_change(pin_passwd,new_pin)
+	
+	if nil == pin_passwd or nil == new_pin
+	then
+		debug("error:pin_passwd nil")
+		return false
+	end
+
+	return send_at_cmd(format_pin_change_at_cmd(pin_passwd, new_pin))
+
+end
+
+
+--unlock puk setting, restart cfun to take effecct
+--input:
+--		puk:string ,the usim puk code
+--		new_pin:string , the new pin you want to set like 1234
+--return:true if success OR false if fail
+function sim_module.sim_puk_unlock(puk,new_pin)
+	
+	if nil == puk or nil == new_pin
+	then
+		debug("error:puk nil")
+		return false
+	end
+
+	return send_at_cmd(format_puk_unlock_at_cmd(puk, new_pin))
+
+end
 
 --get pin remember setting, restart the dialtool_new to take effecct
 --input:

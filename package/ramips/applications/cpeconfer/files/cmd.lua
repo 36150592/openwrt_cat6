@@ -919,6 +919,32 @@ function sim_pin_unlock()
 	print("pin unlock fail")
 end
 
+function sim_pin_change()
+	print("in sim_pin_change")
+	local ret = sim.sim_pin_change(tostring(arg[2]), tostring(arg[3]))
+
+	if ret
+	then
+		print(" pin change success")
+		return 
+	end
+
+	print("pin change fail")
+end
+
+function sim_puk_unlock()
+	print("in sim_puk_unlock")
+	local ret = sim.sim_puk_unlock(tostring(arg[2]), tostring(arg[3]))
+
+	if ret
+	then
+		print(" puk unlock success")
+		return 
+	end
+
+	print("puk change fail")
+end
+
 function network_get_interface_up_down_status()
 	print("network_get_interface_up_down_status")
 	local info = network.network_get_interface_up_down_status()
@@ -2506,6 +2532,8 @@ local api_func = {
 	["sim_pin_lock_enable"] = sim_pin_lock_enable,
 	["sim_pin_lock_disable"] = sim_pin_lock_disable,
 	["sim_pin_unlock"] = sim_pin_unlock,
+	["sim_pin_change"] = sim_pin_change,
+	["sim_puk_unlock"] = sim_puk_unlock,
 	["sim_pin_set_remember"] = sim_pin_set_remember,
 	["sim_pin_get_remember"] = sim_pin_get_remember,
 	["sim_reload"] = sim_reload,
