@@ -35,12 +35,12 @@ uci_get_by_type() {
 gen_service_file() {
         cat <<-EOF >$2
 [cwmp]
-enable=$(uci_get_by_name_yn $1 tr069_app_enable 1)
+enable=$(uci_get_by_name_yn $1 tr069_app_enable 0)
 interval=$(uci_get_by_name $1 tr069_PeriodicInformInterval 30)
 soap_env=SOAP-ENV
 soap_enc=SOAP-ENC
-acs_auth=$(uci_get_by_name_yn $1 tr069_ACS_auth_1 0)
-cpe_auth=$(uci_get_by_name_yn $1 tr069_CPE_auth_1 0)
+acs_auth=$(uci_get_by_name_yn $1 tr069_ACS_auth 0)
+cpe_auth=$(uci_get_by_name_yn $1 tr069_CPE_auth 0)
 event_filename=/etc/cwmpevent.bin
 acs_url=$(uci_get_by_name $1 tr069_ServerURL http://113.98.195.202:7547/)
 ca_file=/etc/ssl/private/ca.pem
@@ -70,7 +70,9 @@ start() {
     local ret=$(uci_get_by_name cfg TZ_TR069_DATA_MODEL device_dialog_lk.xml)
     gen_service_file cfg /etc/cwmp.conf
     cp /etc/$ret /etc/device.xml -a >/dev/null 2>&1
-    /usr/sbin/cwmpd >/dev/null 2>&1 &
+    if [ $(uci_get_by_name_yn cfg tr069_app_enable 1) = 1 ]; then
+       /usr/sbin/cwmpd >/dev/null 2>&1 &
+    fi
 }
 
 stop(){
@@ -79,7 +81,6 @@ stop(){
 
 restart(){
         stop
-        if [ $(uci_get_by_name_yn cfg tr069_app_enable 1) = 1 ]; then
-         start
-        fi
+        start
+        
 }
