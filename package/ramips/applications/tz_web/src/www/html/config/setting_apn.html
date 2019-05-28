@@ -34,8 +34,10 @@
                    $("#selectAuthentication").val(apnData.auth_type);
                    $("#apn_user_name").val(apnData.username);
                    $("#apn_user_password").val(apnData.password);
-                   if($("#selectAuthentication").val() == "1"){
-                      $(".hideNone").show();
+                   if($("#selectAuthentication").val() == "0"){
+                      $(".hideNone").hide(0);
+                   }else{
+                    $(".hideNone").show(0);
                    }
                    if(apnData.apn_name == undefined || apnData.apn_name == ""){
                         $("#apn_name").val("");
@@ -50,10 +52,10 @@
       getData();
 
       $("#selectAuthentication").change(function(){
-        if($("#selectAuthentication").val() == "1"){
-            $(".hideNone").show();
+        if($("#selectAuthentication").val() == "0"){
+            $(".hideNone").hide(0);
         }else{
-           $(".hideNone").hide();
+            $(".hideNone").show(0);
         }
       });
 
@@ -72,7 +74,7 @@
             apn_user_password =  $("#apn_user_password").val();
             apn_name =  $("#apn_name").val();
             apn_apnNat = $("input[name='apnNat']:checked").val();
-          $form = $("#form");
+            $form = $("#form");
           
 
           var json={},json2= new Object();

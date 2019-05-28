@@ -38,8 +38,10 @@
                    }else{
                         $("#apn_name").val(apnData.apn_name);
                    }
-                   if($("#selectAuthentication").val() == "1"){
-                      $(".hideNone").show();
+                   if($("#selectAuthentication").val() == "0"){
+                      $(".hideNone").hide(0);
+                   }else{
+                     $(".hideNone").show(0);
                    }
                    ApnList = datas.data;
                 }
@@ -47,11 +49,11 @@
         }
       getData();
         $("#selectAuthentication").change(function(){
-        if($("#selectAuthentication").val() == "1"){
-            $(".hideNone").show();
-        }else{
-           $(".hideNone").hide();
-        }
+        if($("#selectAuthentication").val() == "0"){
+              $(".hideNone").hide(0);
+           }else{
+             $(".hideNone").show(0);
+           }
       });
 
       $("#btnSave").on("click",function(){
