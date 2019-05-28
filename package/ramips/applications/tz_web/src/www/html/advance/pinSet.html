@@ -5,14 +5,11 @@
         Page.render();
         Page.setStripeTable();
 		
-		var $btnSave = $('#btnSave').disable(),
-			  $pinTypes = $('input[name=radPins]').disable(),
+		var $btnSave = $('#btnSave'),
+			  $pinTypes = $('input[name=radPins]'),
 			  $pinStatus = $('#pinStatus');
-			  
 		var $box = $('#edit_box2'), $mask = $('#mask');
-		
-		var pingType = 0;
-		function getInfo() {
+		var pingType = 0,ifNeedRestart = true;
             Page.postJSON({
                 json: {
                     cmd: RequestCmd.QUERY_SIM_STATUS
@@ -20,73 +17,70 @@
                 success: function(datas) {
 					 if(datas.sim != ''){
 						if(datas.sim.card_status == '1'){
-                            $pinStatus.html(DOC.status.opened);
-                            pingType =1;
-                        }else {
-                            $pinStatus.html(DOC.status.closed);
-                            pingType =2;
+                            pingType = "1";
+                            ifNeedRestart = false;
+                            $("input[name='radPins']").disable();
+                        }else if(datas.sim.card_status == '2'){
+                           $(".is_show_puk").show(0);
+                           $("#trPinOper").hide(0);
+                           $(".is_show_puk_hide").hide(0);
+                           $(".is_change_pin").hide(0);
+                           $("#trPinStatus").hide(0);
+                           pingType = "2";
+                        }else if(datas.sim.card_status == '0'){
+                            $("#spanChangePin").show(0);
+                            $(".is_show_puk").hide(0);
+                            pingType = "3";
+                            if(datas.sim.pinlock_enable.trim() == "1"){
+                                $pinStatus.html(DOC.status.opened);
+                                $("input[value='1']").prop("checked",true);
+                            }else{
+                                $("input[value='2']").prop("checked",true);
+                                $pinStatus.html(DOC.status.closed);
+                            }
                         }
-                        InputUtil.setRadiosSelectedValue($pinTypes, pingType);
-                        $('#trPinOper').attr('old',pingType);
-                        $btnSave.enable();
-                        $pinTypes.enable();
                     }else{
 						$pinStatus.html(DOC.lbl.noSim);
 					}
                 }
             });
-        }
-
-        getInfo();
 		
-		$btnSave.click(function () {
-			$(this).attr("disabled",true);
-            var $form = $('#pingForm');
-            var json = JSON.parmsToJSON($form);
-
-            if(json.radPins == $("#trPinOper").attr('old')){
-                AlertUtil.alertMsg(CHECK.required.noChanges);
-                $(this).attr("disabled",false);
-                return false;
-            }else {
-                $mask.show();
-                $box.show();
-                SysUtil.setBoxStyle1($box);
+		$("input[name='radPins']").change(function(){
+            if(this.value == "3"){
+                $(".is_change_pin").show(0);
+            }else{
+                $(".is_change_pin").hide(0);
             }
-           
-        });
-		
-		$('#btnClose').click(function() {
-            $box.hide();
-            $mask.hide();
-			$btnSave.enable();
-        });
-		
-		 $('#btnSavePin').click(function () {
-             if($('#pinPassword').val()){
+        })
+		 $btnSave.click(function () {
 			     var json = {};
+                 $btnSave.disable();
                  json.type = $("input[name='radPins']:checked").val();
+                 json.pingType = pingType;
+                 json.new_pin = $("#pinPasswordConfirm").val();
                  json.passwd = $('#pinPassword').val();
+                 json.pukPassword = $("#pukPassword").val();
+                 json.pukPinPasswordConfirm = $("#pukPinPasswordConfirm").val();
                  json.method = JSONMethod.POST;
                  json.cmd = RequestCmd.SET_PIN_STATUS;
 				 Page.postJSON({
                      json: json,
                      success: function(data) {
-                         AlertUtil.alertMsg(PROMPT.saving.success);
-						 $("ul.tabs a").eq(4).click();
+                        $btnSave.enable();
+                         $("ul.tabs a").eq(4).click();
+                         if(ifNeedRestart == false){
+                            AlertUtil.alertMsg(PROMPT.saving.success);
+                         }else{
+                            SysUtil.rebootDevice(PROMPT.tips.rebootMessage);
+                         }  
                      },
 					 fail: function(data) {
+                        $btnSave.enable();
                          AlertUtil.alertMsg(PROMPT.saving.fail);
-                     },
-                     complete: function(){
-                         $box.hide();
-                         $mask.hide();
-                         $btnSave.enable();
                      }
                  });
-             }else {
-                 AlertUtil.alertMsg(CHECK.required.pin);
-             }
+             
+
         })
 
     });
@@ -106,31 +100,42 @@
                         <td>
                             <span id="spanOpenPin"><input type="radio" name="radPins" value="1" /><%- lbl.pinOper1 %>&nbsp;&nbsp;</span>
                             <span id="spanClosePin"><input type="radio" name="radPins" value="2" /><%- lbl.pinOper2 %>&nbsp;&nbsp;</span>
+                            <span id="spanChangePin" style="display:none;"><input type="radio" name="radPins" value="3" /><%- lbl.pinOper3 %>&nbsp;&nbsp;</span>
                         </td>
                     </tr>
+                <tr class="is_show_puk_hide">
+                <th><span><%-lbl.pinCode%><%- colon %></span></th>
+                <td><input type="text" id="pinPassword" name="pinPassword"></td>
+                </tr>
+                <tr class="is_change_pin" style="display:none;">
+                <th><span><%-DOC.lbl.pinOper3%><%- colon %></span></th>
+                <td><input type="text" id="pinPasswordChange" name="pinPasswordChange"></td>
+                </tr>
+                <tr class="is_change_pin" style="display:none;">
+                <th><span><%-DOC.lbl.pinchange%><%- colon %></span></th>
+                <td><input type="text" id="pinPasswordConfirm" name="pinPasswordConfirm"></td>
+                </tr>
+
+                </tr>
+                <tr class="is_show_puk" style="display:none;">
+                <th><span><%-CHECK.required.puk%><%- colon %></span></th>
+                <td><input type="text" id="pukPassword" name="pukPassword"></td>
+                </tr>
+                <tr class="is_show_puk" style="display:none;">
+                <th><span><%-CHECK.required.newPin%><%- colon %></span></th>
+                <td><input type="text" id="pukPinPassword" name="pukPinPassword"></td>
+                </tr>
+                <tr class="is_show_puk" style="display:none;">
+                <th><span><%-CHECK.required.newPinConfirm%><%- colon %></span></th>
+                <td><input type="text" id="pukPinPasswordConfirm" name="pukPinPasswordConfirm"></td>
+                </tr>
+
 					<tr>
 						<th>&nbsp;</th>
 						<td><input type="button" id="btnSave" value="<%- btn.set %>" /></td>
 					</tr>
                 </table>
             </form>
-        </div>
-		<div id="edit_box2" style="width: 300px;height: 100px">
-            <div class="detail" id="fwHead">
-                <div id="edit_title"><%- lbl.pinCode %></div>
-                <div id="edit_close2"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
-                <div style="clear:both;"></div>
-            </div>
-            <div>
-                <table class="detail2" cellspacing="0">
-                <th><span><%-lbl.pinCode%><%- colon %></span></th>
-                <td><input type="text" id="pinPassword" name="pinPassword"></td>
-                <tr>
-                    <th>&nbsp;</th>
-                    <td><input type="button" id="btnSavePin" value="<%- btn.savePinOk %>"/></td>
-                </tr>
-                </table>
-            </div>
         </div>
     </script>
 </div>

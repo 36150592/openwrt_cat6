@@ -1831,26 +1831,57 @@ function set_pinstatus()
 	local ret 
 	local type = tonumber(tz_req["type"])
 	local passwd = tonumber(tz_req["passwd"])
-	
-	tz_answer["success"] = true;
+	local pingType = tonumber(tz_req["pingType"])
+	local new_pin = tonumber(tz_req["new_pin"])
+	local pukPassword = tonumber(tz_req["pukPassword"])
+	local pukPinPasswordConfirm = tonumber(tz_req["pukPinPasswordConfirm"])
+	tz_answer["success"] = true
+	if(pingType == 1)
+		then
+	      ret = sim.sim_pin_unlock(passwd)
+		    if(not ret)
+		       then
+			   tz_answer["success"] = false
+			   tz_answer["enablePin"] = false
+			end
+	end
 	if(1 == type)
 	   then
-	      print(type)
 	      ret = sim.sim_pin_lock_enable(passwd)
 		    if(not ret)
 		       then
-			   tz_answer["success"] = false;
+			   tz_answer["success"] = false
 			   tz_answer["enablePin"] = false
 			end
 	elseif(2 == type)
 	   then
-	      ret = sim.sim_pin_unlock(passwd)
+	      ret = sim.sim_pin_lock_disable(passwd)
 	        if(not ret)
 		      then
-			  tz_answer["success"] = false;
+			  tz_answer["success"] = false
 			  tz_answer["unlockPin"] = false
             end
+     elseif(3 == type)
+	   then
+	      ret = sim.sim_pin_change(passwd,new_pin)
+	      print("ret = ",ret)
+	        if(not ret)
+		      then
+			  tz_answer["success"] = false
+            end
+     
 	end
+	if(pukPassword ~= nil)
+		then
+			ret = sim.sim_puk_unlock(pukPassword,pukPinPasswordConfirm)
+		    if(not ret)
+		       then
+			   tz_answer["success"] = false
+			end
+
+	end		
+
+
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
 end

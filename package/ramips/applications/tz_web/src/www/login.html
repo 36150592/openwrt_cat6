@@ -144,7 +144,7 @@
                 success: function (data) {
                     Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue('6') || "3E");
                     Page.language = data.data.web_language.toUpperCase();
-                    $("script[src^='js/language/']").remove();
+                    //$("script[src^='js/language/']").remove();
                     $("script[src^='js/main']").remove();
                     $.getScript('js/language/' + data.data.web_language.toLowerCase() + '.js', function () {
                         $.getScript('js/main.js', init);
