@@ -201,8 +201,7 @@ function sim_module.sim_get_status()
 end
 
 
-
-
+-- only when the usim card is ready status can this interface be invoked
 function sim_module.sim_pin_lock_enable(pin_passwd)
 
 	if nil == pin_passwd
@@ -214,6 +213,8 @@ function sim_module.sim_pin_lock_enable(pin_passwd)
 	return send_at_cmd(format_enable_pin_lock_at_cmd(pin_passwd))
 end
 
+
+-- only when the usim card is ready status can this interface be invoked
 function sim_module.sim_pin_lock_disable(pin_passwd)
 	
 	if nil == pin_passwd
