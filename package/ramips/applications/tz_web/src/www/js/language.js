@@ -76,6 +76,7 @@ var DOC = {
 	timezone:{},
 	week:{},
 	lan:{},
+	info:{},
 	
 	networkMode: { helper: {} },
 	dial: { helper: {} },
