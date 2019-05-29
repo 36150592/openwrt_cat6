@@ -28,11 +28,11 @@
                            $("#trPinStatus").hide(0);
                            pingType = "2";
                         }else if(datas.sim.card_status == '0'){
-                            $("#spanChangePin").show(0);
                             $(".is_show_puk").hide(0);
                             pingType = "3";
                             if(datas.sim.pinlock_enable.trim() == "1"){
                                 $pinStatus.html(DOC.status.opened);
+                                $("#spanChangePin").show(0);
                                 $("input[value='1']").prop("checked",true);
                             }else{
                                 $("input[value='2']").prop("checked",true);
@@ -61,6 +61,31 @@
                  json.passwd = $('#pinPassword').val();
                  json.pukPassword = $("#pukPassword").val();
                  json.pukPinPasswordConfirm = $("#pukPinPasswordConfirm").val();
+                 if(json.type == "3"){
+                    if($("#pinPassword").val().length < 1 || $("#pinPasswordChange").val().length < 1){
+                        AlertUtil.alertMsg(DOC.status.repPinCheck);
+                        $btnSave.enable();
+                        return false;
+                    }
+                    if($("#pinPasswordChange").val() != json.new_pin){
+                        AlertUtil.alertMsg(CHECK.required.newPinConfirm2);
+                        $btnSave.enable();
+                        return false;
+                    }
+                 }
+                 if(pingType == "2"){
+                    if($("#pukPinPassword").val().length < 1){
+                        AlertUtil.alertMsg(DOC.status.repPinCheck);
+                        $btnSave.enable();
+                        return false;
+                    }
+
+                    if($("#pukPinPassword").val() != $("#pukPinPasswordConfirm").val()){
+                        AlertUtil.alertMsg(CHECK.required.newPinConfirm2);
+                        $btnSave.enable();
+                        return false;
+                    }
+                 }
                  json.method = JSONMethod.POST;
                  json.cmd = RequestCmd.SET_PIN_STATUS;
 				 Page.postJSON({
