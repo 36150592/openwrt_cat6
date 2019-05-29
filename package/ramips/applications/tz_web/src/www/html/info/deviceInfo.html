@@ -62,15 +62,15 @@
 						values_lte.push(data2.modem.softver || loading);
 						values_lte.push(data2.modem.hardware || loading);
 					}
-                    values_lte.push(data2.modem.imei || loading);
+                    values_lte.push(data2.factory.imei || loading);
                     values_lte.push(data2.sim.imsi || loading);
                     values_lte.push(data2.sim.iccid || loading);
 					var sn = loading;
                     if(data2.softVersion.device_sn != undefined){
                         sn = data2.softVersion.device_sn
                     }
-                    else if(data2.version.type && data2.sim.imsi){
-                        sn = data2.version.type + data2.sim.imsi
+                    else if(data2.version.type && data2.factory.imei){
+                        sn = data2.version.type + data2.factory.imei
                     }
 					values_lte.push(sn);
 

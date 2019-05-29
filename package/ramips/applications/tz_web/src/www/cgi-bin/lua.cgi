@@ -27,13 +27,13 @@ function login()
 	tz_answer["cmd"] = 100
 	local bolename = 0
 	local bolepassword = 0
-	local userSign	
-	local nSplitArray = {}  
-	
+	local userSign
+	local nSplitArray = {}
+
 	local username = "'"..tz_req["username"].."'"
 	local password = "'"..tz_req["passwd"].."'"
 	local sessionId = tz_req["sessionId"]
-	
+
 	local file = io.open("/etc/config/tozed", "r")
 	io.input(file)
 	for l in file:lines() do
@@ -46,16 +46,16 @@ function login()
 				 userSign = 'TZ_USERNAME'
 		   end
 	  end
-	  
-	  if  nSplitArray[2] == 'TZ_PASSWD' and userSign == 'TZ_USERNAME' 
+
+	  if  nSplitArray[2] == 'TZ_PASSWD' and userSign == 'TZ_USERNAME'
 	    then
 		   if nSplitArray[3] == password
 		      then
 		        bolepassword = 1
-				break 
+				break
 		   end
 	  end
-	    
+
 	  if nSplitArray[2] == 'TZ_SUPER_USERNAME'
 	    then
 		   if nSplitArray[3] == username
@@ -64,16 +64,16 @@ function login()
 				 userSign = 'TZ_SUPER_USERNAME'
 		   end
 	  end
-	  
-	  if nSplitArray[2] == 'TZ_SUPER_PASSWD' and userSign == 'TZ_SUPER_USERNAME' 
+
+	  if nSplitArray[2] == 'TZ_SUPER_PASSWD' and userSign == 'TZ_SUPER_USERNAME'
 	    then
 		   if nSplitArray[3] == password
 		      then
 		        bolepassword = 1
-				break 
+				break
 		   end
 	  end
-	  
+
 	   if nSplitArray[2] == 'TZ_TEST_USERNAME'
 	    then
 		   if nSplitArray[3] == username
@@ -82,30 +82,30 @@ function login()
 				 userSign = 'TZ_TEST_USERNAME'
 		   end
 	  end
-	  
-	  if nSplitArray[2] == 'TZ_TEST_PASSWD' and userSign == 'TZ_TEST_USERNAME' 
+
+	  if nSplitArray[2] == 'TZ_TEST_PASSWD' and userSign == 'TZ_TEST_USERNAME'
 	    then
 		   if nSplitArray[3] == password
 		      then
 		        bolepassword = 1
-				break 
+				break
 		   end
 	  end
 
-	
-	end
-	
-	io.close(file)
-	
 
-	if bolename == 1 and bolepassword == 1 
+	end
+
+	io.close(file)
+
+
+	if bolename == 1 and bolepassword == 1
 	then
 		if (uti.is_file_exist("/tmp/sessionsave") ~= true)
 		then
 					os.execute("cd /tmp && mkdir  sessionsave")
 		end
-			 
-		local logintime = os.time()   
+
+		local logintime = os.time()
 		local fileDir = "/tmp/sessionsave/."
 		local fileName = string.format("%s%s%s",fileDir,sessionId,logintime)
 		local file1 = io.open(fileName,"w")
@@ -138,21 +138,21 @@ function login()
 
 		result_json = cjson.encode(tz_answer);
 		print(result_json);
-		return 
+		return
     end
-	
-	
+
+
 	tz_answer["success"] = false;
 	result_json = cjson.encode(tz_answer);
 	print(result_json);
 	return
-   
-	
-	
+
+
+
 end
 
 function logout()
-      
+
 	local tz_answer = {};
 	tz_answer["cmd"] = 99;
 	local fileName = string.format("rm /tmp/sessionsave/.%s",tz_req["sessionId"])
@@ -160,7 +160,7 @@ function logout()
 	tz_answer["success"] = true;
 	result_json = cjson.encode(tz_answer);
 	print(result_json);
-	
+
 end
 
 function iniPage()
@@ -178,8 +178,8 @@ function iniPage()
 	tz_answer["data"] = Rdata;
 	result_json = cjson.encode(tz_answer);
 	print(result_json);
-	
-	
+
+
 end
 
 function change_language()
@@ -188,36 +188,36 @@ function change_language()
 	shellcmd = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/login.html",oldLanguage,newLanguage,WEB_PATH)
 	shellcmd1 = string.format("sed -i 's/%s.js?t=000000/%s.js?t=000000/g' %s/index.html",oldLanguage,newLanguage,WEB_PATH)
 	shellcmd2 = string.format("sed -i 's/\"Language\":\"%s\"/\"Language\":\"%s\"/g' %s/config.json",oldLanguage,newLanguage,WEB_PATH)
-	
+
 	system.system_set_web_language(newLanguage)
-	  
+
 	os.execute(shellcmd)
 	os.execute(shellcmd1)
 	os.execute(shellcmd2)
-	
+
     local tz_answer = {};
 	tz_answer["success"] = true;
 	tz_answer["cmd"] = 97;
 	result_json = cjson.encode(tz_answer);
 	print(result_json);
-   
+
 end
 
 
 function get_sysinfo()
 	local data_array = {}
 
-	data_array["wan"] = network.network_get_wan_info() 
+	data_array["wan"] = network.network_get_wan_info()
 	data_array["4g"] = network.network_get_4g_net_info()
 	data_array["4g1"] = network.network_get_4g1_net_info()
 	data_array["4g2"] = network.network_get_4g2_net_info()
-		
+
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 0;
 	tz_answer["data"] = data_array;
 	result_json = cjson.encode(tz_answer);
-	print(result_json); 
+	print(result_json);
 
 end
 
@@ -225,13 +225,13 @@ function get_sysinfo_2()
 	local data_array = {}
 
     data_array["system"]  = system.system_get_status() or ''
-		
+
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 0;
 	tz_answer["data"] = data_array;
 	result_json = cjson.encode(tz_answer);
-	print(result_json); 
+	print(result_json);
 
 end
 
@@ -239,13 +239,13 @@ function get_sysinfo_3()
 	local data_array = {}
 
 	data_array["modem"] = modem.modem_get_status() or ''
-		
+
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 0;
 	tz_answer["data"] = data_array;
 	result_json = cjson.encode(tz_answer);
-	print(result_json); 
+	print(result_json);
 
 end
 
@@ -253,13 +253,13 @@ function get_sysinfo_4()
 	local data_array = {}
 
 	data_array["sim"] = sim.sim_get_status() or ''
-		
+
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 0;
 	tz_answer["data"] = data_array;
 	result_json = cjson.encode(tz_answer);
-	print(result_json); 
+	print(result_json);
 
 end
 
@@ -273,13 +273,13 @@ function get_sysinfo_5()
 	else
 		data_array["lan"] = ''
 	end
-		
+
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 0;
 	tz_answer["data"] = data_array;
 	result_json = cjson.encode(tz_answer);
-	print(result_json); 
+	print(result_json);
 
 end
 
@@ -288,6 +288,8 @@ function get_diviceinfo()
 	local data_array = {}
 	data_array["sim"] = sim.sim_get_status() or ''
 	data_array["modem"] = modem.modem_get_info() or ''
+	data_array["factory"] = system.system_get_tozed_factory_info() or ''
+
 	--data_array["device"] = device.device_get_info() or ''
 	data_array["version"] = system.get_divice_version() or ''
 	 data_array["system"]  = system.system_get_status() or ''
@@ -297,8 +299,8 @@ function get_diviceinfo()
 	tz_answer["cmd"] = 43;
 	tz_answer["data"] = data_array;
 	result_json = cjson.encode(tz_answer);
-	print(result_json); 
-	
+	print(result_json);
+
 end
 
 function get_wifi()
@@ -306,13 +308,13 @@ function get_wifi()
 	local data_array
 	if next(array) ~= nil
 	then
-		
+
 		local id
 		for k,v in pairs(array) do
 			if(v["band"] == "2.4G")
 				then
 					data_array = v
-					id = v['wifi_id']				  
+					id = v['wifi_id']
 			end
 		end
 		data_array['status'] = wifi.wifi_get_enable_status(id)
@@ -322,11 +324,11 @@ function get_wifi()
 		--data_array['maxNum'] = wifi.wifi_get_connect_sta_number(id)
 		--data_array['encryption'] = wifi.wifi_get_encryption(id)
 		--data_array['pwd'] = wifi.wifi_get_password(id)
-		
+
 	else
 	    data_array = ''
 	end
-	
+
 		local tz_answer = {};
 		tz_answer["success"] = true;
 		tz_answer["cmd"] = 101;
@@ -345,10 +347,10 @@ function get_wifi5()
 			if(v["band"] == "5G")
 				then
 					data_array = v
-					id = v['wifi_id']				  
+					id = v['wifi_id']
 			end
 		end
-	
+
 		data_array['status'] = wifi.wifi_get_enable_status(id)
 		data_array['hidden_ssid'] = wifi.wifi_get_hidden_ssid(id)
 		data_array['wmm'] = wifi.wifi_get_wmm(id)
@@ -367,7 +369,7 @@ function get_wifi5()
 		tz_answer["data"] = data_array;
 		result_json = cjson.encode(tz_answer);
 		print(result_json);
-	
+
 end
 
 function get_ssidlist()
@@ -379,9 +381,9 @@ function get_ssidlist()
   for k,v in pairs(array) do
 	   if(v["primary_id"] == wifiId)
 	     then
-		  data_array[i] = v		
+		  data_array[i] = v
 		  data_array[i]['status'] = wifi.wifi_secondary_get_enable_status(v["secondary_id"])
-          i = i+ 1	  
+          i = i+ 1
 		end
   end
   local tz_answer = {};
@@ -390,14 +392,14 @@ function get_ssidlist()
   tz_answer["data"] = data_array;
   result_json = cjson.encode(tz_answer);
   print(result_json);
-  
+
 end
 
 function set_ssidlist()
 
 	local tz_answer = {};
-	local ret 
-	
+	local ret
+
 	local wifiId = tonumber(tz_req["wifiId"])
 	local secondaryId = tonumber(tz_req["secondaryId"])
 	local wifiOpen = tonumber(tz_req["wifiOpen"])
@@ -408,7 +410,7 @@ function set_ssidlist()
 	local authenticationType = tz_req["authenticationType"]
 	local encryptAlgorithm = tz_req["encryptAlgorithm"]
 	local key = tz_req["key"]
-	
+
 	if(nil ~= wifiOpen)
 	then
 		if(0 == wifiOpen)
@@ -427,7 +429,7 @@ function set_ssidlist()
               end
 	   end
 	end
-	
+
 	if(nil ~= broadcast)
 	then
 		if(0 == broadcast)
@@ -446,7 +448,7 @@ function set_ssidlist()
               end
 	   end
 	end
-	
+
 	if(nil ~= wmm)
 	then
 		if(0 == wmm)
@@ -465,7 +467,7 @@ function set_ssidlist()
             end
 	    end
 	end
-	
+
 	if(nil ~= ssid)
 	 then
 		ret = wifi.wifi_secondary_set_ssid(secondaryId, ssid)
@@ -474,77 +476,77 @@ function set_ssidlist()
 				tz_answer["setSsid"] = false
 			end
 	end
-	
+
 	if(nil ~= maxStation)
 	 then
-		ret = wifi.wifi_secondary_set_connect_sta_num(secondaryId, maxStation)	
-		
+		ret = wifi.wifi_secondary_set_connect_sta_num(secondaryId, maxStation)
+
 			if(not ret)
 				then
 				tz_answer["setnumber"] = false
 			end
-	end  
-	
+	end
+
 	if(nil ~= authenticationType)
 	 then
-		ret = wifi.wifi_secondary_set_encryption(secondaryId, authenticationType)	
+		ret = wifi.wifi_secondary_set_encryption(secondaryId, authenticationType)
 			if(not ret)
 				then
 				tz_answer["setEncryption"] = false
-			end	    
-	end 
-	
+			end
+	end
+
 	if(nil ~= encryptAlgorithm)
 	 then
-		ret = wifi.wifi_secondary_set_encryption_type(secondaryId, encryptAlgorithm)	
+		ret = wifi.wifi_secondary_set_encryption_type(secondaryId, encryptAlgorithm)
 			if(not ret)
 				then
 				tz_answer["setEncryptionType"] = false
-			end	    
-	end 
-		
+			end
+	end
+
 	if(nil ~= key)
 	 then
-		ret = wifi.wifi_secondary_set_password(secondaryId, key)	
+		ret = wifi.wifi_secondary_set_password(secondaryId, key)
 			if(not ret)
 				then
 				tz_answer["setPassword"] = false
 			end
-	end 
-	
+	end
+
 	wifi.wifi_restart(wifiId)
 	tz_answer["success"] = true;
 	tz_answer["cmd"] = 121;
 	result_json = cjson.encode(tz_answer);
 	print(result_json);
-	
-	
+
+
 end
 
 function get_lan()
- 
+
    	local array = wifi.wifi_get_dev()
 	local network = {}
 	local wifi_id
 	local i = 1
-	network[i] = array[1]['network']	
+	network[i] = array[1]['network']
 	i = i + 1
-	wifiId = array[1]['wifi_id']		
+	wifiId = array[1]['wifi_id']
     local data_lan = {}
 
 	local array2 = wifi.wifi_secondary_get_ssid_list()
 	for k,v in pairs(array2) do
 	   if(v["primary_id"] == wifiId)
 	     then
-		 network[i] = v['network']		
-         i = i + 1	 
+		 network[i] = v['network']
+         i = i + 1
 		end
 	end
-	
+
 	for k,v in pairs(network) do
-	    data_lan[k] = dhcp.dhcp_get_object_by_network(v)['interface']	
+	    data_lan[k] = dhcp.dhcp_get_object_by_network(v)['interface']
 	end
-	
+
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 203;
@@ -576,26 +578,26 @@ function get_dhcp_list()
 	local network = {}
 	local wifi_id
 	local i = 1
-	network[i] = array[1]['network']	
+	network[i] = array[1]['network']
 	i = i + 1
-	wifiId = array[1]['wifi_id']		
+	wifiId = array[1]['wifi_id']
     local data_array = {}
 
 	local array2 = wifi.wifi_secondary_get_ssid_list()
 	for k,v in pairs(array2) do
 	   if(v["primary_id"] == wifiId)
 	     then
-		 network[i] = v['network']		
-         i = i + 1	 
+		 network[i] = v['network']
+         i = i + 1
 		end
 	end
-	
+
 	for k,v in pairs(network) do
 	    data_array[k] = dhcp.dhcp_get_object_by_network(v)
 	end
-	
+
 	local lists = dhcp.dhcp_get_reserve_ip()
-	
+
 	local tz_answer = {};
     tz_answer["success"] = true;
 	tz_answer["cmd"] = 102;
@@ -603,7 +605,7 @@ function get_dhcp_list()
 	tz_answer["reserveList"] = lists;
 	result_json = cjson.encode(tz_answer);
 	print(result_json);
-	
+
 
 end
 
@@ -611,17 +613,17 @@ function set_wifi()
 
 	local tz_answer = {}
 	tz_answer["cmd"] = 2
-    local ret 
+    local ret
 	local array = wifi.wifi_get_dev()
-	
+
 	local id
 	for k,v in pairs(array) do
 	   if(v["band"] == "2.4G")
 	     then
-		   id = v['wifi_id']				  
+		   id = v['wifi_id']
 		end
 	end
-	
+
 	local wifiOpen = tonumber(tz_req["wifiOpen"])
 	local broadcast = tonumber(tz_req["broadcast"])
 	local wmm = tonumber(tz_req["wmm"])
@@ -634,7 +636,7 @@ function set_wifi()
 	local authenticationType = tz_req["authenticationType"]
 	local encryptAlgorithm = tz_req["encryptAlgorithm"]
 	local key = tz_req["key"]
-	
+
 	if(nil ~= wifiOpen)
 	then
 		if(0 == wifiOpen)
@@ -653,7 +655,7 @@ function set_wifi()
               end
 	   end
 	end
-	
+
 	if(nil ~= broadcast)
 	then
 		if(0 == broadcast)
@@ -672,7 +674,7 @@ function set_wifi()
               end
 	   end
 	end
-	
+
 	if(nil ~= wmm)
 	then
 		if(0 == wmm)
@@ -691,7 +693,7 @@ function set_wifi()
             end
 	    end
 	end
-	
+
 	if(nil ~= ssid)
 	 then
 		ret = wifi.wifi_set_ssid(id, ssid)
@@ -700,103 +702,103 @@ function set_wifi()
 				tz_answer["setSsid"] = false
 			end
 	end
-		
+
 	if(nil ~= txPower)
 	 then
-		ret = wifi.wifi_set_txpower(id, txPower)	
+		ret = wifi.wifi_set_txpower(id, txPower)
 			if(not ret)
 				then
 				tz_answer["setTxpower"] = false
 			end
-	end  
-	
+	end
+
 	if(nil ~= maxStation)
 	 then
-		ret = wifi.wifi_set_connect_sta_number(id, maxStation)	
+		ret = wifi.wifi_set_connect_sta_number(id, maxStation)
 			if(not ret)
 				then
 				tz_answer["setnumber"] = false
 			end
-	end  
-	
+	end
+
 	if(nil ~= channel)
 	 then
-		ret = wifi.wifi_set_channel(id, channel)	
+		ret = wifi.wifi_set_channel(id, channel)
 			if(not ret)
 				then
 				tz_answer["setChannel"] = false
 			end
-	end  
-	
+	end
+
 	if(nil ~= mode)
 	 then
-		ret = wifi.wifi_set_mode(id, mode)	
+		ret = wifi.wifi_set_mode(id, mode)
 			if(not ret)
 				then
 				tz_answer["setMode"] = false
 			end
-	end 
-	
+	end
+
 	if(nil ~= ht)
 	 then
-		ret = wifi.wifi_set_bandwidth(id, ht)	
+		ret = wifi.wifi_set_bandwidth(id, ht)
 			if(not ret)
 				then
 				tz_answer["setHtMode"] = false
 			end
 	end
-	
-	
+
+
 	if(nil ~= authenticationType)
 	 then
-		ret = wifi.wifi_set_encryption(id, authenticationType)	
+		ret = wifi.wifi_set_encryption(id, authenticationType)
 			if(not ret)
 				then
 				tz_answer["setEncryption"] = false
-			end	    
-	end 
-	
+			end
+	end
+
 	if(nil ~= encryptAlgorithm)
 	 then
-		ret = wifi.wifi_set_encryption_type(id, encryptAlgorithm)	
+		ret = wifi.wifi_set_encryption_type(id, encryptAlgorithm)
 			if(not ret)
 				then
 				tz_answer["setEncryptionType"] = false
-			end	    
-	end 
-	
+			end
+	end
+
 	if(nil ~= key)
 	 then
-		ret = wifi.wifi_set_password(id, key)	
+		ret = wifi.wifi_set_password(id, key)
 			if(not ret)
 				then
 				tz_answer["setPassword"] = false
 			end
-	end 
+	end
 
 	wifi.wifi_restart(id)
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
-	
-	
+
+
 end
 
 function set_wifi5()
 
     local tz_answer = {}
 	tz_answer["cmd"] = 202
-    local ret 
+    local ret
 	local array = wifi.wifi_get_dev()
-	
+
 	local id
 	for k,v in pairs(array) do
 	   if(v["band"] == "5G")
 	     then
-		   id = v['wifi_id']				  
+		   id = v['wifi_id']
 		end
 	end
-	
+
 	local wifiOpen = tonumber(tz_req["wifiOpen"])
 	local broadcast = tonumber(tz_req["broadcast"])
 	local wmm = tonumber(tz_req["wmm"])
@@ -808,8 +810,8 @@ function set_wifi5()
 	local authenticationType = tz_req["authenticationType"]
 	local encryptAlgorithm = tz_req["encryptAlgorithm"]
 	local key = tz_req["key"]
-	
-	
+
+
 	if(nil ~= wifiOpen)
 	then
 		if(0 == wifiOpen)
@@ -828,7 +830,7 @@ function set_wifi5()
               end
 	   end
 	end
-	
+
 	if(nil ~= broadcast)
 	then
 		if(0 == broadcast)
@@ -847,7 +849,7 @@ function set_wifi5()
               end
 	   end
 	end
-	
+
 	if(nil ~= wmm)
 	then
 		if(0 == wmm)
@@ -866,7 +868,7 @@ function set_wifi5()
             end
 	    end
 	end
-	
+
 	if(nil ~= ssid)
 	 then
 		ret = wifi.wifi_set_ssid(id, ssid)
@@ -875,83 +877,83 @@ function set_wifi5()
 				tz_answer["setSsid"] = false
 			end
 	end
-	
+
 	if(nil ~= channel)
 	 then
-		ret = wifi.wifi_set_channel(id, channel)	
+		ret = wifi.wifi_set_channel(id, channel)
 			if(not ret)
 				then
 				tz_answer["setChannel"] = false
 			end
-	end  
-	
+	end
+
 	if(nil ~= mode)
 	 then
-		ret = wifi.wifi_set_mode(id, mode)	
+		ret = wifi.wifi_set_mode(id, mode)
 			if(not ret)
 				then
 				tz_answer["setMode"] = false
 			end
 	end
-	
+
 	if(nil ~= bandWidth)
 	 then
-		ret = wifi.wifi_set_bandwidth(id, bandWidth)	
+		ret = wifi.wifi_set_bandwidth(id, bandWidth)
 			if(not ret)
 				then
 				tz_answer["setBwMode"] = false
 			end
 	end
-	
+
 	if(nil ~= maxStation)
 	 then
-		ret = wifi.wifi_set_connect_sta_number(id, maxStation)	
+		ret = wifi.wifi_set_connect_sta_number(id, maxStation)
 			if(not ret)
 				then
 				tz_answer["setnumber"] = false
 			end
-	end  
-	
+	end
+
 	if(nil ~= authenticationType)
 	 then
-		ret = wifi.wifi_set_encryption(id, authenticationType)	
+		ret = wifi.wifi_set_encryption(id, authenticationType)
 			if(not ret)
 				then
 				tz_answer["setEncryption"] = false
-			end	    
-	end 
-	
+			end
+	end
+
 	if(nil ~= encryptAlgorithm)
 	 then
-		ret = wifi.wifi_set_encryption_type(id, encryptAlgorithm)	
+		ret = wifi.wifi_set_encryption_type(id, encryptAlgorithm)
 			if(not ret)
 				then
 				tz_answer["setEncryptionType"] = false
-			end	    
-	end 
-	
+			end
+	end
+
 	if(nil ~= key)
 	 then
-		ret = wifi.wifi_set_password(id, key)	
+		ret = wifi.wifi_set_password(id, key)
 			if(not ret)
 				then
 				tz_answer["setPassword"] = false
 			end
-	end 
-	
+	end
+
 	wifi.wifi_restart(id)
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
 
-end 
+end
 
 function set_dhcp()
 
 	local tz_answer = {}
 	tz_answer["cmd"] = 3
-    local ret 
-	
+    local ret
+
 	local lanName = tz_req["lanName"]
 	local lanIp = tz_req["lanIp"]
 	local netMask = tz_req["netMask"]
@@ -963,8 +965,8 @@ function set_dhcp()
 	local main_Dns = tz_req["main_dns"]
 	local vice_Dns = tz_req["vice_dns"]
 
-	
-   
+
+
 	if(nil ~= lanIp)
 	  then
 		ret = dhcp.dhcp_set_server_ip(lanName,lanIp)
@@ -972,10 +974,10 @@ function set_dhcp()
 				then
 				tz_answer["setIp"] = true
 			else
-                tz_answer["setIp"] = false			
+                tz_answer["setIp"] = false
 			end
 	end
-	
+
 	if(nil ~= netMask)
 	  then
 		ret = dhcp.dhcp_set_server_mask(lanName,netMask)
@@ -984,7 +986,7 @@ function set_dhcp()
 				tz_answer["setMask"] = false
 			end
 	end
-	
+
 	if(nil ~= expireTime)
 	  then
 		ret = dhcp.dhcp_set_lease_time(lanName,expireTime)
@@ -993,7 +995,7 @@ function set_dhcp()
 				tz_answer["setLeaseTime"] = false
 			end
 	end
-	
+
 	if(nil ~= dhcpServer)
 	   then
 	   if(0 == dhcpServer)
@@ -1011,9 +1013,9 @@ function set_dhcp()
 			  tz_answer["enableDhcp"] = false
             end
 	    end
-	  
+
 	end
-	
+
 	if(nil ~= ipBegin)
 	  then
 		ret = dhcp.dhcp_set_ip_range(lanName,ipBegin, limitNum)
@@ -1021,8 +1023,8 @@ function set_dhcp()
 				then
 				tz_answer["setIpRange"] = false
 			end
-	end	
-	
+	end
+
 	if(nil ~= main_Dns)
 	then
 		ret = dhcp.dhcp_set_main_dns(lanName, main_Dns)
@@ -1044,17 +1046,17 @@ function set_dhcp()
 		end
 
 	end
-	
+
     dhcp.dhcp_restart()
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
-	
+
 end
 
 function get_dhcpClient()
     local tz_answer = {}
-	tz_answer["cmd"] = 103   
+	tz_answer["cmd"] = 103
 	local data_array = dhcp.dhcp_get_client_list()
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
@@ -1066,10 +1068,10 @@ end
 function get_wifiClient()
 
 	local tz_answer = {}
-	tz_answer["cmd"] = 117   
+	tz_answer["cmd"] = 117
 
 	local data_array = dhcp.dhcp_get_client_list()
-	
+
 	local data_array2 = wifi.wifi_get_connect_sta_by_dev("2.4G")
 	tz_answer["success"] = true
 	tz_answer["userlist"] = data_array
@@ -1082,9 +1084,9 @@ end
 function get_wifi5Client()
 
 	local tz_answer = {}
-	tz_answer["cmd"] = 118  
+	tz_answer["cmd"] = 118
 	local data_array = dhcp.dhcp_get_client_list()
-	
+
 	local data_array2 = wifi.wifi_get_connect_sta_by_dev("5G")
 	tz_answer["success"] = true
 	tz_answer["userlist"] = data_array
@@ -1114,17 +1116,17 @@ function get_sysstatus()
 	for k,v in pairs(array) do
 	   if(v["band"] == "2.4G")
 	     then
-		 data_wifi['status'] = wifi.wifi_get_enable_status(v['wifi_id'])	
-       end		 
+		 data_wifi['status'] = wifi.wifi_get_enable_status(v['wifi_id'])
+       end
 	   if(v["band"] == "5G")
 	     then
-			data_wifi['status5'] = wifi.wifi_get_enable_status(v['wifi_id'])		   
+			data_wifi['status5'] = wifi.wifi_get_enable_status(v['wifi_id'])
 		end
 	end
-	
+
 	data_array["wifi"] = data_wifi
 	local tz_answer = {}
-	tz_answer["cmd"] = 113   
+	tz_answer["cmd"] = 113
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
@@ -1135,7 +1137,7 @@ end
 
 function get_routerinfo()
 	local tz_answer = {}
-	tz_answer["cmd"] = 133   
+	tz_answer["cmd"] = 133
 	local data_array = {}
 	data_array["status"] = modem.modem_get_status() or ''
 	data_array["divice"] = modem.modem_get_info() or ''
@@ -1152,7 +1154,7 @@ function get_routerinfo()
 	data_wifi['status'] = wifi.wifi_get_enable_status(id)
 	data_wifi['ssid'] = wifi.wifi_get_ssid(id)
 	data_array["wifi"] = data_wifi
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
@@ -1163,7 +1165,7 @@ end
 function firewall_restart()
 
 	local tz_answer = {}
-	tz_answer["cmd"] = 20   
+	tz_answer["cmd"] = 20
 	tz_answer["success"] = firewall.firewall_restart()
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
@@ -1171,10 +1173,10 @@ function firewall_restart()
 end
 
 function clear_allrule()
- 
+
 	local tz_answer = {}
-	tz_answer["cmd"] = 39   
-	local datas = tz_req["datas"] 
+	tz_answer["cmd"] = 39
+	local datas = tz_req["datas"]
 
 	if nil ~= datas
 	then
@@ -1191,7 +1193,7 @@ function clear_allrule()
 		elseif "portMapping" == datas["param"]
 		then
 			tz_answer["success"] = firewall.firewall_set_port_redirect_list({})
-		elseif "urlFilter" == datas["param"]	
+		elseif "urlFilter" == datas["param"]
 		then
 			tz_answer["success"] = firewall.firewall_set_url_filter_list({})
 		elseif "ipMacBinding" == datas["param"]
@@ -1216,11 +1218,11 @@ end
 function port_filter()
 
 	local tz_answer = {}
-	tz_answer["cmd"] = 21   
-	
+	tz_answer["cmd"] = 21
+
     local datas = tz_req["datas"]
 	local getfun = tz_req["getfun"]
- 
+
 	if (getfun)
 	then
 	  local data_array = firewall.firewall_get_port_filter_list() or ''
@@ -1228,10 +1230,10 @@ function port_filter()
 	  tz_answer["success"] = true
 	else
 	  tz_answer["success"] = firewall.firewall_set_port_filter_list(datas)
-		
+
 	end
 
-	
+
 
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
@@ -1241,11 +1243,11 @@ end
 function ip_filter()
 
 	local tz_answer = {}
-	tz_answer["cmd"] = 22   
-	
+	tz_answer["cmd"] = 22
+
     local datas = tz_req["datas"]
 	local getfun = tz_req["getfun"]
- 
+
 	if (getfun)
 	then
 	  local data_array = firewall.firewall_get_ip_filter_list() or ''
@@ -1253,10 +1255,10 @@ function ip_filter()
 	  tz_answer["success"] = true
 	else
 	  tz_answer["success"] = firewall.firewall_set_ip_filter_list(datas)
-		
+
 	end
 
-	
+
 
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
@@ -1266,11 +1268,11 @@ end
 function mac_filter()
 
 	local tz_answer = {}
-	tz_answer["cmd"] = 23   
-	
+	tz_answer["cmd"] = 23
+
     local datas = tz_req["datas"]
 	local getfun = tz_req["getfun"]
- 
+
 	if (getfun)
 	then
 	  local data_array = firewall.firewall_get_mac_filter_list() or ''
@@ -1278,10 +1280,10 @@ function mac_filter()
 	  tz_answer["success"] = true
 	else
 	  tz_answer["success"] = firewall.firewall_set_mac_filter_list(datas)
-		
+
 	end
 
-	
+
 
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
@@ -1291,11 +1293,11 @@ end
 function ipmac_binding()
 
 	local tz_answer = {}
-	tz_answer["cmd"] = 24   
-	
+	tz_answer["cmd"] = 24
+
     local datas = tz_req["datas"]
 	local getfun = tz_req["getfun"]
- 
+
 	if (getfun)
 	then
 	  local data_array = firewall.firewall_get_ipmac_bind_filter_list() or ''
@@ -1303,7 +1305,7 @@ function ipmac_binding()
 	  tz_answer["success"] = true
 	else
 	  tz_answer["success"] = firewall.firewall_set_ipmac_bind_filter_list(datas)
-		
+
 	end
 
 	result_json = cjson.encode(tz_answer)
@@ -1314,11 +1316,11 @@ end
 function speed_limit()
 
 	local tz_answer = {}
-	tz_answer["cmd"] = 25   
-	
+	tz_answer["cmd"] = 25
+
     local datas = tz_req["datas"]
 	local getfun = tz_req["getfun"]
- 
+
 	if (getfun)
 	then
 	  local data_array = firewall.firewall_get_speed_filter_list() or ''
@@ -1326,7 +1328,7 @@ function speed_limit()
 	  tz_answer["success"] = true
 	else
 	  tz_answer["success"] = firewall.firewall_set_speed_filter_list(datas)
-		
+
 	end
 
 	result_json = cjson.encode(tz_answer)
@@ -1337,11 +1339,11 @@ end
 function url_filtet()
 
    	local tz_answer = {}
-	tz_answer["cmd"] = 26   
-	
+	tz_answer["cmd"] = 26
+
     local datas = tz_req["datas"]
 	local getfun = tz_req["getfun"]
- 
+
 	if (getfun)
 	then
 	  local data_array = firewall.firewall_get_url_filter_list() or ''
@@ -1349,10 +1351,10 @@ function url_filtet()
 	  tz_answer["success"] = true
 	else
 	  tz_answer["success"] = firewall.firewall_set_url_filter_list(datas)
-		
+
 	end
 
-	
+
 
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
@@ -1360,13 +1362,13 @@ function url_filtet()
 end
 
 function port_redirect()
-   
+
 	local tz_answer = {}
-	tz_answer["cmd"] = 27   
-	
+	tz_answer["cmd"] = 27
+
     local datas = tz_req["datas"]
 	local getfun = tz_req["getfun"]
- 
+
 	if (getfun)
 	then
 	  local data_array = firewall.firewall_get_port_redirect_list() or ''
@@ -1374,7 +1376,7 @@ function port_redirect()
 	  tz_answer["success"] = true
 	else
 	  tz_answer["success"] = firewall.firewall_set_port_redirect_list(datas)
-		
+
 	end
 
 	result_json = cjson.encode(tz_answer)
@@ -1389,7 +1391,7 @@ function default_action()
 
 	local action = tz_req["action"]
 	local getfun = tz_req["getfun"]
-	
+
 	if (getfun)
 	then
 	  local data = firewall.firewall_get_default_action() or ''
@@ -1397,7 +1399,7 @@ function default_action()
 	  tz_answer["success"] = true
 	else
 	  tz_answer["success"] = firewall.firewall_set_default_action(action)
-		
+
 	end
 
 	result_json = cjson.encode(tz_answer)
@@ -1407,13 +1409,13 @@ function default_action()
 end
 
 function acl_filter()
-    
+
 	local tz_answer = {}
-	tz_answer["cmd"] = 29   
-	
+	tz_answer["cmd"] = 29
+
     local datas = tz_req["datas"]
 	local getfun = tz_req["getfun"]
- 
+
 	if (getfun)
 	then
 	  local data_array = firewall.firewall_get_acl_filter_list() or ''
@@ -1421,7 +1423,7 @@ function acl_filter()
 	  tz_answer["success"] = true
 	else
 	  tz_answer["success"] = firewall.firewall_set_acl_filter_list(datas)
-		
+
 	end
 
 	result_json = cjson.encode(tz_answer)
@@ -1431,11 +1433,11 @@ function acl_filter()
 end
 
 function network_tool()
-	
-	local tz_answer = system.system_network_tool(tz_req)
-	
 
-	tz_answer["cmd"] = 145   
+	local tz_answer = system.system_network_tool(tz_req)
+
+
+	tz_answer["cmd"] = 145
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
@@ -1443,7 +1445,7 @@ end
 
 function upload_file()
 	local tz_answer = {}
-	tz_answer["cmd"] = 5 
+	tz_answer["cmd"] = 5
 	local UploadDir = "/tmp/web_upload/"
 
 	local boundary = uti.get_env_boundary(envv)
@@ -1454,7 +1456,7 @@ function upload_file()
 	local a3 = io.read()
 	local a4 = io.read()
 
-	local file_len = content_len - string.len(a2) - string.len(a3) - string.len(boundary) * 2 - 10 - 7 + 1 
+	local file_len = content_len - string.len(a2) - string.len(a3) - string.len(boundary) * 2 - 10 - 7 + 1
 
 	local a5 = io.read(file_len)
 	if nil ~= a5
@@ -1467,17 +1469,17 @@ function upload_file()
 		ff:write(a5)
 		io.close(ff)
 	end
-	
+
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
-	
+
 end
 
 function update_partial()
 	local UploadDir = "/tmp/web_upload/"
 	local tz_answer = {}
-	tz_answer["cmd"] = 106   	
+	tz_answer["cmd"] = 106
     local fileName = tz_req["fileName"]
 	tz_answer["success"] = true
 	tz_answer["data"] = system.update_system(UploadDir..fileName)
@@ -1501,7 +1503,7 @@ end
 function reboot_sys()
 
 	local tz_answer = {}
-	tz_answer["cmd"] = 6  
+	tz_answer["cmd"] = 6
 	local ret = os.execute("reboot ")
 	if(ret == 0)
 	 then
@@ -1516,7 +1518,7 @@ end
 
 function deal_at()
 	local tz_answer = {}
-	tz_answer["cmd"] = 19  
+	tz_answer["cmd"] = 19
 
 	local f = io.popen(string.format("sendat -d/dev/ttyUSB1 -e  %s", tz_req["atCmd"]))
 	tz_answer["data"] = f:read("*a")
@@ -1528,16 +1530,16 @@ end
 
 function get_datetime()
 	local tz_answer = {}
-	tz_answer["cmd"] = 10  
-	
+	tz_answer["cmd"] = 10
+
 	local data_array = {}
 	data_array["status"] = system.system_ntp_get_enable_status()
 	data_array["timezone"] = system.system_ntp_get_timezone() or ''
 	data_array["server"] = system.system_ntp_get_server_address() or ''
-	
+
 	local lbltime = os.date("%Y-%m-%d %H:%M:%S %A")
 	data_array["lbltime"] = lbltime
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
@@ -1548,13 +1550,13 @@ end
 function set_datetime()
     local tz_answer = {}
 	tz_answer["cmd"] = 11
-	local ret 
-	
+	local ret
+
 	local ntpOpen = tonumber(tz_req["ntpOpen"])
 	local timezone = tonumber(tz_req["timezone"])
 	local timeServer = tz_req["timeServer"]
 	local datetime = tz_req["datetime"]
-	
+
 	if(nil ~= ntpOpen)
 	then
 		if(0 == ntpOpen)
@@ -1573,7 +1575,7 @@ function set_datetime()
               end
 	   end
 	end
-	
+
 	if(nil ~= timezone)
 	 then
 		ret = system.system_ntp_set_timezone(timezone)
@@ -1582,19 +1584,19 @@ function set_datetime()
 				tz_answer["setTimezone"] = false
 			end
 	end
-	
+
 	if(nil ~= timeServer)
 	 then
 	 local serverArr = {timeServer,tz_req["timeServer2"],tz_req["timeServer3"],tz_req["timeServer4"]}
-	
+
 	 ret = system.system_ntp_set_server_address(serverArr)
 		 if(not ret)
 			then
 				tz_answer["setTimeserver"] = false
 			end
-	 
+
 	end
-	
+
 	if(nil ~= datetime)
 	 then
 		ret = system.system_ntp_set_date(datetime)
@@ -1603,7 +1605,7 @@ function set_datetime()
 				tz_answer["setDatetime"] = false
 			end
 	end
-	
+
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
@@ -1612,11 +1614,11 @@ end
 
 function get_systime()
 	local tz_answer = {}
-	tz_answer["cmd"] = 1 
-	
+	tz_answer["cmd"] = 1
+
 	--local timezone = system.system_ntp_get_timezone()
 	local systime = os.time()
-	
+
 	tz_answer["success"] = true
 	tz_answer["systime"] = systime
 	result_json = cjson.encode(tz_answer)
@@ -1628,16 +1630,16 @@ function set_lockceel()
     local tz_answer = {}
 	tz_answer["cmd"] = 160
 
-	local ret 
+	local ret
     local earfcn = tonumber(tz_req["txtFreqPoint"])
 	local pci = tonumber(tz_req["txtPhyCellId"])
-	
+
 	ret = modem.modem_set_lte_lock_cell(pci,earfcn)
 		if(not ret)
 			then
 			tz_answer["setLockcell"] = false
 		end
-		
+
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
@@ -1648,8 +1650,8 @@ end
 
 function get_lockceel()
     local tz_answer = {}
-	tz_answer["cmd"] = 162 
-	
+	tz_answer["cmd"] = 162
+
 	local pci,earfcn = modem.modem_get_lte_lock_cell()
 	local modem  = modem.modem_get_status() or ''
 
@@ -1666,9 +1668,9 @@ function get_networkSet()
     local tz_answer = {}
 	tz_answer["cmd"] = 163
 	local data_array = {}
-	
+
 	data_array["act"] = modem.modem_get_network_mode()
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
@@ -1680,7 +1682,7 @@ function set_networkSet()
 	local tz_answer = {}
 	tz_answer["cmd"] = 164
 
-	local ret 
+	local ret
     local act = tonumber(tz_req["networkMode"])
 
 	if(nil ~= act)
@@ -1690,7 +1692,7 @@ function set_networkSet()
 				then
 				tz_answer["setNetwork"] = false
 			end
-	end	
+	end
 
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
@@ -1703,9 +1705,9 @@ function get_plmnSet()
     local tz_answer = {}
 	tz_answer["cmd"] = 169
 	local data_array = {}
-	
+
 	data_array["plmn"] = modem.modem_get_lock_operator() or ''
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
@@ -1717,7 +1719,7 @@ function set_plmnSet()
 	local tz_answer = {}
 	tz_answer["cmd"] = 170
 
-	local ret 
+	local ret
 	local plmn = tz_req["lockPlmn"]
 
 	if(nil ~= plmn)
@@ -1727,8 +1729,8 @@ function set_plmnSet()
 				then
 				tz_answer["setOperator"] = false
 			end
-	end	
-	
+	end
+
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
@@ -1739,9 +1741,9 @@ end
 function get_simstatus()
 	local tz_answer = {}
 	tz_answer["cmd"] = 134
-	
+
 	local sim = sim.sim_get_status() or ''
-	
+
 	tz_answer["success"] = true
 	tz_answer["sim"] = sim
 	result_json = cjson.encode(tz_answer)
@@ -1751,18 +1753,18 @@ function get_simstatus()
 end
 
 
-function get_supprotband()   
+function get_supprotband()
 	local tz_answer = {}
 	tz_answer["cmd"] = 165
-	
+
 	local data_array = {}
 	local gw,lte,tds = modem.modem_get_support_band()
 	local lockband = modem.modem_get_lock_band()
-	
+
     data_array["gw"] = gw
 	data_array["lte"] = lte
 	data_array["tds"] = tds
-	
+
 	tz_answer["success"] = true
 	tz_answer["band"] = data_array
 	tz_answer["lockband"] = lockband
@@ -1777,7 +1779,7 @@ function set_supprotband()
 	local tz_answer = {}
 	tz_answer["cmd"] = 166
 
-	local ret 
+	local ret
 	local band = tz_req["band"]
 
 	if(nil ~= band)
@@ -1787,8 +1789,8 @@ function set_supprotband()
 				then
 				tz_answer["setBand"] = false
 			end
-	end	
-	
+	end
+
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
@@ -1799,7 +1801,7 @@ end
 function get_remoteLogin()
 	local tz_answer = {}
 	tz_answer["cmd"] = 167
-	
+
 	local data_array = {}
 	data_array["enremote"] = firewall.firewall_remote_get_web_login()
 
@@ -1813,7 +1815,7 @@ end
 function get_remotePin()
 	local tz_answer = {}
 	tz_answer["cmd"] = 173
-	
+
 	local data_array = {}
 	data_array["enremote"] = firewall.firewall_remote_get_web_login()
 
@@ -1828,60 +1830,29 @@ function set_pinstatus()
     local tz_answer = {}
 	tz_answer["cmd"] = 135
 
-	local ret 
+	local ret
 	local type = tonumber(tz_req["type"])
 	local passwd = tonumber(tz_req["passwd"])
-	local pingType = tonumber(tz_req["pingType"])
-	local new_pin = tonumber(tz_req["new_pin"])
-	local pukPassword = tonumber(tz_req["pukPassword"])
-	local pukPinPasswordConfirm = tonumber(tz_req["pukPinPasswordConfirm"])
-	tz_answer["success"] = true
-	if(pingType == 1)
-		then
-	      ret = sim.sim_pin_unlock(passwd)
-		    if(not ret)
-		       then
-			   tz_answer["success"] = false
-			   tz_answer["enablePin"] = false
-			end
-	end
+
+	tz_answer["success"] = true;
 	if(1 == type)
 	   then
+	      print(type)
 	      ret = sim.sim_pin_lock_enable(passwd)
 		    if(not ret)
 		       then
-			   tz_answer["success"] = false
+			   tz_answer["success"] = false;
 			   tz_answer["enablePin"] = false
 			end
 	elseif(2 == type)
 	   then
-	      ret = sim.sim_pin_lock_disable(passwd)
+	      ret = sim.sim_pin_unlock(passwd)
 	        if(not ret)
 		      then
-			  tz_answer["success"] = false
+			  tz_answer["success"] = false;
 			  tz_answer["unlockPin"] = false
             end
-     elseif(3 == type)
-	   then
-	      ret = sim.sim_pin_change(passwd,new_pin)
-	      print("ret = ",ret)
-	        if(not ret)
-		      then
-			  tz_answer["success"] = false
-            end
-     
 	end
-	if(pukPassword ~= nil)
-		then
-			ret = sim.sim_puk_unlock(pukPassword,pukPinPasswordConfirm)
-		    if(not ret)
-		       then
-			   tz_answer["success"] = false
-			end
-
-	end		
-
-
 	result_json = cjson.encode(tz_answer)
 	print(result_json);
 end
@@ -1890,26 +1861,26 @@ end
 function get_macAccess()
     local tz_answer = {}
 	tz_answer["cmd"] = 123
-	
+
 	local data_array = {}
 	local array = wifi.wifi_get_dev()
 	if next(array) ~= nil
 	then
-	
+
 		local id
 		for k,v in pairs(array) do
 			if(v["band"] == "2.4G")
 				then
-					id = v['wifi_id']				  
+					id = v['wifi_id']
 			end
 		end
-		
+
 		data_array["policy"], data_array["macs"] = wifi.wifi_get_mac_access_control(id)
-	
+
 	else
 	    data_array = ''
 	end
-	
+
 	tz_answer["success"] = true
 	tz_answer["maclist"] = data_array
 	result_json = cjson.encode(tz_answer)
@@ -1920,21 +1891,21 @@ end
 function set_macAccess()
 	local tz_answer = {}
 	tz_answer["cmd"] = 124
-	
-	local ret 
+
+	local ret
 	local array = wifi.wifi_get_dev()
-	
+
 	local id
 	for k,v in pairs(array) do
 	   if(v["band"] == "2.4G")
 	     then
-		   id = v['wifi_id']				  
+		   id = v['wifi_id']
 		end
 	end
-	
+
 	local policy = tonumber(tz_req["policy"])
 	local maclist = tz_req["maclist"]
-	
+
 	if(nil ~= policy )
 	 then
 		ret = wifi.wifi_set_mac_access_control(id,policy,maclist)
@@ -1942,8 +1913,8 @@ function set_macAccess()
 				then
 				tz_answer["setMacAccess"] = false
 			end
-	end	
-	
+	end
+
 	wifi.wifi_restart(id)
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
@@ -1956,26 +1927,26 @@ function get_wifi5macAccess()
 
     local tz_answer = {}
 	tz_answer["cmd"] = 125
-	
+
 	local data_array = {}
 	local array = wifi.wifi_get_dev()
 	if next(array) ~= nil
 	then
-	
+
 		local id
 		for k,v in pairs(array) do
 			if(v["band"] == "5G")
 				then
-					id = v['wifi_id']				  
+					id = v['wifi_id']
 			end
 		end
-		
+
 		data_array["policy"], data_array["macs"] = wifi.wifi_get_mac_access_control(id)
-	
+
 	else
 	    data_array = ''
 	end
-	
+
 	tz_answer["success"] = true
 	tz_answer["maclist"] = data_array
 	result_json = cjson.encode(tz_answer)
@@ -1987,21 +1958,21 @@ function set_wifi5macAccess()
 
 	local tz_answer = {}
 	tz_answer["cmd"] = 126
-	
-	local ret 
+
+	local ret
 	local array = wifi.wifi_get_dev()
-	
+
 	local id
 	for k,v in pairs(array) do
 	   if(v["band"] == "5G")
 	     then
-		   id = v['wifi_id']				  
+		   id = v['wifi_id']
 		end
 	end
-	
+
 	local policy = tonumber(tz_req["policy"])
 	local maclist = tz_req["maclist"]
-	
+
 	if(nil ~= policy)
 	 then
 		ret = wifi.wifi_set_mac_access_control(id,policy,maclist)
@@ -2009,8 +1980,8 @@ function set_wifi5macAccess()
 				then
 				tz_answer["setMacAccess"] = false
 			end
-	end	
-	
+	end
+
 	wifi.wifi_restart(id)
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
@@ -2022,7 +1993,7 @@ function get_tr069()
 	local tz_answer = {}
 	tz_answer["cmd"] = 175
 	local dataArr = system.system_get_tr069_info()
-	
+
 	tz_answer["success"] = true
 	tz_answer["tr069"] = dataArr
 	result_json = cjson.encode(tz_answer)
@@ -2033,41 +2004,41 @@ end
 function get_wpsSet()
     local tz_answer = {}
 	tz_answer["cmd"] =171
-	
+
 	local array = wifi.wifi_get_dev()
 	local id
 	local data_array = {}
 	for k,v in pairs(array) do
 	   if(v["band"] == "2.4G")
 	     then
-		   id = v['wifi_id']				  
+		   id = v['wifi_id']
 		end
 	end
-	
+
 	data_array["switch"] = wifi.wifi_get_wps_switch(id)
 	data_array["type"] = wifi.wifi_get_wps_type(id) or ''
 	data_array["pin"] = wifi.wifi_get_wps_pin(id) or ''
 
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
-	
+
 end
 
 function set_wpsSet()
 	local tz_answer = {}
 	tz_answer["cmd"] = 172
-	
-	local ret 
+
+	local ret
 	local array = wifi.wifi_get_dev()
-	
+
 	local id
 	for k,v in pairs(array) do
 	   if(v["band"] == "2.4G")
 	     then
-		   id = v['wifi_id']				  
+		   id = v['wifi_id']
 		end
 	end
 
@@ -2082,8 +2053,8 @@ function set_wpsSet()
 				then
 				tz_answer["setwpsMode"] = false
 			end
-	end		
-	
+	end
+
 	if(nil ~= wpsPin)
 	 then
 	    if(0 == wpsPin)
@@ -2101,7 +2072,7 @@ function set_wpsSet()
 				end
 		end
     end
-	
+
 	if(nil ~= wpsEnble)
 		  then
 			ret = wifi.wifi_set_wps_switch(id,wpsEnble)
@@ -2110,7 +2081,7 @@ function set_wpsSet()
 			     tz_answer["disablewps"] = false
 	   		end
 	end
-	
+
 	wifi.wifi_restart(id)
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
@@ -2121,41 +2092,41 @@ end
 function get_wps5Set()
     local tz_answer = {}
 	tz_answer["cmd"] =176
-	
+
 	local array = wifi.wifi_get_dev()
 	local id
 	local data_array = {}
 	for k,v in pairs(array) do
 	   if(v["band"] == "5G")
 	     then
-		   id = v['wifi_id']				  
+		   id = v['wifi_id']
 		end
 	end
-	
+
 	data_array["switch"] = wifi.wifi_get_wps_switch(id)
 	data_array["type"] = wifi.wifi_get_wps_type(id) or ''
 	data_array["pin"] = wifi.wifi_get_wps_pin(id) or ''
 
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
-	
+
 end
 
 function set_wps5Set()
 	local tz_answer = {}
 	tz_answer["cmd"] = 177
-	
-	local ret 
+
+	local ret
 	local array = wifi.wifi_get_dev()
-	
+
 	local id
 	for k,v in pairs(array) do
 	   if(v["band"] == "5G")
 	     then
-		   id = v['wifi_id']				  
+		   id = v['wifi_id']
 		end
 	end
 
@@ -2170,8 +2141,8 @@ function set_wps5Set()
 				then
 				tz_answer["setwpsMode"] = false
 			end
-	end		
-	
+	end
+
 	if(nil ~= wpsPin)
 	 then
 	    if(0 == wpsPin)
@@ -2189,7 +2160,7 @@ function set_wps5Set()
 				end
 		end
     end
-	
+
 	if(nil ~= wpsEnble)
 		  then
 			ret = wifi.wifi_set_wps_switch(id,wpsEnble)
@@ -2198,7 +2169,7 @@ function set_wps5Set()
 			     tz_answer["disablewps"] = false
 	   		end
 	end
-	
+
 	wifi.wifi_restart(id)
 	tz_answer["success"] = true
 	result_json = cjson.encode(tz_answer)
@@ -2216,7 +2187,7 @@ function get_socket_at_switch()
 end
 
 function set_socket_at_app()
-	
+
 	local appEnable = tz_req["appEnable"]
 
 	if( nil ~= appEnable )
@@ -2236,14 +2207,14 @@ function set_socket_at_app()
 end
 
 function set_dhcp_ip_mac()
-	local ret 
+	local ret
 	local tz_answer = {}
 	local dataList = tz_req["dataList"]
 
 	if(nil ~= dataList)
 	then
 			ret = dhcp.dhcp_set_reserve_ip(dataList)
-			
+
 				if(not ret)
 			  	then
 			  			tz_answer["success"] = false
@@ -2255,16 +2226,16 @@ function set_dhcp_ip_mac()
 	print(dataList)
 	result_json = cjson.encode(tz_answer)
 
-	
+
 	print(result_json)
 end
 
 function route_list_get()
-	
+
 	local tz_answer = {}
 	tz_answer["cmd"] = 211
 	local data_array = {}
-	
+
 	data_array["routeList"] = firewall.firewall_get_static_route()
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
@@ -2274,8 +2245,8 @@ function route_list_get()
 end
 
 function route_list_set()
-	
-	local ret 
+
+	local ret
 	local tz_answer = {}
 	local routeList = tz_req["routeList"]
 	firewall.firewall_set_static_route(routeList)
@@ -2289,12 +2260,12 @@ function route_list_set()
 end
 
 function get_apn_data()
-	
+
 	local tz_answer = {}
 	tz_answer["cmd"] = 213
 	local data_array = {}
-	
-	
+
+
 	tz_answer["success"] = true
 	tz_answer["data"] = modem.modem_get_mutilapn_config()
 	result_json = cjson.encode(tz_answer)
@@ -2304,8 +2275,8 @@ end
 
 
 function set_apn_data()
-	
-	local ret 
+
+	local ret
 	local tz_answer = {}
 	local apnList = tz_req["apnList"]
 	if(nil ~= apnList)
@@ -2324,8 +2295,8 @@ function set_apn_data()
 end
 
 function set_ping_list()
-	
-	local ret 
+
+	local ret
 	local tz_answer = {}
 	local dataList = tz_req["dataList"]
 	local pingFlag = tonumber(tz_req["pingFlag"])
@@ -2355,14 +2326,14 @@ function set_ping_list()
 end
 
 function get_ping_list()
-	
+
 	local tz_answer = {}
 	tz_answer["cmd"] = 216
 	local data_array = {}
 	data_array["pingList"] = firewall.firewall_remote_get_ping_list()
 	data_array["dataFlag"] = firewall.firewall_remote_get_ping()
 
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
@@ -2373,7 +2344,7 @@ end
 
 
 function get_web_list()
-	
+
 	local tz_answer = {}
 	tz_answer["cmd"] = 217
 	local data_array = {}
@@ -2381,7 +2352,7 @@ function get_web_list()
 	data_array["webList"] = firewall.firewall_remote_get_web_login_list()
 	data_array["webFlag"] = firewall.firewall_remote_get_web_login()
 
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
@@ -2391,7 +2362,7 @@ end
 
 
 function set_web_list()
-	local ret 
+	local ret
 	local tz_answer = {}
 	local dataList1 = tz_req["dataList1"]
 	local dataList2 = tz_req["dataList2"]
@@ -2430,7 +2401,7 @@ function set_web_list()
 end
 
 function set_tr069_config()
-	local ret 
+	local ret
 	local tz_answer = {}
 	local enabled = tz_req["enabled"]
 	local url = tz_req["url"]
@@ -2464,7 +2435,7 @@ function set_tr069_config()
 		then
 			tz_answer["success"] = false
 	end
-	
+
 	if(nil ~= acsAuthEnabled)
 		then
 		ret = system.system_set_tr069_tr069_ACS_auth(acsAuthEnabled)
@@ -2518,7 +2489,7 @@ function get_web_hide_config()
 	local tz_answer = {}
 	tz_answer["cmd"] = 220
 	local data_array = {}
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = system.system_get_web_info()
 	result_json = cjson.encode(tz_answer)
@@ -2532,7 +2503,7 @@ function get_auto_dial()
 	local tz_answer = {}
 	tz_answer["cmd"] = 221
 	local data_array = {}
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = modem.modem_get_auto_dial()
 	result_json = cjson.encode(tz_answer)
@@ -2542,7 +2513,7 @@ function get_auto_dial()
 end
 
 function set_open_auto_dial()
-	local ret 
+	local ret
 	local tz_answer = {}
 	local enable = tonumber(tz_req["enable"])
 	if(nil ~= enable)
@@ -2562,7 +2533,7 @@ function set_open_auto_dial()
 end
 
 function set_close_auto_dial()
-	local ret 
+	local ret
 	local tz_answer = {}
 	local enable = tonumber(tz_req["enable"])
 	if(nil ~= enable)
@@ -2585,7 +2556,7 @@ function restore_factory()
 	local tz_answer = {}
 	tz_answer["cmd"] = 224
 	local data_array = {}
-	
+
 	tz_answer["success"] = true
 	os.execute("/etc/tozed/tz_restore_factory")
 	result_json = cjson.encode(tz_answer)
@@ -2597,7 +2568,7 @@ function get_dmz_data()
 	local tz_answer = {}
 	tz_answer["cmd"] = 226
 	local data_array = {}
-	
+
 	tz_answer["success"] = true
 	tz_answer["enable"],tz_answer["ip"] = firewall.firewall_get_dmz()
 	result_json = cjson.encode(tz_answer)
@@ -2606,7 +2577,7 @@ function get_dmz_data()
 
 end
 function set_dmz_data()
-	local ret 
+	local ret
 	local tz_answer = {}
 	local enable = tz_req["enable"]
 	local ip = tz_req["ip"]
@@ -2632,7 +2603,7 @@ function get_arp_data()
 	local tz_answer = {}
 	tz_answer["cmd"] = 228
 	local data_array = {}
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = firewall.firewall_get_arp_bind_list()
 	result_json = cjson.encode(tz_answer)
@@ -2642,8 +2613,8 @@ function get_arp_data()
 end
 
 function set_arp_data()
-	
-	local ret 
+
+	local ret
 	local tz_answer = {}
 	local routeList = tz_req["routeList"]
 	if(nil ~= routeList)
@@ -2664,7 +2635,7 @@ function set_arp_data()
 end
 
 function system_export_config()
-	
+
 	local tz_answer = {}
 	tz_answer["cmd"] = 230
 	local data_array = {}
@@ -2677,7 +2648,7 @@ function system_export_config()
 end
 
 function system_import_config()
-	local ret 
+	local ret
 	local tz_answer = {}
 	tz_answer["cmd"] = 231
 	local configFile = tz_req["configFile"]
@@ -2689,9 +2660,9 @@ function system_import_config()
 			tz_answer["success"] = false
 		else
 			tz_answer["success"] = true
-		end 
+		end
 	end
-	
+
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
 
@@ -2701,7 +2672,7 @@ function get_ddns_data()
 	local tz_answer = {}
 	tz_answer["cmd"] = 232
 	local data_array = {}
-	
+
 	tz_answer["success"] = true
 	tz_answer["data"] = system.system_ddns_get_config()
 	result_json = cjson.encode(tz_answer)
@@ -2711,7 +2682,7 @@ function get_ddns_data()
 end
 
 function set_ddns_data()
-	local ret 
+	local ret
 	local tz_answer = {}
 	local enabled = tonumber(tz_req["enable"])
 	local username = tz_req["username"]
@@ -2731,7 +2702,7 @@ function set_ddns_data()
 	end
 
 	tz_answer["success"] = true
-	
+
 	tz_answer["data"] = data_array
 	result_json = cjson.encode(tz_answer)
 	print(result_json)
@@ -2743,7 +2714,7 @@ function firewall_upnp_get_data()
 	tz_answer["cmd"] = 236
 	local data_array = {}
 	local data_data = {}
-	
+
 	tz_answer["success"] = true
 	data_data["status"] = firewall.firewall_upnp_get_enable_status()
 	data_data["upnuList"] = firewall.firewall_upnp_get_port_mapping_list()
@@ -2754,7 +2725,7 @@ function firewall_upnp_get_data()
 end
 
 function set_firewall_upnp_enable()
-	local ret 
+	local ret
 	local tz_answer = {}
 	ret =firewall.firewall_upnp_enable()
 	if(not ret)
@@ -2769,7 +2740,7 @@ function set_firewall_upnp_enable()
 
 end
 function set_firewall_upnp_disable()
-	local ret 
+	local ret
 	local tz_answer = {}
 	ret =firewall.firewall_upnp_disable()
 	if(not ret)
@@ -2877,7 +2848,7 @@ local switch = {
 	 [235] = set_firewall_upnp_disable,
 	 [236] = firewall_upnp_get_data,
  }
- 
+
 cmdid = uti.get_env_cmdId(envv)
 if cmdid ~= nil
 then
@@ -2901,7 +2872,7 @@ else
 				result_json = cjson.encode(tz_answer);
 				print(result_json);
 				return
-		  
+
 		  else
 
 		      local f = switch[tz_req["cmd"]]
@@ -2909,14 +2880,14 @@ else
 				f()
 			   end
 			  if(tz_req["cmd"] ~= 99) then
-				local logintime = os.time()    
+				local logintime = os.time()
 				local file = io.open(fileName,"w")
 				io.input(file)
 				file:write("updateTime:"..logintime)
 				io.close(file)
 			  end
 	      end
-		  
+
 	   else
 
 	   local f = switch[tz_req["cmd"]]
@@ -2924,7 +2895,7 @@ else
 		  f()
 	    end
 	end
-	
+
 end
 
 
