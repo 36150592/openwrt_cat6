@@ -806,6 +806,7 @@ DOC.title.addPortFiltering = "端口过滤";
 DOC.title.addPortMapping = "端口映射";
 DOC.title.addSpeedLimit = "速度限制";
 DOC.title.addUrlFiltering = "URL过滤";
+DOC.title.device = "设备和版本信息";
 DOC.title.deviceInfo = "设备信息";
 DOC.title.fourGInfo = "4G信息";
 DOC.title.internetChecking = "网络检测";
