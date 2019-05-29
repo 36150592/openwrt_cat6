@@ -17,7 +17,7 @@
     <script type="text/javascript" src="js/underscore-min.js"></script>
     <script type="text/javascript" src="js/language_list.js?t=000000"></script>
     <script type="text/javascript" src="js/language.js?t=000000"></script>
-    <script type="text/javascript" src="js/language/cn.js?t=000000"></script>
+    <script type="text/javascript" src="js/language/en.js?t=000000"></script>
     <script type="text/javascript" src="js/helper.js?t=000000"></script>
     <script type="text/javascript" src="js/main.js?t=000000"></script>
 
@@ -144,7 +144,7 @@
                 success: function (data) {
                     Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue('6') || "3E");
                     Page.language = data.data.web_language.toUpperCase();
-                    //$("script[src^='js/language/']").remove();
+                    $("script[src^='js/language/']").remove();
                     $("script[src^='js/main']").remove();
                     $.getScript('js/language/' + data.data.web_language.toLowerCase() + '.js', function () {
                         $.getScript('js/main.js', init);
@@ -170,7 +170,7 @@
 
                         values.push(datas.softVersion.software_version || loading);
                         values.push(datas.softVersion.config_version || loading);
-                        values.push(datas.modem.imei || loading);
+                        values.push(datas.factory.imei || loading);
 
                         var device_info_html = Page.createTable(DOC.title.deviceInfo, names, values, names.length, 1).replace("<td>", "<td style=\"width=100px\">");
                         $('#device_info').html(device_info_html);
@@ -219,7 +219,7 @@
                             names.push(DOC.net.dns);
 
                             values.push(DOC.net.ok);
-                            values.push(DOC.net.wirelessMode);
+                            values.push(DOC.net.foruG);
                             values.push(data_wan.ipaddr || loading);
                             values.push(data_wan.netmask || loading);
                             values.push(data_wan.gateway || loading);
