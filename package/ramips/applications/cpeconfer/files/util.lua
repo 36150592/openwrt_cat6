@@ -31,6 +31,10 @@ function module.debug(...)
 	os.execute(string.format("logger %s", log_str))]]--
 end
 
+function module.read_stdin(content_length)
+	return tzlib.read_stdin(content_length)
+end
+
 function module.split(szFullString, szSeparator)  
 	local nFindStartIndex = 1  
 	local nSplitIndex = 1  

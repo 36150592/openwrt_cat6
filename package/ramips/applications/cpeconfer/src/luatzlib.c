@@ -11,7 +11,7 @@
 #include<linux/un.h>
 #include <errno.h>
 #include <unistd.h>
-
+#include <stdlib.h>
 //待注册的C函数，该函数的声明形式在上面的例子中已经给出。
 //需要说明的是，该函数必须以C的形式被导出，因此extern "C"是必须的。
 //函数代码和上例相同，这里不再赘述。
@@ -25,6 +25,31 @@ int remove_stderr(lua_State* L)
     freopen("/dev/null", "w", stderr);
     lua_pushnumber(L,0);
     return 1;
+}
+
+int read_stdin(lua_State* L)
+{
+
+    char *request = NULL;
+	int content_length = luaL_checkint(L,1);
+	if(content_length<= 0)
+		return 0;
+
+
+    if (!(request = (char *) malloc(content_length + 1))) {
+        return 0;
+    }
+
+    if (!fread(request, content_length, 1, stdin)) {
+        free(request);
+        return 0;
+    }
+
+    request[content_length] = '\0';
+    lua_pushstring(L, request);
+    free(request);
+	return 1;
+
 }
 
 int unix_connect(lua_State* L)
@@ -97,6 +122,7 @@ static luaL_Reg mylibs[] = {
 	{"unix_read",unix_read},
 	{"unix_write",unix_write},
     {"unix_close",unix_close},
+    {"read_stdin",read_stdin},
     {NULL, NULL} 
 }; 
 

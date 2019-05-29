@@ -2431,7 +2431,9 @@ if cmdid ~= nil then
     uti.web_log(cmdid)
     if "5" == cmdid then upload_file() end
 else
-    data1 = io.read()
+  --data1=io.read();
+	local content_len = uti.get_env_content_len(envv)
+	data1 = uti.read_stdin(content_len)
     tz_req = cjson.decode(data1)
     local cmd = tz_req["cmd"]
     if (cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 97 and cmd ~= 113 and
