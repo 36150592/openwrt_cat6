@@ -138,6 +138,7 @@ var RequestCmd = {
     FW_UPNP_ENABLE:234,
     FW_UPNP_DISABLE:235,
     FW_UPNP:236,
+    GET_INFO: 237
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
@@ -188,6 +189,7 @@ var Url = {
     LOGIN: '/login.html',
     INDEX: '/index.html',
     PASSWD: '/html/changePasswd.html',
+    INFO: '/info.html',
 
     DEFAULT_CGI: '/cgi-bin/lua.cgi'
     //DEFAULT_CGI: 'xml_action.cgi?method=set&module=duster&file=http'

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <title>Info</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css?t=000000">
+
+    <script type="text/javascript" src="js/json2.js"></script>
+    <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.form.js"></script>
+    <script type="text/javascript" src="js/jquery.validate.js"></script>
+    <script type="text/javascript" src="js/underscore-min.js"></script>
+    <script type="text/javascript" src="js/language_list.js?t=000000"></script>
+    <script type="text/javascript" src="js/language.js?t=000000"></script>
+    <script type="text/javascript" src="js/language/cn.js?t=000000"></script>
+    <script type="text/javascript" src="js/helper.js?t=000000"></script>
+    <script type="text/javascript" src="js/main.js?t=000000"></script>
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var names = [],
+                values = [],
+                loading = "-"
+
+            function get_info() {
+                Page.postJSON({
+                    json: { cmd: RequestCmd.GET_INFO },
+                    success: function (data) {
+                        var datas = data.data,
+                            sn,
+                            runtime = ConvertUtil.timeStamp(datas.runtime || 0)
+
+                        names.push(DOC.info.modemIMEI)
+                        names.push(DOC.info.factoryIMEI)
+                        names.push(DOC.info.lanMac)
+                        names.push(DOC.info.wanMac)
+                        names.push(DOC.info.twoPointFourGMac)
+                        names.push(DOC.info.fivePointEightGMac)
+                        names.push(DOC.info.realSoftwareVersion)
+                        names.push(DOC.info.configSoftware)
+                        names.push(DOC.info.configurationVersion)
+                        names.push(DOC.info.sn)
+                        names.push(DOC.info.buildTime)
+                        names.push(DOC.info.type)
+                        names.push(DOC.info.twoPointFourGMainSSID)
+                        names.push(DOC.info.fivePointEightGMainSSID)
+                        names.push(DOC.info.runningTime)
+                        names.push(DOC.info.modemType)
+                        names.push(DOC.info.modemSoftwareVersion)
+                        names.push(DOC.info.IMSI)
+                        names.push(DOC.info.ICCID)
+
+                        values.push(datas.modem_imei || loading)
+                        values.push(datas.factory_imei || loading)
+                        values.push(datas.lan_mac || loading)
+                        values.push(datas.wan_mac || loading)
+                        values.push(datas.twopointfour_g_mac || loading)
+                        values.push(datas.fivepointeight_g_mac || loading)
+                        values.push(datas.real_software_version || loading)
+                        values.push(datas.config_software || loading)
+                        values.push(datas.config_version || loading);
+                        if (datas.device_sn != undefined) {
+                            sn = datas.device_sn
+                        }
+                        else if (datas.type && datas.factory_imei) {
+                            sn = datas.type + datas.factory_imei
+                        }
+                        values.push(sn || loading);
+                        values.push(datas.build || loading);
+                        values.push(datas.type || loading)
+                        values.push(datas.twopointfour_g_ssid || loading)
+                        values.push(datas.fivepointeight_g_ssid || loading)
+                        values.push(runtime || loading);
+                        values.push(datas.modem_type)
+                        values.push(datas.modem_softver || loading);
+                        values.push(datas.sim_imsi || loading);
+                        values.push(datas.sim_iccid || loading);
+
+                        Page.isNULLToSpace = true;
+
+                        var info_html = Page.createTable2('', names, values, names.length, 2).replace("<th>", "<th style=\"width:200px\">");
+                        $('#info').html(info_html);
+                        Page.setStripeTable();
+
+                        Page.isNULLToSpace = false;
+
+                    }
+                });
+            }
+
+            get_info()
+
+        })
+
+    </script>
+</head>
+
+<body id="info_page" style="overflow: auto">
+    <div id="info" class="info"></div>
+</body>
+
+</html>

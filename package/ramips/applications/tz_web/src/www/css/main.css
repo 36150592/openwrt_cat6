@@ -1830,3 +1830,7 @@ ul.tabs a.current {
 	border-top: 1px solid #0085D0;
 	background-color: #ECECEC;
 }
+
+#info_page .info table th,#info_page .info table td {
+	font-size: 20px !important;
+}
