@@ -161,6 +161,9 @@ networkconfightml.ipMacEdit = {};
 networkconfightml.prompt = {};
 networkconfightml.tab_menu = {};
 
+var networkconfig2html = {}; 
+networkconfig2html.helper = {};
+
 var networktoolhtml = {};
 networktoolhtml.editClose = {};
 networktoolhtml.form1 = {};

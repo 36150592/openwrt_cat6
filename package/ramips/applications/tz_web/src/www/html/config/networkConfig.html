@@ -2,7 +2,7 @@
 
 <script type="text/javascript">
 
-    $(document).ready(function(){
+    $(document).ready(function () {
         TempUtil.render('tabsitems-template', 'tabsitems', networkconfightml.tab_menu);
         TempUtil.render('networkform1-template0', 'form0', networkconfightml.form1);
         TempUtil.render('networkform1-template1', 'form1', networkconfightml.form1);
@@ -11,7 +11,7 @@
         Page.render('#fwHead', '#fwHead_template');
         Page.render('#fwBody', '#fwBody_template');
         var showText = networkconfightml.prompt;
-        var flag=0;
+        var flag = 0;
         var $lis = $("ul.tabs a");
         var $boxes = $("div.tab_boxes > div");
         var $btnSaveLan = $('input[id^=btnSaveLan]');
@@ -20,10 +20,10 @@
         var reserveIpMacs0 = [];
         var reserveIpMacs1 = [];
         var reserveIpMacs2 = [];
-        var editIndex=0;
-        var $box = $('#edit_box'),$mask = $('#mask'),$btnSaveMac = $('#btnSaveMac'),$btnEditMac = $('#btnEditMac'),$btnSaveControl = $('.btnSaveControl'),$btnAdd0 = $('#btnAdd0'),$btnAdd1 = $('#btnAdd1'),$btnAdd2 = $('#btnAdd2'),$btnClose = $('#btnClose');
+        var editIndex = 0;
+        var $box = $('#edit_box'), $mask = $('#mask'), $btnSaveMac = $('#btnSaveMac'), $btnEditMac = $('#btnEditMac'), $btnSaveControl = $('.btnSaveControl'), $btnAdd0 = $('#btnAdd0'), $btnAdd1 = $('#btnAdd1'), $btnAdd2 = $('#btnAdd2'), $btnClose = $('#btnClose');
 
-        if(!Page.getShowHideByBit(2)){
+        if (!Page.getShowHideByBit(2)) {
             $(".isShowDhcp").hide();
         }
         function createIpMacTable() {
@@ -32,7 +32,7 @@
             var sb = new StringBuilder();
 
             sb.append(String.format('<table class="list" cellspacing="0"  style="margin-top: 0px"><tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3}</th><th>{4}</th></tr>',
-                DOC.table.rowNo,DOC.device.name, DOC.net.mac, DOC.net.ip, DOC.net.connectTime));
+                DOC.table.rowNo, DOC.device.name, DOC.net.mac, DOC.net.ip, DOC.net.connectionTime));
             for (var i = 0; i < length; i++) {
                 var item = ipMacs[i];
                 sb.append(String.format('<tr><td>{0}</td>', i + 1));
@@ -48,16 +48,16 @@
 
 
         }
-		
+
         function createIpListTable0(reserveList) {
             var sb = new StringBuilder();
-            sb.append(String.format('<span style="font-size:20px;">{0}</span>',networkconfightml.form1.ipAddres));
+            sb.append(String.format('<span style="font-size:20px;">{0}</span>', networkconfightml.form1.ipAddres));
             sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
                 networkconfightml.form1.edit, networkconfightml.form1.del));
 
-            for(var i = 0; i < reserveList.length; i++) {
-                if(reserveList[i] !== ""){
-                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit0">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
+            for (var i = 0; i < reserveList.length; i++) {
+                if (reserveList[i] !== "") {
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit0">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>', reserveList[i].ip, reserveList[i].mac, networkconfightml.form1.edit, networkconfightml.form1.del));
                 }
             }
             sb.append('</table>');
@@ -66,12 +66,12 @@
 
         function createIpListTable1(reserveList) {
             var sb = new StringBuilder();
-            sb.append(String.format('<span style="font-size:20px;">{0}</span>',networkconfightml.form1.ipAddres));
+            sb.append(String.format('<span style="font-size:20px;">{0}</span>', networkconfightml.form1.ipAddres));
             sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
                 networkconfightml.form1.edit, networkconfightml.form1.del));
-            for(var i = 0; i < reserveList.length; i++) {
-                if(reserveList[i] !== ""){
-                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit1">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
+            for (var i = 0; i < reserveList.length; i++) {
+                if (reserveList[i] !== "") {
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit1">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>', reserveList[i].ip, reserveList[i].mac, networkconfightml.form1.edit, networkconfightml.form1.del));
                 }
             }
 
@@ -79,12 +79,12 @@
             $('#reserveLists1').html(sb.toString());
         }
 
-         $(document).on('click','a[class="macDel"]',function(){
+        $(document).on('click', 'a[class="macDel"]', function () {
             $(this).parent().parent().remove();
         });
 
-        $(document).on('click','a[class="macEdit0"]',function(){
-            flag=1;
+        $(document).on('click', 'a[class="macEdit0"]', function () {
+            flag = 1;
             $box.show();
             $mask.show();
             $btnSaveMac.hide();
@@ -96,8 +96,8 @@
             editIndex = $('a[class="macEdit0"]').index(this);
         });
 
-        $(document).on('click','a[class="macEdit1"]',function(){
-            flag=2;
+        $(document).on('click', 'a[class="macEdit1"]', function () {
+            flag = 2;
             $box.show();
             $mask.show();
             $btnSaveMac.hide();
@@ -109,8 +109,8 @@
             editIndex = $('a[class="macEdit1"]').index(this);
         });
 
-        $(document).on('click','a[class="macEdit2"]',function(){
-            flag=3;
+        $(document).on('click', 'a[class="macEdit2"]', function () {
+            flag = 3;
             $box.show();
             $mask.show();
             $btnSaveMac.hide();
@@ -122,8 +122,8 @@
             editIndex = $('a[class="macEdit2"]').index(this);
         });
 
-          $btnAdd0.click(function () {
-            flag=1;
+        $btnAdd0.click(function () {
+            flag = 1;
             $box.show();
             $mask.show();
             $btnSaveMac.show();
@@ -131,8 +131,8 @@
             $('#edit_title').text(DOC.table.add + DOC.net.mac);
             SysUtil.setBoxStyle1($box);
         });
-           $btnAdd1.click(function () {
-            flag=2;
+        $btnAdd1.click(function () {
+            flag = 2;
             $box.show();
             $mask.show();
             $btnSaveMac.show();
@@ -140,8 +140,8 @@
             $('#edit_title').text(DOC.table.add + DOC.net.mac);
             SysUtil.setBoxStyle1($box);
         });
-            $btnAdd2.click(function () {
-            flag=3;
+        $btnAdd2.click(function () {
+            flag = 3;
             $box.show();
             $mask.show();
             $btnSaveMac.show();
@@ -150,7 +150,7 @@
             SysUtil.setBoxStyle1($box);
         });
 
-        $btnClose.click(function() {
+        $btnClose.click(function () {
             $box.hide();
             $mask.hide();
             $('#macList').val('');
@@ -159,12 +159,12 @@
 
         $btnSaveMac.click(function () {
             var mac = $('#macList').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
-            var ipaddr=$('#macListIp').val();
+            var ipaddr = $('#macListIp').val();
             if (ipaddr == "") {
                 AlertUtil.alertMsg(CHECK.required.ip);
                 return false;
             }
-            
+
             if (!CheckUtil.checkIp(ipaddr)) {
                 AlertUtil.alertMsg(CHECK.format.ip);
                 return false;
@@ -183,48 +183,48 @@
             var dhcp1_ip_pre = dhcp1_ip.substring(0, dhcp1_ip.lastIndexOf('.'));
             var dhcp2_ip = $("#lanIp2").val();
             var dhcp2_ip_pre = dhcp2_ip.substring(0, dhcp2_ip.lastIndexOf('.'));
-            var ipaddrList = ipaddr.substring(0,ipaddr.lastIndexOf('.'));
-            if(flag==1){
-                if(dhcp0_ip_pre != ipaddrList){
+            var ipaddrList = ipaddr.substring(0, ipaddr.lastIndexOf('.'));
+            if (flag == 1) {
+                if (dhcp0_ip_pre != ipaddrList) {
                     AlertUtil.alertMsg(showText.ipCheckMsg2);
                     return false;
                 }
-                var sb = String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit0">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',ipaddr,mac, showText.edit,showText.del);
-                 $("'"+sb+"'").appendTo($('#reserveLists0 table'));
-             }else if(flag==2){
-                if(dhcp1_ip_pre != ipaddrList){
+                var sb = String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit0">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>', ipaddr, mac, showText.edit, showText.del);
+                $("'" + sb + "'").appendTo($('#reserveLists0 table'));
+            } else if (flag == 2) {
+                if (dhcp1_ip_pre != ipaddrList) {
                     AlertUtil.alertMsg(showText.ipCheckMsg2);
                     return false;
                 }
-                 var sb = String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit1">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',ipaddr,mac, showText.edit,showText.del);
-                 $("'"+sb+"'").appendTo($('#reserveLists1 table'));
-             }else if(flag==3){
-                if(dhcp2_ip_pre != ipaddrList){
+                var sb = String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit1">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>', ipaddr, mac, showText.edit, showText.del);
+                $("'" + sb + "'").appendTo($('#reserveLists1 table'));
+            } else if (flag == 3) {
+                if (dhcp2_ip_pre != ipaddrList) {
                     AlertUtil.alertMsg(showText.ipCheckMsg2);
                     return false;
                 }
-                 var sb = String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit2">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',ipaddr,mac, showText.edit,showText.del);
-                 $("'"+sb+"'").appendTo($('#reserveLists2 table'));
-             }
-           
+                var sb = String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit2">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>', ipaddr, mac, showText.edit, showText.del);
+                $("'" + sb + "'").appendTo($('#reserveLists2 table'));
+            }
+
 
             $box.hide();
             $mask.hide();
             $('#macList').val('');
         });
 
-         $btnEditMac.click(function () {
-           
-            
+        $btnEditMac.click(function () {
+
+
             var mac = $('#macList').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
-            var ipaddr=$('#macListIp').val();
+            var ipaddr = $('#macListIp').val();
             var dhcp0_ip = $("#lanIp0").val();
             var dhcp0_ip_pre = dhcp0_ip.substring(0, dhcp0_ip.lastIndexOf('.'));
             var dhcp1_ip = $("#lanIp1").val();
             var dhcp1_ip_pre = dhcp1_ip.substring(0, dhcp1_ip.lastIndexOf('.'));
             var dhcp2_ip = $("#lanIp2").val();
             var dhcp2_ip_pre = dhcp2_ip.substring(0, dhcp2_ip.lastIndexOf('.'));
-            var ipaddrList = ipaddr.substring(0,ipaddr.lastIndexOf('.'));
+            var ipaddrList = ipaddr.substring(0, ipaddr.lastIndexOf('.'));
             if (mac == "") {
                 AlertUtil.alertMsg(CHECK.required.mac);
                 return false;
@@ -234,27 +234,27 @@
                 AlertUtil.alertMsg(CHECK.format.mac);
                 return false;
             }
-            if(flag==1){
-                if(dhcp0_ip_pre != ipaddrList){
+            if (flag == 1) {
+                if (dhcp0_ip_pre != ipaddrList) {
                     AlertUtil.alertMsg(showText.ipCheckMsg2);
                     return false;
                 }
-                $('#reserveLists0 table tr').eq(editIndex+1).children('td').eq(1).text(mac);
-                $('#reserveLists0 table tr').eq(editIndex+1).children('td').eq(0).text(ipaddr);
-            }else if(flag==2){
-                if(dhcp1_ip_pre != ipaddrList){
+                $('#reserveLists0 table tr').eq(editIndex + 1).children('td').eq(1).text(mac);
+                $('#reserveLists0 table tr').eq(editIndex + 1).children('td').eq(0).text(ipaddr);
+            } else if (flag == 2) {
+                if (dhcp1_ip_pre != ipaddrList) {
                     AlertUtil.alertMsg(showText.ipCheckMsg2);
                     return false;
                 }
-                $('#reserveLists1 table tr').eq(editIndex+1).children('td').eq(1).text(mac);
-            }else if(flag==3){
-                if(dhcp2_ip_pre != ipaddrList){
+                $('#reserveLists1 table tr').eq(editIndex + 1).children('td').eq(1).text(mac);
+            } else if (flag == 3) {
+                if (dhcp2_ip_pre != ipaddrList) {
                     AlertUtil.alertMsg(showText.ipCheckMsg2);
                     return false;
                 }
-                $('#reserveLists2 table tr').eq(editIndex+1).children('td').eq(1).text(mac);
-            }   
-            
+                $('#reserveLists2 table tr').eq(editIndex + 1).children('td').eq(1).text(mac);
+            }
+
             $box.hide();
             $mask.hide();
             $("#macListIp").val('');
@@ -264,62 +264,57 @@
 
         function createIpListTable2(reserveList) {
             var sb = new StringBuilder();
-            sb.append(String.format('<span style="font-size:20px;">{0}</span>',networkconfightml.form1.ipAddres));
+            sb.append(String.format('<span style="font-size:20px;">{0}</span>', networkconfightml.form1.ipAddres));
             sb.append(String.format('<table class="list" cellspacing="0"><tr><th>IP</th><th>MAC</th><th>{0}</th><th>{1}</th></tr>',
                 networkconfightml.form1.edit, networkconfightml.form1.del));
 
-            for(var i = 0; i < reserveList.length; i++) {
-                if(reserveList[i] !== ""){
-                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit2">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>',reserveList[i].ip, reserveList[i].mac,networkconfightml.form1.edit, networkconfightml.form1.del));
+            for (var i = 0; i < reserveList.length; i++) {
+                if (reserveList[i] !== "") {
+                    sb.append(String.format('<tr><td>{0}</td><td>{1}</td><td><a href="javascript:;" class="macEdit2">{2}</a></td><td><a href="javascript:;" class="macDel">{3}</a></td></tr>', reserveList[i].ip, reserveList[i].mac, networkconfightml.form1.edit, networkconfightml.form1.del));
                 }
             }
-            
+
             sb.append('</table>');
 
             $('#reserveLists2').html(sb.toString());
         }
 
-        function create_reserve_ip_mac_list_dhcp(reserveList, dhcp_ip_pre, reserveIpMacsList){
-            for(var i = 0; i < reserveList.length; i++) {
-                if(reserveList[i] !== "")
-                {
-                    if( reserveList[i].ip.substring(0, reserveList[i].ip.lastIndexOf('.')) == dhcp_ip_pre )
-                    {
+        function create_reserve_ip_mac_list_dhcp(reserveList, dhcp_ip_pre, reserveIpMacsList) {
+            for (var i = 0; i < reserveList.length; i++) {
+                if (reserveList[i] !== "") {
+                    if (reserveList[i].ip.substring(0, reserveList[i].ip.lastIndexOf('.')) == dhcp_ip_pre) {
                         reserveIpMacsList.push(reserveList[i]);
                     }
                 }
             }
         }
-		
 
-         $btnSaveControl.click(function () {
-            var  $tr0 = $('#reserveLists0 table tr');
-            var  $tr1 = $('#reserveLists1 table tr');
-            var  $tr2 = $('#reserveLists2 table tr');
-            var obj={},objArr={},objArr2={};
-            var macArr=[];
-            if($tr0.length > 1 ){
-                for (var i=1;i < $tr0.length;i++)
-                {   
 
-                obj={mac:$($tr0[i]).children('td').eq(1).text(),ip:$($tr0[i]).children('td').eq(0).text()};
-                macArr.push(obj);    
+        $btnSaveControl.click(function () {
+            var $tr0 = $('#reserveLists0 table tr');
+            var $tr1 = $('#reserveLists1 table tr');
+            var $tr2 = $('#reserveLists2 table tr');
+            var obj = {}, objArr = {}, objArr2 = {};
+            var macArr = [];
+            if ($tr0.length > 1) {
+                for (var i = 1; i < $tr0.length; i++) {
+
+                    obj = { mac: $($tr0[i]).children('td').eq(1).text(), ip: $($tr0[i]).children('td').eq(0).text() };
+                    macArr.push(obj);
                 }
             }
-            
-            if($tr1.length > 1 ){
-                for (var i=1;i < $tr1.length;i++)
-                {     
-                obj={mac:$($tr1[i]).children('td').eq(1).text(),ip:$($tr1[i]).children('td').eq(0).text()};
-                macArr.push(obj);
-                    
+
+            if ($tr1.length > 1) {
+                for (var i = 1; i < $tr1.length; i++) {
+                    obj = { mac: $($tr1[i]).children('td').eq(1).text(), ip: $($tr1[i]).children('td').eq(0).text() };
+                    macArr.push(obj);
+
                 }
             }
-            if($tr2.length > 1 ){
-                for (var i=1;i < $tr2.length;i++)
-                {   
-                obj={mac:$($tr2[i]).children('td').eq(1).text(),ip:$($tr2[i]).children('td').eq(0).text()};
-                macArr.push(obj);   
+            if ($tr2.length > 1) {
+                for (var i = 1; i < $tr2.length; i++) {
+                    obj = { mac: $($tr2[i]).children('td').eq(1).text(), ip: $($tr2[i]).children('td').eq(0).text() };
+                    macArr.push(obj);
                 }
             }
             var json = {};
@@ -328,17 +323,17 @@
             json.cmd = RequestCmd.SET_DHCP_IP_MAC;
             Page.postJSON({
                 json: json,
-                success: function(data) {
+                success: function (data) {
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(4).click();
                 },
-                complete: function(){
-                    $('.btnSaveControl').attr("disabled",false);
+                complete: function () {
+                    $('.btnSaveControl').attr("disabled", false);
                 }
             });
         });
 
-        $lis.click(function() {
+        $lis.click(function () {
             $lis.removeClass("current");
             $(this).addClass("current");
             var pannelIndex = $lis.index(this);
@@ -347,35 +342,35 @@
                 case 0:
                     Page.postJSON({
                         json: { cmd: RequestCmd.DHCP_INFO },
-                        success: function(datas) {
+                        success: function (datas) {
                             reserveIpMacs0 = [];
                             reserveIpMacs1 = [];
                             reserveIpMacs2 = [];
                             var data = datas.data;
                             var dhcp_reserve_ip = datas.reserveList;
-							 //createIpListTable(dhcp_reserve_ip);
-                            for(var i = 0; i < data.length; i++){
+                            //createIpListTable(dhcp_reserve_ip);
+                            for (var i = 0; i < data.length; i++) {
                                 var dstatus = data[i].enable ? '1' : '0';
                                 if (dstatus == DHCPServer.CLOSED) {
                                     $('#dhcpServer' + i).prop("checked", false);
-                                    $('tr.dhcp' +i).hide();
+                                    $('tr.dhcp' + i).hide();
                                 } else {
                                     $('#dhcpServer' + i).prop("checked", true);
-                                    $('tr.dhcp' +i).show();
+                                    $('tr.dhcp' + i).show();
                                 }
-                                $('#dhcpServer' + i).attr('old',dstatus);
+                                $('#dhcpServer' + i).attr('old', dstatus);
                                 $('#lanName' + i).val(data[i].name);
                                 // $('#main_dns' + i).val(data[i].main_dns);
                                 // $('#vice_dns' + i).val(data[i].vice_dns);
-                                Page.setFormFieldValue2("lanIp"+i, data[i].server_ip);
-                                Page.setFormFieldValue2("netMask"+i, data[i].netmask);
-                                Page.setFormFieldValue2("ipBegin"+i, data[i].start_ip);
-                                Page.setFormFieldValue2("ipEnd"+i, data[i].end_ip);
-                                Page.setFormFieldValue2("expireTime"+i, data[i].leasetime);
-                                Page.setFormFieldValue2("main_dns"+i, data[i].main_dns);
-                                Page.setFormFieldValue2("vice_dns"+i, data[i].vice_dns);
+                                Page.setFormFieldValue2("lanIp" + i, data[i].server_ip);
+                                Page.setFormFieldValue2("netMask" + i, data[i].netmask);
+                                Page.setFormFieldValue2("ipBegin" + i, data[i].start_ip);
+                                Page.setFormFieldValue2("ipEnd" + i, data[i].end_ip);
+                                Page.setFormFieldValue2("expireTime" + i, data[i].leasetime);
+                                Page.setFormFieldValue2("main_dns" + i, data[i].main_dns);
+                                Page.setFormFieldValue2("vice_dns" + i, data[i].vice_dns);
                             }
-							var dhcp0_ip = $("#lanIp0").val();
+                            var dhcp0_ip = $("#lanIp0").val();
                             var dhcp0_ip_pre = dhcp0_ip.substring(0, dhcp0_ip.lastIndexOf('.'));
                             var dhcp1_ip = $("#lanIp1").val();
                             var dhcp1_ip_pre = dhcp1_ip.substring(0, dhcp1_ip.lastIndexOf('.'));
@@ -396,18 +391,21 @@
                     $('#helperContainer').show();
                     break;
                 case 1:
+                    Page.getHelperPage('html/config/networkConfig.html');
                     $('.helper_box').show();
                     $('#helperContainer').show();
                     break;
                 case 2:
+                    Page.getHelperPage('html/config/networkConfig.html');
                     $('.helper_box').show();
                     $('#helperContainer').show();
                     break;
                 case 3:
-                    $('#helperContainer').hide();
+                    Page.getHelperPage2('html/config/networkConfig.html');
+                    $('#helperContainer').show();
                     if (firstRequest) {
                         Page.postJSON({
-                            json: {cmd: RequestCmd.DHCPCLIENT_INFO},
+                            json: { cmd: RequestCmd.DHCPCLIENT_INFO },
                             success: function (datas) {
                                 ipMacs = datas.data;
                                 createIpMacTable();
@@ -422,104 +420,104 @@
 
         $lis.eq(0).click();
 
-        $chkDHCP.click(function() {
+        $chkDHCP.click(function () {
             var id = this.id.substring(10);
             if ($(this).prop("checked")) {
-                $('tr.dhcp' +id).show();
+                $('tr.dhcp' + id).show();
             } else {
-                $('tr.dhcp' +id).hide();
+                $('tr.dhcp' + id).hide();
 
             }
         });
-		
-		var $InputLanIp = $('input[name=lanIp]');
+
+        var $InputLanIp = $('input[name=lanIp]');
 
         $InputLanIp.change(function () {
-           var id = this.id.substring(5);
-		   var lanip = $(this).val();
-		   var newip = lanip.substring(0, lanip.lastIndexOf('.'));
-			
-		   var ipbegin = $("#ipBegin"+id).val();
-           var ipend = $("#ipEnd"+id).val();
-		   
-		   var begin = ipbegin.substring(ipbegin.lastIndexOf('.'));
-		   var end = ipend.substring(ipend.lastIndexOf('.'));
-		   
-		    $("#ipBegin"+id).val(newip+begin);
-			$("#ipEnd"+id).val(newip+end);
+            var id = this.id.substring(5);
+            var lanip = $(this).val();
+            var newip = lanip.substring(0, lanip.lastIndexOf('.'));
+
+            var ipbegin = $("#ipBegin" + id).val();
+            var ipend = $("#ipEnd" + id).val();
+
+            var begin = ipbegin.substring(ipbegin.lastIndexOf('.'));
+            var end = ipend.substring(ipend.lastIndexOf('.'));
+
+            $("#ipBegin" + id).val(newip + begin);
+            $("#ipEnd" + id).val(newip + end);
 
         });
 
         var lan_rules = {
-            lanIp : {required: true, gateway: true},
-            netMask : {required: true, ip: true},
-            ipBegin : {required: true, ipnozero: true},
-            ipEnd : {required: true, ipnozero: true},
-            main_dns : {required: true, ip: true},
-            vice_dns : {ip: true},
-            expireTime : {required: true, digits: true, min: 1}
+            lanIp: { required: true, gateway: true },
+            netMask: { required: true, ip: true },
+            ipBegin: { required: true, ipnozero: true },
+            ipEnd: { required: true, ipnozero: true },
+            main_dns: { required: true, ip: true },
+            vice_dns: { ip: true },
+            expireTime: { required: true, digits: true, min: 1 }
         };
 
         var lan_messages = {
-            lanIp : {required: showText.ipCheckMsg1, gateway: showText.ipCheckMsg3},
-            netMask : {required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3},
-            ipBegin : {required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3},
-            ipEnd : {required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3},
-            main_dns : {required: CHECK.format.dns2, ip: CHECK.format.dns},
-            vice_dns : {ip: CHECK.format.dns},
-            expireTime : {required: showText.timeCheckMsg1, digits: showText.timeCheckMsg2, min: showText.timeCheckMsg3}
+            lanIp: { required: showText.ipCheckMsg1, gateway: showText.ipCheckMsg3 },
+            netMask: { required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3 },
+            ipBegin: { required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3 },
+            ipEnd: { required: showText.ipCheckMsg1, ip: showText.ipCheckMsg3 },
+            main_dns: { required: CHECK.format.dns2, ip: CHECK.format.dns },
+            vice_dns: { ip: CHECK.format.dns },
+            expireTime: { required: showText.timeCheckMsg1, digits: showText.timeCheckMsg2, min: showText.timeCheckMsg3 }
         };
 
-        $btnSaveLan.click(function(){
+        $btnSaveLan.click(function () {
             var id = this.id.substring(10);
-            $(this).attr("disabled",true);
+            $(this).attr("disabled", true);
             var count = 0;
-            var $form = $('#form'+id);
-            if(!CheckUtil.checkForm($form, lan_rules, lan_messages)){
-                $(this).attr("disabled",false);
+            var $form = $('#form' + id);
+            if (!CheckUtil.checkForm($form, lan_rules, lan_messages)) {
+                $(this).attr("disabled", false);
                 return false;
             }
             var json = JSON.parmsToJSON($form);
             json.dhcpServer = json.dhcpServer ? '1' : '0';
-            var ipBeginLast = json.ipBegin.substring(json.ipBegin.lastIndexOf(".")+1,json.ipBegin.length);
-            var ipEndLast = json.ipEnd.substring(json.ipEnd.lastIndexOf(".")+1,json.ipEnd.length);
-            if(parseInt(ipEndLast,10) < parseInt(ipBeginLast,10)){
-                 AlertUtil.alertMsg(DOC.apn.rule);
-                $('#btnSaveLan'+id).attr("disabled",false);
+            var ipBeginLast = json.ipBegin.substring(json.ipBegin.lastIndexOf(".") + 1, json.ipBegin.length);
+            var ipEndLast = json.ipEnd.substring(json.ipEnd.lastIndexOf(".") + 1, json.ipEnd.length);
+            if (parseInt(ipEndLast, 10) < parseInt(ipBeginLast, 10)) {
+                AlertUtil.alertMsg(DOC.apn.rule);
+                $('#btnSaveLan' + id).attr("disabled", false);
                 return false;
             }
-            if(json.dhcpServer == DHCPServer.OPENED){
-                if(!CheckUtil.checkNetSegment(json.lanIp, json.netMask, json.ipBegin)){
+            if (json.dhcpServer == DHCPServer.OPENED) {
+                if (!CheckUtil.checkNetSegment(json.lanIp, json.netMask, json.ipBegin)) {
                     AlertUtil.alertMsg(showText.ipCheckMsg4);
-                    $(this).attr("disabled",false);
+                    $(this).attr("disabled", false);
                     return false;
                 }
-                if(!CheckUtil.checkNetSegment(json.lanIp, json.netMask, json.ipEnd)){
+                if (!CheckUtil.checkNetSegment(json.lanIp, json.netMask, json.ipEnd)) {
                     AlertUtil.alertMsg(showText.ipCheckMsg5);
-                    $(this).attr("disabled",false);
+                    $(this).attr("disabled", false);
                     return false;
                 }
-                if(json.main_dns == $("#main_dns" +id).attr('old')){
+                if (json.main_dns == $("#main_dns" + id).attr('old')) {
                     delete json["main_dns"];
                     count++;
                 }
-                if(json.vice_dns == $("#vice_dns" +id).attr('old')){
+                if (json.vice_dns == $("#vice_dns" + id).attr('old')) {
                     delete json["vice_dns"];
                     count++;
                 }
-                if(json.ipBegin ==  $("#ipBegin" +id).attr('old')  && json.ipEnd ==  $("#ipEnd" +id).attr('old')){
+                if (json.ipBegin == $("#ipBegin" + id).attr('old') && json.ipEnd == $("#ipEnd" + id).attr('old')) {
                     delete json["ipBegin"];
                     delete json["ipEnd"];
                     count += 2;
-                }else {
-                    json.limitNum = json.ipEnd.replace(/\./g,'') - json.ipBegin.replace(/\./g,'') + 1;
+                } else {
+                    json.limitNum = json.ipEnd.replace(/\./g, '') - json.ipBegin.replace(/\./g, '') + 1;
                 }
-                if(json.expireTime ==  $("#expireTime" +id).attr('old')){
+                if (json.expireTime == $("#expireTime" + id).attr('old')) {
                     delete json["expireTime"];
                     count++;
                 }
 
-            }else{
+            } else {
                 delete json["ipBegin"];
                 delete json["ipEnd"];
                 delete json["expireTime"];
@@ -528,26 +526,26 @@
                 count += 5;
             }
 
-            if(json.dhcpServer == $("#dhcpServer" +id).attr('old')){
+            if (json.dhcpServer == $("#dhcpServer" + id).attr('old')) {
                 delete json["dhcpServer"];
                 count++;
             }
 
 
-            if(json.lanIp ==  $("#lanIp" +id).attr('old')){
+            if (json.lanIp == $("#lanIp" + id).attr('old')) {
                 delete json["lanIp"];
                 count++;
             }
-            if(json.netMask ==  $("#netMask" +id).attr('old')){
+            if (json.netMask == $("#netMask" + id).attr('old')) {
                 delete json["netMask"];
                 count++;
             }
-            if(count == 8){
+            if (count == 8) {
                 AlertUtil.alertMsg(CHECK.required.noChanges);
-                $(this).attr("disabled",false);
+                $(this).attr("disabled", false);
                 return false;
             }
-            
+
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.NETWORK_CONFIG;
 
@@ -568,19 +566,19 @@
              }*/
             Page.postJSON({
                 json: json,
-                success: function(data) {
+                success: function (data) {
                     // AlertUtil.alertMsg(PROMPT.saving.success);
                     if (AlertUtil.confirm(PROMPT.tips.rebootMessage)) {
-						if(id == 0){
-                            reboot(json.lanIp);	
-                        }else {
+                        if (id == 0) {
+                            reboot(json.lanIp);
+                        } else {
                             reboot();
                         }
-                       
+
                     }
                 },
-                complete: function(){
-                    $('#btnSaveLan'+id).attr("disabled",false);
+                complete: function () {
+                    $('#btnSaveLan' + id).attr("disabled", false);
                 }
             });
 
@@ -593,27 +591,27 @@
                     cmd: RequestCmd.SYS_REBOOT,
                     method: JSONMethod.POST
                 },
-                success: function() {
+                success: function () {
                     var isOk = false;
-                    var timeoutCtl = setTimeout(function() {
+                    var timeoutCtl = setTimeout(function () {
                         isOk = true;
                     }, 1000 * 90);
                     SysUtil.showProgress(ProgressTime.REBOOT, PROMPT.status.rebooting,
-                        function() {
+                        function () {
                             return isOk;
                         },
-                        function() {
+                        function () {
                             clearTimeout(timeoutCtl);
-                            if(ip){
+                            if (ip) {
                                 window.location.href = window.location.href.replace(window.location.host, ip);
-                            }else {
+                            } else {
                                 location.reload();
                             }
 
                         }
                     );
                 },
-                fail: function() {
+                fail: function () {
 
                 }
             });
@@ -692,12 +690,12 @@
                           <div style="margin-top:10px;"> <input id="btnAdd0" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
                     </script>
                 </form>
-				
-                
-              
-                       
+
+
+
+
             </div>
-            <div >
+            <div>
                 <form id="form1">
                     <script type="text/template" id="networkform1-template1">
                         <table class="detail" cellspacing="0">
@@ -753,7 +751,7 @@
                 </form>
 
             </div>
-            <div >
+            <div>
                 <form id="form2">
                     <script type="text/template" id="networkform1-template2">
                         <table class="detail" cellspacing="0">
@@ -821,16 +819,16 @@
         <div id="helper"></div>
     </div>
 
-    <div id="edit_box" style="width: 400px;height: 200px" >
-    <div class="detail" id="fwHead">
-        <script type="text/template" id="fwHead_template">
+    <div id="edit_box" style="width: 400px;height: 200px">
+        <div class="detail" id="fwHead">
+            <script type="text/template" id="fwHead_template">
             <div id="edit_title"></div>
             <div id="edit_close"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
             <div style="clear:both;"></div>
         </script>
-    </div>
-    <div id="fwBody">
-        <script type="text/template" id="fwBody_template">
+        </div>
+        <div id="fwBody">
+            <script type="text/template" id="fwBody_template">
             <table class="detail" cellspacing="0">
                 <tr>
                      <th><span><%- net.ip %></span></th>
@@ -847,7 +845,7 @@
                 </tr>
             </table>
         </script>
+        </div>
     </div>
-</div>
     <span style="clear:both"></span>
 </div>

@@ -1,19 +1,18 @@
+<!-- LAN Device List Helper Page -->
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <script type="text/javascript">
     $(document).ready(function(){
-        TempUtil.render('helperContainer-template', 'helperContainer', networkconfightml.helper)
+        TempUtil.render('helperContainer-template', 'helperContainer', networkconfig2html.helper)
     });
 </script>
 <div id="helperContainer">
     <script type="text/template" id="helperContainer-template">
 
-         <div id="helper0" >
-
             <div class="helper_name"><%= title1 %></div>
             <div class="helper_desc">
                 <%= item1 %>
             </div>
-
+        
             <div class="helper_name"><%= title2 %></div>
             <div class="helper_desc">
                 <%= item2 %>
@@ -24,22 +23,5 @@
                 <%= item3 %>
             </div>
 
-            <div class="helper_name"><%= title4 %></div>
-            <div class="helper_desc">
-                <%= item4 %>
-            </div>
-
-            <div class="helper_name"><%= title5 %></div>
-            <div class="helper_desc">
-                <%= item5 %>
-            </div>
-			
-
-        </div>
-		
-		<div id="helper3" style="display: none">
-            <%= item6 %>
-        </div>	
-		
     </script>
 </div>
