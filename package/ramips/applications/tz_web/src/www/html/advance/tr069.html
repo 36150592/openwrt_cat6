@@ -174,8 +174,7 @@
            Page.postJSON({
                $id: $btnSave,
                json: json,
-               success: function() {
-                   //SysUtil.rebootDevice();
+               complete: function(data) {
                    AlertUtil.alertMsg(PROMPT.saving.success);
                }
            });
