@@ -1,9 +1,9 @@
 CC=gcc
 CFLAGS += -c -g -fpic -Os  -Wall -Werror -ffunction-sections -fdata-sections 
 LUATZLIB_LDFLAGS += -L./ -llua
-SO_CFLAGS += -shared
+SO_CFLAGS += -shared -ldl -lpthread
 
-LUATZLIB_SO_OBJS = luatzlib.o
+LUATZLIB_SO_OBJS = luatzlib.o sendat.o
 LUATZLIB_INC += luatzlib.h
 
 LUATZLIB_SO = luatzlib.so

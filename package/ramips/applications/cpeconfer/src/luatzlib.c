@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
+extern int sendat(char *at, char *result);
 //待注册的C函数，该函数的声明形式在上面的例子中已经给出。
 //需要说明的是，该函数必须以C的形式被导出，因此extern "C"是必须的。
 //函数代码和上例相同，这里不再赘述。
@@ -25,6 +26,24 @@ int remove_stderr(lua_State* L)
     freopen("/dev/null", "w", stderr);
     lua_pushnumber(L,0);
     return 1;
+}
+
+int send_at_to_modem(lua_State* L)
+{
+
+	char *at = luaL_checkstring(L,1);
+	char result[512] = {0};
+
+	int ret = sendat(at, result);
+
+	if(0 == ret)
+	{
+		lua_pushstring(L, result);
+		return 1;
+	}
+
+	return 0;
+
 }
 
 int read_stdin(lua_State* L)
@@ -123,6 +142,7 @@ static luaL_Reg mylibs[] = {
 	{"unix_write",unix_write},
     {"unix_close",unix_close},
     {"read_stdin",read_stdin},
+    {"send_at", send_at_to_modem},
     {NULL, NULL} 
 }; 
 

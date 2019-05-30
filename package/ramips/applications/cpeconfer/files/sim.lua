@@ -10,6 +10,7 @@ local SIM_DYNAMIC_STATUS_PATH="/tmp/.system_info_dynamic"
 local SIM_SEND_AT_CMD="sendat -d/dev/ttyUSB1 -f/tmp/at_send -o/tmp/at_recv"
 local SIM_AT_SEND_FILE="/tmp/at_send"
 local SIM_AT_RECV_FILE="/tmp/at_recv"
+local SIM_PIN_ENABLE_FILE="/tmp/.sim_pin_enable"
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
@@ -48,85 +49,79 @@ local function clear_file(path)
 	return 0 == os.execute(string.format("> %s", path))
 end
 
-local function format_enable_pin_lock_at_cmd(pin_passwd)return string.format('AT+CLCK="SC",1,"%s"\n', pin_passwd) end
-local function format_disable_pin_lock_at_cmd(pin_passwd)return string.format('AT+CLCK="SC",0,"%s"\n', pin_passwd) end
-local function format_get_pin_lock_at_cmd()return 'AT+CLCK="SC",2,""\n' end
-local function format_pin_unlock_at_cmd(pin_passwd)return string.format('AT+CPIN=%s\n', pin_passwd) end
-local function format_pin_change_at_cmd(pin_passwd,new_pin)return string.format('AT+CPWD="SC","%s","%s"\n', pin_passwd, new_pin) end
-local function format_puk_unlock_at_cmd(puk,new_pin)return string.format('AT+CPIN="%s","%s"\n', puk, new_pin) end
+local function format_enable_pin_lock_at_cmd(pin_passwd)return string.format('AT+CLCK="SC",1,"%s"', pin_passwd) end
+local function format_disable_pin_lock_at_cmd(pin_passwd)return string.format('AT+CLCK="SC",0,"%s"', pin_passwd) end
+local function format_get_pin_lock_at_cmd()return 'AT+CLCK="SC",2,""' end
+local function format_pin_unlock_at_cmd(pin_passwd)return string.format('AT+CPIN=%s', pin_passwd) end
+local function format_pin_change_at_cmd(pin_passwd,new_pin)return string.format('AT+CPWD="SC","%s","%s"', pin_passwd, new_pin) end
+local function format_puk_unlock_at_cmd(puk,new_pin)return string.format('AT+CPIN="%s","%s"', puk, new_pin) end
 local function format_get_rev_cmd(file)return string.format('cat %s | grep OK | wc -l', file) end
 
 local function send_at_cmd(cmd)
-	clear_file(SIM_AT_SEND_FILE)
-	clear_file(SIM_AT_RECV_FILE)
-	local f_send = io.open(SIM_AT_SEND_FILE, "w+")
-	local p = nil
-	if nil == f_send
-	then
-		debug("open send file fail")
-		return false
-	end
-
-	if nil == cmd
-	then
-		debug("error:cmd nil")
-		return false
-	end
-
-	f_send:write(cmd)
-
-	p = io.popen(SIM_SEND_AT_CMD)
-	if p == nil
-	then
-		debug("execute at cmd fail")
-		return false
-	end
-
-	io.close(p)
-
-	p = io.popen(format_get_rev_cmd(SIM_AT_RECV_FILE))
-
-	if nil == p
-	then
-		debug("open recv file fail")
-		return false
-	end
-
-	if "1" == p:read()
-	then
-		debug("at fail")
-		return true
-	end
-
-	io.close(p)
-	io.close(f_send)
-
-	return false
-
+	debug("send_at_cmd cmd = ",cmd)
+	local tzlib = require("luatzlib")
+	local res = tzlib.send_at(cmd)
+	debug("at result = ",res)
+	return res
 end
 
 local function get_pin_lock_enable_status()
-	local ret = send_at_cmd(format_get_pin_lock_at_cmd())
-	if true == ret
+
+	local f = io.popen("cat ".. SIM_PIN_ENABLE_FILE)
+	if nil ~= f
 	then
-		local f = io.popen(string.format("cat %s | grep 'CLCK' | cut -d':' -f 2", SIM_AT_RECV_FILE))
-		if nil ~= f
-		then 
-			local res = f:read()
-			io.close(f)
+		local res = f:read()
+		io.close(f)
+		if "1" == res or "0" == res
+		then
 			return res
 		end
 	end
 
-	return nil
+	local ret = send_at_cmd(format_get_pin_lock_at_cmd())
+	if nil ~= ret
+	then
+		local f = string.find(ret, "+CLCK: 0")
+		if f ~= nil
+		then
+			os.execute("echo -n '0' > "..SIM_PIN_ENABLE_FILE)
+			return "0"
+		end
+	end
+
+	os.execute("echo -n '1' > "..SIM_PIN_ENABLE_FILE)
+	return "1"
 end
 
 function sim_module.sim_reload()
-	if send_at_cmd("AT+CFUN=0\n")
+	if send_at_cmd("AT+CFUN=0")
 	then
-		return send_at_cmd("AT+CFUN=1\n")
+		return send_at_cmd("AT+CFUN=1")
 	end
 	return false
+end
+
+local function  get_card_status()
+	local res = send_at_cmd("AT+CPIN?")
+	if nil ~= res
+	then
+	
+			if string.find(res,"SIM PIN") ~= nil
+			then
+				return 1
+			elseif string.find(res,"PUK") ~= nil
+			then
+				return 2
+			elseif string.find(res,"READY") ~= nil
+			then 
+				return 0
+			else
+				return -1
+			end
+	end
+
+	return -1
+
 end
 
 -- must start the dialtool_new
@@ -155,42 +150,46 @@ function sim_module.sim_get_status()
 
 		local array = split(res,":")
 		--print(array[1],"=", array[2])
-		local key = string.gsub(array[1],"\t","")
-		local value = string.gsub(array[2],"\t","")
-		key = string.lower(key)
-		
-		if  "iccid" == key
+		if nil ~= array[1] and nil ~= array[2]
 		then
-			status["iccid"] = value
-		elseif "imsi" == key
-		then
-			status["imsi"] = value
-		elseif "lock_pin_flag" == key
-		then
-			if value == "1"
-			then 
-				status["card_status"] = 1
+	 		local key = string.gsub(array[1],"\t","")
+			local value = string.gsub(array[2],"\t","")
+			key = string.lower(key)
+			
+			if  "iccid" == key
+			then
+				status["iccid"] = value
+			elseif "imsi" == key
+			then
+				status["imsi"] = value
+			elseif "lock_pin_flag" == key
+	           then
+	               if value == "1"
+	               then 
+	                       status["card_status"] = 1
+	               end
+	        elseif "lock_puk_flag" == key
+	        then
+	               if value == "1"
+	               then 
+	                       status["card_status"] = 2
+	               end
+			elseif "is_sim_exist" == key
+			then
+				status["is_sim_exist"] = value
+			elseif "pin_left_times" == key
+			then
+				status["pin_left_times"] = value
+			elseif "puk_left_times" == key
+			then
+				status["puk_left_times"] = value
 			end
-		elseif "lock_puk_flag" == key
-		then
-			if value == "1"
-			then 
-				status["card_status"] = 2
-			end
-		elseif "is_sim_exist" == key
-		then
-			status["is_sim_exist"] = value
-		elseif "pin_left_times" == key
-		then
-			status["pin_left_times"] = value
-		elseif "puk_left_times" == key
-		then
-			status["puk_left_times"] = value
 		end
-
+		
 		res = f:read()
 	end
 
+	--status["card_status"] = get_card_status()
 	status["pinlock_enable"] = get_pin_lock_enable_status()
 
 
@@ -210,7 +209,16 @@ function sim_module.sim_pin_lock_enable(pin_passwd)
 		return false
 	end
 
-	return send_at_cmd(format_enable_pin_lock_at_cmd(pin_passwd))
+	local res =  send_at_cmd(format_enable_pin_lock_at_cmd(pin_passwd))
+
+	if res ~= nil and string.find(res,"OK")
+	then
+		os.execute("echo -n '1' > "..SIM_PIN_ENABLE_FILE)
+		return true
+	else
+		return false
+	end
+
 end
 
 
@@ -223,7 +231,15 @@ function sim_module.sim_pin_lock_disable(pin_passwd)
 		return false
 	end
 
-	return send_at_cmd(format_disable_pin_lock_at_cmd(pin_passwd))
+	local res = send_at_cmd(format_disable_pin_lock_at_cmd(pin_passwd))
+
+	if res ~= nil and string.find(res,"OK")
+	then
+		os.execute("echo -n '0' > "..SIM_PIN_ENABLE_FILE)
+		return true
+	else
+		return false
+	end
 end
 
 function sim_module.sim_pin_unlock(pin_passwd)
@@ -234,7 +250,13 @@ function sim_module.sim_pin_unlock(pin_passwd)
 		return false
 	end
 
-	return send_at_cmd(format_pin_unlock_at_cmd(pin_passwd))
+	local res =  send_at_cmd(format_pin_unlock_at_cmd(pin_passwd))
+	if res ~= nil and string.find(res,"OK")
+	then
+		return true
+	else
+		return false
+	end
 
 end
 
@@ -251,7 +273,14 @@ function sim_module.sim_pin_change(pin_passwd,new_pin)
 		return false
 	end
 
-	return send_at_cmd(format_pin_change_at_cmd(pin_passwd, new_pin))
+	local res =  send_at_cmd(format_pin_change_at_cmd(pin_passwd, new_pin))
+
+	if res ~= nil and string.find(res,"OK")
+	then
+		return true
+	else
+		return false
+	end
 
 end
 
@@ -269,7 +298,13 @@ function sim_module.sim_puk_unlock(puk,new_pin)
 		return false
 	end
 
-	return send_at_cmd(format_puk_unlock_at_cmd(puk, new_pin))
+	local res =  send_at_cmd(format_puk_unlock_at_cmd(puk, new_pin))
+	if res ~= nil and string.find(res,"OK")
+	then
+		return true
+	else
+		return false
+	end
 
 end
 

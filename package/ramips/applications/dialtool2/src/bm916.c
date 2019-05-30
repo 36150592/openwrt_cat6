@@ -1326,10 +1326,12 @@ void bm916_init(int*  Dial_proc_state)
 					*Dial_proc_state=Dial_State_CPIN_QUERY;
 				break;	
 		case Dial_State_CPIN_QUERY:
+				log_info("in Dial_State_CPIN_QUERY\n");
 				global_dial_vars.pin_qpin_flag=0;		//set flag ,so we can choose which cmd to input pin 
 				if(NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && 
 					NULL != strstr(global_dialtool.buffer_at_sponse,CMD_RESULT_CPIN_READY))
 				{
+					log_info("in cpin ready\n");
 					global_dial_vars.is_sim_exist=1;
 					global_dial_vars.device_lock_pin=0;
 					global_dial_vars.device_lock_puk=0;
@@ -1341,20 +1343,20 @@ void bm916_init(int*  Dial_proc_state)
 					NULL != strstr(global_dialtool.buffer_at_sponse,CMD_RESULT_CPIN_NEED_PIN))
 				{
 					global_dial_vars.sim_real_lock_pin = 1;
-					//log_error("enable_pin = %s\n",global_init_parms.enable_pin);
+					log_info("in cpin need pin\n");
 					check_cpin_num = 0;
 					global_dial_vars.is_sim_exist=1;
 					global_dial_vars.device_lock_pin=1;
 					global_dial_vars.device_lock_puk=0;
 					if(global_init_parms.enable_pin[0] == '1' )
-						*Dial_proc_state=Dial_State_BMCPNCNT;
-					else
-						log_error(">>>>>>>>>>no enable auto verification pin\n");
+						log_error(">>>>>>>>>>had enable auto verification pin,begin to auto unlock pin\n");
+					*Dial_proc_state=Dial_State_BMCPNCNT;
 					break;
 				}
 				else if(NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && 
 					NULL != strstr(global_dialtool.buffer_at_sponse,CMD_RESULT_CPIN_NEED_PUK))
 				{
+					log_info("in cpin puk\n");
 					global_dial_vars.is_sim_exist=1;
 					global_dial_vars.device_lock_pin=0;
 					global_dial_vars.device_lock_puk=1;
@@ -1364,6 +1366,7 @@ void bm916_init(int*  Dial_proc_state)
 				}
 				else
 				{
+					log_info("in else\n");
 					check_cpin_num++;
 					if(check_cpin_num > 4)
 					{
@@ -1431,7 +1434,7 @@ void bm916_init(int*  Dial_proc_state)
 						if(NULL != ptr_tmp)
 							global_dial_vars.puk_left_times=atoi(ptr_tmp+strlen("PUK1="));
 						//we only try first time cpin,so if cpin times not equal to 3,we wait web change pin code,pin default value is 3
-						if( global_dial_vars.device_lock_pin ==1)
+						if( global_dial_vars.device_lock_pin ==1 || global_dial_vars.device_lock_puk == 1)
 						{
 							if(global_init_parms.enable_pin[0] == '1' && strlen(global_init_parms.pin) && !hasSetPin)
 							{
