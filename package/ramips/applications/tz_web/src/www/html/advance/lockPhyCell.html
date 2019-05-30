@@ -1,9 +1,9 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <script type="text/javascript">
-    $(document).ready(function() {
+    $(document).ready(function () {
         Page.render();
-       
+
         var $btnSave = $('#btnSave').disable(),
             $locks = $('.lock').hide(),
             $spanLockedStatus = $('#spanLockedStatus'),
@@ -14,36 +14,36 @@
         var currentFreqPoint = "", currentPhyCellId = "";
         var lockedFreqPoint = "", lockedPhyCellId = "";
 
-        $lockTypes.change(function() {
-            if(this.value == 2){
+        $lockTypes.change(function () {
+            if (this.value == 2) {
                 $locks.show();
-            }else {
+            } else {
                 $locks.hide();
             }
 
-            if(this.value == "1"){
+            if (this.value == "1") {
                 $(".pciEarfcn").show();
-            }else{
+            } else {
                 $(".pciEarfcn").hide();
             }
         });
 
 
         function showInfo() {
-            if(lockedStatus == 1){
+            if (lockedStatus == 1) {
                 $spanLockedStatus.html(DOC.status.unlocked);
-            }else if (lockedStatus == 2) {
+            } else if (lockedStatus == 2) {
                 $spanLockedStatus.html(DOC.status.locked);
-                if(lockType == 2){
-                    Page.setFormFieldValue2("txtFreqPoint",lockedFreqPoint);
-                    Page.setFormFieldValue2("txtPhyCellId",lockedPhyCellId);
+                if (lockType == 2) {
+                    Page.setFormFieldValue2("txtFreqPoint", lockedFreqPoint);
+                    Page.setFormFieldValue2("txtPhyCellId", lockedPhyCellId);
                     $locks.show();
                 }
-            }else {
+            } else {
                 $spanLockedStatus.html(DOC.lbl.noSim);
             }
             InputUtil.setRadiosSelectedValue($lockTypes, lockType);
-            $('#lockType').attr('old',lockType);
+            $('#lockType').attr('old', lockType);
         }
 
         function getInfo() {
@@ -51,8 +51,8 @@
                 json: {
                     cmd: RequestCmd.LOCK_ONE_CELL
                 },
-                success: function(datas) {
-                    if(datas.modem != ''){
+                success: function (datas) {
+                    if (datas.modem != '') {
                         lockedStatus = 1;
                         currentPhyCellId = datas.modem.pci;
                         currentFreqPoint = datas.modem.earfcn;
@@ -60,23 +60,23 @@
                         $("#currentPhyCellId").text(datas.modem.pci);
                         $btnSave.enable();
                         $lockTypes.enable();
-                        if(datas.pci != undefined && datas.pci != ''){
+                        if (datas.pci != undefined && datas.pci != '') {
                             lockedStatus = 2;
                             lockedPhyCellId = datas.pci;
                             lockedFreqPoint = datas.earfcn;
-                            if(datas.pci == datas.modem.pci){
+                            if (datas.pci == datas.modem.pci) {
                                 lockType = 1;
-                            }else {
+                            } else {
                                 lockType = 2;
                             }
                         }
 
-                        if(lockType == "1"){
+                        if (lockType == "1") {
                             $(".pciEarfcn").show();
                         }
                     }
                 },
-                complete: function() {
+                complete: function () {
                     showInfo();
                 }
             });
@@ -85,43 +85,42 @@
         getInfo();
 
         var rules = {
-                txtFreqPoint: { required: true, range:[0,65535]},
-                txtPhyCellId: { required: true, range:[0,503]}
-            },
+            txtFreqPoint: { required: true, range: [0, 65535] },
+            txtPhyCellId: { required: true, range: [0, 503] }
+        },
             messages = {
-                txtFreqPoint: { required: CHECK.required.freqPoint, range:CHECK.required.freqPointMax },
-                txtPhyCellId: { required: CHECK.required.PhyCellId, range:CHECK.required.PhyCellIdMax }
+                txtFreqPoint: { required: CHECK.required.freqPoint, range: CHECK.required.freqPointMax },
+                txtPhyCellId: { required: CHECK.required.PhyCellId, range: CHECK.required.PhyCellIdMax }
             };
 
-
-        $btnSave.click(function() {
-            $(this).attr("disabled",true);
+        $btnSave.click(function () {
+            $(this).attr("disabled", true);
             var $form = $('#lockPhyCellForm');
             var json = JSON.parmsToJSON($form);
 
-            if(json.lockType == $("#lockType").attr('old')){
-                if(json.lockType == '2'){
-                    if(json.txtFreqPoint == $("#txtFreqPoint").attr('old') && json.txtPhyCellId == $("#txtPhyCellId").attr('old')){
+            if (json.lockType == $("#lockType").attr('old')) {
+                if (json.lockType == '2') {
+                    if (json.txtFreqPoint == $("#txtFreqPoint").attr('old') && json.txtPhyCellId == $("#txtPhyCellId").attr('old')) {
                         AlertUtil.alertMsg(CHECK.required.noChanges);
-                        $(this).attr("disabled",false);
+                        $(this).attr("disabled", false);
                         return false;
                     }
-                }else {
+                } else {
                     AlertUtil.alertMsg(CHECK.required.noChanges);
-                    $(this).attr("disabled",false);
+                    $(this).attr("disabled", false);
                     return false;
                 }
 
-            }else {
-                if(json.lockType == '1'){
+            } else {
+                if (json.lockType == '1') {
                     json.txtFreqPoint = currentFreqPoint;
                     json.txtPhyCellId = currentPhyCellId;
-                }else if(json.lockType == '2'){
-                    if(!CheckUtil.checkForm($form, rules, messages)){
-                        $(this).attr("disabled",false);
+                } else if (json.lockType == '2') {
+                    if (!CheckUtil.checkForm($form, rules, messages)) {
+                        $(this).attr("disabled", false);
                         return false;
                     }
-                }else if(json.lockType == '0'){
+                } else if (json.lockType == '0') {
                     json.txtFreqPoint = '';
                     json.txtPhyCellId = '';
                 }
@@ -132,12 +131,12 @@
             json.cmd = RequestCmd.LOCK_PHY_CELL;
             Page.postJSON({
                 json: json,
-                success: function(data) {
+                success: function (data) {
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $("ul.tabs a").eq(3).click();
                 },
-                complete: function(){
-                    $('#btnSave').attr("disabled",false);
+                complete: function () {
+                    $('#btnSave').attr("disabled", false);
                 }
             });
 
@@ -177,10 +176,18 @@
                 <tr class="lock">
                     <th><%- lbl.freqPoint %><%- colon %></th>
                     <td><input type="text" id="txtFreqPoint" name="txtFreqPoint" /></td>
+                    <tr class="lock">
+                        <th>&nbsp;</th>
+                        <td><%- DOC.lbl.lockFreqPointTip %><b><%- DOC.lbl.lockFreqPointTipRange %></b></td>
+                    </tr>
                 </tr>
                 <tr class="lock">
                     <th><%- lbl.phyCellId %><%- colon %></th>
                     <td><input type="text" id="txtPhyCellId" name="txtPhyCellId" /></td>
+                    <tr class="lock">
+                        <th>&nbsp;</th>
+                        <td><%- DOC.lbl.lockPhyCellIdTip %><b><%- DOC.lbl.lockPhyCellIdTipRange %></b></td>
+                    </tr>
                 </tr>
                 <tr id="trSave">
                     <th>&nbsp;</th>
@@ -192,4 +199,3 @@
         </form>
     </script>
 </div>
-
