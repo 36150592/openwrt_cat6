@@ -40,6 +40,8 @@ CSA scan_att_configs;
 int sendAtFlag = 0;
 int global_sleep_interval_long=0;
 
+
+
 const MDI* modules_info_summary[]=
 {
 	&bm806_moduleinfo,
@@ -856,6 +858,8 @@ int main(int argc,char *argv[] )
 	char config_file_name[64]={0};
 	char* vendor_id_file = NULL;
 	char* product_id_file = NULL;
+	// global_dial_vars.act should not init to 0 for 0 represent 2g
+	global_dial_vars.act=-1;
 	openlog(argv[0],  LOG_PID, 0);  
 	log_info("program start:%s %d\n",__FUNCTION__,__LINE__);
 	timeLog("aaaaaaaaaaaaaaaaaaa");
