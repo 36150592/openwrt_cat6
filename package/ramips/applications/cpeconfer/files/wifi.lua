@@ -2017,141 +2017,87 @@ function wifi_module.wifi_set_wps_pin(wifi_id, wifi_pin_code)
 	if nil == wifi_pin_code or "" == wifi_pin_code  or type(wifi_pin_code) ~= "number"
 	then
 		debug("error pin code")
-		return flase
+		return false
     else
-    	x:set(WIFI_CONFIG_FILE, section_name, "wps", "pin")
-    	x:set(WIFI_CONFIG_FILE, section_name, "pin", wifi_pin_code)
+		local ifname = x:get(WIFI_CONFIG_FILE,section_name, "ifname")    	
+		local ret1 = os.execute("iwpriv " .. ifname .. "  set WscStop=1")
+		local ret2 = os.execute("iwpriv " .. ifname .. "  set WscConfMode=7")
+		local ret3 = os.execute("iwpriv " .. ifname .. "  set WscPinCode="..tostring(wifi_pin_code))
+		local ret4 = os.execute("iwpriv ".. ifname .. "  set WscMode=1")
+		local ret5 = os.execute("iwpriv ".. ifname .."  set WscGetConf=1")
+		 return ret1 == 0 and ret2 == 0 and ret3 == 0 and ret4 == 0 and ret5 == 0 
 	end
 
-    return x:commit(WIFI_CONFIG_FILE)
-
-end
-
--- get the wifi wps pin
--- input:
---		wifi_id(number):wifi index get by wifi_get_dev
--- return:
---		the wifi pin code or  ""
-function wifi_module.wifi_get_wps_pin(wifi_id)
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-    
-	if nil == section_name or "" == section_name
-	then
-		debug("error wifi_id")
-		return false
-	end
-
-    local code =  x:get(WIFI_CONFIG_FILE, section_name, "pin")
-
-    if nil == code
-    then	
-    	return ""
-    else
-    	return tonumber(code)
-    end
-
-end
-
--- set the wifi wps type
--- input:
---		wifi_id(number):wifi index get by wifi_get_dev
---		wps_type:pbc  or pin
--- return:
---		true if success or false if fail
-function wifi_module.wifi_set_wps_type(wifi_id,wps_type)
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-    
-	if nil == section_name or "" == section_name
-	then
-		debug("error wifi_id")
-		return false
-	end
-
-	if "pbc" ~= wps_type and "pin" ~= wps_type
-	then
-		debug("error switch")
-		return false
-	end
-
-	x:set(WIFI_CONFIG_FILE, section_name, "wps", wps_type)
    
-    return x:commit(WIFI_CONFIG_FILE)
+	return false
+end
+
+-- enable wps pbc 
+-- input:
+--    wifi_id(number):wifi index get by wifi_get_dev
+-- return:
+--    true if success , false if fail
+function wifi_module.wifi_enable_wps_pbc(wifi_id)
+	local section_name = common_get_ifame_section_name_by_index(wifi_id)
+
+	if nil == section_name or "" == section_name
+	then
+		debug("error wifi_id")
+		return false
+	end
+
+	x:set(WIFI_CONFIG_FILE, section_name, "wps", "pbc")
+
+	return x:commit(WIFI_CONFIG_FILE)
 
 end
 
--- get the wifi wps type
+-- disable wps pbc 
 -- input:
---		wifi_id(number):wifi index get by wifi_get_dev
---		wps_type:pbc  or pin
+--    wifi_id(number):wifi index get by wifi_get_dev
 -- return:
---		pbc or pin or false 
-function wifi_module.wifi_get_wps_type(wifi_id)
+--    true if success , false if fail
+function wifi_module.wifi_disable_wps_pbc(wifi_id)
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-    
+
 	if nil == section_name or "" == section_name
 	then
 		debug("error wifi_id")
 		return false
 	end
 
-	return x:get(WIFI_CONFIG_FILE, section_name, "wps")
-end 
+	x:set(WIFI_CONFIG_FILE, section_name, "wps", "")
 
-
--- set the wifi wps switch
--- input:
---		wifi_id(number):wifi index get by wifi_get_dev
---		enable:enable  or disable
--- return:
---		true if success or false if fail
-function wifi_module.wifi_set_wps_switch(wifi_id,enable)
-	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-    
-	if nil == section_name or "" == section_name
-	then
-		debug("error wifi_id")
-		return false
-	end
-
-	if "disable" ~= enable and "enable" ~= enable
-	then
-		debug("error enable")
-		return false
-	end
-
-	if "disable" == enable
-	then
-		x:delete(WIFI_CONFIG_FILE, section_name, "wps")
-		x:delete(WIFI_CONFIG_FILE, section_name, "pin")
-	end
-   
-    return x:commit(WIFI_CONFIG_FILE)
+	return x:commit(WIFI_CONFIG_FILE)
 
 end
 
--- get the wifi wps switch
+-- get wifi wps pbc enable or disable
 -- input:
---		wifi_id(number):wifi index get by wifi_get_dev
+--    wifi_id(number):wifi index get by wifi_get_dev
 -- return:
---		disable or enable or false 
-function wifi_module.wifi_get_wps_switch(wifi_id)
+--    1:enable
+--    0:disable
+--	  -1:error
+function wifi_module.wifi_get_wps_pbc_enable_status(wifi_id)
 	local section_name = common_get_ifame_section_name_by_index(wifi_id)
-    
+
 	if nil == section_name or "" == section_name
 	then
 		debug("error wifi_id")
-		return "disable"
+		return -1
 	end
 
-	local enable =  x:get(WIFI_CONFIG_FILE, section_name, "wps")
-	if nil == enable or "" == enable
+	local pbc = x:get(WIFI_CONFIG_FILE, section_name, "wps")
+
+	if "pbc" == pbc
 	then
-		return "disable"
+		return 1
 	else
-		return "enable"
+		return 0
 	end
+end
 
-end 
 
 -- create a random pin code to access 
 -- input:

@@ -38,6 +38,7 @@ check_device_connect() {
 		sleep 1
 	done
 
+    iwpriv $2 set WscStop=1
 	echo none > /sys/class/leds/blue:wps/trigger
 	echo 0 > /sys/class/leds/blue:wps/brightness
 }
@@ -55,31 +56,17 @@ do
         fi
 
         if [ $ifname'' == "" ];then
-                continue;
+            continue;
         fi
 
 
         if [ $wps'' == 'pbc' ];then
-                echo $wps
-                echo $ifname
-		local cur_cli=`iwpriv $ifname get_on_cli | grep -v $ifname | grep -v MAC | grep -v ^$ | wc -l`
-                iwpriv $ifname set WscStop=1
-                iwpriv $ifname set WscConfMode=7
-                iwpriv $ifname set WscMode=2
-                iwpriv $ifname set WscGetConf=1
-		check_device_connect  $cur_cli  $ifname $band
-        elif [ $wps'' == "pin" ];then
-                config_get pin $section pin
-                if [ $pin'' == "" ];then
-                        continue;
-                fi
-
-                iwpriv $ifname  set WscStop=1
-                iwpriv $ifname  set WscConfMode=7
-                iwpriv $ifname  set WscPinCode=$pin
-                iwpriv $ifname  set WscMode=1
-                iwpriv $ifname  set WscGetConf=1
-
+		   local cur_cli=`iwpriv $ifname get_on_cli | grep -v $ifname | grep -v MAC | grep -v ^$ | wc -l`
+           iwpriv $ifname set WscStop=1
+           iwpriv $ifname set WscConfMode=7
+           iwpriv $ifname set WscMode=2
+           iwpriv $ifname set WscGetConf=1
+           check_device_connect  $cur_cli  $ifname $band
         fi
 
 done
