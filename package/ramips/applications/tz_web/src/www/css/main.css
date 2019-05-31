@@ -1589,13 +1589,14 @@ ul.tabs a.current {
 	float: right;
 }
 
-#edit_box2 {
-	display: none;
+.edit_box2 {
 	position: absolute;
 	padding: 20px;
-	height: 300px;
+	height: 180px;
 	width: 700px;
-	z-index: 999;
+	top: 30% !important;
+	left: 20% !important;
+	z-index: 99999;
 	border: solid 8px #999;
 	background: #fff;
 }
