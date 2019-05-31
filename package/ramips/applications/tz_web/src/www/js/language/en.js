@@ -588,7 +588,6 @@ DOC.net.dnsServer = "DNS Server Address";
 DOC.net.downlink = "Downlink";
 DOC.net.downlinkTraffic = "Downlink Traffic";
 DOC.net.fail = "Fail";
-DOC.net.fourG = "4G";
 DOC.net.gateway = "Gateway";
 DOC.net.gatewayv6 = "IPv6 Gateway";
 DOC.net.ip = "IP";

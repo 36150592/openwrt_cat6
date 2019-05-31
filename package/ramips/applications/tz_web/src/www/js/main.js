@@ -138,7 +138,8 @@ var RequestCmd = {
     FW_UPNP_ENABLE:234,
     FW_UPNP_DISABLE:235,
     FW_UPNP:236,
-    GET_INFO: 237
+    GET_INFO: 237,
+    GET_LOGIN_INFO: 238
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },

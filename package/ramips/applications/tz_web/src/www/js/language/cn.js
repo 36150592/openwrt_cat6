@@ -589,7 +589,6 @@ DOC.net.dnsServer = "DNS服务器";
 DOC.net.downlink = "下行";
 DOC.net.downlinkTraffic = "下行流量";
 DOC.net.fail = "连接失败";
-DOC.net.fourG = "4G";
 DOC.net.gateway = "网关";
 DOC.net.gatewayv6 = "IPv6网关";
 DOC.net.ip = "IP地址";

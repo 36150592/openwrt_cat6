@@ -112,7 +112,7 @@
                             //      $btnLogin.enable();
                             //  }
                         }
-                    });
+                    }); h
                 });
 
                 $username.keydown(function (e) {
@@ -153,135 +153,135 @@
 
             });
 
-            function loadDeviceInfo() {
+            function getNetState(flag) {
+                var state = "-";
+                if (flag == -1) {
+                    state = "?";
+                } else if (flag == 0) {
+                    state = "2g";
+                } else if (flag == 2) {
+                    state = "3g";
+                } else if (flag == 7) {
+                    state = "4g";
+                }
+                return state;
+            }
+
+            function changeConnectionNetworkStatusValueColor(wan_ipaddr, fourg_ipaddr) {
+                if (!!wan_ipaddr || !!fourg_ipaddr) {
+                    $('.login_right #internet_checking table tr:first-child td').css("color", "green");
+                }
+                if (!wan_ipaddr && !fourg_ipaddr) {
+                    $('.login_right #internet_checking table tr:first-child td').css("color", "red");
+                }
+            }
+
+            function getLoginInfo() {
                 Page.postJSON({
-                    json: { cmd: RequestCmd.DEVICE_VERSION_INFO },
+                    json: { cmd: RequestCmd.GET_LOGIN_INFO },
                     success: function (data) {
-                        var names = [],
-                            values = [],
-                            device = DOC.device,
-                            datas = data.data;
+                        var names_device = [],
+                            values_device = [],
+                            names_network = [],
+                            values_network = [],
+                            names_modem = [],
+                            values_modem = [],
+                            datas = data.data,
+                            netState = getNetState(datas.modem_act);
+                
+
+
+                        names_device.push(DOC.device.softwarVersion);
+                        names_device.push(DOC.device.configVersion);
+                        names_device.push(DOC.device.imei);
+
+                        values_device.push(datas.software_version || loading);
+                        values_device.push(datas.config_version || loading);
+                        values_device.push(datas.factory_imei || loading);
+
+                  
+                        if (!!datas.wan_ipaddr) {
+                            names_network.push(DOC.lbl.connectionNetworkStatus);
+                            names_network.push(DOC.lbl.netMode);
+                            names_network.push(DOC.net.wanIp);
+                            names_network.push(DOC.net.mask);
+                            names_network.push(DOC.net.gateway);
+                            names_network.push(DOC.net.dns1);
+                            names_network.push(DOC.net.dns2);
+
+                            values_network.push(DOC.net.ok);
+                            values_network.push(DOC.net.wiredMode);
+                            values_network.push(datas.wan_ipaddr || loading);
+                            values_network.push(datas.wan_netmask || loading);
+                            values_network.push(datas.wan_gateway || loading);
+                            values_network.push(datas.wan_first_dns || loading);
+                            values_network.push(datas.wan_second_dns || loading);
+                        }
+
+                        if (!!datas.fourg_ipaddr && !datas.wan_ipaddr) {
+                            names_network.push(DOC.lbl.connectionNetworkStatus);
+                            names_network.push(DOC.lbl.netMode);
+                            names_network.push(DOC.net.wanIp);
+                            names_network.push(DOC.net.mask);
+                            names_network.push(DOC.net.gateway);
+                            names_network.push(DOC.net.dns1);
+                            names_network.push(DOC.net.dns2);
+
+                            values_network.push(DOC.net.ok);
+                            values_network.push(netState);
+                            values_network.push(datas.fourg_ipaddr || loading);
+                            values_network.push(datas.fourg_netmask || loading);
+                            values_network.push(datas.fourg_gateway || loading);
+                            values_network.push(datas.fourg_dns1 || loading);
+                            values_network.push(datas.fourg_dns2 || loading);
+                        }
+
+                        if (!datas.wan_ipaddr && !datas.fourg_ipaddr) {
+                            names_network.push(DOC.lbl.connectionNetworkStatus);
+                            names_network.push(DOC.lbl.netMode);
+                            names_network.push(DOC.net.wanIp);
+                            names_network.push(DOC.net.mask);
+                            names_network.push(DOC.net.gateway);
+                            names_network.push(DOC.net.dns1);
+                            names_network.push(DOC.net.dns2);
+
+                            values_network.push(DOC.net.fail);
+                            values_network.push(DOC.net.noNetwork);
+                            values_network.push(loading);
+                            values_network.push(loading);
+                            values_network.push(loading);
+                            values_network.push(loading);
+                            values_network.push(loading);
+                        }
+
+                        names_modem.push(DOC.lte.rsrp);
+                        names_modem.push(DOC.lte.rssi);
+                        names_modem.push(DOC.lte.rsrq);
+                        names_modem.push(DOC.lte.sinr);
+
+                        values_modem.push(datas.modem_rsrp ? FormatUtil.formatField(datas.modem_rsrp, 'dBm') : loading);
+                        values_modem.push(datas.modem_rssi ? FormatUtil.formatField(datas.modem_rssi, 'dBm') : loading);
+                        values_modem.push(datas.modem_rsrq ? FormatUtil.formatField(datas.modem_rsrq, 'dB') : loading);
+                        values_modem.push(datas.modem_sinr ? FormatUtil.formatField(datas.modem_sinr, 'dB') : loading);
 
                         Page.isNULLToSpace = true;
 
-                        names.push(device.softwarVersion);
-                        names.push(device.configVersion);
-                        names.push(device.imei);
-
-                        values.push(datas.softVersion.software_version || loading);
-                        values.push(datas.softVersion.config_version || loading);
-                        values.push(datas.factory.imei || loading);
-
-                        var device_info_html = Page.createTable(DOC.title.deviceInfo, names, values, names.length, 1).replace("<td>", "<td style=\"width=100px\">");
+                        var device_info_html = Page.createTable(DOC.title.deviceInfo, names_device, values_device, names_device.length, 1).replace("<td>", "<td style=\"width=100px\">");
                         $('#device_info').html(device_info_html);
                         Page.setStripeTable();
                         Page.isNULLToSpace = false;
-                    }
-                });
-            }
 
-            function internetChecking() {
-                Page.postJSON({
-                    json: { cmd: RequestCmd.SYS_INFO },
-                    success: function (data) {
-                        var datas = data.data,
-                            data_wan = datas.wan,
-                            data_4g = datas['4g'],
-                            data_4g1 = datas['4g1'],
-                            data_4g2 = datas['4g2'],
-                            names = [],
-                            values = []
-
-                        Page.isNULLToSpace = true;
-
-                        if (!!data_wan.ipaddr) {
-                            names.push(DOC.lbl.connectionNetworkStatus);
-                            names.push(DOC.lbl.netMode);
-                            names.push(DOC.net.wanIp);
-                            names.push(DOC.net.mask);
-                            names.push(DOC.net.gateway);
-                            names.push(DOC.net.dns);
-
-                            values.push(DOC.net.ok);
-                            values.push(DOC.net.wiredMode);
-                            values.push(data_wan.ipaddr || loading);
-                            values.push(data_wan.netmask || loading);
-                            values.push(data_wan.gateway || loading);
-                            values.push(data_wan.first_dns || loading);
-                        }
-
-                        if (!!data_4g.ipaddr || !!data_4g1.ipaddr || !!data_4g2.ipaddr) {
-                            names.push(DOC.lbl.connectionNetworkStatus);
-                            names.push(DOC.lbl.netMode);
-                            names.push(DOC.net.wanIp);
-                            names.push(DOC.net.mask);
-                            names.push(DOC.net.gateway);
-                            names.push(DOC.net.dns);
-
-                            values.push(DOC.net.ok);
-                            values.push(DOC.net.foruG);
-                            values.push(data_wan.ipaddr || loading);
-                            values.push(data_wan.netmask || loading);
-                            values.push(data_wan.gateway || loading);
-                            values.push(data_wan.first_dns || loading);
-                        }
-
-                        if (!data_wan.ipaddr && !data_4g.ipaddr && !data_4g1.ipaddr && !data_4g2.ipaddr) {
-                            names.push(DOC.lbl.connectionNetworkStatus);
-                            names.push(DOC.lbl.netMode);
-                            names.push(DOC.net.wanIp);
-                            names.push(DOC.net.mask);
-                            names.push(DOC.net.gateway);
-                            names.push(DOC.net.dns);
-
-                            values.push(DOC.net.fail);
-                            values.push(DOC.net.noNetwork);
-                            values.push(loading);
-                            values.push(loading);
-                            values.push(loading);
-                            values.push(loading);
-                        }
-
-                        var internet_checking_html = Page.createTable(DOC.title.internetChecking, names, values, names.length, 1).replace("<td>", "<td style=\"width=100px\">");
+                        var internet_checking_html = Page.createTable(DOC.title.internetChecking, names_network, values_network, names_network.length, 1).replace("<td>", "<td style=\"width=100px\">");
                         $('#internet_checking').html(internet_checking_html);
-                        if (!!data_wan.ipaddr || !!data_4g.ipaddr || !!data_4g1.ipaddr || !!data_4g2.ipaddr) {
-                            $('.login_right #internet_checking table tr:first-child td').css("color", "green");
-                        }
-                        if (!data_wan.ipaddr && !data_4g.ipaddr && !data_4g1.ipaddr && !data_4g2.ipaddr) {
-                            $('.login_right #internet_checking table tr:first-child td').css("color", "red");
-                        }
-                        Page.setStripeTable();
-                        Page.isNULLToSpace = false;
-                    }
-                });
-            }
 
-            function fourGInfo() {
+                        changeConnectionNetworkStatusValueColor(datas.wan_ipaddr, datas.fourg_ipaddr)
 
-                Page.postJSON({
-                    json: { cmd: RequestCmd.SYS_INFO_3 },
-                    success: function (data) {
-                        var names = [],
-                            values = [],
-                            datas = data.data,
-                            data_modem = datas.modem;
-
-                        Page.isNULLToSpace = true;
-
-                        names.push(DOC.lte.rsrp);
-                        names.push(DOC.lte.rssi);
-                        names.push(DOC.lte.rsrq);
-                        names.push(DOC.lte.sinr);
-
-                        values.push(data_modem.rsrp ? FormatUtil.formatField(data_modem.rsrp, 'dBm') : loading);
-                        values.push(data_modem.rssi ? FormatUtil.formatField(data_modem.rssi, 'dBm') : loading);
-                        values.push(data_modem.rsrq ? FormatUtil.formatField(data_modem.rsrq, 'dB') : loading);
-                        values.push(data_modem.sinr ? FormatUtil.formatField(data_modem.sinr, 'dB') : loading);
-
-                        var net_html = Page.createTable(DOC.title.fourGInfo, names, values, names.length, 1).replace("<td>", "<td>");
+                        var net_html = Page.createTable(DOC.title.fourGInfo, names_modem, values_modem, names_modem.length, 1).replace("<td>", "<td>");
                         $('#four_G_info').html(net_html);
+
                         Page.setStripeTable();
                         Page.isNULLToSpace = false;
+
                     }
                 })
             }
@@ -291,9 +291,7 @@
                 $('#copyright').text(copyright)
             }
 
-            loadDeviceInfo();
-            internetChecking();
-            fourGInfo();
+            getLoginInfo()
             addFooterHtml()
         });
 

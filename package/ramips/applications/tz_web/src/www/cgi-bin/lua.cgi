@@ -2330,6 +2330,37 @@ function get_info()
 
 end
 
+function get_login_info()
+    local data_array = {}
+
+    data_array["factory_imei"] = system.system_get_tozed_factory_info()['imei'] 
+    data_array["software_version"] = system.system_get_tozed_system_info()['software_version'] 
+    data_array["config_version"] = system.system_get_tozed_system_info()['config_version']
+    data_array["modem_act"] = modem.modem_get_status()['act'] 
+    data_array["modem_rsrp"] = modem.modem_get_status()['rsrp']
+    data_array["modem_rssi"] = modem.modem_get_status()['rssi'] 
+    data_array["modem_rsrq"] = modem.modem_get_status()['rsrq'] 
+    data_array["modem_sinr"] = modem.modem_get_status()['sinr'] 
+    data_array["wan_ipaddr"] = network.network_get_wan_info()['ipaddr'] 
+    data_array["wan_netmask"] = network.network_get_wan_info()['netmask'] 
+    data_array["wan_gateway"] = network.network_get_wan_info()['gateway'] 
+    data_array["wan_first_dns"] = network.network_get_wan_info()['first_dns']
+    data_array["wan_second_dns"] = network.network_get_wan_info()['second_dns'] 
+    data_array["fourg_ipaddr"] = network.network_get_4g_net_info()['ipaddr'] 
+    data_array["fourg_netmask"] = network.network_get_4g_net_info()['netmask'] 
+    data_array["fourg_gateway"] = network.network_get_4g_net_info()['gateway'] 
+    data_array["fourg_dns1"] = network.network_get_4g_net_info()['first_dns'] 
+    data_array["fourg_dns2"] = network.network_get_4g_net_info()['second_dns'] 
+
+    local tz_answer = {}
+    tz_answer["success"] = true
+    tz_answer["cmd"] = 238
+    tz_answer["data"] = data_array
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end
+
 local switch = {
     [0] = get_sysinfo,
     [1] = get_systime,
@@ -2423,7 +2454,8 @@ local switch = {
     [234] = set_firewall_upnp_enable,
     [235] = set_firewall_upnp_disable,
     [236] = firewall_upnp_get_data,
-    [237] = get_info
+    [237] = get_info,
+    [238] = get_login_info
 }
 
 cmdid = uti.get_env_cmdId(envv)
@@ -2437,7 +2469,7 @@ else
     tz_req = cjson.decode(data1)
     local cmd = tz_req["cmd"]
     if (cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 97 and cmd ~= 113 and
-        cmd ~= 220 and cmd ~= 43 and cmd ~= 0 and cmd ~= 208 and cmd ~= 101) then
+        cmd ~= 220 and cmd ~= 43 and cmd ~= 0 and cmd ~= 208 and cmd ~= 101 and cmd ~=238) then
         local fileName = string.format("/tmp/sessionsave/.%s",
                                        tz_req["sessionId"])
         if (uti.is_file_exist(fileName) ~= true) then
