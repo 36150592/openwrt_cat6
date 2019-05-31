@@ -191,7 +191,7 @@ if [ "$2" = "" ]; then
 	echo "  2:   完全编译"
 	echo "  a:   配置openwrt编译选项"
 	echo "  b:   配置kernel"
-	echo "任意包名,例如：package/ramips/applications/dialtool2/compile"
+	echo "任意包名,例如：package/ramips/applications/dialtool2"
 	echo "  q:   quit"
 	read options
 	
@@ -249,8 +249,10 @@ elif [ "$options" = "b" ]; then
 elif [ "$options" = "q" ]; then
 	exit
 else
-	echo "make $options V=99"
-	make $options V=99
+	echo "make $options/{clean,prepare,compile} V=99"
+	make $options/clean V=99
+	make $options/prepare V=99
+	make $options/compile V=99
 fi
 
 if [ "$?" = "0" ] ; then
