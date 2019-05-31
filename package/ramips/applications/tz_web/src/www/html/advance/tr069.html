@@ -174,7 +174,7 @@
            Page.postJSON({
                $id: $btnSave,
                json: json,
-               complete: function(data) {
+               success: function(data) {
                    AlertUtil.alertMsg(PROMPT.saving.success);
                }
            });
