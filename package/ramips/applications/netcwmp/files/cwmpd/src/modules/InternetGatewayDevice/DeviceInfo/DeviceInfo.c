@@ -100,14 +100,20 @@ int cpe_get_igd_di_softwareversion(cwmp_t * cwmp, const char * name, char ** val
 {
     //return get_sys_parameter(X_SYS_SoftwareVersion, value);
     char shcmd[128];
-    sprintf(shcmd, "cat /version |grep software_version|awk -F= \'{print $2}\'");
-    read_memory(shcmd, param, sizeof(param));
+	read_memory("uci -q get tozed.system.TZ_SYSTEM_SOFTWARE_VERSION", param, 64); 
     util_strip_traling_spaces(param);
-    if (strlen(param) == 0) {
-    	*value = NULL;
-    } else {
-    	*value = param;
-    }
+	if (strlen(param) == 0) {
+	       sprintf(shcmd, "cat /version |grep software_version|awk -F= \'{print $2}\'");
+			read_memory(shcmd, param, sizeof(param));
+			util_strip_traling_spaces(param);
+			if (strlen(param) == 0) {
+				*value = NULL;
+			} else {
+				*value = param;
+			}
+	}else{
+		*value = param;
+	}
     return FAULT_CODE_OK;
 }
 

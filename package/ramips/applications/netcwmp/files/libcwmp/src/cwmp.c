@@ -3949,20 +3949,14 @@ int uci_get_single_config_attr(char *name, char *value) {
 int uci_set_single_config_attr(char *name, char *value) {
 
 	char shellcmd[256], buffer[256];
-	//printf("jiangyibo  111111 \n");
+	
 	sprintf(shellcmd, "%s", name);
 	if (read_memory(shellcmd, buffer, sizeof(buffer)) == SUCCESS) {
-		//printf("jiangyibo mmmd%s\n",buffer);
-		strcpy(value,buffer);
-/*		if (get_attr_by_line(buffer, name, value) == NULL) {
-			value[0] = '\0';
-		}
-*/		
-	} else {
-		value[0] = '\0';
-	}
+		
+		return SUCCESS;
+	} 
 
-	return SUCCESS;
+	return FAIL;
 }
 
 
@@ -4393,7 +4387,38 @@ int read_lte_param( const char* config_file,InfoStruct* server_wifi_info )
 		{
 			STRCPY_S( system_version_info.imsi,field_value );
 			
-		}				
+		}	
+		else if( !strcmp( field_name,"PLMN" ) )
+		{
+			STRCPY_S( system_version_info.PLMN,field_value );
+			
+		}
+		else if( !strcmp( field_name,"band" ) )
+		{
+			STRCPY_S( system_version_info.TZBAND,field_value );
+			
+		}		
+		else if( !strcmp( field_name,"act" ) )
+		{
+			STRCPY_S( system_version_info.AcT,field_value );
+			
+		}	
+		else if( !strcmp( field_name,"PCI" ) )
+		{
+			STRCPY_S( system_version_info.TZPHYCELLID,field_value );
+			
+		}	
+		else if( !strcmp( field_name,"CQI" ) )
+		{
+			STRCPY_S( system_version_info.TZCQI,field_value );
+			
+		}
+		else if( !strcmp( field_name,"MCS" ) )
+		{
+			STRCPY_S( system_version_info.TZMCS,field_value );
+			
+		}	
+											
 	}
 
 	//关掉文件句柄
@@ -6368,26 +6393,26 @@ int get_sys_parameter(enum SystemParameterName name, char **value)
 			break;
 			
 		case X_SYS_ACS_URL:
-			get_single_config_attr("TZ_TR069_URL", param);
+			get_single_config_attr("tr069_ServerURL", param);
 			break;
 			
 		case X_SYS_ACS_Username:
-			get_single_config_attr("TZ_TR069_USERNAME", param);
+			get_single_config_attr("tr069_ServerUsername", param);
 			break;
 			
 		case X_SYS_ACS_Password:
-			get_single_config_attr("TZ_TR069_PASSWD", param);
+			get_single_config_attr("tr069_ServerPassword", param);
 			break;
 			
 		case X_SYS_URL:
 			break;
 			
 		case X_SYS_Username:
-			get_single_config_attr("TZ_TR069_LINK_USERNAME", param);
+			get_single_config_attr("tr069_ConnectionRequestUname", param);
 			break;
 			
 		case X_SYS_Password:
-			get_single_config_attr("TZ_TR069_LINK_PASSWD", param);
+			get_single_config_attr("tr069_ConnectionRequestPassword", param);
 			break;
 
 		default:

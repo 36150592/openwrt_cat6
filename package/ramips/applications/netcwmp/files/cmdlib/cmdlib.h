@@ -1078,6 +1078,8 @@ typedef struct
 	char TZTXPOWER[32];
 	char TZGLBCELLID[32];
 	char TZPHYCELLID[32];
+	char TZCQI[32];
+	char TZMCS[32];
 
 
 	//锁IMSI段号的字段

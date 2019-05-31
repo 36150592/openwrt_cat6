@@ -82,6 +82,7 @@ int cpe_set_igd_ms_username(cwmp_t * cwmp, const char * name, const char * value
 {
 	char combuf[128];
 	cwmp_conf_set("cwmp:acs_username", value);
+	/*
 	if(isTestConfig())
 	{
 		set_single_config_attr("TZ_TR069_USERNAME2", value);
@@ -90,6 +91,7 @@ int cpe_set_igd_ms_username(cwmp_t * cwmp, const char * name, const char * value
 	{
 		set_single_config_attr(TZ_TR069_USERNAME, value);
 	}
+	*/
     snprintf(combuf,sizeof(combuf),"uci set tozed.cfg.tr069_ServerUsername=%s 2>/dev/null&&uci commit tozed",value);
 
 	uci_set_single_config_attr(combuf, "y");
@@ -111,11 +113,12 @@ int cpe_set_igd_ms_password(cwmp_t * cwmp, const char * name, const char * value
 {
 		char combuf[128];
 	cwmp_conf_set("cwmp:acs_password", value);
+	/*
 	if(isTestConfig())
 		set_single_config_attr("TZ_TR069_PASSWD2", value);
 	else
 		set_single_config_attr(TZ_TR069_PASSWD, value);
-
+*/
     snprintf(combuf,sizeof(combuf),"uci set tozed.cfg.tr069_ServerPassword=%s 2>/dev/null&&uci commit tozed",value);
 
 	uci_set_single_config_attr(combuf, "y");		
@@ -132,16 +135,18 @@ int cpe_get_igd_ms_url(cwmp_t * cwmp, const char * name, char ** value, pool_t *
 int cpe_set_igd_ms_url(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
 		char combuf[128];
+		
 	cwmp_conf_set("cwmp:acs_url", value);
+	/*
 	if(isTestConfig())
 		set_single_config_attr("TZ_TR069_URL2", value);
 	else
 		set_single_config_attr(TZ_TR069_URL, value);
-
+*/
     snprintf(combuf,sizeof(combuf),"uci set tozed.cfg.tr069_ServerURL=%s 2>/dev/null&&uci commit tozed",value);
 
 	uci_set_single_config_attr(combuf, "y");		
-		
+	
     return FAULT_CODE_OK;
 }
 
@@ -169,6 +174,7 @@ int cpe_set_igd_ms_connectionrequestusername(cwmp_t * cwmp, const char * name, c
 {
 	char combuf[128]={0};
 	cwmp_conf_set("cwmp:cpe_username", value);
+	/*
 	if(isTestConfig())
 	{
 		set_single_config_attr("TZ_TR069_LINK_USERNAME2", value);
@@ -182,12 +188,12 @@ int cpe_set_igd_ms_connectionrequestusername(cwmp_t * cwmp, const char * name, c
 	{
 		set_single_config_attr(TZ_TR069_LINK_USERNAME, value);
 		if (value != NULL && strlen(value) > 0) {
-			set_single_config_attr(TZ_TR069_CPE_AUTH_ENABLED, "1");
+			set_single_config_attr(TZ_TR069_CPE_AUTH_ENABLED, "y");
 		} else {
-			set_single_config_attr(TZ_TR069_CPE_AUTH_ENABLED, "0");
+			set_single_config_attr(TZ_TR069_CPE_AUTH_ENABLED, "n");
 		}
 	}
-
+*/
     snprintf(combuf,sizeof(combuf),"uci set tozed.cfg.tr069_ConnectionRequestUname=%s 2>/dev/null&&uci commit tozed",value);
 
 	uci_set_single_config_attr(combuf, "y");		
@@ -207,10 +213,12 @@ int cpe_set_igd_ms_connectionrequestpassword(cwmp_t * cwmp, const char * name, c
 {
 	char combuf[128]={0};
 	cwmp_conf_set("cwmp:cpe_password", value);
+	/*
 	if(isTestConfig())
 		set_single_config_attr("TZ_TR069_LINK_PASSWD2", value);
 	else
 		set_single_config_attr(TZ_TR069_LINK_PASSWD, value);
+		*/
     snprintf(combuf,sizeof(combuf),"uci set tozed.cfg.tr069_ConnectionRequestPassword=%s 2>/dev/null&&uci commit tozed",value);
 
 	uci_set_single_config_attr(combuf, "y");				
@@ -522,7 +530,17 @@ int cpe_get_igd_di_X_CMCC_IMSI(cwmp_t * cwmp, const char * name, char ** value, 
 
 int cpe_get_igd_di_X_CMCC_IMEI(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	return get_parameter(X_CMCC_IMEI, value);
+	    char shcmd[64];
+		sprintf(shcmd, "eth_mac g imei 2>/dev/null");
+		read_memory(shcmd, param, sizeof(param));
+		util_strip_traling_spaces(param);
+		if (strlen(param) == 0) {
+			*value = NULL;
+		} else {
+			*value = param;
+		}
+		return FAULT_CODE_OK;
+	//return get_parameter(X_CMCC_IMEI, value);
 }
 
 int cpe_get_igd_di_X_CMCC_ConfigVersion(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)

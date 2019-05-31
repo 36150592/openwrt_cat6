@@ -1827,7 +1827,7 @@ int cpe_set_igd_WEPKey(cwmp_t *cwmp, const char *name, const char *value, int le
 
 int  cpe_refresh_igd_WLANConfiguration(cwmp_t * cwmp, parameter_node_t * param_node, callback_register_func_t callback_reg)
 {
-    printf("jiangyibo wifi info\n");
+  //  printf("jiangyibo wifi info\n");
     igd_entries.wlan_entry = uci_get_wifi_num();
     cwmp_refresh_i_parameter(cwmp, param_node, igd_entries.wlan_entry);
     cwmp_model_refresh_object(cwmp, param_node, 0, callback_reg);
@@ -3372,9 +3372,9 @@ int cpe_get_igd_SSIDOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value,
 
 int cpe_set_igd_SSIDOfMultiSSID(cwmp_t *cwmp, const char *name, const char *value, int length, callback_register_func_t callback_reg)
 {
-    printf("jiangyibo uu\n");
+ 
     int res = uci_mul_set_wifi_param(name, "ssid", value);
-    printf("jiangyibo uu22\n");
+ 
         cmd_touch(REBOOT_WIFI_MODULE);
     callback_reg(cwmp, restart_wifi, NULL, NULL);
     return FAULT_CODE_OK;
@@ -3483,7 +3483,7 @@ int cpe_set_igd_NATSwitchOfMultiSSID(cwmp_t *cwmp, const char *name, const char 
 
 int cpe_get_igd_DHCPSwitchOfMultiSSID(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-    printf("jiangyibo jj \n");
+    
     int res = uci_mul_get_dhcp_param(name, "ignore", value);
     if(*value == NULL)
     {
@@ -3491,7 +3491,7 @@ int cpe_get_igd_DHCPSwitchOfMultiSSID(cwmp_t * cwmp, const char * name, char ** 
           *value = param;
         return FAULT_CODE_OK;
     }
-    printf("jiangyibo jj %s\n",*value);
+    
     if(FAULT_CODE_OK != res){
         return res;
     }
