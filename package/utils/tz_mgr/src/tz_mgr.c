@@ -16,6 +16,7 @@
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>   /* The L2 protocols */
 #include <pthread.h>
+#include <uci.h>
 
 
 #include "configtoolc.h"
@@ -30,30 +31,30 @@
 #define FALSE 0
 #endif
 
-#define TZ_WIFI_MAX_TXPOWER	23
+#define TZ_WIFI_MAX_TXPOWER 23
 //send to server
 #define PROTOCOL_TYPE_ECTSP 0x9886
 
 //send to client
 #define PROTOCOL_TYPE_ECTCP 0x9887
 
-#define DEV_LED_RED			"r"
-#define DEV_LED_GREEN		"g"
-#define DEV_LED_WPS			"wps"
-#define CMD_LED_ON			1
-#define CMD_LED_OFF			0
+#define DEV_LED_RED         "r"
+#define DEV_LED_GREEN       "g"
+#define DEV_LED_WPS         "wps"
+#define CMD_LED_ON          1
+#define CMD_LED_OFF         0
 
 
-#define NAME_OF_WIRELESS_INTERFACE	"ra0"
-#define SCRIPT_DHCPD		"/etc/init.d/odhcpd"
-#define SCRIPT_DNSMAQ		"/etc/init.d/dnsmasq"
-#define SCRIPT_HTTPD		"/etc/init.d/mini_httpd"
+#define NAME_OF_WIRELESS_INTERFACE  "ra0"
+#define SCRIPT_DHCPD        "/etc/init.d/odhcpd"
+#define SCRIPT_DNSMAQ       "/etc/init.d/dnsmasq"
+#define SCRIPT_HTTPD        "/etc/init.d/mini_httpd"
 #define TZ_FACTORY_FLAG_FILE "/etc/.flag_factory_config"
-#define TZ_SCRIPT_RESTORE	"/etc/tozed/tz_restore_factory"
-#define TZ_VERSION_FILE		"/version"
+#define TZ_SCRIPT_RESTORE   "/etc/tozed/tz_restore_factory"
+#define TZ_VERSION_FILE     "/version"
 #define TZ_FIRMWARE_VERSION "software_version"
 #define TZ_FIRMWARE_INLINE_VERSION "inline_soft_version"
-#define TZ_CONFIG_VERSION 	"config_version"
+#define TZ_CONFIG_VERSION   "config_version"
 #define TZ_MGR_RESTART_COUNT_FILE "/tmp/.tz_mgr_restart_count"//记录程序的重启次数，从而计算连接不上室外机的时间
 #define TZ_RESTORE_NO_RESPONE_COUNT_FILE "/tmp/.tz_mgr_restore_no_respone_count"//记录发送恢复出厂指令没收到回复的次数，若超过5次视为与室外机失联，清除出厂标志，即不通知室外机恢复出厂
 #define TZ_MGR_ENABLE_DHCP_FLAG_FILE "/tmp/.tz_mgr_dhcp_enable"//如果存在此文件，则启动dhcp服务
@@ -61,7 +62,7 @@
 #define AFTER_KEY_RESTORE_FLAG_FILE "/etc/.flag_after_key_restore_factory"//通过按键恢复出厂后创建，如果存在此文件，通知室外机恢复出厂
 
 
-#define APP_NAME	"tz_mgr"  //程序名字,必须与配置文件及脚本一致！
+#define APP_NAME    "tz_mgr"  //程序名字,必须与配置文件及脚本一致！
 
 //空宏
 #define IN 
@@ -112,6 +113,8 @@ char TZ_FOTA_UPGRADE_IP[16];     //temp ip
 char TZ_FOTA_UPGRADE_IP_BACKUP[16];//temp ip backup
 void tz_get_if_ip(char* ip_buf,int buf_len);//获取当前接口的ip
 void tz_check_restart_count(void);//获取重启次数，目前每5秒启动一次，超过1分钟没连接则启动dhcp server，否则关掉它
+int setWirelessCfgValue(char *name,char *value);//使用cuci设置wireless参数
+
 
 //copy form miao
 static volatile int is_connected_to_server=FALSE;
@@ -127,7 +130,7 @@ static volatile int reboot_timer_counter=0;
 
 
 void *recv_thread(void* tag)//接收线程入口
-{	
+{   
 	unsigned short listen_protocol_type = PROTOCOL_TYPE_ECTCP;//监听发送到客户端的数据包
 
 	
@@ -142,7 +145,7 @@ void *recv_thread(void* tag)//接收线程入口
 
 
 void *heartbeat_thread(void* tag)//心跳线程入口
-{	
+{   
 	while(1)
 	{
 		sleep(1);
@@ -196,7 +199,7 @@ int main(int argc, char * const argv[])
 				break;
 			case 'D':
 				global_debugPrint_flag = true;
-				break;	
+				break;  
 		}
 	}
 	pthread_rwlock_init(&send_sock_rwlock, NULL);//初始化读写锁
@@ -331,7 +334,7 @@ int CreateRawSocket(char const *ifname, unsigned short type,IN unsigned char *hw
 		print("ioctl(SIOCFIGINDEX):Could not get interface index");
 		return -2;
 	}
-	sa.sll_ifindex = ifr.ifr_ifindex;	
+	sa.sll_ifindex = ifr.ifr_ifindex;   
 
 	if(IfIndex){
 			*IfIndex = ifr.ifr_ifindex;
@@ -342,7 +345,7 @@ int CreateRawSocket(char const *ifname, unsigned short type,IN unsigned char *hw
 		return -3;
 	}
 
-    return fd;
+	return fd;
 }
 
 //客户端状态机
@@ -613,6 +616,8 @@ int util_decode_frame_info(unsigned char* ethernet_frame)
 //收到服务器下发的配置信息
 int util_decode_field_info(unsigned char* p_ethernet_frame,int frame_len)
 {
+
+
 	int current_len=0;
 	unsigned char field;
 	unsigned char *p_field=&field;
@@ -803,11 +808,11 @@ int util_decode_field_info(unsigned char* p_ethernet_frame,int frame_len)
 			case CMD_INFO_TZ_WIFI_40M_ENABLE:
 				print("CMD_INFO_TZ_WIFI_40M_ENABLE:%s", ( const char* )p_ethernet_frame);
 				strcpy(server_wifi_info.TZ_WIFI_40M_ENABLE,( const char* )p_ethernet_frame);
-				break;		
+				break;      
 			case CMD_INFO_TZ_FOTA_UPGRADE_IP:
 				strcpy(TZ_FOTA_UPGRADE_IP,( const char* )p_ethernet_frame);
 				if( strlen( TZ_FOTA_UPGRADE_IP ) )
-				{	
+				{   
 					tz_get_if_ip(TZ_FOTA_UPGRADE_IP_BACKUP,sizeof(TZ_FOTA_UPGRADE_IP_BACKUP));
 					if( strcmp( TZ_FOTA_UPGRADE_IP,TZ_FOTA_UPGRADE_IP_BACKUP ) )
 					{
@@ -893,7 +898,8 @@ int util_sync_config_info(void)
 			print("error:config_set_string AP_SSID failed! ret=%d",ret);
 		}
 		//默认只有一个ssid
-		shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].ssid=%s",server_wifi_info.AP_SSID);
+		setWirelessCfgValue("ssid",server_wifi_info.AP_SSID);
+		//shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].ssid=\"%s\"",server_wifi_info.AP_SSID);
 		wifi_config_changed=true;
 		config_have_changed=TRUE;
 	}
@@ -975,13 +981,15 @@ int util_sync_config_info(void)
 				print("%s","encrypt mode == WPA+PSK+TKIP");
 				//默认只有一个ssid
 				shell_recv(NULL,0,"%s","uci set wireless.@wifi-iface[0].encryption=psk+tkip");
-				shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].key=%s", server_wifi_info.PSK_KEY);
+				setWirelessCfgValue("key",server_wifi_info.PSK_KEY);
+				//shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].key=\"%s\"", server_wifi_info.PSK_KEY);
 			}
 			else if(!strcmp(server_wifi_info.AP_WPA, "3"))//WPA1+WPA2+PSK+TKIP
 			{
 				print("%s","encrypt mode == WPA1+WPA2+PSK+TKIP");
 				shell_recv(NULL,0,"%s","uci set wireless.@wifi-iface[0].encryption=psk+psk2+tkip");
-				shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].key=%s", server_wifi_info.PSK_KEY);
+				setWirelessCfgValue("key",server_wifi_info.PSK_KEY);
+				//shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].key=\"%s\"", server_wifi_info.PSK_KEY);
 			}
 
 		}
@@ -992,13 +1000,15 @@ int util_sync_config_info(void)
 			{
 				print("%s","encrypt mode == WPA2+PSK+AES");
 				shell_recv(NULL,0,"%s","uci set wireless.@wifi-iface[0].encryption=psk2+ccmp");
-				shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].key=%s", server_wifi_info.PSK_KEY);
+				setWirelessCfgValue("key",server_wifi_info.PSK_KEY);
+				//shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].key=\"%s\"", server_wifi_info.PSK_KEY);
 			}
 			else if(!strcmp(server_wifi_info.AP_WPA, "3"))//WPA1+WPA2+PSK+AES
 			{
 				print("%s","encrypt mode == WPA1+WPA2+PSK+AES");
 				shell_recv(NULL,0,"%s","uci set wireless.@wifi-iface[0].encryption=psk+psk2+tkip+ccmp");
-				shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].key=%s", server_wifi_info.PSK_KEY);
+				setWirelessCfgValue("key",server_wifi_info.PSK_KEY);
+				//shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].key=\"%s\"", server_wifi_info.PSK_KEY);
 			}
 		}
 	}
@@ -1060,7 +1070,7 @@ int util_sync_config_info(void)
 		}
 		int disabled = strcmp(server_wifi_info.TZ_ENABLE_WIFI,"yes")?1:0;
 		print("set wireless.%s.disabled=%d..", NAME_OF_WIRELESS_INTERFACE, disabled);
-		shell_recv(NULL,0,"uci set wireless.%s.disabled=%d", NAME_OF_WIRELESS_INTERFACE, disabled);
+		shell_recv(NULL,0,"uci set wireless.%s.disabled=\"%d\"", NAME_OF_WIRELESS_INTERFACE, disabled);
 		wifi_config_changed=true;
 		config_have_changed=TRUE;
 	}
@@ -1186,7 +1196,7 @@ int util_sync_config_info(void)
 		{
 			print("error:config_set_string AP_HIDESSID failed! ret=%d",ret);
 		}
-		shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].hidden=%s", server_wifi_info.AP_HIDESSID);
+		shell_recv(NULL,0,"uci set wireless.@wifi-iface[0].hidden=\"%s\"", server_wifi_info.AP_HIDESSID);
 		wifi_config_changed = true;
 		config_have_changed=TRUE;
 	}
@@ -1202,7 +1212,7 @@ int util_sync_config_info(void)
 		config_have_changed=TRUE;
 		//设置当前设备的IP地址
 		print("set the %s ip to %s   (ipv4)", network_dev_name, server_wifi_info.AP_IPADDR);
-		shell_recv(NULL,0,"uci set network.lan.ipaddr=%s",server_wifi_info.AP_IPADDR);
+		shell_recv(NULL,0,"uci set network.lan.ipaddr=\"%s\"",server_wifi_info.AP_IPADDR);
 		network_config_changed = true;
 		//被分配的IP地址和服务器的IP地址不同,  ------>没关系
 		/*if( server_wifi_info.is_ip_not_the_same_with_server )
@@ -1274,7 +1284,7 @@ int util_sync_config_info(void)
 		{
 			print("error:config_set_string AP_PRIMARY_CH failed! ret=%d",ret);
 		}
-		shell_recv(NULL,0,"uci set wireless.%s.channel=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info.AP_PRIMARY_CH);
+		shell_recv(NULL,0,"uci set wireless.%s.channel=\"%s\"", NAME_OF_WIRELESS_INTERFACE, server_wifi_info.AP_PRIMARY_CH);
 		config_have_changed=TRUE;
 		wifi_config_changed = true;
 	}
@@ -1330,7 +1340,7 @@ int util_sync_config_info(void)
 		{
 			wifi_mode=6;//other default n
 		}
-		shell_recv(NULL,0,"uci set wireless.%s.mode=%d", NAME_OF_WIRELESS_INTERFACE, wifi_mode);
+		shell_recv(NULL,0,"uci set wireless.%s.mode=\"%d\"", NAME_OF_WIRELESS_INTERFACE, wifi_mode);
 		wifi_config_changed = true;
 	}
 
@@ -1362,7 +1372,7 @@ int util_sync_config_info(void)
 		{
 			print("error:config_set_string TXPOWER failed! ret=%d",ret);
 		}
-		shell_recv(NULL,0,"uci set wireless.%s.txpower=%d", NAME_OF_WIRELESS_INTERFACE, txpower);
+		shell_recv(NULL,0,"uci set wireless.%s.txpower=\"%d\"", NAME_OF_WIRELESS_INTERFACE, txpower);
 		config_have_changed=TRUE;
 		wifi_config_changed = true;
 	}
@@ -1391,7 +1401,7 @@ int util_sync_config_info(void)
 	if( strcmp( server_wifi_info_backup.TZ_WIFI_40M_ENABLE,server_wifi_info.TZ_WIFI_40M_ENABLE ) )
 	{
 		print("set TZ_WIFI_40M_ENABLE to %s..",server_wifi_info.TZ_WIFI_40M_ENABLE);
-		ret = config_set_string("main", "AP_GATEWAY", server_wifi_info.TZ_WIFI_40M_ENABLE);
+		ret = config_set_string("main", "TZ_WIFI_40M_ENABLE", server_wifi_info.TZ_WIFI_40M_ENABLE);
 		if(ret < 0)
 		{
 			print("error:config_set_string TZ_WIFI_40M_ENABLE failed! ret=%d",ret);
@@ -1400,12 +1410,12 @@ int util_sync_config_info(void)
 		if(!strcmp(server_wifi_info.TZ_WIFI_40M_ENABLE, "2"))//40MHz
 		{
 			print("-->set wireless.%s.ht=%s", NAME_OF_WIRELESS_INTERFACE, "40");
-			shell_recv(NULL,0,"uci set wireless.%s.ht=%s", NAME_OF_WIRELESS_INTERFACE, "40");
+			shell_recv(NULL,0,"uci set wireless.%s.ht=\"%s\"", NAME_OF_WIRELESS_INTERFACE, "40");
 		}
 		else if(!strcmp(server_wifi_info.TZ_WIFI_40M_ENABLE, "0"))
 		{
 			print("-->set wireless.%s.ht=%s", NAME_OF_WIRELESS_INTERFACE, "20");
-			shell_recv(NULL,0,"uci set wireless.%s.ht=%s", NAME_OF_WIRELESS_INTERFACE, "20");
+			shell_recv(NULL,0,"uci set wireless.%s.ht=\"%s\"", NAME_OF_WIRELESS_INTERFACE, "20");
 		}
 		wifi_config_changed = true;
 	}
@@ -1436,38 +1446,38 @@ int util_sync_config_info(void)
 //配置IP地址
 int util_config_ipv4_addr(const char *net_dev, const char* ipaddr)
 {
-    struct ifreq ifr;
-    int fd = 0;
-    struct sockaddr_in *pAddr;
+	struct ifreq ifr;
+	int fd = 0;
+	struct sockaddr_in *pAddr;
 
-    if( (NULL == net_dev) || (NULL == ipaddr) )
-    {
-        print("%s","illegal call function SetGeneralIP!");
-        return -1;
-    }
+	if( (NULL == net_dev) || (NULL == ipaddr) )
+	{
+		print("%s","illegal call function SetGeneralIP!");
+		return -1;
+	}
 
-    if ( ( fd = socket(AF_INET,SOCK_DGRAM,0) ) < 0 )
-    {
-        print("%s","socket....setip..false!!!");
-        return -1;
-    }
+	if ( ( fd = socket(AF_INET,SOCK_DGRAM,0) ) < 0 )
+	{
+		print("%s","socket....setip..false!!!");
+		return -1;
+	}
 
-    strcpy(ifr.ifr_name, net_dev);
+	strcpy(ifr.ifr_name, net_dev);
 
-    pAddr = (struct sockaddr_in *)&(ifr.ifr_addr);
-    bzero(pAddr, sizeof(struct sockaddr_in));
-    pAddr->sin_addr.s_addr = inet_addr(ipaddr);
-    pAddr->sin_family = AF_INET;
+	pAddr = (struct sockaddr_in *)&(ifr.ifr_addr);
+	bzero(pAddr, sizeof(struct sockaddr_in));
+	pAddr->sin_addr.s_addr = inet_addr(ipaddr);
+	pAddr->sin_family = AF_INET;
 	int err_no = 0;
 	err_no = ioctl(fd, SIOCSIFADDR, &ifr);
-    if (err_no < 0)
-    {
-        close(fd);
-        print("ioctl:%s ----> set %s ip to %s  false!!", strerror(err_no) ,net_dev, ipaddr);
-        return -1;
-    }
-    close(fd);
-    return 0;
+	if (err_no < 0)
+	{
+		close(fd);
+		print("ioctl:%s ----> set %s ip to %s  false!!", strerror(err_no) ,net_dev, ipaddr);
+		return -1;
+	}
+	close(fd);
+	return 0;
 }
 
 
@@ -1673,7 +1683,7 @@ int util_send_ack_frame(int socket_handle,unsigned short ethernet_frame_type,uns
 
 	//send ethernet frame
 	pthread_rwlock_wrlock(&send_sock_rwlock);
-	util_send_ethernet_frame(	g_send_sock_fd
+	util_send_ethernet_frame(   g_send_sock_fd
 								,ethernet_frame_type
 								,ethernet_frame_buffer
 								,real_frame_size
@@ -2120,18 +2130,18 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	tmp = config_get_string("main", "AP_SSID", "Default-SSID");
 	strncpy(server_wifi_info->AP_SSID, tmp,strlen(tmp));
 	print("AP_SSID=%s",tmp);
-	//shell_recv(NULL,0,"iwpriv %s set SSID=%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_SSID);
+	//shell_recv(NULL,0,"iwpriv %s set SSID=\"%s\"",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_SSID);
 
 
 	tmp = config_get_string("main", "AP_HIDESSID", "0");
 	strncpy(server_wifi_info->AP_HIDESSID, tmp,strlen(tmp));
 	print("AP_HIDESSID=%s",tmp);
-	//shell_recv(NULL,0,"iwpriv %s set HideSSID=%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_HIDESSID);
+	//shell_recv(NULL,0,"iwpriv %s set HideSSID=\"%s\"",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_HIDESSID);
 
 	tmp = config_get_string("main", "AP_PRIMARY_CH", "auto");
 	strncpy(server_wifi_info->AP_PRIMARY_CH, tmp,strlen(tmp));
 	print("AP_PRIMARY_CH=%s",tmp);
-	//shell_recv(NULL,0,"iwpriv %s set Channel=%s",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_PRIMARY_CH);
+	//shell_recv(NULL,0,"iwpriv %s set Channel=\"%s\"",NAME_OF_WIRELESS_INTERFACE,server_wifi_info->AP_PRIMARY_CH);
 
 
 	tmp = config_get_string("main", "TXPOWER", "18");
@@ -2154,7 +2164,7 @@ int uci_get_config(IN InfoStruct* server_wifi_info)//获取数据库内容到缓
 	tmp = config_get_string("main", "PSK_KEY", "123456789");
 	strncpy(server_wifi_info->PSK_KEY, tmp,strlen(tmp));
 	print("PSK_KEY=%s",tmp);
-	//shell_recv(NULL,0,"iwpriv %s set WPAPSK=%s", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->PSK_KEY);
+	//shell_recv(NULL,0,"iwpriv %s set WPAPSK=\"%s\"", NAME_OF_WIRELESS_INTERFACE, server_wifi_info->PSK_KEY);
 
 	tmp = config_get_string("main", "AP_CYPHER", "CCMP");
 	strncpy(server_wifi_info->AP_CYPHER, tmp,strlen(tmp));
@@ -2306,13 +2316,13 @@ void tz_get_if_ip(char* ip_buf,int buf_len)
 	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		print("socket error");
-		return -1;
+		return;
 	}
 	strcpy(ifr.ifr_name,network_dev_name);
 	if(ioctl(sockfd, SIOCGIFADDR, &ifr) < 0)//直接获取IP地址
 	{
 		print("ioctl error");
-		return -1;
+		return;
 	}
 	memcpy(&sin, &ifr.ifr_dstaddr, sizeof(sin));
 	memset(ip_buf,0,buf_len);
@@ -2426,5 +2436,56 @@ void tz_check_restore_no_respone_count(void)
 		print("Start counting..");
 		shell_recv(NULL,0,"echo 1 > %s", TZ_RESTORE_NO_RESPONE_COUNT_FILE);
 	}
+}
+
+int setWirelessCfgValue(char *name,char *value)
+{
+	if (NULL == name || NULL == value)
+	{
+		return -1;
+	}
+ 
+	struct uci_context * ctx = uci_alloc_context();
+	if (NULL == ctx)
+		print("%s","setWirelessCfgValue uci_alloc_context error\n");
+	
+	int ret = 0;
+	#if 0
+	struct uci_ptr ptr;
+	memset(&ptr, 0, sizeof(ptr));
+	ptr.package = "wireless",  
+	ptr.section = "@wifi-iface[0]",  
+	ptr.option = name,  
+	ptr.value = value,  
+	#else
+	struct uci_ptr ptr;
+	memset(&ptr, 0, sizeof(ptr));
+	char uciOption[128];
+	memset(uciOption, 0, sizeof(uciOption));
+	snprintf(uciOption, sizeof(uciOption)-1, "wireless.@wifi-iface[0].%s", name);
+	print("uci_lookup_ptr %s\n", uciOption);
+	if(UCI_OK != uci_lookup_ptr(ctx, &ptr, uciOption, true))
+		{
+		   uci_perror(ctx, "no found!\n");
+		   return -1;
+		}
+	print("uci_lookup_ptr ok: %s.%s.%s\n", 
+		ptr.package, ptr.section, ptr.option);
+	ptr.value = value;
+	#endif
+	
+	print("change cfg: %s.%s.%s, value(%s)\n", 
+				ptr.package, ptr.section, ptr.option, ptr.value);
+	ret = uci_set(ctx,&ptr);
+	print("uci_set ret(%d)\n", ret);
+	if (0 == ret){
+		ret = uci_commit(ctx, &ptr.p, false);
+		print("uci_commit ret(%d)\n", ret);
+	}
+	uci_unload(ctx,ptr.p);
+	uci_free_context(ctx);
+	
+	print("set wireless cfg end, %s: %s\n", name, value);
+	return 0;
 }
 
