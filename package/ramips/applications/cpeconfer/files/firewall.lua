@@ -403,10 +403,20 @@ local function format_set_port_filter_cmd(port,protocol,action,comment)
 
 		local cmd2 = string.format("echo 'iptables -I FORWARD -p udp -m state --state NEW,ESTABLISHED,RELATED -m udp --dport %s -j %s ##%s##%s##%s##%s##%s##2' >> %s ;",
 								 port, action, FIREWALL_PORT_FILTER_PREX, port,protocol, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
-		return string.format("%s%s",cmd1,cmd2)
+
+		local cmd3 = string.format("echo 'iptables -I FORWARD -p tcp -m state --state NEW,ESTABLISHED,RELATED -m tcp --sport %s -j %s ##%s##%s##%s##%s##%s##3' >> %s ;",
+								 port, action, FIREWALL_PORT_FILTER_PREX, port,protocol, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+
+		local cmd4 = string.format("echo 'iptables -I FORWARD -p udp -m state --state NEW,ESTABLISHED,RELATED -m udp --sport %s -j %s ##%s##%s##%s##%s##%s##4' >> %s ;",
+								 port, action, FIREWALL_PORT_FILTER_PREX, port,protocol, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		return string.format("%s%s%s%s",cmd1,cmd2,cmd3,cmd4)
 	else
-		return string.format("echo 'iptables -I FORWARD -p %s -m state --state NEW,ESTABLISHED,RELATED -m %s --dport %s -j %s ##%s##%s##%s##%s##%s##1' >> %s ;",
+		local cmd1 =  string.format("echo 'iptables -I FORWARD -p %s -m state --state NEW,ESTABLISHED,RELATED -m %s --dport %s -j %s ##%s##%s##%s##%s##%s##1' >> %s ;",
 								 protocol, protocol, port, action, FIREWALL_PORT_FILTER_PREX, port,protocol, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		local cmd2 =  string.format("echo 'iptables -I FORWARD -p %s -m state --state NEW,ESTABLISHED,RELATED -m %s --sport %s -j %s ##%s##%s##%s##%s##%s##2' >> %s ;",
+								 protocol, protocol, port, action, FIREWALL_PORT_FILTER_PREX, port,protocol, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+
+		return string.format("%s%s",cmd1,cmd2)
 	end
 end
 
