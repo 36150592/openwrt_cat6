@@ -247,7 +247,7 @@ struct ipt_entry *get_iptc_entry(char* src_ip, char* dest_ip)
     /* And the target */
     target = (struct ipt_entry_target *)(fw->elems);
     target->u.target_size = size3;
-    strcpy(target->u.user.name, "ACCEPT");
+    strcpy(target->u.user.name, "RETURN");
     return fw;
 }  
 
