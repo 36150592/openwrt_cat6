@@ -1627,21 +1627,19 @@ ul.tabs a.current {
 	display: none;
 }
 
-#main {	
+#main .login_main{	
 	position: relative;
 }
 
 #main .login_left {
 	box-sizing: border-box;
-	position: absolute;
 	width: 70%;
-	height: auto;
+	height: 100%;
 	border-right: 1px solid #0085D0;
 }
 
 #main .login_left, .login_left_t {
 	box-sizing: border-box;
-	position: relative;
 	width: 70%;
 	height:0;	
 }
@@ -1659,61 +1657,61 @@ ul.tabs a.current {
 }
 
 #login_container {
-	position: relative;
 	width: 100%;
 	height: 100%;
 	top: 100px;
+	margin: 0 auto;
 }
 
 #login_container .Login_EN {
-	margin: 7% auto;
-	width: 40%;
-	height: 60%;
-	background: url(../images/anhui/login_en.png) no-repeat;
+	margin: 1% 0;
+	width: 100%;
+	height: 100%;
+	background-image: url(../images/anhui/login_en.png);
+	background-repeat: no-repeat;
+	background-size: 400px 280px;
+	background-position: center;
 }
 
 #login_container .Login_CN {
-	margin: 7% auto;
-	width: 40%;
-	height: 60%;
+	margin: 1% 0;
+	width: 100%;
+	height: 100%;
 	background: url(../images/anhui/login.png) no-repeat;
+	background-repeat: no-repeat;
+	background-size: 400px 280px;
+	background-position: center;
 }
 
 #login_container .login_desc {
-	display: inline-block;
+	top: 41%;
+	left: 32%;
+	width: 10%;
+	height: 20%;
+	position: absolute;
 	text-align: right;
-	vertical-align: top;
-	padding-right: 6px;
-	padding-left: 20px;
-	width: 25%;
-	font-size: 14px;
+	font-size: 16px;
 	font-weight: bolder;
 }
 
 #login_container .login_desc .login_desc_username {
-	padding-top: 114px;
+	padding-top: 4%;
 }
 
 #login_container .login_desc .login_desc_password {
-	padding-top: 17px;
+	padding-top: 14%;
 }
 
 #login_container .login_desc .login_desc_language {
-	padding-top: 15px;
+	padding-top: 12%;
 }	
 
 #login_container .login_table {
+	top: 40%;
+	left: 43%;
+	position: absolute;
+	text-align: left;
 	display: inline-block;
-	vertical-align: top;
-	padding-top: 105px;
-}
-
-.login_table .tr_language {
-	padding-top: 10px;
-}
-
-.login_table .tr_username {
-	padding-top: 10px;
 }
 
 .login_table .tr_username input {
