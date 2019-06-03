@@ -1833,3 +1833,14 @@ ul.tabs a.current {
 #info_page .info table th,#info_page .info table td {
 	font-size: 20px !important;
 }
+#simPInPosition{
+	position: absolute;
+	z-index: 100000;
+	color:red;
+	height: 30px;
+	left: 30%;
+	top:0px;
+	font-weight:bold;
+	line-height:30px;
+	margin:0 auto;
+}
