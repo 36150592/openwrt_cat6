@@ -11,7 +11,6 @@
         Page.render('#fwHead', '#fwHead_template');
         Page.render('#fwBody', '#fwBody_template');
         Page.render('#wpsSet', '#wpsSet_template');
-
         var showText = wirelessconfightml.prompt;
         var $lis = $("ul.tabs a");
         var $boxes = $("div.tab_boxes > div");
@@ -87,6 +86,8 @@
             $mask.show();
             $btnSaveMac.show();
             $btnEditMac.hide();
+            (".noWpsPin").show(0);
+            $(".wpsPIN").hide(0);
             $('#edit_title').text(DOC.table.add + DOC.net.mac);
             SysUtil.setBoxStyle1($box);
         });
@@ -188,34 +189,63 @@
                 }
             });
         });
-        $("#wpsEnble").change(function(){
-            if($(this).prop("checked")){
-                $(".wpsSettingHide").show();
-            }else{
-                $(".wpsSettingHide").hide();
-            }
-        });
-        $("input[name=wpsMode]").on("click",function(){
-        if($(this).val() == "pbc"){
-            $("#wpsPin").attr("disabled",true);
-        }else{
-            $("#wpsPin").attr("disabled",false);
+        var clearTimeout2;
+        function getRandomCode(time) {
+          if(time > 0){
+                time --;
+                $("#pinTime").text(time);
+          }else{
+                $("#btnClose").click();
+                clearTimeout(clearTimeout2);
+          }
+           clearTimeout2 = setTimeout(function() { 
+               getRandomCode(time);
+           },1000);
         }
+        $("#wpsRandomPin").on("click",function(){
+                  $('#wpsRandomPin').attr("disabled",true);
+                var json = new Object();
+                json.method = JSONMethod.POST;
+                json.cmd = RequestCmd.OPEN_RANDOM_PIN;
+
+                Page.postJSON({
+                json: json,
+                success: function(data) {
+                    Page.postJSON({
+                        json: {
+                            cmd: RequestCmd.WPS_PIN_GET,
+                            method: JSONMethod.GET
+                        },
+                        success: function(datas) {
+
+                            var data = datas.data;
+                            $("#pinMobil").text(data.getRandomPin);
+                            $("#edit_box").show(0);
+                            $(".noWpsPin").hide(0);
+                            $(".wpsPIN").show();
+                            getRandomCode(120);
+                            SysUtil.setBoxStyle1($box);
+                            $mask.show();
+                        }
+                    });
+                },
+                complete: function(){
+                    $('#wpsRandomPin').attr("disabled",false);
+                }
+            });
+
+
         })
        $btnSaveWps.click(function () {
+            $(this).attr("disabled",true);
             var json = new Object();
             
             if($("#wpsEnble").prop("checked")){
-                json.wpsEnble = "enable";
-                json.wpsMode =$("input[name='wpsMode']:checked").val();
-            if($("input[name='wpsMode']:checked").val() == "pin"){
-                json.wpsPin = $("#wpsPin").val();
-            }
-
+                json.wpsEnble = "1";
             }else{
-                json.wpsEnble = "disable";
+                json.wpsEnble = "0";
             }
-                       
+            json.wpsPin = $("#wpsPin").val();       
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.WPS5_PIN_SET;
             Page.postJSON({
@@ -378,21 +408,10 @@
                         },
                         success: function(datas) {
                             var data = datas.data;
-                            if(data.switch == "enable"){
+                            if(data.switch == "1"){
                                 $("#wpsEnble").prop("checked",true);
-                                $(".wpsSettingHide").show();
                             }else{
                                 $("#wpsEnble").prop("checked",false);
-                                $(".wpsSettingHide").hide();
-                            }
-                            $("#wpsPin").val(data.pin);
-                            if(data.type == "pin"){
-                                $("input[value='pin']").attr("checked",true);
-                            }else if(data.type == "pbc"){
-                                $("#wpsPin").attr("disabled",true);
-                                $("input[value='pbc']").attr("checked",true);
-                            }else{
-                                 $("input[name='wpsMode']").attr("checked",false);
                             }
                         }
                     });
@@ -913,7 +932,7 @@
 
             <div  id="wpsSet">
                 <script type="text/template" id="wpsSet_template">
-                     <form id="wpsForm" >
+                      <form id="wpsForm" >
                         <table class="detail" cellspacing="0">
                             <tr>
                                 <th><%- lbl.wpsEnble %><%- colon %></th>
@@ -922,17 +941,17 @@
                                 </td>
                             </tr>
 
-                            <tr class="wpsSettingHide" style="display:none;">
-                                <th><%- lbl.wpsMode %><%- colon %></th>
-                                <td>
-                                    <input type="radio" id="wpsPinEnale" name="wpsMode"  value="pin"/>PIN
-                                    <input type="radio" id="wpsPbcEnable" name="wpsMode" value="pbc"/>PBC
-                                </td>
-                            </tr>
-                            <tr class="wpsSettingHide" style="display:none;">
+                            <tr>
                                 <th><%- lbl.wpsPin %><%- colon %></th>
                                 <td>
                                     <input type="text" id="wpsPin" name="wpsPin"  class="normal"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><%- lbl.wpsRandomPin %><%- colon %></th>
+                                <td>
+                                    <input type="button" id="wpsRandomPin" value="<%- lbl.wpsCreatePin %>"/>
+                                    <span id="randomPin" style="margin-left:50px;"></span>
                                 </td>
                             </tr>
                             <tr>
@@ -960,18 +979,25 @@
         </div>
         <div id="fwBody">
             <script type="text/template" id="fwBody_template">
-                <table class="detail" cellspacing="0">
-                    <th><span><%- net.mac %></span></th>
-                    <td><input type="text" id="macList" name="macList" class="large" maxlength="30" /><span class="cmt"><%- lbl.example %><%- colon %>B8:AC:6F:BB:7E:3F</span></td>
-                    <tr>
-                        <th>&nbsp;</th>
-                        <td>
-                            <input type="button" id="btnSaveMac" value="<%- btn.save %>" />
-                            <input type="button" id="btnEditMac" value="<%- btn.save %>" />
-                        </td>
-                    </tr>
-                </table>
-            </script>
+            <table class="detail noWpsPin" cellspacing="0">
+                <th><span><%- net.mac %></span></th>
+                <td><input type="text" id="macList" name="macList" class="large" maxlength="30" /><span class="cmt"><%- lbl.example %><%- colon %>B8:AC:6F:BB:7E:3F</span></td>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td>
+                        <input type="button" id="btnSaveMac" value="<%- btn.save %>" />
+                        <input type="button" id="btnEditMac" value="<%- btn.save %>" />
+                    </td>
+                </tr>
+            </table>
+            <table class="detail wpsPIN" cellspacing="0" style="display:none;">
+                <tr>
+                  <th>
+                     <%- net.mobilePhone %><span id="pinMobil"></span> <%- net.wpsSetup %><span id="pinTime"></span><%- unit.second %>
+                  </th>
+                </tr>
+            </table>
+        </script>
         </div>
     </div>
     <span style="clear:both"></span>

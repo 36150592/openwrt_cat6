@@ -1520,25 +1520,60 @@ function set_pinstatus()
     local tz_answer = {}
     tz_answer["cmd"] = 135
 
-    local ret
+    local ret 
     local type = tonumber(tz_req["type"])
     local passwd = tonumber(tz_req["passwd"])
-
+    local pingType = tonumber(tz_req["pingType"])
+    local new_pin = tonumber(tz_req["new_pin"])
+    local pukPassword = tonumber(tz_req["pukPassword"])
+    local pukPinPasswordConfirm = tonumber(tz_req["pukPinPasswordConfirm"])
     tz_answer["success"] = true
-    if (1 == type) then
-        print(type)
-        ret = sim.sim_pin_lock_enable(passwd)
-        if (not ret) then
-            tz_answer["success"] = false
-            tz_answer["enablePin"] = false
-        end
-    elseif (2 == type) then
-        ret = sim.sim_pin_unlock(passwd)
-        if (not ret) then
-            tz_answer["success"] = false
-            tz_answer["unlockPin"] = false
-        end
+    if(pingType == 1)
+        then
+          ret = sim.sim_pin_unlock(passwd)
+            if(not ret)
+               then
+               tz_answer["success"] = false
+               tz_answer["enablePin"] = false
+            end
     end
+    if(1 == type)
+       then
+          ret = sim.sim_pin_lock_enable(passwd)
+            if(not ret)
+               then
+               tz_answer["success"] = false
+               tz_answer["enablePin"] = false
+            end
+    elseif(2 == type)
+       then
+          ret = sim.sim_pin_lock_disable(passwd)
+            if(not ret)
+              then
+              tz_answer["success"] = false
+              tz_answer["unlockPin"] = false
+            end
+     elseif(3 == type)
+       then
+          ret = sim.sim_pin_change(passwd,new_pin)
+          print("ret = ",ret)
+            if(not ret)
+              then
+              tz_answer["success"] = false
+            end
+     
+    end
+    if(pukPassword ~= nil)
+        then
+            ret = sim.sim_puk_unlock(pukPassword,pukPinPasswordConfirm)
+            if(not ret)
+               then
+               tz_answer["success"] = false
+            end
+
+    end     
+
+
     result_json = cjson.encode(tz_answer)
     print(result_json)
 end
@@ -1676,9 +1711,8 @@ function get_wpsSet()
         if (v["band"] == "2.4G") then id = v['wifi_id'] end
     end
 
-    data_array["switch"] = wifi.wifi_get_wps_switch(id)
-    data_array["type"] = wifi.wifi_get_wps_type(id) or ''
-    data_array["pin"] = wifi.wifi_get_wps_pin(id) or ''
+    data_array["switch"] = wifi.wifi_get_wps_pbc_enable_status(id) or {}
+    data_array["getRandomPin"] = wifi.wifi_get_wps_random_pin_code(id) or {}
 
     tz_answer["success"] = true
     tz_answer["data"] = data_array
@@ -1699,14 +1733,10 @@ function set_wpsSet()
         if (v["band"] == "2.4G") then id = v['wifi_id'] end
     end
 
-    local wpsEnble = tz_req["wpsEnble"]
+    local wpsEnble = tonumber(tz_req["wpsEnble"])
     local wpsPin = tonumber(tz_req["wpsPin"])
-    local wpsMode = tz_req["wpsMode"]
 
-    if (nil ~= wpsMode) then
-        ret = wifi.wifi_set_wps_type(id, wpsMode)
-        if (not ret) then tz_answer["setwpsMode"] = false end
-    end
+
 
     if (nil ~= wpsPin) then
         if (0 == wpsPin) then
@@ -1719,8 +1749,14 @@ function set_wpsSet()
     end
 
     if (nil ~= wpsEnble) then
-        ret = wifi.wifi_set_wps_switch(id, wpsEnble)
-        if (not ret) then tz_answer["disablewps"] = false end
+        if(1 == wpsEnble) then
+            ret = wifi.wifi_enable_wps_pbc(id)
+            if (not ret) then tz_answer["enablewps"] = false end
+        else
+            ret = wifi.wifi_disable_wps_pbc(id)
+            if (not ret) then tz_answer["disablewps"] = false end
+        end
+        
     end
 
     wifi.wifi_restart(id)
@@ -1741,9 +1777,8 @@ function get_wps5Set()
         if (v["band"] == "5G") then id = v['wifi_id'] end
     end
 
-    data_array["switch"] = wifi.wifi_get_wps_switch(id)
-    data_array["type"] = wifi.wifi_get_wps_type(id) or ''
-    data_array["pin"] = wifi.wifi_get_wps_pin(id) or ''
+    data_array["switch"] = wifi.wifi_get_wps_pbc_enable_status(id) or {}
+    data_array["getRandomPin"] = wifi.wifi_get_wps_random_pin_code(id) or {}
 
     tz_answer["success"] = true
     tz_answer["data"] = data_array
@@ -1764,14 +1799,8 @@ function set_wps5Set()
         if (v["band"] == "5G") then id = v['wifi_id'] end
     end
 
-    local wpsEnble = tz_req["wpsEnble"]
+    local wpsEnble = tonumber(tz_req["wpsEnble"])
     local wpsPin = tonumber(tz_req["wpsPin"])
-    local wpsMode = tz_req["wpsMode"]
-
-    if (nil ~= wpsMode) then
-        ret = wifi.wifi_set_wps_type(id, wpsMode)
-        if (not ret) then tz_answer["setwpsMode"] = false end
-    end
 
     if (nil ~= wpsPin) then
         if (0 == wpsPin) then
@@ -1782,10 +1811,15 @@ function set_wps5Set()
             if (not ret) then tz_answer["setwpsPin"] = false end
         end
     end
-
     if (nil ~= wpsEnble) then
-        ret = wifi.wifi_set_wps_switch(id, wpsEnble)
-        if (not ret) then tz_answer["disablewps"] = false end
+        if(1 == wpsEnble) then
+            ret = wifi.wifi_enable_wps_pbc(id)
+            if (not ret) then tz_answer["enablewps"] = false end
+        else
+            ret = wifi.wifi_disable_wps_pbc(id)
+            if (not ret) then tz_answer["disablewps"] = false end
+        end
+        
     end
 
     wifi.wifi_restart(id)
@@ -2280,19 +2314,19 @@ function get_info()
 
     data_array["wan_mac"] = network.network_get_wan_info()['mac']
 
-		data_array["sim_imsi"] = sim.sim_get_status()['imsi'] or ''
-		data_array["sim_iccid"] = sim.sim_get_status()['iccid'] or ''
-		data_array["modem_imei"] = modem.modem_get_info()['imei'] or ''
-		data_array["modem_type"] = modem.modem_get_info()['type'] or ''
-		data_array["modem_softver"] = modem.modem_get_info()['softver'] or ''
+        data_array["sim_imsi"] = sim.sim_get_status()['imsi'] or ''
+        data_array["sim_iccid"] = sim.sim_get_status()['iccid'] or ''
+        data_array["modem_imei"] = modem.modem_get_info()['imei'] or ''
+        data_array["modem_type"] = modem.modem_get_info()['type'] or ''
+        data_array["modem_softver"] = modem.modem_get_info()['softver'] or ''
     data_array["factory_imei"] = system.system_get_tozed_factory_info()['imei'] or ''
-		data_array["type"] = system.get_divice_version()['type'] or ''
-		data_array["real_software_version"] = system.get_divice_version()['software_version'] or ''
-		data_array["build"] = system.get_divice_version()['build'] or ''
+        data_array["type"] = system.get_divice_version()['type'] or ''
+        data_array["real_software_version"] = system.get_divice_version()['software_version'] or ''
+        data_array["build"] = system.get_divice_version()['build'] or ''
     data_array["runtime"] = system.system_get_status()['runtime'] or ''
-		data_array["config_software"] = system.system_get_tozed_system_info()['software_version'] or ''
-		data_array["config_version"] = system.system_get_tozed_system_info()['config_version'] or ''
-		data_array["device_sn"] = system.system_get_tozed_system_info()['device_sn'] or ''
+        data_array["config_software"] = system.system_get_tozed_system_info()['software_version'] or ''
+        data_array["config_version"] = system.system_get_tozed_system_info()['config_version'] or ''
+        data_array["device_sn"] = system.system_get_tozed_system_info()['device_sn'] or ''
 
     local array = wifi.wifi_get_dev()
     if next(array) ~= nil then
@@ -2306,15 +2340,15 @@ function get_info()
         data_array = ''
     end
 
-		local array1 = dhcp.dhcp_get_object_list()
-		data_array['lan_mac'] = array1[1]['lan_mac']
+        local array1 = dhcp.dhcp_get_object_list()
+        data_array['lan_mac'] = array1[1]['lan_mac']
 
     local array3 = wifi.wifi_get_dev()
     if next(array3) ~= nil then
         for k, v in pairs(array3) do
             if (v["band"] == "5G") then
-								data_array['fivepointeight_g_mac'] = v['mac']
-								data_array['fivepointeight_g_ssid'] = v['ssid']
+                                data_array['fivepointeight_g_mac'] = v['mac']
+                                data_array['fivepointeight_g_ssid'] = v['ssid']
             end
         end
     else
@@ -2360,6 +2394,55 @@ function get_login_info()
     print(result_json)
 
 end
+
+function open_random_pin()
+        local data_array  = {}
+        local ret
+        local tz_answer = {}
+
+    local array = wifi.wifi_get_dev()
+    local id
+    local data_array = {}
+    for k, v in pairs(array) do
+        if (v["band"] == "2.4G") then id = v['wifi_id'] end
+    end
+        ret = wifi.wifi_create_wps_random_pin_code(id)
+        if (not ret) 
+            then 
+                tz_answer["success"] = false 
+        end
+
+        tz_answer["success"] = true
+        tz_answer["cmd"] = 239
+        result_json = cjson.encode(tz_answer)
+        print(result_json)
+
+end
+
+function open_5g_random_pin()
+        local data_array  = {}
+        local ret
+        local tz_answer = {}
+
+    local array = wifi.wifi_get_dev()
+    local id
+    local data_array = {}
+    for k, v in pairs(array) do
+        if (v["band"] == "5G") then id = v['wifi_id'] end
+    end
+        ret = wifi.wifi_create_wps_random_pin_code(id)
+        if (not ret) 
+            then 
+                tz_answer["success"] = false 
+        end
+
+        tz_answer["success"] = true
+        tz_answer["cmd"] = 240
+        result_json = cjson.encode(tz_answer)
+        print(result_json)
+
+end
+
 
 local switch = {
     [0] = get_sysinfo,
@@ -2455,7 +2538,9 @@ local switch = {
     [235] = set_firewall_upnp_disable,
     [236] = firewall_upnp_get_data,
     [237] = get_info,
-    [238] = get_login_info
+    [238] = get_login_info,
+    [239] = open_random_pin,
+    [240] = open_5g_random_pin,
 }
 
 cmdid = uti.get_env_cmdId(envv)
@@ -2463,13 +2548,13 @@ if cmdid ~= nil then
     uti.web_log(cmdid)
     if "5" == cmdid then upload_file() end
 else
-  --data1=io.read();
-	local content_len = uti.get_env_content_len(envv)
-	data1 = uti.read_stdin(content_len)
+  data1=io.read();
+    --local content_len = uti.get_env_content_len(envv)
+    --data1 = uti.read_stdin(content_len)
     tz_req = cjson.decode(data1)
     local cmd = tz_req["cmd"]
     if (cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 97 and cmd ~= 113 and
-        cmd ~= 220 and cmd ~= 43 and cmd ~= 0 and cmd ~= 208 and cmd ~= 101 and cmd ~=238) then
+        cmd ~= 220 and cmd ~= 43 and cmd ~= 0 and cmd ~= 208 and cmd ~= 101 and cmd ~= 238 and cmd ~= 134)  then
         local fileName = string.format("/tmp/sessionsave/.%s",
                                        tz_req["sessionId"])
         if (uti.is_file_exist(fileName) ~= true) then
