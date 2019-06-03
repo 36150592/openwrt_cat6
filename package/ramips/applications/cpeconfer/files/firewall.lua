@@ -264,7 +264,23 @@ local function format_delete_item_cmd(item_str)
 end
 
 local function format_set_mac_filter_cmd(mac,action,comment) 
-	return string.format("echo 'iptables -I FORWARD -m mac --mac-source %s -j %s ##%s##%s##%s##%s' >> %s", mac, action, FIREWALL_MAC_FILTER_PREX, mac, action, comment, FIREWALL_CUSTOM_CONFIG_FILE) 
+	local cmd2 = ""
+	if 'ACCEPT' == action
+	then
+		local f = io.popen("cat /tmp/dhcp.leases| grep "..string.lower(mac).." | cut -d' ' -f 3")
+		if nil ~= f
+		then
+			local res_ip = f:read()
+			if nil ~= res_ip
+			then
+				cmd2 = string.format("echo 'iptables -I FORWARD -d %s  -j %s ##%s##%s##%s##%s##2' >> %s;",res_ip, action, FIREWALL_MAC_FILTER_PREX, mac, action, comment, FIREWALL_CUSTOM_CONFIG_FILE) 
+			end	
+			io.close(f)
+		end 
+	end
+	
+	local cmd1 = string.format("echo 'iptables -I FORWARD -m mac --mac-source %s -j %s ##%s##%s##%s##%s##1' >> %s;", mac, action, FIREWALL_MAC_FILTER_PREX, mac, action, comment, FIREWALL_CUSTOM_CONFIG_FILE) 
+	return cmd1 .. cmd2
 end
 
 local function format_get_mac_filter_cmd() 
@@ -691,7 +707,7 @@ function firewall_module.firewall_get_mac_filter_list()
 	end
 
 
-
+	local j = 1
 	for i = 1, table.maxn(data)
 	do
 		debug(data[i])
@@ -701,7 +717,11 @@ function firewall_module.firewall_get_mac_filter_list()
 		temp["action"] = array[4]
 		temp["comment"] = array[5]
 		temp["iswork"] = rule_is_work(data[i])
-		mac_filter_list[i] = temp
+		if "1" == array[6]
+		then
+			mac_filter_list[j] = temp
+			j = j+1
+		end
 
 	end
 
@@ -1458,16 +1478,16 @@ end
 --		nil:get fail
 function firewall_module.firewall_get_default_action()
 
-	if check_section_is_exist("default_forward")
+	local cmd = "'iptables -D delegate_forward -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT'"
+	local f = io.popen("cat ".. FIREWALL_CUSTOM_CONFIG_FILE .. " | grep ^"..cmd.." | wc -l")
+	if nil ~= f
 	then
-		local src = x:get(FIREWALL_CONFIG_FILE, "default_forward", "src")
-		local dest = x:get(FIREWALL_CONFIG_FILE, "default_forward", "dest")
-
-		if "lan" == src and "wan" == dest
+		local res = f:read()
+		if "1" == res
 		then
-			return "ACCEPT"
-		else
 			return "DROP"
+		else
+			return "ACCEPT"
 		end
 	end
 
@@ -1490,30 +1510,15 @@ function firewall_module.firewall_set_default_action(action)
 		debug("check_action fail")
 		return false
 	end
-
-	if check_section_is_exist("default_forward")
-	then
-		if "ACCEPT" ~= action
-		then
-			x:delete(FIREWALL_CONFIG_FILE, "default_forward", "src")
-			x:delete(FIREWALL_CONFIG_FILE, "default_forward", "dest")
-		else 
-			x:set(FIREWALL_CONFIG_FILE,"default_forward", "src", "lan")
-			x:set(FIREWALL_CONFIG_FILE,"default_forward", "dest", "wan")
-		end
+	local cmd = "'iptables -D delegate_forward -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT'"
+	if "ACCEPT" == action
+	then	
+		return 0  == os.execute("sed -i s/^"..cmd.."//g "..FIREWALL_CUSTOM_CONFIG_FILE)
 	else
-		debug("no default_forward section")
-		return false
+		local ret1 = os.execute("sed -i s/^"..cmd.."//g "..FIREWALL_CUSTOM_CONFIG_FILE)
+		local ret2 = os.execute("echo "..cmd.."  >> "..FIREWALL_CUSTOM_CONFIG_FILE)
+		return 0 == ret1 and 0 == ret2
 	end
-	
-	if x:commit(FIREWALL_CONFIG_FILE)
-	then
-		debug("set firewall default action success")
-		return true
-	end
-
-	debug("set firewall default action fail")
-	return false
 end
 
 
