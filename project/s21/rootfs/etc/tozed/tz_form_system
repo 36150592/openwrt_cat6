@@ -14,4 +14,19 @@ if [ "${TZSYSTEM_SNTP_TIMEZONE}" != "" ]; then
 else
 	uci set  system.@system[0].timezone=8
 fi
+
+if [ "${TZSYSTEM_SNTP_SERVER}" != "" ]; then
+    uci delete system.ntp.server
+    for var in ${TZSYSTEM_SNTP_SERVER}
+    do
+	    uci add_list  system.ntp.server=${var}
+    done
+
+else
+    uci delete system.ntp.server
+	uci add_list system.ntp.server='s2m.time.edu.cn'
+fi
+
+
+
 uci commit

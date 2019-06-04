@@ -92,6 +92,11 @@ bitcomposite表示使用位进行组合的配置字段
 			<default value="CST-8" />
 	</config>
 
+
+
+	<config name="TZSYSTEM_SNTP_SERVER" type="text" description="时间服务器" detail="时间服务器，如有多个，请用空格分隔" maxlength="128" class_name="SYSTEM_CONFIG_FIELD"  >
+		<default value="ntp.sjtu.edu.cn" />
+	</config>
 	<config name="TZSYSTEM_REMOTE_LOGIN" type="select" description="远程登录开关" detail="远程EWB登录开关" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
         	<option value="1" description="开启" />
 		<option value="0" description="关闭" />
