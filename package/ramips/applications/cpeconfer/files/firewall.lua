@@ -264,23 +264,7 @@ local function format_delete_item_cmd(item_str)
 end
 
 local function format_set_mac_filter_cmd(mac,action,comment) 
-	local cmd2 = ""
-	if 'ACCEPT' == action
-	then
-		local f = io.popen("cat /tmp/dhcp.leases| grep "..string.lower(mac).." | cut -d' ' -f 3")
-		if nil ~= f
-		then
-			local res_ip = f:read()
-			if nil ~= res_ip
-			then
-				cmd2 = string.format("echo 'iptables -I FORWARD -d %s  -j %s ##%s##%s##%s##%s##2' >> %s;",res_ip, action, FIREWALL_MAC_FILTER_PREX, mac, action, comment, FIREWALL_CUSTOM_CONFIG_FILE) 
-			end	
-			io.close(f)
-		end 
-	end
-	
-	local cmd1 = string.format("echo 'iptables -I FORWARD -m mac --mac-source %s -j %s ##%s##%s##%s##%s##1' >> %s;", mac, action, FIREWALL_MAC_FILTER_PREX, mac, action, comment, FIREWALL_CUSTOM_CONFIG_FILE) 
-	return cmd1 .. cmd2
+	return string.format("echo 'iptables -I FORWARD -m mac --mac-source %s -j %s ##%s##%s##%s##%s##1' >> %s;", mac, action, FIREWALL_MAC_FILTER_PREX, mac, action, comment, FIREWALL_CUSTOM_CONFIG_FILE) 
 end
 
 local function format_get_mac_filter_cmd() 
@@ -364,9 +348,21 @@ end
 local function format_set_url_filter_cmd(url,action,comment, interface)
 	if nil == interface  or "" == interface
 	then
-		return string.format("echo 'iptables -I FORWARD -m string --string %s --algo bm -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		if "ACCEPT" == action
+		then
+			-- the URL accept rule will perform DNS check ,so the device must can connect to internet when using this rule
+			return string.format("echo 'iptables -I FORWARD -d %s -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		else
+			return string.format("echo 'iptables -I FORWARD -m string --string %s --algo bm -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		end	
 	else
-		return string.format("echo 'iptables -I FORWARD -i br-%s -m string --string %s --algo bm -j %s ##%s##%s##%s##%s##%s' >> %s",interface, url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, interface, FIREWALL_CUSTOM_CONFIG_FILE)		
+		if "ACCEPT" == action
+		then
+			-- the URL accept rule will perform DNS check ,so the device must can connect to internet when using this rule
+			return string.format("echo 'iptables -I FORWARD -d %s -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		else
+			return string.format("echo 'iptables -I FORWARD -i br-%s -m string --string %s --algo bm -j %s ##%s##%s##%s##%s##%s' >> %s",interface, url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, interface, FIREWALL_CUSTOM_CONFIG_FILE)		
+		end
 	end
 end
 
@@ -1478,7 +1474,7 @@ end
 --		nil:get fail
 function firewall_module.firewall_get_default_action()
 
-	local cmd = "'iptables -D delegate_forward -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT'"
+	local cmd = "'iptables -D zone_lan_forward -m comment --comment \"forwarding lan -> wan\" -j zone_wan_dest_ACCEPT'"
 	local f = io.popen("cat ".. FIREWALL_CUSTOM_CONFIG_FILE .. " | grep ^"..cmd.." | wc -l")
 	if nil ~= f
 	then
@@ -1510,7 +1506,7 @@ function firewall_module.firewall_set_default_action(action)
 		debug("check_action fail")
 		return false
 	end
-	local cmd = "'iptables -D delegate_forward -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT'"
+	local cmd = "'iptables -D zone_lan_forward -m comment --comment \"forwarding lan -> wan\" -j zone_wan_dest_ACCEPT'"
 	if "ACCEPT" == action
 	then	
 		return 0  == os.execute("sed -i s/^"..cmd.."//g "..FIREWALL_CUSTOM_CONFIG_FILE)
