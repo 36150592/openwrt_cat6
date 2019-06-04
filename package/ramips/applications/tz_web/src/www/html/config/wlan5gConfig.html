@@ -99,7 +99,7 @@
         });
 
         $("input[name='wifiOpen']").change(function(){
-            var thisId = this.id.substring(8,);
+            var thisId = this.id.substring(8);
             if($(this).prop("checked")){
                 $(".wifi_disable_hide"+thisId).show();
             }else{
@@ -408,7 +408,7 @@
                         },
                         success: function(datas) {
                             var data = datas.data;
-                            if(data.switch == "1"){
+                            if(data.switchWps == "1"){
                                 $("#wpsEnble").prop("checked",true);
                             }else{
                                 $("#wpsEnble").prop("checked",false);

@@ -103,7 +103,7 @@
 			$('#macList').val('');
         });
         $("input[name='wifiOpen']").change(function(){
-            var thisId = this.id.substring(8,);
+            var thisId = this.id.substring(8);
             if($(this).prop("checked")){
                 $(".wifi_disable_hide"+thisId).show();
             }else{
@@ -285,8 +285,6 @@
                 $('.helper_box2').hide();
             }
 
-
-
             switch (pannelIndex) {
                 case 0:
                     Page.postJSON({
@@ -340,8 +338,9 @@
                     Page.getHelperPage('html/config/wirelessConfig.html');
                     $('.helper_box').show();
                     break;
-                case 1:
+                 case 1:
                     Page.getHelperPage2('html/config/wirelessConfig.html');
+                    break;
                 case 2:
                     Page.postJSON({
                         json: { cmd: RequestCmd.SSIDLIST_INFO,wifiId: $wifiId.val() },
@@ -426,8 +425,8 @@
 							method: JSONMethod.GET
                         },
                         success: function(datas) {
-							 var data = datas.data;
-                            if(data.switch == "1"){
+                            var data = datas.data;
+                            if(data.switchWps == "1"){
                                 $("#wpsEnble").prop("checked",true);
                             }else{
                                 $("#wpsEnble").prop("checked",false);
@@ -439,7 +438,7 @@
             }
         });
 
-        $lis.eq(0).click();
+         $lis.eq(0).click();
         var maxAllowedStation =  Page.maxAllowedStation ? Page.maxAllowedStation : 32;
 
         var wireless_rules = {
@@ -1078,7 +1077,6 @@
                 </tr>
             </table>
         </script>
-    </div>
 </div>
 <span style="clear:both"></span>
 </div>

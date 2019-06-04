@@ -1710,8 +1710,7 @@ function get_wpsSet()
     for k, v in pairs(array) do
         if (v["band"] == "2.4G") then id = v['wifi_id'] end
     end
-
-    data_array["switch"] = wifi.wifi_get_wps_pbc_enable_status(id) or {}
+    data_array["switchWps"] = wifi.wifi_get_wps_pbc_enable_status(id) or {}
     data_array["getRandomPin"] = wifi.wifi_get_wps_random_pin_code(id) or {}
 
     tz_answer["success"] = true
@@ -1777,7 +1776,7 @@ function get_wps5Set()
         if (v["band"] == "5G") then id = v['wifi_id'] end
     end
 
-    data_array["switch"] = wifi.wifi_get_wps_pbc_enable_status(id) or {}
+    data_array["switchWps"] = wifi.wifi_get_wps_pbc_enable_status(id) or {}
     data_array["getRandomPin"] = wifi.wifi_get_wps_random_pin_code(id) or {}
 
     tz_answer["success"] = true
@@ -2548,9 +2547,9 @@ if cmdid ~= nil then
     uti.web_log(cmdid)
     if "5" == cmdid then upload_file() end
 else
-  data1=io.read();
-    --local content_len = uti.get_env_content_len(envv)
-    --data1 = uti.read_stdin(content_len)
+  --data1=io.read();
+    local content_len = uti.get_env_content_len(envv)
+    data1 = uti.read_stdin(content_len)
     tz_req = cjson.decode(data1)
     local cmd = tz_req["cmd"]
     if (cmd ~= 100 and cmd ~= 80 and cmd ~= 133 and cmd ~= 97 and cmd ~= 113 and
