@@ -462,6 +462,23 @@ function firewall_set_url_filter()
 		end
 end
 
+
+function firewall_get_url_default_action()
+
+	print("in firewall_get_url_default_action")
+	local info = firewall.firewall_get_url_default_action()
+	print(info)
+end
+
+
+function firewall_set_url_default_action()
+
+	print("in firewall_set_url_default_action")
+	local info = firewall.firewall_set_url_default_action(tostring(arg[2]))
+	print(info)
+end
+
+
 function firewall_get_speed_filter()
 
 	print("in firewall_get_speed_filter")
@@ -2559,6 +2576,8 @@ local api_func = {
 	["firewall_set_ipmac_bind_filter"] = firewall_set_ipmac_bind_filter,
 	["firewall_set_url_filter"] = firewall_set_url_filter,
 	["firewall_get_url_filter"] = firewall_get_url_filter,
+	["firewall_get_url_default_action"] = firewall_get_url_default_action,
+	["firewall_set_url_default_action"] = firewall_set_url_default_action,
 	["firewall_set_ip_filter"] = firewall_set_ip_filter,
 	["firewall_get_ip_filter"] = firewall_get_ip_filter,
 	["firewall_set_acl_filter"] = firewall_set_acl_filter,

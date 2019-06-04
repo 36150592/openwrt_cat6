@@ -24,6 +24,7 @@ local FIREWALL_ACL_FILTER_PREX="ACL-FILTER"
 local FIREWALL_IP_MAC_BIND_FILTER_PREX="IP-MAC-BIND-FILTER"
 local FIREWALL_SPEED_LIMIT_FILTER_PREX="SPEED-LIMIT-FILTER"
 local FIREWALL_PORT_REDIRECT_PREX="PORT-REDIRECT"
+local FIREWALL_URL_DEFAULT_ACTION="URL-DEFAULT-ACTION"
 local FIREWALL_UCI_ZONE="zone"
 
 local debug = util.debug
@@ -348,21 +349,29 @@ end
 local function format_set_url_filter_cmd(url,action,comment, interface)
 	if nil == interface  or "" == interface
 	then
-		if "ACCEPT" == action
-		then
-			-- the URL accept rule will perform DNS check ,so the device must can connect to internet when using this rule
-			return string.format("echo 'iptables -I FORWARD -d %s -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
-		else
-			return string.format("echo 'iptables -I FORWARD -m string --string %s --algo bm -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
-		end	
+		local cmd1 = string.format("echo 'iptables -I FORWARD -p udp -m udp --dport 53  -m string --string %s --algo bm  --icase -j %s ##%s##%s##%s##%s####1' >> %s;",
+		 url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		local cmd2 = string.format("echo 'iptables -I INPUT -p udp -m udp --dport 53  -m string --string %s --algo bm  --icase -j %s ##%s##%s##%s##%s####2' >> %s;",
+		 url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		local cmd3 = string.format("echo 'ip6tables -I FORWARD -p udp -m udp --dport 53  -m string --string %s --algo bm  --icase -j %s ##%s##%s##%s##%s####3' >> %s;",
+		 url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		local cmd4 = string.format("echo 'ip6tables -I INPUT -p udp -m udp --dport 53  -m string --string %s --algo bm  --icase -j %s ##%s##%s##%s##%s####4' >> %s;",
+		 url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
+		return cmd1 .. cmd2 .. cmd3 ..cmd4
 	else
-		if "ACCEPT" == action
-		then
-			-- the URL accept rule will perform DNS check ,so the device must can connect to internet when using this rule
-			return string.format("echo 'iptables -I FORWARD -d %s -j %s ##%s##%s##%s##%s' >> %s", url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, FIREWALL_CUSTOM_CONFIG_FILE)
-		else
-			return string.format("echo 'iptables -I FORWARD -i br-%s -m string --string %s --algo bm -j %s ##%s##%s##%s##%s##%s' >> %s",interface, url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, interface, FIREWALL_CUSTOM_CONFIG_FILE)		
-		end
+		local cmd1 = string.format("echo 'iptables -I FORWARD -i br-%s  -p udp -m udp --dport 53 -m string --string %s --algo bm --icase -j %s ##%s##%s##%s##%s##%s##1' >> %s;",
+			interface, url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, interface, FIREWALL_CUSTOM_CONFIG_FILE)	
+	
+		local cmd2 = string.format("echo 'iptables -I INPUT -i br-%s  -p udp -m udp --dport 53 -m string --string %s --algo bm --icase -j %s ##%s##%s##%s##%s##%s##2' >> %s;",
+			interface, url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, interface, FIREWALL_CUSTOM_CONFIG_FILE)	
+
+		local cmd3 = string.format("echo 'ip6tables -I FORWARD -i br-%s  -p udp -m udp --dport 53 -m string --string %s --algo bm --icase -j %s ##%s##%s##%s##%s##%s##3' >> %s;",
+			interface, url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, interface, FIREWALL_CUSTOM_CONFIG_FILE)	
+	
+		local cmd4 = string.format("echo 'ip6tables -I INPUT -i br-%s  -p udp -m udp --dport 53 -m string --string %s --algo bm --icase -j %s ##%s##%s##%s##%s##%s##4' >> %s;",
+			interface, url, action, FIREWALL_URL_FILTER_PREX, url, action, comment, interface, FIREWALL_CUSTOM_CONFIG_FILE)	
+
+		return cmd1 .. cmd2 ..cmd3 .. cmd4
 	end
 end
 
@@ -971,7 +980,7 @@ function firewall_module.firewall_get_url_filter_list()
 	end
 
 
-
+	local j = 1
 	for i = 1, table.maxn(data)
 	do
 		debug(data[i])
@@ -982,8 +991,12 @@ function firewall_module.firewall_get_url_filter_list()
 		temp["comment"] = array[5]
 		temp["interface"] = array[6]
 		temp["iswork"] = rule_is_work(data[i])
-		url_filter_list[i] = temp
-
+		
+		if '1' == array[7]
+		then
+			url_filter_list[j] = temp
+			j = j+1
+		end
 	end
 
 	return reserve_array(url_filter_list)
@@ -1036,6 +1049,58 @@ function firewall_module.firewall_set_url_filter_list(filter_list)
 
 	
 	return true
+end
+
+function firewall_module.firewall_get_url_default_action()
+
+	local cmd =  string.format("'iptables -I INPUT -p udp -m udp --dport 53 -j DROP##%s'",FIREWALL_URL_DEFAULT_ACTION)
+	local f = io.popen("cat ".. FIREWALL_CUSTOM_CONFIG_FILE .. " | grep ^"..cmd.." | wc -l")
+	if nil ~= f
+	then
+		local res = f:read()
+		if "1" == res
+		then
+			return "DROP"
+		else
+			return "ACCEPT"
+		end
+	end
+
+	debug("firewall get defaults action fail")
+	return nil
+
+end
+
+function firewall_module.firewall_set_url_default_action(action)
+	if check_action(action) == false
+	then
+		debug("check_action fail")
+		return false
+	end
+
+	local cmd1 = string.format("'iptables -I INPUT -p udp -m udp --dport 53 -j DROP ##%s'",FIREWALL_URL_DEFAULT_ACTION)
+	local cmd2 = string.format("'iptables -I FORWARD -p udp -m udp --dport 53 -j DROP ##%s'",FIREWALL_URL_DEFAULT_ACTION)
+	local cmd3 = string.format("'ip6tables -I INPUT -p udp -m udp --dport 53 -j DROP ##%s'",FIREWALL_URL_DEFAULT_ACTION)
+	local cmd4 = string.format("'ip6tables -I FORWARD -p udp -m udp --dport 53 -j DROP ##%s'",FIREWALL_URL_DEFAULT_ACTION)
+
+	local ret1 = os.execute("sed -i /^"..cmd1.."/d "..FIREWALL_CUSTOM_CONFIG_FILE)
+	local ret2 = os.execute("sed -i /^"..cmd2.."/d "..FIREWALL_CUSTOM_CONFIG_FILE)
+	local ret3 = os.execute("sed -i /^"..cmd3.."/d "..FIREWALL_CUSTOM_CONFIG_FILE)
+	local ret4 = os.execute("sed -i /^"..cmd4.."/d "..FIREWALL_CUSTOM_CONFIG_FILE)
+	if "DROP" == action or "REJECT" == action
+	then
+		ret1 = os.execute("echo "..cmd1.."  >> "..FIREWALL_CUSTOM_CONFIG_FILE)
+		ret2 = os.execute("echo "..cmd2.."  >> "..FIREWALL_CUSTOM_CONFIG_FILE)
+		ret3 = os.execute("echo "..cmd3.."  >> "..FIREWALL_CUSTOM_CONFIG_FILE)
+		ret4 = os.execute("echo "..cmd4.."  >> "..FIREWALL_CUSTOM_CONFIG_FILE)
+		local list = firewall_module.firewall_get_url_filter_list()
+		if list ~= nil and table.maxn(list) > 0
+		then
+			firewall_module.firewall_set_url_filter_list(list)
+		end
+	end
+
+	return 0 == ret1 and 0 == ret2 and 0 == ret3 and 0 == ret4
 end
 
 -- get ip filter list
@@ -1509,9 +1574,9 @@ function firewall_module.firewall_set_default_action(action)
 	local cmd = "'iptables -D zone_lan_forward -m comment --comment \"forwarding lan -> wan\" -j zone_wan_dest_ACCEPT'"
 	if "ACCEPT" == action
 	then	
-		return 0  == os.execute("sed -i s/^"..cmd.."//g "..FIREWALL_CUSTOM_CONFIG_FILE)
+		return 0  == os.execute("sed -i /^"..cmd.."/d "..FIREWALL_CUSTOM_CONFIG_FILE)
 	else
-		local ret1 = os.execute("sed -i s/^"..cmd.."//g "..FIREWALL_CUSTOM_CONFIG_FILE)
+		local ret1 = os.execute("sed -i /^"..cmd.."/d "..FIREWALL_CUSTOM_CONFIG_FILE)
 		local ret2 = os.execute("echo "..cmd.."  >> "..FIREWALL_CUSTOM_CONFIG_FILE)
 		return 0 == ret1 and 0 == ret2
 	end
