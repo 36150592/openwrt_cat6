@@ -80,7 +80,7 @@
         })
         function createTable() {
             Page.postJSON({
-                json: { cmd: RequestCmd.STATIC_ARP_BINDING, asynss: true },
+                json: { cmd: RequestCmd.STATIC_ARP_BINDING},
                 success: function (datas) {
 
                     ipMacs = datas.data;
@@ -224,7 +224,6 @@
 
                 </tr>
             </table>
-        </script>
 </div>
 </div>
 </form>

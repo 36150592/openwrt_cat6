@@ -3,7 +3,7 @@
 <script type="text/javascript">
     $(document).ready(function() {
         Page.render();
-        Page.setStripeTable();
+         Page.setStripeTable();
 		var upnpList = "";
 		
         $("#btnSaveUpnpStatus").on("click",function(){
@@ -29,7 +29,7 @@
         })
         function createTable(){
              Page.postJSON({
-            json: { cmd: RequestCmd.FW_UPNP,asynss:true},
+            json: { cmd: RequestCmd.FW_UPNP},
             success: function(datas){ 
              if(datas.data.status == "enable"){
                 $("input[value='enable']").prop("checked",true);
@@ -54,7 +54,6 @@
             }
             
             sb.append('</table>');
-
             $('#routeTh').html(sb.toString());
                         },
                         complete:function(){
@@ -70,7 +69,7 @@
 
 <div class="tab_boxes" id="child_container">
     <script type="text/template" id="child_template">
-     <form id="form">
+    <form id="form">
     <div style="margin-top:10px;margin-bottom:30px;">
          <table class="detail" cellspacing="0">
             <tr style="margin-bottom:20px;">
@@ -96,9 +95,6 @@
     </h3>
     <div id="routeTh">
     </div>
-        </script>
-            </div>
-        </div>
     </form>
     </script>
 </div>
