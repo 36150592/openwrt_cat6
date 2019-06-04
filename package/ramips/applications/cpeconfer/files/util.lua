@@ -75,7 +75,7 @@ function module.web_log(content)
 	then
 		local ff = io.open("/tmp/web_log","a")
 		ff:write(content)
-		io.close(ff)
+		io.close(ff)		
 	end
 end
 
@@ -301,6 +301,26 @@ function module._and(a, b)
 	return to_digit(dig)
 
 
+end
+
+function module.get_web_log()
+	local f = io.open("/tmp/web_log","r")
+	local logs = f:read("*all")
+	f:close()
+	return logs
+end
+
+function module.clear_web_log()
+	os.execute("echo -n > /tmp/web_log")
+	-- local f = io.open("/tmp/web_log","r")
+	-- local log = f:read()
+	-- f:close()
+	-- if log ~= nil
+	-- then
+	-- 	return log
+	-- else
+	-- 	return nil
+	-- end
 end
 
 

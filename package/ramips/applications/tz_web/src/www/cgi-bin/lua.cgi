@@ -32,7 +32,7 @@ function login()
     local username = "'" .. tz_req["username"] .. "'"
     local password = "'" .. tz_req["passwd"] .. "'"
     local sessionId = tz_req["sessionId"]
-
+    
     local file = io.open("/etc/config/tozed", "r")
     io.input(file)
     for l in file:lines() do
@@ -2442,6 +2442,33 @@ function open_5g_random_pin()
 
 end
 
+function get_web_log() 
+    local data_array = {}
+
+    data_array["logs"] = uti.get_web_log()
+
+    local tz_answer = {}
+    tz_answer["success"] = true
+    tz_answer["cmd"] = 239
+    tz_answer["data"] = data_array
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end
+
+function clear_web_log()
+    local data_array = {}
+
+    uti.clear_web_log()
+
+    local tz_answer = {}
+    tz_answer["success"] = true
+    tz_answer["cmd"] = 240
+    -- tz_answer["data"] = data_array
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end
 
 local switch = {
     [0] = get_sysinfo,
@@ -2540,6 +2567,8 @@ local switch = {
     [238] = get_login_info,
     [239] = open_random_pin,
     [240] = open_5g_random_pin,
+    [241] = get_web_log,
+    [242] = clear_web_log
 }
 
 cmdid = uti.get_env_cmdId(envv)

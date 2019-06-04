@@ -142,6 +142,8 @@ var RequestCmd = {
     GET_LOGIN_INFO: 238,
     OPEN_RANDOM_PIN:239,
     OPEN_5G_RANDOM_PIN:240
+    SYS_LOG: 241,
+    SYS_CLEAR_LOG: 242
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
