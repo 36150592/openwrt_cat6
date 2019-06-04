@@ -64,7 +64,11 @@ model_func_t ModelFunction[] =
     {"cpe_get_igd_di_X_CMCC_Band", cpe_get_igd_di_X_CMCC_Band},
     {"cpe_get_igd_di_X_CMCC_BandWidth", cpe_get_igd_di_X_CMCC_BandWidth},
     {"cpe_get_igd_di_X_CMCC_EnodeBId", cpe_get_igd_di_X_CMCC_EnodeBId},
-		
+
+
+	{"cpe_get_LockLteBands", cpe_get_LockLteBands},
+	{"cpe_get_igd_di_X_CMCC_TAC", cpe_get_igd_di_X_CMCC_TAC},
+	{"cpe_get_igd_di_X_CMCC_ECGI", cpe_get_igd_di_X_CMCC_ECGI},    		
 	{"cpe_get_igd_di_X_CMCC_LAC", cpe_get_igd_di_X_CMCC_LAC},
     {"cpe_get_igd_di_X_CMCC_CellId", cpe_get_igd_di_X_CMCC_CellId},
     {"cpe_get_igd_di_X_CMCC_GlobeCellId", cpe_get_igd_di_X_CMCC_GlobeCellId},

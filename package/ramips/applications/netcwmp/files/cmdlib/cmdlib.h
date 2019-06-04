@@ -1080,7 +1080,9 @@ typedef struct
 	char TZPHYCELLID[32];
 	char TZCQI[32];
 	char TZMCS[32];
-
+	char TZTAC[32];
+	char TZLOCKLTEBAND[32];
+	char TZECGI[32];
 
 	//锁IMSI段号的字段
 	char TZ_ENABLE_LOCK_IMSI_PREFIX[32];

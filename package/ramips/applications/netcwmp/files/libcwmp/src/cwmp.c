@@ -4393,6 +4393,21 @@ int read_lte_param( const char* config_file,InfoStruct* server_wifi_info )
 			STRCPY_S( system_version_info.PLMN,field_value );
 			
 		}
+		else if( !strcmp( field_name,"TAC" ) )
+		{
+			STRCPY_S( system_version_info.TZTAC,field_value );
+			
+		}
+		else if( !strcmp( field_name,"LTE_LOCK_BAND" ) )
+		{
+			STRCPY_S( system_version_info.TZLOCKLTEBAND,field_value );
+			
+		}		
+		else if( !strcmp( field_name,"ECGI" ) )
+		{
+			STRCPY_S( system_version_info.TZECGI,field_value );
+			
+		}				
 		else if( !strcmp( field_name,"band" ) )
 		{
 			STRCPY_S( system_version_info.TZBAND,field_value );
@@ -4416,9 +4431,20 @@ int read_lte_param( const char* config_file,InfoStruct* server_wifi_info )
 		else if( !strcmp( field_name,"MCS" ) )
 		{
 			STRCPY_S( system_version_info.TZMCS,field_value );
-			
 		}	
-											
+		else if( !strcmp( field_name,"EARFCN" ) )
+		{
+			STRCPY_S( system_version_info.TZEARFCN,field_value );
+		}	
+		else if( !strcmp( field_name,"SINR" ) )
+		{
+			STRCPY_S( system_version_info.TZSINR,field_value );
+		}
+		else if( !strcmp( field_name,"CELL_ID" ) )
+		{
+			STRCPY_S( system_version_info.TZGLBCELLID,field_value );
+		}						
+										
 	}
 
 	//关掉文件句柄
@@ -6627,12 +6653,28 @@ int get_parameter(enum ParameterName name, char **value)
 			strcpy(param, system_version_info.PLMN);
 			break;
 
+		case X_CMCC_TAC:
+			strcpy(param, system_version_info.TZTAC);
+			break;
+
+		case X_CMCC_LOCKLTEBAND:
+			strcpy(param, system_version_info.TZLOCKLTEBAND);
+			break;			
+
+		case X_CMCC_ECGI:
+			strcpy(param, system_version_info.iccid);
+			break;
+
+		case X_CMCC_CQI:
+			strcpy(param, system_version_info.TZCQI);
+			break;
+
+		case X_CMCC_MCS:
+			strcpy(param, system_version_info.TZMCS);
+			break;			
+
 		case X_CMCC_SignalQuality:
-			{
-				char tozedinds[64];
-				cmd_cat("/proc/tozed/ind", tozedinds, sizeof(tozedinds));
-				sscanf(tozedinds, "%*s%*s%*s%s%*s", param);
-			}
+			strcpy(param, system_version_info.TZRSRP);
 			break;
 			
 		case X_CMCC_RSRP:

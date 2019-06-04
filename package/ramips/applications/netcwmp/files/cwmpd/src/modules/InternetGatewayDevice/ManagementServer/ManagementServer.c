@@ -458,19 +458,78 @@ int cpe_get_igd_di_X_CMCC_PLMN(cwmp_t * cwmp, const char * name, char ** value, 
 	return get_parameter(X_CMCC_PLMN, value);
 }
 
+int cpe_get_igd_di_X_CMCC_TAC(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	return get_parameter(X_CMCC_TAC, value);
+}
+
+int cpe_get_LockLteBands(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	return get_parameter(X_CMCC_LOCKLTEBAND, value);
+}
+
+
+int cpe_get_igd_di_X_CMCC_ECGI(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{
+	return get_parameter(X_CMCC_ECGI, value);
+}
+
+
 int cpe_get_igd_di_X_CMCC_CQI(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	return get_parameter(X_CMCC_PLMN, value);
+	return get_parameter(X_CMCC_CQI, value);
 }
 
 int cpe_get_igd_di_X_CMCC_MCS(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	return get_parameter(X_CMCC_PLMN, value);
+	return get_parameter(X_CMCC_MCS, value);
 }
 
 int cpe_get_igd_di_X_CMCC_SignalQuality(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {
-	return get_parameter(X_CMCC_SignalQuality, value);
+	int SignalQuality = 0;
+	char buf[64];
+
+	int tValue=0;
+	get_parameter(X_CMCC_SignalQuality, value);
+
+	if(strlen(*value)==0)
+	{
+		strcpy(param, "0");
+	    *value = param;
+		return FAULT_CODE_OK;	
+	}
+
+	tValue = atoi(*value);
+	
+	//p[0] = -115; p[1] = -110; p[2] = -105; p[3] = -97; p[4] = -84;
+	if(tValue==0)
+	{
+		strcpy(param, "0");
+	    *value = param;
+	}else{
+		if(tValue<= -115)
+		{
+			strcpy(param, "0");
+			*value = param;
+		}else if(tValue<= -110){
+			strcpy(param, "1");
+			*value = param;
+		}else if(tValue<= -105){
+			strcpy(param, "2");
+			*value = param;
+		}else if(tValue<= -97){
+			strcpy(param, "3");
+			*value = param;
+		}else if(tValue<= -84){
+			strcpy(param, "4");
+			*value = param;
+		}else{
+			strcpy(param, "5");
+			*value = param;
+		}
+	}
+	return FAULT_CODE_OK;	
 }
 
 int cpe_get_igd_di_X_CMCC_RSRP(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
