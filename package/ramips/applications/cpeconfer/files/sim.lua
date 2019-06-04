@@ -11,6 +11,8 @@ local SIM_SEND_AT_CMD="sendat -d/dev/ttyUSB1 -f/tmp/at_send -o/tmp/at_recv"
 local SIM_AT_SEND_FILE="/tmp/at_send"
 local SIM_AT_RECV_FILE="/tmp/at_recv"
 local SIM_PIN_ENABLE_FILE="/tmp/.sim_pin_enable"
+local SIM_PIN_PUK_LEFT_TIME_FILE="/tmp/.sim_pin_puk_left_time"
+local SIM_CARD_STATUS_FILE="/tmp/.sim_card_status"
 local debug = util.debug
 local split = util.split 
 local sleep = util.sleep
@@ -195,10 +197,48 @@ function sim_module.sim_get_status()
 
 	io.close(f)
 
+	f = io.open(SIM_PIN_PUK_LEFT_TIME_FILE,"r")
+	if nil ~= f
+	then
+		local pin_left = f:read()
+		local puk_left = f:read()
+		status["pin_left_times"] = pin_left
+		status["puk_left_times"] = puk_left
+		io.close(f)
+	else
+		local ret = os.execute("echo "..status["pin_left_times"] .." > "..SIM_PIN_PUK_LEFT_TIME_FILE)
+		os.execute("echo "..status["puk_left_times"] .." >> "..SIM_PIN_PUK_LEFT_TIME_FILE)
+	end
+
+	f = io.open(SIM_CARD_STATUS_FILE,"r")
+	if nil ~= f
+	then
+		local card_status = f:read()
+		status["card_status"] = card_status
+		io.close(f)
+	else
+		os.execute("echo "..status["card_status"] .." > "..SIM_CARD_STATUS_FILE)
+	end
+
 	return status
 
 end
 
+local function  update_sim_info()
+	local ret = send_at_cmd("at+BMCPNCNT")
+	if nil ~= ret
+	then
+		local str = string.gmatch(ret,"%d+");
+	 	str()
+		local pin_left  = str()
+		str()
+		local puk_left = str()
+		os.execute("echo "..pin_left .." > "..SIM_PIN_PUK_LEFT_TIME_FILE)
+		os.execute("echo "..puk_left .." >> "..SIM_PIN_PUK_LEFT_TIME_FILE)
+	end
+	local ret = get_card_status()
+	os.execute("echo "..ret .." > "..SIM_CARD_STATUS_FILE)
+end
 
 -- only when the usim card is ready status can this interface be invoked
 function sim_module.sim_pin_lock_enable(pin_passwd)
@@ -216,6 +256,7 @@ function sim_module.sim_pin_lock_enable(pin_passwd)
 		os.execute("echo -n '1' > "..SIM_PIN_ENABLE_FILE)
 		return true
 	else
+		update_sim_info()
 		return false
 	end
 
@@ -238,6 +279,7 @@ function sim_module.sim_pin_lock_disable(pin_passwd)
 		os.execute("echo -n '0' > "..SIM_PIN_ENABLE_FILE)
 		return true
 	else
+		update_sim_info()
 		return false
 	end
 end
@@ -251,6 +293,8 @@ function sim_module.sim_pin_unlock(pin_passwd)
 	end
 
 	local res =  send_at_cmd(format_pin_unlock_at_cmd(pin_passwd))
+	os.execute("rm -f "..SIM_PIN_PUK_LEFT_TIME_FILE)
+	update_sim_info()
 	if res ~= nil and string.find(res,"OK")
 	then
 		return true
@@ -274,7 +318,7 @@ function sim_module.sim_pin_change(pin_passwd,new_pin)
 	end
 
 	local res =  send_at_cmd(format_pin_change_at_cmd(pin_passwd, new_pin))
-
+	update_sim_info()
 	if res ~= nil and string.find(res,"OK")
 	then
 		return true
@@ -299,6 +343,7 @@ function sim_module.sim_puk_unlock(puk,new_pin)
 	end
 
 	local res =  send_at_cmd(format_puk_unlock_at_cmd(puk, new_pin))
+	update_sim_info()
 	if res ~= nil and string.find(res,"OK")
 	then
 		return true
