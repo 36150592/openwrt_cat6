@@ -536,7 +536,7 @@ end
 local function get_lock_band()
 
 	local gw_lock_band ,tds_lock_band, lte_lock_band
-	local gw_support_band, tds_support_band, lte_support_band = get_support_band()
+	local gw_support_band, lte_support_band,tds_support_band  = get_support_band()
 
 	gw_lock_band = x:get(TOZED_CONFIG_FILE,UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_GW_BAND_PREF")
 	tds_lock_band = x:get(TOZED_CONFIG_FILE,UCI_SECTION_DIALTOOL2, "TZ_DIALTOOL2_TDS_BAND_PREF")
