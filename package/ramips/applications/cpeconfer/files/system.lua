@@ -22,6 +22,7 @@ local GET_CPU_AVG1_CMD="cat /proc/loadavg | awk '{print $1}'"
 local GET_CPU_AVG5_CMD="cat /proc/loadavg | awk '{print $2}'"
 local GET_CPU_AVG15_CMD="cat /proc/loadavg | awk '{print $3}'"
 local TOZED_DDNS_SECTION="ddns"
+local SYSTEM_STATIC_FILE="/tmp/.system_info_static"
 
 system_module.sys_info = {
 		
@@ -139,8 +140,15 @@ function system_module.get_divice_version()
 		info[arr[1]] = arr[2]
         res = f:read()
 	end
-	 io.close(f)
-	 return info
+	io.close(f)
+
+	local device_type = x:get(TOZED_CONFIG_FILE,"system","TZ_SYSTEM_DEVICE_TYPE")
+	if nil ~= device_type
+	then
+		info["type"] = device_type
+	end
+
+	return info
 
 end
 
@@ -673,11 +681,54 @@ function system_module.system_get_tozed_system_info()
 			io.close(f)
 		end
 
-		local f = io.popen("eth_mac g sn")
-		info["device_sn"]  = f:read()
-		io.close(f)
+		local sn_generate_type = x:get(TOZED_CONFIG_FILE,"system","TZ_SYSTEM_SN_GENERATE_TYPE")
 
+		if "1" == sn_generate_type
+		then
+			local f = io.popen("eth_mac g sn")
+			info["device_sn"]  = f:read()
+			io.close(f)
+		else
+			local f = io.popen("cat "..SYSTEM_STATIC_FILE.." | grep module_imei | cut -d':' -f 2")
+			local imei = nil
+			
+			if nil ~=f
+			then
+				imei = f:read()
+				io.close(f)
+			end
+
+			if nil ~= imei 
+			then
+
+				local sn_prefix = x:get(TOZED_CONFIG_FILE,"system", "TZ_SYSTEM_SN_PREFIX")
+				if nil ~= sn_prefix
+				then
+					info["device_sn"] = sn_prefix .. imei
+					return info
+				end
+
+				local device_type = x:get(TOZED_CONFIG_FILE,"system", "TZ_SYSTEM_DEVICE_TYPE")
+				if nil ~= device_type
+				then
+					info["device_sn"] = device_type .. imei
+
+					return info
+				end
+
+				local f = io.popen("cat /version  | grep ^type | cut -d'=' -f 2")
+				if nil ~= f
+				then
+					local true_type = f:read()
+					info["device_sn"] = true_type .. imei
+					return info
+				end
+			end
+			
+		end
+	
 		return info
+	
 end
 
 

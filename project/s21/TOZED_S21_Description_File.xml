@@ -32,6 +32,21 @@ bitcomposite表示使用位进行组合的配置字段
 	<config name="TZSYSTEM_CUSTOMER_SOFT_VERSION" type="text" description="客户指定软件版本" detail="客户指定软件版本" maxlength="32" class_name="SYSTEM_CONFIG_FIELD"  >
         	<default value="" />
 	</config>
+		
+	<config name="TZSYSTEM_SN_GENERATE_TYPE" type="select" description="SN号生成规则" detail="SN号生成规则" maxlength="32" class_name="SYSTEM_CONFIG_FIELD"  >
+			<option value="1" description="从配置区读取" />
+			<option value="0" description="组合" />
+			<default value="1" />
+	</config>
+	
+		
+	<config name="TZSYSTEM_CUSTOMER_TYPE" type="text" description="客户型号" detail="客户型号" maxlength="32" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<default value="" />
+	</config>
+	
+	<config name="TZSYSTEM_CUSTOMER_SN_PREFIX" type="text" description="客户定制SN前缀" detail="客户定制SN前缀" maxlength="32" class_name="SYSTEM_CONFIG_FIELD"  >
+        	<default value="" />
+	</config>
 
 	<config name="TZSYSTEM_TELNET_ENABLE" type="select" description="telnet开关" detail="telnet开关，默认关闭" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
         	<option value="1" description="开启" />

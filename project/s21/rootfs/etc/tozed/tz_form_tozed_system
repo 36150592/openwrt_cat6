@@ -32,5 +32,17 @@ else
 	cfg -a TZ_SYSTEM_TELNET_ENABLE="0" --section system
 fi
 
+if [ "${TZSYSTEM_CUSTOMER_TYPE}" != "" ]; then
+	cfg -a TZ_SYSTEM_DEVICE_TYPE=${TZSYSTEM_CUSTOMER_TYPE} --section system
+fi
+
+if [ "${TZSYSTEM_CUSTOMER_SN_PREFIX}" != "" ]; then
+	cfg -a TZ_SYSTEM_SN_PREFIX=${TZSYSTEM_CUSTOMER_SN_PREFIX} --section system
+fi
+
+if [ "${TZSYSTEM_SN_GENERATE_TYPE}" != "" ]; then
+	cfg -a TZ_SYSTEM_SN_GENERATE_TYPE=${TZSYSTEM_SN_GENERATE_TYPE} --section system
+fi
+
 cfg -c
 
