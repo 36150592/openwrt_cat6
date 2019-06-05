@@ -364,5 +364,65 @@ function network_module.network_get_interface_up_down_status()
 	return ar
 end
 
+-- set the lan/wan mode ,restart the system to take effect
+-- input:string
+--		lan:set to lan mode--> all the eth ports are set to be lan 
+--		wan:set to wan mode--> port 4 set to wan  and the other set to lan
+-- output:
+--		true if success , false if fail
+function network_module.network_set_lan_wan_mode(mode)
+	if "lan" ~= mode and "wan" ~= mode
+	then
+		debug("input mode error,must be lan/wan")
+		return false
+	end
+
+	x:foreach(NETWORK_CONFIG_FILE, "switch_vlan", function(s)
+
+		if "1" == s["vlan"]
+		then
+			if "lan" == mode
+			then
+				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 2 3 4 6t")
+			elseif "wan" == mode
+			then
+ 				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 2 3 6t")
+ 			end
+ 		elseif "2" == s["vlan"]
+ 		then
+ 			if "lan" == mode
+			then
+				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+			elseif "wan" == mode
+			then
+ 				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","4 6t")
+ 			end
+		end
+	end)
+
+	return x:commit(NETWORK_CONFIG_FILE)
+end
+
+-- get the lan/wan mode ,restart the system to take effect
+-- input:none
+-- output:string
+--		lan:set to lan mode--> all the eth ports are set to be lan 
+--		wan:set to wan mode--> port 4 set to wan  and the other set to lan
+function network_module.network_get_lan_wan_mode()
+
+	local mode = "lan"
+	x:foreach(NETWORK_CONFIG_FILE, "switch_vlan", function(s)
+
+		if "1" == s["vlan"] and "0 1 2 3 4 6t" == s["ports"]
+		then
+			mode = "lan"
+		elseif "1" == s["vlan"] and "0 1 2 3 6t" == s["ports"]
+		then
+			mode = "wan"
+		end
+	end)
+
+	return mode
+end
 
 return network_module

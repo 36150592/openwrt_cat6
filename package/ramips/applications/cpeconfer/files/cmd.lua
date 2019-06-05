@@ -962,6 +962,18 @@ function sim_puk_unlock()
 	print("puk change fail")
 end
 
+function network_get_lan_wan_mode()
+	print("network_get_lan_wan_mode")
+	local ret = network.network_get_lan_wan_mode()
+	print(ret)
+end
+
+function network_set_lan_wan_mode()
+	print("network_get_lan_wan_mode")
+	local ret = network.network_set_lan_wan_mode(tostring(arg[2]))
+	print(ret)
+end
+
 function network_get_interface_up_down_status()
 	print("network_get_interface_up_down_status")
 	local info = network.network_get_interface_up_down_status()
@@ -2534,6 +2546,9 @@ local api_func = {
 	["network_get_4g1_net_info"] = network_get_4g1_net_info,
 	["network_get_4g2_net_info"] = network_get_4g2_net_info,
 	["network_get_interface_up_down_status"] = network_get_interface_up_down_status,
+	["network_set_lan_wan_mode"] = network_set_lan_wan_mode,
+	["network_get_lan_wan_mode"] = network_get_lan_wan_mode,
+	
 	--sim
 	["sim_get_status"] = sim_get_status,
 	["sim_pin_lock_enable"] = sim_pin_lock_enable,
