@@ -80,7 +80,8 @@ var DOC = {
 	
 	networkMode: { helper: {} },
 	dial: { helper: {} },
-	apn: { helper: {} }
+	apn: { helper: {} },
+	apnHelper: {}
 };
 
 var HELP = {

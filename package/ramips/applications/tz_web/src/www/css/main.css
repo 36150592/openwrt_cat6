@@ -936,6 +936,7 @@ div.helper_name {
 }
 
 div.helper_desc {
+	font-size: 14px;
 	padding: 5px 20px;
 	margin-bottom: 10px;
 }
@@ -1890,3 +1891,23 @@ ul.tabs a.current {
 	border: 1px solid grey;
 	cursor: pointer;
 }
+
+.setting_apn_form {
+	display: inline-block;
+	width: 60%;
+}
+
+.setting_apn_helper {
+	box-sizing: border-box;
+	float: right; 
+	vertical-align: top;
+	width:40%; 
+	height: 100%;
+	padding: 10px;
+	background: #ECF1F4;
+}
+
+
+
+
+
