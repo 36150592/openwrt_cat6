@@ -91,6 +91,8 @@ typedef struct  GLOBAL_DIAL_VARIABLES
 	int network_mode_bmrat;		//detail register network mode
 	char network_mode_detail[64];		//network mode display by str
 	int ipstack_registered;		//sometime we can not register ipstack we want
+	int ipv6_register_status; 
+	int ipv4_register_status; 
 	int signal_rssi_level;			//rssi lvl
 	char signal_rssi_value[8];		//rssi value
 	char signal_rsrp[8];

@@ -505,6 +505,20 @@ const MDI bm916_moduleinfo=
 
 static int check_cpin_num = 0;
 
+static void  prepare_v6_environment()
+{
+	char bmwan0_local_ipv6_exist[64] = "";
+	read_memory("ifconfig bmwan0 | grep fe80:c810",bmwan0_local_ipv6_exist ,sizeof(bmwan0_local_ipv6_exist));
+	if (bmwan0_local_ipv6_exist[0] == 0 )
+	{
+		system("ifconfig bmwan0 down");//ifconfig bmwan0 down
+		system("ip addr add dev bmwan0 fe80:C810:3001:D00::3/56");
+		system("ifconfig bmwan0 up");
+	}
+	
+	system("pgrep -f odhcp6c.*bmwan0 | xargs kill ");
+}
+
 int down_udhcpc(char *card_name)
 {
 	FILE* pstr; char cmd[128],buff[512],pidfile[128];
@@ -957,6 +971,80 @@ void bm916_sendat(int num)
 				util_send_cmd(global_dialtool.dev_handle,cmd_buffer,&global_dialtool.pthread_moniter_flag);
 				break;
 			}
+
+		case Dial_State_QCRMCALL_DISCONNECT_V6:
+			{
+				util_send_cmd(global_dialtool.dev_handle,"AT$QCRMCALL=0,1,2\r",&global_dialtool.pthread_moniter_flag);
+				break;
+			}
+
+		case Dial_State_QCRMCALL_V6:
+			{
+				prepare_v6_environment();
+				
+				char cmd_buffer[64] = "";
+				
+				if(global_dial_vars.evdo_cdma_flag!=0)
+				{
+					snprintf(cmd_buffer,sizeof(cmd_buffer ),"AT$QCRMCALL=1,1,2,2,1\r");
+				}
+				else
+				{
+					snprintf(cmd_buffer,sizeof(cmd_buffer ),"AT$QCRMCALL=1,1,2,2,1\r");
+				}
+				
+				util_send_cmd(global_dialtool.dev_handle, cmd_buffer, &global_dialtool.pthread_moniter_flag);
+				break;
+			}
+
+		case Dial_State_QCRMCALL_QUERY_V6:
+			{
+				log_info("query_ipv6\n");
+				util_send_cmd(global_dialtool.dev_handle,"AT$QCRMCALL?\r",&global_dialtool.pthread_moniter_flag);
+				break;
+			}
+
+		case Dial_State_QCRMCALL_DISCONNECT_V4:
+			{
+				util_send_cmd(global_dialtool.dev_handle,"AT$QCRMCALL=0,1,1\r",&global_dialtool.pthread_moniter_flag);
+				break;
+			}
+
+		case Dial_State_QCRMCALL_V4:
+			{
+				down_udhcpc(global_system_info.module_info.network_card_name);
+				up_udhcpc(global_system_info.module_info.network_card_name);
+				
+				char cmd_buffer[64] = "";
+				
+				if(global_dial_vars.evdo_cdma_flag!=0)
+				{
+					snprintf(cmd_buffer,sizeof(cmd_buffer ),"AT$QCRMCALL=1,1,2,1,1\r");
+				}
+				else
+				{
+					snprintf(cmd_buffer,sizeof(cmd_buffer ),"AT$QCRMCALL=1,1,1,2,1\r");
+				}
+				
+				util_send_cmd(global_dialtool.dev_handle, cmd_buffer, &global_dialtool.pthread_moniter_flag);
+				break;
+			}
+
+		case Dial_State_QCRMCALL_QUERY_V4:
+			{
+				log_info("query_ipv4\n");
+				util_send_cmd(global_dialtool.dev_handle,"AT$QCRMCALL?\r",&global_dialtool.pthread_moniter_flag);
+				break;
+			}
+
+		case Dial_State_QCRMCALL_V4V6:
+			{
+				log_info("query_ipv4v6\n");
+				util_send_cmd(global_dialtool.dev_handle,"AT$QCRMCALL?\r",&global_dialtool.pthread_moniter_flag);
+				break;
+			}
+
+		
 		case Dial_State_QCRMCALL:
 			{
 				down_udhcpc(global_system_info.module_info.network_card_name);
@@ -966,6 +1054,7 @@ void bm916_sendat(int num)
 				if(global_dial_vars.evdo_cdma_flag!=0)
 				{
 					if(!strncmp("IP",global_init_parms.ipstack,strlen(global_init_parms.ipstack)))
+						
 						snprintf(cmd_buffer,sizeof(cmd_buffer ),"AT$QCRMCALL=1,1,1,1,1,0\r");
 					else if(!strncmp("IPV6",global_init_parms.ipstack,strlen(global_init_parms.ipstack)))
 						snprintf(cmd_buffer,sizeof(cmd_buffer ),"AT$QCRMCALL=1,1,2,1,1,0\r");
@@ -979,7 +1068,7 @@ void bm916_sendat(int num)
 					else if(!strncmp("IPV6",global_init_parms.ipstack,strlen(global_init_parms.ipstack)))
 						snprintf(cmd_buffer,sizeof(cmd_buffer ),"AT$QCRMCALL=1,1,2,2,1\r");
 					else
-						snprintf(cmd_buffer,sizeof(cmd_buffer ),"AT$QCRMCALL=1,1,3,2,1\r"); //occur a mistake
+						snprintf(cmd_buffer,sizeof(cmd_buffer ),"AT$QCRMCALL=1,1,2,2,1\r"); //occur a mistake
 				}
 				util_send_cmd(global_dialtool.dev_handle,cmd_buffer,&global_dialtool.pthread_moniter_flag);
 				break;
@@ -1064,7 +1153,7 @@ void bm916_sendat(int num)
 			util_send_cmd(global_dialtool.dev_handle,"AT+SIGNALIND=0\r",&global_dialtool.pthread_moniter_flag);
 			break;
 		case Dial_State_QCRMCALL_DISCONNECT:
-			util_send_cmd(global_dialtool.dev_handle,"AT$QCRMCALL=0,1\r",&global_dialtool.pthread_moniter_flag);
+			util_send_cmd(global_dialtool.dev_handle,"AT$QCRMCALL=0,1,3\r",&global_dialtool.pthread_moniter_flag);
 			break;
 		case Dial_State_CSQ:
 			util_send_cmd(global_dialtool.dev_handle,"AT+CSQ\r",&global_dialtool.pthread_moniter_flag);
@@ -2032,8 +2121,15 @@ void bm916_dial(int* Dial_proc_state )
 				//sometimes have no signal,and we search nothing,but we must be sure wihich network we are on 
 				if(global_dial_vars.network_mode_bmrat!=31)
 				{
-					
-					*Dial_proc_state=Dial_State_QCRMCALL;
+					if (strcmp(global_init_parms.ipstack,"IPV4V6") == 0)
+					{
+						*Dial_proc_state=Dial_State_QCRMCALL_V6;
+					}
+					else
+					{
+						*Dial_proc_state=Dial_State_QCRMCALL_V4;
+					}
+					//*Dial_proc_state=Dial_State_QCRMCALL;
 					exception_count=0;
 				}
 				else
@@ -2053,6 +2149,94 @@ void bm916_dial(int* Dial_proc_state )
 				break;
 			}
 			break;
+
+		case Dial_State_QCRMCALL_DISCONNECT_V6:
+			{
+				*Dial_proc_state=Dial_State_QCRMCALL_V6;
+			}
+			break;
+
+		case Dial_State_QCRMCALL_V6:
+			{
+				sleep(5);
+				*Dial_proc_state=Dial_State_QCRMCALL_QUERY_V6;
+			}
+			break;
+			
+		case Dial_State_QCRMCALL_QUERY_V6:
+			{
+				if(NULL!= strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				{
+					if( NULL!= strstr(global_dialtool.buffer_at_sponse,"1, V6") ) 
+						global_dial_vars.ipv6_register_status = 1;
+					else
+						global_dial_vars.ipv6_register_status = 0;
+				}
+				else
+					global_dial_vars.ipv6_register_status = 0;
+
+				if( NULL!= strstr(global_dialtool.buffer_at_sponse,"1, V4") ) 
+					global_dial_vars.ipv4_register_status = 1;
+				else
+					global_dial_vars.ipv4_register_status = 0;
+
+				if (strcmp(global_init_parms.ipstack,"IPV4V6") == 0)
+				{
+					*Dial_proc_state=Dial_State_QCRMCALL_V4;
+				}
+				else
+				{
+					*Dial_proc_state=Dial_State_BMDATASTATUS;
+				}
+			}
+			break;
+
+		case Dial_State_QCRMCALL_DISCONNECT_V4:
+			{
+				
+				*Dial_proc_state=Dial_State_QCRMCALL_V4;
+			}
+			break;
+
+		case Dial_State_QCRMCALL_V4:
+			{
+				
+				*Dial_proc_state=Dial_State_QCRMCALL_QUERY_V4;
+			}
+			break;
+			
+		case Dial_State_QCRMCALL_QUERY_V4:
+			{
+				if(NULL!= strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				{
+					if( NULL!= strstr(global_dialtool.buffer_at_sponse,"1, V4") ) 
+					{
+						global_dial_vars.ipv4_register_status = 1;
+						exception_count=0;
+					}
+					else
+					{
+						global_dial_vars.ipv4_register_status = 0;
+						exception_count++;
+					}
+				}
+				else
+				{
+					global_dial_vars.ipv4_register_status = 0;
+					exception_count++;
+				}
+				
+				printf("exception_count = %d\n", exception_count);
+				if( global_dial_vars.ipv4_register_status == 1 || exception_count > 60)
+				{
+					printf("go out 60\n");
+					exception_count=0;
+					*Dial_proc_state=Dial_State_BMDATASTATUS;
+				}
+				
+			}
+			break;
+			
 		case Dial_State_QCRMCALL:
 				*Dial_proc_state=Dial_State_QCRMCALL_QUERY;
 				//system("cat /proc/uptime | awk '{print $1}' >> /root/begin_dial_time");
@@ -2276,6 +2460,7 @@ void bm916_dial(int* Dial_proc_state )
 void bm916_deamon(int* Dial_proc_state)
 {
 	static int data_link_status_count=0;
+	static int connect_status_fail_count = 0;
 	log_info("%s %d global_dialtool.Dial_proc_state %d\n",__FUNCTION__,__LINE__,global_dialtool.Dial_proc_state);
 	
 	if(check_file_exist(MANUAL_DISCONNECT))
@@ -3113,7 +3298,7 @@ void bm916_deamon(int* Dial_proc_state)
 //				log_info("csq:%.1f,%.1f,%.1f,%.1f\n",rssi,rsrp,rsrq,snr);
 			}
 
-			*Dial_proc_state=Dial_State_BMDATASTATUS;
+			*Dial_proc_state=Dial_State_QCRMCALL_V4V6;
 			break;
 		case Dial_State_HDRCSQ:
 			if(NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && NULL != strstr(global_dialtool.buffer_at_sponse,"^HDRCSQ:"))
@@ -3152,6 +3337,86 @@ void bm916_deamon(int* Dial_proc_state)
 				}
 				*Dial_proc_state=Dial_State_BMDATASTATUS;	
 			}
+			break;
+
+		case Dial_State_QCRMCALL_V4V6:
+			{
+				if(NULL!= strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
+				{
+					if( NULL!= strstr(global_dialtool.buffer_at_sponse,"1, V6") ) 
+						global_dial_vars.ipv6_register_status = 1;
+					else
+						global_dial_vars.ipv6_register_status = 0;
+
+					if( NULL!= strstr(global_dialtool.buffer_at_sponse,"1, V4") ) 
+						global_dial_vars.ipv4_register_status = 1;
+					else
+						global_dial_vars.ipv4_register_status = 0;
+				}
+
+				if (strcmp(global_init_parms.ipstack,"IPV4V6") == 0)
+				{
+					if( global_dial_vars.ipv6_register_status == 1 && global_dial_vars.ipv4_register_status == 1 )
+					{
+						connect_status_fail_count = 0;
+					}
+					else
+					{
+						connect_status_fail_count ++;
+					}
+				}
+				else
+				{
+					if(global_dial_vars.ipv4_register_status == 1 )
+					{
+						connect_status_fail_count = 0;
+					}
+					else
+					{
+						connect_status_fail_count ++;
+					}
+				}
+
+				if(connect_status_fail_count > 1)
+				{
+					if( data_link_status_count > 0)
+					{
+						global_dialtool.Dial_Lvl_1=DIAL_DIAL;
+						*Dial_proc_state=Dial_State_QCRMCALL_DISCONNECT;
+					}
+					else
+					{
+						if (strcmp(global_init_parms.ipstack,"IPV4V6") == 0)
+						{
+							if ( global_dial_vars.ipv6_register_status == 0 && global_dial_vars.ipv4_register_status == 0)
+							{
+								global_dialtool.Dial_Lvl_1=DIAL_DIAL;
+								*Dial_proc_state=Dial_State_QCRMCALL_DISCONNECT;
+							}
+							else if ( global_dial_vars.ipv6_register_status == 0)
+							{
+								global_dialtool.Dial_Lvl_1=DIAL_DIAL;
+								*Dial_proc_state=Dial_State_QCRMCALL_DISCONNECT_V6;
+							}
+							else
+							{
+								global_dialtool.Dial_Lvl_1=DIAL_DIAL;
+								*Dial_proc_state=Dial_State_QCRMCALL_DISCONNECT_V4;
+							}
+						}
+						else
+						{
+							global_dialtool.Dial_Lvl_1=DIAL_DIAL;
+							*Dial_proc_state=Dial_State_QCRMCALL_DISCONNECT;
+						}
+					}
+					data_link_status_count = 0;
+					connect_status_fail_count = 0;
+				}
+				else
+					*Dial_proc_state=Dial_State_BMDATASTATUS;
+			}
+			break;
 		case Dial_State_BMDATASTATUS:
 			if(NULL!=strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && NULL!=strstr(global_dialtool.buffer_at_sponse,"+BMDATASTATUS:"))
 			{

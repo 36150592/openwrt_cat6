@@ -138,6 +138,13 @@ typedef enum
 	Dial_State_QCRMCALL,
 	Dial_State_QCRMCALL_QUERY,
 	Dial_State_QCRMCALL_DISCONNECT,
+	Dial_State_QCRMCALL_V6,
+	Dial_State_QCRMCALL_QUERY_V6,
+	Dial_State_QCRMCALL_DISCONNECT_V6,
+	Dial_State_QCRMCALL_V4,
+	Dial_State_QCRMCALL_QUERY_V4,
+	Dial_State_QCRMCALL_DISCONNECT_V4,
+	Dial_State_QCRMCALL_V4V6,
 	Dial_State_CSQ,
 	Dial_State_CSQ_SET,
 	Dial_State_HDRCSQ,
@@ -304,4 +311,5 @@ extern void num_asciistr_to_decimalstr(char * input,char * output);
 extern int cmd_echo(char* str,const char *file_name);
 extern int check_file_exist(char *file_path);
 extern int cmd_touch(const char *file_name);
+extern int read_memory(char *shellcmd, char *out, int size);
 #endif
