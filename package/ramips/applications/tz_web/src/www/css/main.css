@@ -1833,14 +1833,48 @@ ul.tabs a.current {
 #info_page .info table th,#info_page .info table td {
 	font-size: 20px !important;
 }
-#simPInPosition{
+
+#sys_log {
+	position: relative;
+    width: 85%;
+    height: 100%;
+    padding: 0 8% 0 2%;
+}
+
+#sys_log .sys_log_title {
 	position: absolute;
-	z-index: 100000;
-	color:red;
-	height: 30px;
-	left: 30%;
-	top:0px;
-	font-weight:bold;
-	line-height:30px;
-	margin:0 auto;
+    width: 99.8%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 16px;
+    text-indent: 15px;
+    font-weight: bold;
+    background: #D9E5F4;
+    color: #000;
+}
+
+#sys_log .sys_log_content {
+	position: absolute;
+	top: 30px;
+	overflow: auto;
+	width: 98%;
+	height: 500px;
+	padding-top: 14px;
+    padding-left: 24px;
+	font-size: 14px;
+    line-height: 22px;
+    background-color: #F5F8FA;
+}
+
+#sys_log .sys_log_btn {
+	position: absolute;
+	text-align: center;
+	line-height: 26px;
+	bottom: 20px;
+	width: 106px;
+	height: 26px;
+	font-size: 14px;
+    font-weight: 600;
+	border: 1px solid grey;
+	cursor: pointer;
 }
