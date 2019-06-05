@@ -1834,6 +1834,18 @@ ul.tabs a.current {
 	font-size: 20px !important;
 }
 
+#simPInPosition{
+	position: absolute;
+	z-index: 100000;
+	color:red;
+	height: 30px;
+	left: 30%;
+	top:0px;
+	font-weight:bold;
+	line-height:30px;
+	margin:0 auto;
+}
+
 #sys_log {
 	position: relative;
     width: 85%;
