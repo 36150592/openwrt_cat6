@@ -24,7 +24,7 @@
                     })
 
         $btnAdd.click(function () {
-            $box.show();
+            $box.addClass('edit_box').show(); 
             $mask.show();
             $btnSaveIp.show();
             $btnEditIp.hide();
@@ -33,7 +33,7 @@
         });
 
         $btnClose.click(function() {
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $('#ipList').val('');
         });
@@ -52,7 +52,7 @@
 
             var sb = String.format('<tr><td>{0}</td><td><a href="javascript:;" class="ipEdit">{1}</a></td><td><a href="javascript:;" class="ipDel">{2}</a></td></tr>',ip, showText.edit,showText.del);
             $("'"+sb+"'").appendTo($('#ipLists table'));
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $('#ipList').val('');
         });
@@ -102,7 +102,7 @@
             }
 
             $('#ipLists table tr').eq(editIndex).children('td').eq(0).text(ip);
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $('#ipList').val('');
 
@@ -174,7 +174,7 @@
     </script>
 </div>
 
-<div id="edit_box" style="width: 400px;height: 100px" >
+<div id="edit_box" style="display: none;">
     <div class="detail" id="fwHead">
         <script type="text/template" id="fwHead_template">
             <div id="edit_title"></div>

@@ -82,7 +82,7 @@
         }
 
         $btnAdd.click(function () {
-            $box.show();
+            $box.addClass('edit_box').show(); 
             $mask.show();
             $btnSaveMac.show();
             $btnEditMac.hide();
@@ -93,7 +93,7 @@
         });
 
         $btnClose.click(function() {
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $('#macList').val('');
         });
@@ -121,7 +121,7 @@
 
             var sb = String.format('<tr><td>{0}</td><td><a href="javascript:;" class="macEdit">{1}</a></td><td><a href="javascript:;" class="macDel">{2}</a></td></tr>',mac, showText.edit,showText.del);
             $("'"+sb+"'").appendTo($('#macLists table'));
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $('#macList').val('');
         });
@@ -139,7 +139,7 @@
             }
 
             $('#macLists table tr').eq(editIndex).children('td').eq(0).text(mac);
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $('#macList').val('');
 
@@ -150,7 +150,7 @@
         });
 
         $(document).on('click','a[class="macEdit"]',function(){
-            $box.show();
+            $box.addClass('edit_box').show(); 
             $mask.show();
             $btnSaveMac.hide();
             $btnEditMac.show();
@@ -220,7 +220,7 @@
 
                             var data = datas.data;
                             $("#pinMobil").text(data.getRandomPin);
-                            $("#edit_box").show(0);
+                            $("#edit_box").addClass('edit_box').show(0);
                             $(".noWpsPin").hide(0);
                             $(".wpsPIN").show();
                             getRandomCode(120);
@@ -969,7 +969,7 @@
     <div class="helper_box">
         <div id="helper"></div>
     </div>
-    <div id="edit_box" style="width: 400px;height: 100px" >
+    <div id="edit_box" style="display: none;" >
         <div class="detail" id="fwHead">
             <script type="text/template" id="fwHead_template">
                 <div id="edit_title"></div>

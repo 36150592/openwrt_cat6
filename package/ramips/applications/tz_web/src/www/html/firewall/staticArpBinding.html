@@ -10,10 +10,10 @@
             $pinStatus = $('#pinStatus');
         var $btnSaveRoute = $("#btnSaveRoute"), $btnClose = $("#btnClose"), $btnSaveRoute2 = $("#btnSavePin");
         $("#btnEdit").hide();
-        var $box = $('#edit_box2'), $mask = $('#mask');
+        var $box = $('#edit_box'), $mask = $('#mask');
 
         $('#btnClose').click(function () {
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $btnSave.enable();
         });
@@ -33,7 +33,7 @@
             sb.append(String.format('<td><a href="javascript:;" class="macEdit2">{0}</a></td>', DOC.table.edit));
             sb.append(String.format('<td><a href="javascript:;" class="routeDel">{0}</a></td></tr>', dialconfightml.lnsTable.del));
             $("'" + sb + "'").appendTo($('#routeTh table'));
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
         })
         $("#btnSaveRoute2").on("click", function () {
@@ -70,7 +70,7 @@
                     }
                 },
                 complete: function () {
-                    $box.hide();
+                    $box.removeClass('edit_box').hide();
                     $mask.hide();
                     $('.btnSaveControl').attr("disabled", false);
 
@@ -116,7 +116,7 @@
 
         var editIndex;
         $btnSaveRoute.on("click", function () {
-            $box.addClass('edit_box2').show();    
+            $box.addClass('edit_box').show();    
             $mask.show();
             
             $("#networktoolhtml").val("");
@@ -176,7 +176,7 @@
 
 
 
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $("#routeTh table tr").eq(editIndex + 1).children("td").eq(1).text(destinationIp);
             $("#routeTh table tr").eq(editIndex + 1).children("td").eq(2).text(macList);
@@ -195,7 +195,7 @@
        <input type="button" id="btnSaveRoute" value="<%- TAB.route.AddroutingTable %>" />
     &nbsp;&nbsp;&nbsp;&nbsp;<input type="button" id="btnSaveRoute2" value="<%- networktoolhtml.form5.btnSetting %>" />
     </div> 
-		<div id="edit_box2" style="display: none;">
+		<div id="edit_box" style="display: none;">
             <div class="detail" id="fwHead">
                 <div id="edit_title"><%- lbl.pinCode %></div>
                 <div id="edit_close2"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>

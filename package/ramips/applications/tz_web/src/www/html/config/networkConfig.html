@@ -85,7 +85,7 @@
 
         $(document).on('click', 'a[class="macEdit0"]', function () {
             flag = 1;
-            $box.show();
+            $box.addClass('edit_box').show(); 
             $mask.show();
             $btnSaveMac.hide();
             $btnEditMac.show();
@@ -98,7 +98,7 @@
 
         $(document).on('click', 'a[class="macEdit1"]', function () {
             flag = 2;
-            $box.show();
+            $box.addClass('edit_box').show(); 
             $mask.show();
             $btnSaveMac.hide();
             $btnEditMac.show();
@@ -111,7 +111,7 @@
 
         $(document).on('click', 'a[class="macEdit2"]', function () {
             flag = 3;
-            $box.show();
+            $box.addClass('edit_box').show(); 
             $mask.show();
             $btnSaveMac.hide();
             $btnEditMac.show();
@@ -124,7 +124,7 @@
 
         $btnAdd0.click(function () {
             flag = 1;
-            $box.show();
+            $box.addClass('edit_box').show(); 
             $mask.show();
             $btnSaveMac.show();
             $btnEditMac.hide();
@@ -133,7 +133,7 @@
         });
         $btnAdd1.click(function () {
             flag = 2;
-            $box.show();
+            $box.addClass('edit_box').show(); 
             $mask.show();
             $btnSaveMac.show();
             $btnEditMac.hide();
@@ -142,7 +142,7 @@
         });
         $btnAdd2.click(function () {
             flag = 3;
-            $box.show();
+            $box.addClass('edit_box').show(); 
             $mask.show();
             $btnSaveMac.show();
             $btnEditMac.hide();
@@ -151,7 +151,7 @@
         });
 
         $btnClose.click(function () {
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $('#macList').val('');
             $("#macListIp").val('');
@@ -208,7 +208,7 @@
             }
 
 
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $('#macList').val('');
         });
@@ -255,7 +255,7 @@
                 $('#reserveLists2 table tr').eq(editIndex + 1).children('td').eq(1).text(mac);
             }
 
-            $box.hide();
+            $box.removeClass('edit_box').hide();
             $mask.hide();
             $("#macListIp").val('');
             $('#macList').val('');
@@ -819,7 +819,7 @@
         <div id="helper"></div>
     </div>
 
-    <div id="edit_box" style="width: 400px;height: 200px">
+    <div id="edit_box" style="display: none;">
         <div class="detail" id="fwHead">
             <script type="text/template" id="fwHead_template">
             <div id="edit_title"></div>

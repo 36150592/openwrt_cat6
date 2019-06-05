@@ -156,40 +156,48 @@
         function showEditBox(data)
         {
             $mask.show();
-            $box.show();
+            $box.addClass('edit_box').show(); 
             SysUtil.setBoxStyle($box);
 
             switch(currentPannelIndex) {
                 case 0:
                     processPortFilter(data);
+                    $box.addClass('edit_box').show(); 
                     break;
 
                 case 1:
                     processIpFilter(data);
+                    $box.addClass('edit_box').show(); 
                     break;
 
                 case 2:
                     processMacFilter(data);
+                    $box.addClass('edit_box').show(); 
                     break;
 
                 case 3:
                     processPortMapping(data);
+                    $box.addClass('edit_box').show(); 
                     break;
 
                 case 4:
                     processUrlFilter(data);
+                    $box.addClass('edit_box').show(); 
                     break;
 
                 case 5:
                     processIpMacBinding(data);
+                    $box.addClass('edit_box').show(); 
                     break;
 
                 case 6:
                     processSpeedLimit(data);
+                    $box.addClass('edit_box').show(); 
                     break;
 
                 case 7:
                     processAclFilter(data);
+                    $box.addClass('edit_box').show(); 
                     break;
 
                 default:
@@ -748,7 +756,7 @@
 					}
 
                     $mask.hide();
-                    $box.hide();
+                    $box.removeClass('edit_box').hide();
                 });
             });
             // });

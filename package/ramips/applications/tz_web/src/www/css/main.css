@@ -1566,7 +1566,7 @@ ul.tabs a.current {
 }
 
 /*----------tabs end------------*/
-
+/* 
 #edit_box {
 	display: none;
 	position: absolute;
@@ -1577,7 +1577,7 @@ ul.tabs a.current {
 	border: solid 8px #999;
 	background: #fff;
 	top: 0px !important;
-}
+} */
 
 #edit_title {
 	float: left;
@@ -1589,13 +1589,13 @@ ul.tabs a.current {
 	float: right;
 }
 
-.edit_box2 {
+.edit_box {
 	position: absolute;
 	padding: 20px;
-	height: 180px;
-	width: 700px;
+	height: 200px;
+	width: 500px;
 	top: 30% !important;
-	left: 20% !important;
+	left: 30% !important;
 	z-index: 99999;
 	border: solid 8px #999;
 	background: #fff;
