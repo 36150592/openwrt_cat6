@@ -729,7 +729,7 @@ var StatusUtil = {
                     $('#wifiInfo').html(StatusUtil.formatWiFiInfo(wifiStatus.status));
                     $('#wifiInfo5g').html(StatusUtil.format5gWiFiInfo(wifiStatus.status5));
                     $('#simInfo').html(StatusUtil.formatSimInfo(sysStatus.is_sim_exist));
-                    for(var i=0;i<interStatus.length-1;i++){
+                    for(var i=0;i<interStatus.length;i++){
                         if(i< 3){
                             var j=i+1;
                             $('#lan'+j).html(StatusUtil.formatNetInterfaceInfo(interStatus[i], "Lan"+j));

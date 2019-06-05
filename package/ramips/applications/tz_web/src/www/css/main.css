@@ -1685,30 +1685,30 @@ ul.tabs a.current {
 
 #login_container .login_desc {
 	top: 41%;
-	left: 32%;
+	left: 34%;
 	width: 10%;
 	height: 20%;
 	position: absolute;
 	text-align: right;
-	font-size: 16px;
-	font-weight: bolder;
+	font-size: 14px;
+	font-weight: bold;
 }
 
 #login_container .login_desc .login_desc_username {
-	padding-top: 4%;
+	padding-top: 8%;
 }
 
 #login_container .login_desc .login_desc_password {
-	padding-top: 14%;
+	padding-top: 16%;
 }
 
 #login_container .login_desc .login_desc_language {
-	padding-top: 12%;
+	padding-top: 16%;
 }	
 
 #login_container .login_table {
 	top: 40%;
-	left: 43%;
+	left: 46%;
 	position: absolute;
 	text-align: left;
 	display: inline-block;
@@ -1771,7 +1771,7 @@ ul.tabs a.current {
 	overflow: hidden !important;
 	outline: none;
 	width: 120px;
-	height: 27px;
+	height: 30px;
 	padding: 5px 30px 5px 8px;
 	border: 1px solid #a8a8a8;
 	border-radius: 4px;
