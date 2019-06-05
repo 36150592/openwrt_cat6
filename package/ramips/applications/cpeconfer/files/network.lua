@@ -425,4 +425,53 @@ function network_module.network_get_lan_wan_mode()
 	return mode
 end
 
+local function check_mac(mac)
+	if string.match(mac,"%x%x:%x%x:%x%x:%x%x:%x%x:%x%x") == nil
+	then
+		return false
+	end
+
+	return true
+end
+
+-- set wan mac addr, restart system to take effect
+-- input:string
+--	 mac addr or nil to set the default mac in the factory section
+-- return:
+--		true if success , false if fail
+function network_module.network_set_wan_mac(mac_addr)
+
+	if nil == mac_addr or "" == mac_addr
+	then
+		local f = io.popen("eth_mac  r wan")
+		if nil ~= f
+		then
+			local mac = f:read()
+			if nil ~= mac
+			then
+				x:set(NETWORK_CONFIG_FILE,"wan","macaddr",mac)
+				return x:commit(NETWORK_CONFIG_FILE)
+			end
+			io.close(f)
+		end
+	else
+		if check_mac(mac_addr)
+		then
+			x:set(NETWORK_CONFIG_FILE,"wan","macaddr",mac_addr)
+			return x:commit(NETWORK_CONFIG_FILE)
+		end
+	end
+
+	return false
+end
+
+-- get wan mac addr
+-- input:none
+-- return:
+--		mac addr
+function network_module.network_get_wan_mac()
+	return x:get(NETWORK_CONFIG_FILE,"wan","macaddr")
+end
+
+
 return network_module

@@ -962,6 +962,18 @@ function sim_puk_unlock()
 	print("puk change fail")
 end
 
+function network_set_wan_mac()
+	print("network_set_wan_mac")
+	local ret = network.network_set_wan_mac(arg[2])
+	print(ret)
+end
+
+function network_get_wan_mac()
+	print("network_get_wan_mac")
+	local ret = network.network_get_wan_mac()
+	print(ret)
+end
+
 function network_get_lan_wan_mode()
 	print("network_get_lan_wan_mode")
 	local ret = network.network_get_lan_wan_mode()
@@ -2548,7 +2560,9 @@ local api_func = {
 	["network_get_interface_up_down_status"] = network_get_interface_up_down_status,
 	["network_set_lan_wan_mode"] = network_set_lan_wan_mode,
 	["network_get_lan_wan_mode"] = network_get_lan_wan_mode,
-	
+	["network_set_wan_mac"] = network_set_wan_mac,
+	["network_get_wan_mac"] = network_get_wan_mac,
+
 	--sim
 	["sim_get_status"] = sim_get_status,
 	["sim_pin_lock_enable"] = sim_pin_lock_enable,
