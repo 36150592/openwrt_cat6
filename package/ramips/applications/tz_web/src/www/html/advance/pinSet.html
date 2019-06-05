@@ -4,7 +4,6 @@
     $(document).ready(function() {
         Page.render();
         Page.setStripeTable();
-		
 		var $btnSave = $('#btnSave'),
 			  $pinTypes = $('input[name=radPins]'),
 			  $pinStatus = $('#pinStatus');
@@ -40,18 +39,19 @@
                             }
                         }
                     }else{
+                        $("input[name='radPins']").disable();
 						$pinStatus.html(DOC.lbl.noSim);
 					}
                 }
             });
-		
-		$("input[name='radPins']").change(function(){
-            if(this.value == "3"){
-                $(".is_change_pin").show(0);
-            }else{
-                $(".is_change_pin").hide(0);
-            }
-        })
+       
+    		$("input[name='radPins']").change(function(){
+                if(this.value == "3"){
+                    $(".is_change_pin").show(0);
+                }else{
+                    $(".is_change_pin").hide(0);
+                }
+            })
 		 $btnSave.click(function () {
 			     var json = {};
                  $btnSave.disable();
@@ -101,7 +101,25 @@
                      },
 					 fail: function(data) {
                         $btnSave.enable();
-                         AlertUtil.alertMsg(PROMPT.saving.fail);
+                            Page.postJSON({
+                                json: {
+                                    cmd: RequestCmd.QUERY_SIM_STATUS
+                                },
+                            success: function(datas) {
+                                 $("ul.tabs a").eq(4).click();
+                                var pin_left_times = datas.sim.pin_left_times;
+                                if(ifNeedRestart == false){
+                                     AlertUtil.alertMsg(PROMPT.saving.pingTimes.format(parseInt(pin_left_times)));
+                                 }else{
+                                    if(parseInt(pin_left_times)>0){
+                                       AlertUtil.alertMsg(PROMPT.saving.pingTimes.format(parseInt(pin_left_times)));
+                                    }else{
+                                        AlertUtil.alertMsg(PROMPT.saving.pingTimes.format(parseInt(pin_left_times)));
+                                    }
+                                 }
+                               
+                            }
+                        });                        
                      }
                  });
              
@@ -130,7 +148,7 @@
                     </tr>
                 <tr class="is_show_puk_hide">
                 <th><span><%-lbl.pinCode%><%- colon %></span></th>
-                <td><input type="text" id="pinPassword" name="pinPassword"></td>
+                <td><input type="text" id="pinPassword" name="pinPassword"><span class="cmt"><%- TAB.basic.pinSetRemind %></span></td>
                 </tr>
                 <tr class="is_change_pin" style="display:none;">
                 <th><span><%-DOC.lbl.pinOper3%><%- colon %></span></th>
