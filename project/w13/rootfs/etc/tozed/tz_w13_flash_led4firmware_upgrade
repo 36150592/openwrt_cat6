@@ -1,0 +1,9 @@
+#!/bin/sh
+/etc/init.d/tz_mgr stop
+echo '10' > /sys/class/leds/deco\:wps/brightness
+echo 'timer' > /sys/class/leds/deco\:wps/trigger
+echo '10' > /sys/class/leds/deco\:lte_r/brightness
+echo 'timer' > /sys/class/leds/deco\:lte_r/trigger
+echo '10' > /sys/class/leds/deco\:lte_g/brightness
+echo 'timer' > /sys/class/leds/deco\:lte_g/trigger
+

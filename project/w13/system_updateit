@@ -3,6 +3,7 @@
 UPDATE_SYSTEM_STATUS_SUCCESS=/tmp/.update_system_success
 UPDATE_SYSTEM_STATUS_FAIL=/tmp/.update_system_fail
 UPDATE_SYSTEM_STATUS_ING=/tmp/.update_system_ing
+TZ_W13_FLASH_LED_SH=/etc/tozed/tz_w13_flash_led4firmware_upgrade
 
 TARGET_PACKAGE=$1
 
@@ -60,9 +61,10 @@ if [ "${md5_value_in_file}" != "${md5_value_by_cal}" ]; then
 	go_exit
 fi
 
-echo "check md5sum success, upgrade firmware now..."
+echo "success"
+${TZ_W13_FLASH_LED_SH}
 
 ##firmware update
-sysupgrade -q ${WORK_STATION}/${system_firmware}
+(sleep 1 && sysupgrade -q ${WORK_STATION}/${system_firmware}) &
 
 
