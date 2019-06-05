@@ -960,9 +960,9 @@ function clear_allrule()
     else
         tz_answer["success"] = firewall.firewall_clear_all_user_rule()
     end
-    execute_cmd("/etc/init.d/firewall restart")
     result_json = cjson.encode(tz_answer)
     print(result_json)
+    os.execute("/etc/init.d/firewall restart > /dev/null 2>&1 &")
 
 end
 
@@ -1949,9 +1949,10 @@ function set_ping_list()
 
     tz_answer["success"] = true
     tz_answer["cmd"] = 215
-    execute_cmd("/etc/init.d/firewall restart")
+   
     result_json = cjson.encode(tz_answer)
     print(result_json)
+    os.execute("/etc/init.d/firewall restart > /dev/null 2>&1 &")
 
 end
 
@@ -2007,10 +2008,10 @@ function set_web_list()
 
     tz_answer["success"] = true
     tz_answer["cmd"] = 218
-    execute_cmd("/etc/init.d/firewall restart")
+    
     result_json = cjson.encode(tz_answer)
     print(result_json)
-
+    os.execute("/etc/init.d/firewall restart > /dev/null 2>&1 &")
 end
 
 function set_tr069_config()
@@ -2062,10 +2063,11 @@ function set_tr069_config()
 
     tz_answer["success"] = true
     tz_answer["cmd"] = 219
-    execute_cmd("/etc/init.d/netcwmp restart")
+
     result_json = cjson.encode(tz_answer)
     print(result_json)
-
+    os.execute("/etc/init.d/netcwmp restart > /dev/null 2>&1 &")
+    
 end
 
 function get_web_hide_config()
@@ -2157,10 +2159,9 @@ function set_dmz_data()
     end
     tz_answer["success"] = true
     tz_answer["cmd"] = 225
-    execute_cmd("/etc/init.d/firewall restart")
     result_json = cjson.encode(tz_answer)
     print(result_json)
-
+    os.execute("/etc/init.d/firewall restart > /dev/null 2>&1 &")
 end
 
 function get_arp_data()
