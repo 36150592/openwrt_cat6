@@ -1758,7 +1758,6 @@ function set_wpsSet()
         
     end
 
-    wifi.wifi_restart(id)
     tz_answer["success"] = true
     result_json = cjson.encode(tz_answer)
     print(result_json)
@@ -1821,7 +1820,6 @@ function set_wps5Set()
         
     end
 
-    wifi.wifi_restart(id)
     tz_answer["success"] = true
     result_json = cjson.encode(tz_answer)
     print(result_json)
