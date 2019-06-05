@@ -238,6 +238,7 @@ local function  update_sim_info()
 	end
 	local ret = get_card_status()
 	os.execute("echo "..ret .." > "..SIM_CARD_STATUS_FILE)
+	os.execute("rm -f "..SIM_PIN_ENABLE_FILE)
 end
 
 -- only when the usim card is ready status can this interface be invoked
