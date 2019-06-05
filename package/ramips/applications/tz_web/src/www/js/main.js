@@ -141,7 +141,7 @@ var RequestCmd = {
     GET_INFO: 237,
     GET_LOGIN_INFO: 238,
     OPEN_RANDOM_PIN:239,
-    OPEN_5G_RANDOM_PIN:240
+    OPEN_5G_RANDOM_PIN:240,
     SYS_LOG: 241,
     SYS_CLEAR_LOG: 242
 };
@@ -729,10 +729,20 @@ var StatusUtil = {
                     $('#wifiInfo').html(StatusUtil.formatWiFiInfo(wifiStatus.status));
                     $('#wifiInfo5g').html(StatusUtil.format5gWiFiInfo(wifiStatus.status5));
                     $('#simInfo').html(StatusUtil.formatSimInfo(sysStatus.is_sim_exist));
-                    $('#lan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[0], "Lan1"));
-                    $('#lan2').html(StatusUtil.formatNetInterfaceInfo(interStatus[1], "Lan2"));
-                    $('#lan3').html(StatusUtil.formatNetInterfaceInfo(interStatus[2], "Lan3"));
-                    $('#wan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[3], "Lan4/Wan"));
+                    for(var i=0;i<interStatus.length-1;i++){
+                        if(i< 3){
+                            var j=i+1;
+                            $('#lan'+j).html(StatusUtil.formatNetInterfaceInfo(interStatus[i], "Lan"+j));
+                            if(interStatus[i] == "0"){
+                                $('#lan'+j).hide(0);
+                            }
+                        }else if(i == 3){
+                            $('#wan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[3], "Lan4/Wan"));
+                            if(interStatus[3] == "0"){
+                                $('#wan1').hide(0);
+                            }
+                        }
+                    }
                     sessionStorage["2g_register_status"] = sysStatus["2g_register_status"];
                     sessionStorage["3g_register_status"] = sysStatus["3g_register_status"];
                     sessionStorage["4g_register_status"] = sysStatus["4g_register_status"];
