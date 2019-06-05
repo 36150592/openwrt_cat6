@@ -493,7 +493,7 @@ int cpe_get_igd_di_X_CMCC_SignalQuality(cwmp_t * cwmp, const char * name, char *
 	int tValue=0;
 	get_parameter(X_CMCC_SignalQuality, value);
 
-	if(strlen(*value)==0)
+	if(*value==NULL||strlen(*value)==0)
 	{
 		strcpy(param, "0");
 	    *value = param;
