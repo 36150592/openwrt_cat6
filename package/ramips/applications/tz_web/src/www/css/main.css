@@ -1660,23 +1660,31 @@ ul.tabs a.current {
 	width: 100%;
 	height: 100%;
 	top: 100px;
-	margin: 0 auto;
 }
 
+#login_container .login_background_container {
+	width: 500px;
+	height: 350px;
+	margin: 140px auto;
+}
+
+
 #login_container .Login_EN {
-	margin: 1% 0;
+	box-sizing: content-box;
+	position: relative;
 	width: 100%;
 	height: 100%;
+	margin: auto;
 	background-image: url(../images/anhui/login_en.png);
 	background-repeat: no-repeat;
-	background-size: 400px 280px;
 	background-position: center;
 }
 
 #login_container .Login_CN {
-	margin: 1% 0;
-	width: 100%;
-	height: 100%;
+	box-sizing: content-box;
+	position: relative;
+	width: 500px;
+	height: 350px;
 	background: url(../images/anhui/login.png) no-repeat;
 	background-repeat: no-repeat;
 	background-size: 400px 280px;
@@ -1684,32 +1692,40 @@ ul.tabs a.current {
 }
 
 #login_container .login_desc {
-	top: 41%;
-	left: 34%;
-	width: 10%;
-	height: 20%;
 	position: absolute;
+	vertical-align: top;
+	top: 120px;
+	left: 86px;
+	width: 90px;
+	height: 112px;
+	line-height: 112px;
 	text-align: right;
 	font-size: 14px;
 	font-weight: bold;
 }
 
 #login_container .login_desc .login_desc_username {
-	padding-top: 8%;
+	height: 34px;
+	line-height: 34px;
 }
 
 #login_container .login_desc .login_desc_password {
-	padding-top: 16%;
+	height: 34px;
+	line-height: 34px;
 }
 
 #login_container .login_desc .login_desc_language {
-	padding-top: 16%;
+	height: 35px;
+	line-height: 35px;
 }	
 
 #login_container .login_table {
-	top: 40%;
-	left: 46%;
 	position: absolute;
+	top: 120px;
+	left: 190px;
+	width: auto;
+	height: auto;
+	font-size: 20px;
 	text-align: left;
 	display: inline-block;
 }
@@ -1722,7 +1738,7 @@ ul.tabs a.current {
 	padding: 0 0 0 8px;
 	border: 1px solid #a8a8a8;
 	border-radius: 4px;
-	margin-top: 5px;
+	font-size: 16px;
 	background-color: white !important;	
 }
 
@@ -1734,7 +1750,7 @@ ul.tabs a.current {
 	padding: 0 0 0 8px;
 	border: 1px solid #acae3d;
 	border-radius: 4px;
-	margin-top: 5px;
+	font-size: 16px;
 	background-color: white !important;
 }
 
@@ -1750,7 +1766,7 @@ ul.tabs a.current {
 	padding: 0 0 0 8px;
 	border: 1px solid #a8a8a8;
 	border-radius: 4px;
-	margin-top: 5px;
+	font-size: 16px;
 	background-color: white !important;	
 }
 
@@ -1762,7 +1778,7 @@ ul.tabs a.current {
 	padding: 0 0 0 8px;
 	border: 1px solid #acae3d;
 	border-radius: 4px;
-	margin-top: 5px;
+	font-size: 16px;
 	background-color: white !important;
 }
 
