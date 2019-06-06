@@ -211,7 +211,7 @@ static void sn_handle(char* get_buf, char* set_buf)
 
 		for(i = 0; i < 32 && get_buf[5+i] != 0; i++)
 		{
-			target_sn[i] = get_buf[5+i];
+			target_sn[i] = get_buf[3+i];
 		}
 
 		sprintf(cmdline,"eth_mac s sn %s", target_sn);
