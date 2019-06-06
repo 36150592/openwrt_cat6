@@ -50,7 +50,9 @@ static void get_24g_ssid(char* ssid)
 
 		if(strlen(tz_config_wifi_ssid) == 0)
 		{
-			strcpy(tz_config_wifi_ssid, "ZLT S21 WIFI");
+			strcpy(tz_config_wifi_ssid_prefix, "ZLT S21-2.4G-");
+			get_wifi_ssid_24g_suffix(1, tz_config_wifi_ssid_suffix);
+			sprintf(tz_config_wifi_ssid,"%s%s",tz_config_wifi_ssid_prefix,tz_config_wifi_ssid_suffix);
 		}	
 	}
 	else
@@ -166,7 +168,7 @@ static void get_24g_pwd(char* pwd)
 
 		if(strlen(tz_config_wifi_pwd) == 0)
 		{
-			strcpy(tz_config_wifi_pwd, "87654321");
+			strcpy(tz_config_wifi_pwd, "12345678");
 		}
 	}
 	else
