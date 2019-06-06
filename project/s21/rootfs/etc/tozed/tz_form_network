@@ -133,6 +133,10 @@ config interface '4g'
         option route_lan_section 'lan'
         option primary_apn '1'
 
+config interface '4gv6'
+	option ifname 'bmwan0'
+	option proto 'dhcpv6'
+
 config interface '4g1'
         option ifname 'bmwan1'
         option force_link '1'
