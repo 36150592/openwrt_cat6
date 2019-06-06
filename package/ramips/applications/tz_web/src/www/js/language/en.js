@@ -1839,6 +1839,7 @@ wirelessconfightml.tab_menu.item1 = "Main Wi-Fi Settings";
 wirelessconfightml.tab_menu.connectedList = "Connected List";
 wirelessconfightml.tab_menu.item2 = "Indoor Device Wireless Parameter List";
 wirelessconfightml.tab_menu.item3 = "Auxiliary Wi-Fi1 Settings";
+wirelessconfightml.tab_menu.item4 = "Auxiliary Wi-Fi2 Settings";
 wirelessconfightml.tab_menu.macControl = "Wi-Fi Access Control";
 wirelessconfightml.tab_menu.wps = "WPS Settings";
 wirelessconfightml.macControl.policyTh = "Access Control Type：";
