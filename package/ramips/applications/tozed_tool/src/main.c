@@ -17,6 +17,8 @@
 #define EXPORT_CONFIG_FILE "/tmp/.export_config_file"
 
 #define WIFI_24G_SSID_PWD_FILE "/tmp/wifi_24g_ssid_pwd_file"
+#define WIFI_58G_SSID_PWD_FILE "/tmp/wifi_58g_ssid_pwd_file"
+
 
 
 
@@ -36,7 +38,9 @@ void help_message()
 }
 
 char mac[24];
+char mac_5g[24];
 char imei[24];
+
 
 
 int main(int argc, char** argv)
@@ -60,6 +64,13 @@ int main(int argc, char** argv)
 	read_memory(shellcmd, wifimac, sizeof(wifimac));
 	util_strip_traling_spaces(wifimac);
 
+	//char mac_5g[24];
+	char wifi_5g_mac[56] = "";
+	memset(shellcmd, 0, sizeof(shellcmd));
+	strcpy(shellcmd, "eth_mac r wlan_5g");
+	read_memory(shellcmd, wifi_5g_mac, sizeof(wifi_5g_mac));
+	util_strip_traling_spaces(wifi_5g_mac);
+
 	int i = 0, j = 0; 
 	for(i = 0; i < 17; i++)
 	{
@@ -70,7 +81,19 @@ int main(int argc, char** argv)
 		}
 	}
 
+	i = 0;
+	j = 0;
+	for(i = 0; i < 17; i++)
+	{
+		if(wifi_5g_mac[i] != ':')
+		{
+			mac_5g[j] = wifi_5g_mac[i];
+			j++;
+		}
+	}
+
 	printf("mac = %s\n", mac);
+	printf("mac_5g = %s\n", mac_5g);
 	printf("imei = %s\n", imei);
 	
 	while((ret= getopt(argc,argv,"a:b:c:g:h:w:")) != -1)
@@ -96,7 +119,7 @@ int main(int argc, char** argv)
 					}
 					else if(strcmp(wifi_type,"58g") == 0)
 					{
-						
+						form_wifi_58g_ssid_pwd_to_file(WIFI_58G_SSID_PWD_FILE);
 					}
 					else
 						printf("error wifi type\n");

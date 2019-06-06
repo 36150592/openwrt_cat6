@@ -121,21 +121,18 @@ if [ -f ${FACTORY_FLAG} -o ! -f /etc/config/wireless ]; then
 		TZ_58G_WIFI_MAIN_DISABLE=0
 	fi
 
-	if [ "${TZWIFI_58G_MAIN_WIFI_SSID_PWD_LIKE_24G_SWITCH}" = "n"  ]; then
-		if [ "${TZWIFI_58G_MAIN_WIFI_SSID}" = "" ]; then
-			TZ_58G_WIFI_MAIN_SSID=${TZ_24G_WIFI_MAIN_SSID}5
-		else
-			TZ_58G_WIFI_MAIN_SSID="${TZWIFI_58G_MAIN_WIFI_SSID}"
-		fi
-
-		if [ "${TZWIFI_58G_MAIN_WIFI_PWD}" = "" ]; then
-			TZ_58G_WIFI_MAIN_PWD=${TZ_24G_WIFI_MAIN_PWD}
-		else
-			TZ_58G_WIFI_MAIN_PWD="${TZWIFI_58G_MAIN_WIFI_PWD}"
-		fi
-	else
+	if [ "${TZWIFI_58G_MAIN_WIFI_SSID_PWD_LIKE_24G_SWITCH}" = "y"  ]; then
 		TZ_58G_WIFI_MAIN_SSID=${TZ_24G_WIFI_MAIN_SSID}5
 		TZ_58G_WIFI_MAIN_PWD=${TZ_24G_WIFI_MAIN_PWD}
+	else
+		tozed_tool -b 58g
+		if [ -f /tmp/wifi_58g_ssid_pwd_file ]; then
+			TZ_58G_WIFI_MAIN_SSID="`cat /tmp/wifi_58g_ssid_pwd_file | grep wifi_58g_ssid= | awk -F = '{print $2}'`"
+			TZ_58G_WIFI_MAIN_PWD="`cat /tmp/wifi_58g_ssid_pwd_file | grep wifi_58g_pwd= | awk -F = '{print $2}'`"
+		else
+			TZ_58G_WIFI_MAIN_SSID=ZLT S21 WIFI 5G
+			TZ_58G_WIFI_MAIN_PWD=12345678
+		fi
 	fi
 
 	if [ "${TZWIFI_58G_MAIN_WIFI_MAX_STATION_NUM}" = "" ]; then

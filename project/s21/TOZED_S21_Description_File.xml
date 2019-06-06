@@ -358,8 +358,40 @@ bitcomposite表示使用位进行组合的配置字段
 		<default value="y"/>
 	</config>
 
+	<config name="TZWIFI_58G_MAIN_WIFI_SSID_STATIC_SWITCH" type="select" description="5.8G 主wifi 固定ssid开关" detail="5.8G 主wifi 固定ssid开关，默认开启" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="y"/>
+	</config>
+
 	<config name="TZWIFI_58G_MAIN_WIFI_SSID" type="text" description="5.8G 主wifi 固定SSID名称" detail="5.8G 主wifi 固定SSID名称，默认为ZLT S21_XXXX_5G" class_name="WIFI_CONFIG_FIELD"  >
         	<default value="ZLT S21_XXXX_5G" />
+	</config>
+
+	<config name="TZWIFI_58G_MAIN_WIFI_SSID_PREFIX" type="text" description="5.8G 主wifi SSID名称前缀" detail="5.8G 主wifi 固定SSID前缀，默认为ZLT S21_" class_name="WIFI_CONFIG_FIELD"  >
+        	<default value="ZLT S21_" />
+	</config>
+
+	<config name="TZWIFI_58G_MAIN_WIFI_SSID_SUFFIX" type="select" description="5.8G 主wifi SSID名称后缀" detail="5.8G 主wifi SSID名称后缀" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="1" description="2.4g wifi mac后6位" />
+		<option value="2" description="2.4g wifi mac后3位" />
+		<option value="3" description="5.8g wifi mac后6位" />
+		<option value="4" description="5.8g wifi mac后3位" />
+		<default value="1"/>
+	</config>
+
+	<config name="TZWIFI_58G_MAIN_WIFI_PWD_RANDOM" type="select" description="5.8G 主wifi 密码随机开关" detail="5.8G 主wifi 密码随机开关" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="n" description="关闭" />
+		<option value="y" description="开启" />
+		<default value="n"/>
+	</config>
+
+	<config name="TZWIFI_58G_MAIN_WIFI_PWD_RANDOM_WAY" type="select" description="5.8G 主wifi 密码随机方式" detail="5.8G 主wifi 密码随机方式" class_name="WIFI_CONFIG_FIELD"  >
+        	<option value="1" description="根据2.4g wifi计算出来的 数字、大写字母" />
+		<option value="2" description="根据2.4g wifi计算出来的 数字、大写字母、小写字母" />
+		<option value="3" description="根据5.8g wifi计算出来的 数字、大写字母" />
+		<option value="4" description="根据5.8g wifi计算出来的 数字、大写字母、小写字母" />
+		<default value="1"/>
 	</config>
 
 	<config name="TZWIFI_58G_MAIN_WIFI_PWD" type="text" description="5.8G 主wifi 固定密码" detail="设置 5.8G 主wifi 固定密码，默认为12345678" class_name="WIFI_CONFIG_FIELD"  >
