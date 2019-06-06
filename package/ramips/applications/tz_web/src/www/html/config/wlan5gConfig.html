@@ -64,6 +64,10 @@
             });
         }
 
+        if(Page.getShowHideByBit(1)){
+            $("#walnInfo1").hide(0);
+            $("#walnInfo3").hide(0);
+        }
         function createMacListTable(macs) {
             var sb = new StringBuilder();
 
