@@ -689,7 +689,7 @@ function system_module.system_get_tozed_system_info()
 			info["device_sn"]  = f:read()
 			io.close(f)
 		else
-			local f = io.popen("cat "..SYSTEM_STATIC_FILE.." | grep module_imei | cut -d':' -f 2")
+			local f = io.popen("eth_mac g imei")
 			local imei = nil
 			
 			if nil ~=f
