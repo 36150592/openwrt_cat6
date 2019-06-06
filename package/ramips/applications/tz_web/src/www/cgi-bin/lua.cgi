@@ -2469,6 +2469,56 @@ function clear_web_log()
 
 end
 
+function wifi_advanced_config()
+
+    local tz_answer = {}
+    tz_answer["cmd"] = 243
+    local ret
+    local array = wifi.wifi_get_dev()
+
+    local id
+    for k, v in pairs(array) do
+        if (v["band"] == "2.4G") then id = v['wifi_id'] end
+    end
+
+    
+    local txPower = tonumber(tz_req["txPower"])
+    local maxStation = tonumber(tz_req["maxStation"])
+    local channel = tz_req["channel"]
+    local mode = tonumber(tz_req["wifiWorkMode"])
+
+    if (nil ~= txPower) then
+        ret = wifi.wifi_set_txpower(id, txPower)
+        if (not ret) then tz_answer["setTxpower"] = false end
+    end
+
+    if (nil ~= maxStation) then
+        ret = wifi.wifi_set_connect_sta_number(id, maxStation)
+        if (not ret) then tz_answer["setnumber"] = false end
+    end
+
+    if (nil ~= channel) then
+        ret = wifi.wifi_set_channel(id, channel)
+        if (not ret) then tz_answer["setChannel"] = false end
+    end
+
+    if (nil ~= mode) then
+        ret = wifi.wifi_set_mode(id, mode)
+        if (not ret) then tz_answer["setMode"] = false end
+    end
+
+    if (nil ~= ht) then
+        ret = wifi.wifi_set_bandwidth(id, ht)
+        if (not ret) then tz_answer["setHtMode"] = false end
+    end
+
+    wifi.wifi_restart(id)
+    tz_answer["success"] = true
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end
+
 local switch = {
     [0] = get_sysinfo,
     [1] = get_systime,
@@ -2567,7 +2617,8 @@ local switch = {
     [239] = open_random_pin,
     [240] = open_5g_random_pin,
     [241] = get_web_log,
-    [242] = clear_web_log
+    [242] = clear_web_log,
+    [243] = wifi_advanced_config
 }
 
 cmdid = uti.get_env_cmdId(envv)

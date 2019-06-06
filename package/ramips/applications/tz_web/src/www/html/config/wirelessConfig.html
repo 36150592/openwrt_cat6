@@ -8,6 +8,7 @@
         TempUtil.render('wlform1-template', 'form', wirelessconfightml.form1);
         TempUtil.render('wlform1-template1', 'form1', wirelessconfightml.form1);
         TempUtil.render('wlform1-template2', 'form2', wirelessconfightml.form1);
+        TempUtil.render('wlform1-template3', 'form3', wirelessconfightml.form1);
         TempUtil.render('macInfoContainer-template', 'macInfoContainer', wirelessconfightml.macInfoContainer);
         TempUtil.render('macControl-template', 'macControl',wirelessconfightml.macControl);
         Page.render('#fwHead', '#fwHead_template');
@@ -275,10 +276,10 @@
             var pannelIndex = $lis.index(this);
             $boxes.eq(pannelIndex).show().siblings().hide();
             $('#helper' + pannelIndex).show().siblings().hide();
-            if(pannelIndex == "0"){
+            if(pannelIndex == "3"){
                  $('.helper_box').show();
                  $('.helper_box2').hide();
-            }else if(pannelIndex == "1" || pannelIndex == "2"){
+            }else if(pannelIndex == "0" ||pannelIndex == "1" || pannelIndex == "2"){
                 $('.helper_box').hide();
                 $('.helper_box2').show();
             }else{
@@ -335,11 +336,11 @@
 
                         }
                     });
-                    Page.getHelperPage('html/config/wirelessConfig.html');
+                    Page.getHelperPage2('html/config/wirelessConfig.html');
                     $('.helper_box').show();
                     break;
                  case 1:
-                    Page.getHelperPage2('html/config/wirelessConfig.html');
+                    $('.helper_box').show();
                     break;
                 case 2:
                     Page.postJSON({
@@ -383,24 +384,38 @@
                     $('.helper_box').show();
                     break;
                 case 3:
-                    if (firstRequest) {
-                        Page.postJSON({
-                            json: {
-                                cmd: RequestCmd.WIFI_CONTROL_INFO,
-                                method: JSONMethod.GET
-                            },
-                            success: function(data) {
-                                usrInfos = data.userlist;
-                                macInfos = data.wifilist;
-                                createMacInfosTable();
-                                firstRequest = false;
+                    Page.postJSON({
+                            json: { cmd: RequestCmd.WIFI_INFO },
+                            success: function(datas) {
+                                var data = datas.data;
+                                Page.setFormFieldValue2("txPower", data.txpower);
+                                Page.setFormFieldValue2("maxStation", data.maxassoc);
+                                Page.setFormFieldValue2("channel", data.channel);
+                                Page.setFormFieldValue2("wifiWorkMode", data.mode);    
+                                Page.setFormFieldValue2("ht", data.ht);            
                             }
                         });
-                    }
-                    $('.helper_box').hide();
-                    break;
-
-                case 4:
+                        Page.getHelperPage('html/config/wirelessConfig.html');
+                        $('.helper_box').show();
+                        break;
+                case 4:    
+                    if (firstRequest) {
+                            Page.postJSON({
+                                json: {
+                                    cmd: RequestCmd.WIFI_CONTROL_INFO,
+                                    method: JSONMethod.GET
+                                },
+                                success: function(data) {
+                                    usrInfos = data.userlist;
+                                    macInfos = data.wifilist;
+                                    createMacInfosTable();
+                                    firstRequest = false;
+                                }
+                            });
+                        }
+                        $('.helper_box').hide();
+                        break;
+                case 5:
                     Page.postJSON({
                         json: {
                             cmd: RequestCmd.MAC_ACCESS_CONTROL,
@@ -418,7 +433,7 @@
                     });
                     $('.helper_box').hide();
                     break;
-				case 5:
+				case 6:
 					Page.postJSON({
                         json: {
                             cmd: RequestCmd.WPS_PIN_GET,
@@ -623,6 +638,69 @@
 
         });
 
+        var $btn3Save = $('input[id^=btn3Save]');
+    $btn3Save.click(function() {
+        $(this).attr("disabled",true);
+            var count = 0;
+            var $form = $('#form3');
+            if(!CheckUtil.checkForm($form, wireless_rules, wireless_messages)){
+                $(this).attr("disabled",false);
+                return false;
+            }
+
+            var json = JSON.parmsToJSON($form);
+
+            if(json.key == $('#key').attr('old')){
+                delete json["key"];
+                count++;
+            }else {
+                if (!CheckUtil.checkPwd(json.key)) {
+                    AlertUtil.alertMsg(showText.keyCkeckMsg);
+                    $(this).attr("disabled", false);
+                    return false;
+                }
+            }
+
+            if(json.txPower ==  $("#txPower").attr('old')){
+                delete json["txPower"];
+                count++;
+            }
+            if(json.maxStation ==  $("#maxStation").attr('old')){
+                delete json["maxStation"];
+                count++;
+            }
+            if(json.channel ==  $("#channel").attr('old')){
+                delete json["channel"];
+                count++;
+            }
+            if(json.wifiWorkMode ==  $("#wifiWorkMode").attr('old')){
+                delete json["wifiWorkMode"];
+                count++;
+            }
+            if(json.ht ==  $("#ht").attr('old')){
+                delete json["ht"];
+                count++;
+            }
+            
+            if(count == 5){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+            }
+
+            json.cmd = RequestCmd.WIFI_ADVANCED_CONFIG;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $lis.eq(id).click();
+                },
+                complete: function(){
+                    $('#btn3Save').attr("disabled",false);
+                }
+            });
+    });
+
     });
 
     function showPsw(id){
@@ -645,6 +723,7 @@
                 <li id="walnInfo" ><a href="javascript:;"><%- item1 %></a></li>
                 <li id="walnInfo1" ><a href="javascript:;"><%- item3 %></a></li>
                 <li id="walnInfo2" ><a href="javascript:;"><%- item4 %></a></li>
+                <li id="walnInfo3" ><a href="javascript:;"><%- item5 %></a></li>
                 <li ><a href="javascript:;"><%- connectedList %></a></li>
                 <li ><a href="javascript:;"><%- macControl %></a></li>
 				<li ><a href="javascript:;"><%- wps %></a></li>
@@ -684,7 +763,7 @@
                                 <th><%- ssid %></th>
                                 <td><input type="text" id="ssid" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
                             </tr>
-
+<!-- 
                             <tr class="wifi_disable_hide" style="display:none;">
                                 <th><%- txPower %></th>
                                 <td>
@@ -699,9 +778,9 @@
                                 </td>
                             </tr>
 
-                            <tr class="wifi_disable_hide" style="display:none;">
+                            <tr class="wifi_disable_hide" style="display:none;"> -->
                                 <!--信道-->
-                                <th><%- channel %></th>
+                                <!-- <th><%- channel %></th>
                                 <td><select id="channel" name="channel">
                                     <option value="auto"><%- auto %></option>
                                     <option value="1" class="ch_opt">1</option>
@@ -718,7 +797,7 @@
                                     <option value="12" class="ch_opt2">12</option>
                                     <option value="13" class="ch_opt2">13</option>
                                 </select></td>
-                            </tr>
+                            </tr> -->
 
                             <!--<tr>-->
                             <!--<th><%- wifiMode %></th>-->
@@ -735,7 +814,7 @@
                             <!--</select></td>-->
                             <!--</tr>-->
 
-                            <tr class="wifi_disable_hide" style="display:none;">
+                            <!-- <tr class="wifi_disable_hide" style="display:none;">
                                 <th><%- wifiMode %></th>
                                 <td><select id="wifiWorkMode" name="wifiWorkMode">
                                     <option value="0"  selected="selected">legacy 11b/g mixed</option>
@@ -760,7 +839,7 @@
                                         <option value="20+40"><%- bandWidth60 %></option>
                                     </select>
                                 </td>
-                            </tr>
+                            </tr> -->
 
                             <!--<tr>-->
                             <!--<th><%- secure %></th>-->
@@ -969,6 +1048,80 @@
                     </script>
                 </form>
             </div>
+
+            <div  class="main_box">
+                    <form id="form3">
+                        <script type="text/template" id="wlform1-template3">
+                            <table class="detail" cellspacing="0">
+                                    <tr class="wifi_disable_hide">
+                                            <th><%- txPower %></th>
+                                            <td>
+                                                <input type="text" id="txPower" name="txPower" maxlength="4" class="txt2" />&nbsp;dBm<span class="cmt">(<%- txPowerCmt %>)</span>
+                                            </td>
+                                        </tr>
+            
+                                        <tr class="wifi_disable_hide">
+                                            <th><%- maxStation %></th>
+                                            <td>
+                                                <input type="text" id="maxStation" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
+                                            </td>
+                                        </tr>
+            
+                                        <tr class="wifi_disable_hide">
+                                            <th><%- channel %></th>
+                                            <td><select id="channel" name="channel">
+                                                <option value="auto"><%- auto %></option>
+                                                <option value="1" class="ch_opt">1</option>
+                                                <option value="2" class="ch_opt">2</option>
+                                                <option value="3" class="ch_opt">3</option>
+                                                <option value="4" class="ch_opt">4</option>
+                                                <option value="5">5</option>
+                                                <option value="6" selected="selected">6</option>
+                                                <option value="7">7</option>
+                                                <option value="8">8</option>
+                                                <option value="9">9</option>
+                                                <option value="10">10</option>
+                                                <option value="11">11</option>
+                                                <option value="12" class="ch_opt2">12</option>
+                                                <option value="13" class="ch_opt2">13</option>
+                                            </select></td>
+                                        </tr>
+            
+                                        <tr class="wifi_disable_hide">
+                                            <th><%- wifiMode %></th>
+                                            <td><select id="wifiWorkMode" name="wifiWorkMode">
+                                                <option value="0"  selected="selected">legacy 11b/g mixed</option>
+                                                <option value="1">legacy 11b only</option>
+                                                <option value="2">legacy 11a only</option>
+                                                <option value="3">legacy 11a/b/g mixed</option>
+                                                <option value="4">legacy 11g only</option>
+                                                <option value="5">11abgn mixed</option>
+                                                <option value="6">11n only in 2.4g band</option>
+                                                <option value="7">11gn mixed</option>
+                                                <option value="8">11an mixed</option>
+                                                <option value="9">11bgn mixed</option>
+                                                <option value="10">11AGN mixed</option>
+                                            </select></td>
+                                        </tr>
+            
+                                        <tr id="bandWidthTr" class="wifi_disable_hide">
+                                            <th><%- bandWidth %></th>
+                                            <td>
+                                                <select name="ht" id="ht">
+                                                    <option value="20"><%- bandWidth20 %></option>
+                                                    <option value="20+40"><%- bandWidth60 %></option>
+                                                </select>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                                <th>&nbsp;</th>
+                                                <td><input type="button" id="btn3Save" value="<%- btnSave %>" /></td>
+                                            </tr>
+                            </table>
+                        </script>
+                    </form>
+                </div>
 
             <div id="macInfoContainer">
                 <script type="text/template" id="macInfoContainer-template">
