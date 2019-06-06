@@ -914,7 +914,7 @@ div.main_box {
 }
 
 div.helper_box {
-	float: left;
+	float: right;
 	width: 40%;
 	height: auto;
 	background-color: #ECF1F4;
