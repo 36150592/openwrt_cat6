@@ -277,16 +277,17 @@
             $lis.removeClass("current");
             $(this).addClass("current");
             var pannelIndex = $lis.index(this);
+            console.log(pannelIndex)
             $boxes.eq(pannelIndex).show().siblings().hide();
             $('#helper' + pannelIndex).show().siblings().hide();
             if(pannelIndex == "3"){
+                 Page.getHelperPage('html/config/wirelessConfig.html');
                  $('.helper_box').show();
-                 $('.helper_box2').hide();
             }else if(pannelIndex == "0" ||pannelIndex == "1" || pannelIndex == "2"){
-                $('.helper_box').hide();
-                $('.helper_box2').show();
+                Page.getHelperPage2('html/config/wirelessConfig.html');
+                $('.helper_box').show();
             }else{
-                $('.helper_box2').hide();
+                $('.helper_box').hide();
             }
 
             switch (pannelIndex) {
@@ -339,11 +340,8 @@
 
                         }
                     });
-                    Page.getHelperPage2('html/config/wirelessConfig.html');
-                    $('.helper_box').show();
                     break;
                  case 1:
-                    $('.helper_box').show();
                     break;
                 case 2:
                     Page.postJSON({
@@ -384,7 +382,6 @@
 
                         }
                     });
-                    $('.helper_box').show();
                     break;
                 case 3:
                     Page.postJSON({
@@ -398,8 +395,6 @@
                                 Page.setFormFieldValue2("ht", data.ht);            
                             }
                         });
-                        Page.getHelperPage('html/config/wirelessConfig.html');
-                        $('.helper_box').show();
                         break;
                 case 4:    
                     if (firstRequest) {
@@ -416,7 +411,6 @@
                                 }
                             });
                         }
-                        $('.helper_box').hide();
                         break;
                 case 5:
                     Page.postJSON({
@@ -434,7 +428,6 @@
                             }
                         }
                     });
-                    $('.helper_box').hide();
                     break;
 				case 6:
 					Page.postJSON({
@@ -451,7 +444,6 @@
                             }
                         }
                     });
-                    $('.helper_box').hide();
                     break;
             }
         });
@@ -1199,9 +1191,6 @@
 </div>
 <div class="helper_box" >
     <div id="helper"></div>
-</div>
-<div class="helper_box2">
-    <div id="helper2"></div>
 </div>
 
 <div id="edit_box" style="display: none;" >
