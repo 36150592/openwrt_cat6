@@ -1,0 +1,38 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var helper = $.extend({}, wlan5ghtml.helper, wlan5ghtml.form1);
+        TempUtil.render('helperContainer-template', 'helperContainer', helper);
+
+    });
+</script>
+
+<div id="helperContainer">
+    <script type="text/template" id="helperContainer-template">
+        <div id="helper0">
+
+            
+            <div class="helper_name"><%= title8_2 %></div>
+            <div class="helper_desc">
+            <%= item8_2 %>
+            </div>         
+
+            <div class="helper_name"><%= title4 %></div>
+            <div class="helper_desc">
+                <%= item4 %>
+            </div>
+
+            <div class="helper_name"><%= title5 %></div>
+            <div class="helper_desc">
+                <%= item5 %>
+            </div>
+
+            <div class="helper_name"><%= title12 %></div>
+            <div class="helper_desc">
+                <%= item12 %>
+            </div>
+
+        </div>
+    </script>
+</div>

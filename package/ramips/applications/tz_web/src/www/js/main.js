@@ -144,7 +144,8 @@ var RequestCmd = {
     OPEN_5G_RANDOM_PIN:240,
     SYSTEM_LOG: 241,
     SYS_CLEAR_LOG: 242,
-    WIFI_ADVANCED_CONFIG: 243
+    WIFI_ADVANCED_CONFIG: 243,
+    WIFI5_ADVANCED_CONFIG: 244
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },

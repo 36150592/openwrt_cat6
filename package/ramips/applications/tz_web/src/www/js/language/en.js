@@ -1864,6 +1864,7 @@ wirelessconfightml.macControl.btnSave = "Save";
 wlan5ghtml.tab_menu.item1 =  "Main Wi-Fi Settings";
 wlan5ghtml.tab_menu.item2 =  "Auxiliary Wi-Fi1 Settings";
 wlan5ghtml.tab_menu.item3 =  "Auxiliary Wi-Fi2 Settings";
+wlan5ghtml.tab_menu.item4 =  "Wi-Fi Advanced Settings";
 wlan5ghtml.tab_menu.connectedList = "Connected List";
 wlan5ghtml.tab_menu.macControl = "Wi-Fi Access Control";
 wlan5ghtml.tab_menu.wps = "WPS Settings";
@@ -1874,7 +1875,7 @@ wlan5ghtml.form1.enable ='Enable';
 wlan5ghtml.form1.ssidBd = 'SSID Broadcast::';
 wlan5ghtml.form1.wmm = 'WMM:';
 wlan5ghtml.form1.ssid = 'SSID:';
-wlan5ghtml.form1.channel = 'channel:';
+wlan5ghtml.form1.channel = 'Channel:';
 wlan5ghtml.form1.auto = 'auto';
 wlan5ghtml.form1.channel36 = '36 – 5180MHz';
 wlan5ghtml.form1.channel40 = '40 – 5200MHz';
@@ -1891,7 +1892,7 @@ wlan5ghtml.form1.channel161 = '161 – 5805MHz';
 wlan5ghtml.form1.channel165 = '165 – 5825MHz';
 wlan5ghtml.form1.maxStation = "Max Station:";
 wlan5ghtml.form1.maxStationCmt = "Range:1~<span class=\"max_station\">32</span>";
-wlan5ghtml.form1.Mode = 'Mode:';
+wlan5ghtml.form1.Mode = 'Wi-Fi Mode:';
 wlan5ghtml.form1.na = '11A';
 wlan5ghtml.form1.ac = '11NA';
 wlan5ghtml.form1.an_ac = '11AC';
@@ -1917,11 +1918,11 @@ wlan5ghtml.form1.notNull = 'value cannot be null';
 
 
 wlan5ghtml.helper.title1 = 'Wi-Fi';
-wlan5ghtml.helper.item1 = 'Disabled Wi-Fi, network only use wired connections. Default enabled';
+wlan5ghtml.helper.item1 = 'Disabled Wi-Fi, network only use wired connections.';
 wlan5ghtml.helper.title2 = 'SSID broadcast';
-wlan5ghtml.helper.item2 = 'Enable SSID broadcasting, other wireless devices can search SSID ; Disabled SSID broadcast, you can not search SSID, but by manual input SSID to connected,  default enabled.';
+wlan5ghtml.helper.item2 = 'Enable SSID broadcasting, other wireless devices can search SSID ; Disabled SSID broadcast, you can not search SSID, but by manual input SSID to connected.';
 wlan5ghtml.helper.wmmTh = 'WMM';
-wlan5ghtml.helper.wmmTd = 'Enable Wi-Fi WMM when selected. Default enabled.';
+wlan5ghtml.helper.wmmTd = 'Enable Wi-Fi WMM when selected.';
 wlan5ghtml.helper.title3 = 'SSID';
 wlan5ghtml.helper.item3 = 'SSID can be simply understood as the name of the wireless network, the fuselage and packaging logo visible this default SSID name. SSID name consists of a maximum of 32 characters consisting of letters and numbers, case-sensitive.';
 wlan5ghtml.helper.title4 = 'Channel';
@@ -1949,6 +1950,8 @@ wlan5ghtml.helper.item10 = '<li>1. MAC: Not editable' +
 '<li>5. TX Power: Editable(Range:1~23), defaults to the outdoor device of TX Power</li>';
 wlan5ghtml.helper.title11 = "TX Power";
 wlan5ghtml.helper.item11 = "Professionals settings, users generally do not change.";
+wlan5ghtml.helper.title12 = "Bandwidth";
+wlan5ghtml.helper.item12 = "Be able to select 20HMz, 40MHz or 80MHz";
 
 
 LANGUAGE_FLUX_MOUNT = "Month Usage";

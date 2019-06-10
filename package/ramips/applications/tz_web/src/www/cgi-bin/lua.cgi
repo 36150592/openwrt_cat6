@@ -2519,6 +2519,50 @@ function wifi_advanced_config()
 
 end
 
+function wifi5_advanced_config()
+
+    local tz_answer = {}
+    tz_answer["cmd"] = 244
+    local ret
+    local array = wifi.wifi_get_dev()
+
+    local id
+    for k, v in pairs(array) do
+        if (v["band"] == "5G") then id = v['wifi_id'] end
+    end
+
+    local channel = tz_req["channel"]
+    local mode = tonumber(tz_req["wifiWorkMode"])
+    local bandWidth = tz_req["bandWidth"]
+    local maxStation = tonumber(tz_req["maxStation"])
+
+    if (nil ~= channel) then
+        ret = wifi.wifi_set_channel(id, channel)
+        if (not ret) then tz_answer["setChannel"] = false end
+    end
+
+    if (nil ~= mode) then
+        ret = wifi.wifi_set_mode(id, mode)
+        if (not ret) then tz_answer["setMode"] = false end
+    end
+
+    if (nil ~= bandWidth) then
+        ret = wifi.wifi_set_bandwidth(id, bandWidth)
+        if (not ret) then tz_answer["setBwMode"] = false end
+    end
+
+    if (nil ~= maxStation) then
+        ret = wifi.wifi_set_connect_sta_number(id, maxStation)
+        if (not ret) then tz_answer["setnumber"] = false end
+    end
+
+    wifi.wifi_restart(id)
+    tz_answer["success"] = true
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end
+
 local switch = {
     [0] = get_sysinfo,
     [1] = get_systime,
@@ -2618,7 +2662,8 @@ local switch = {
     [240] = open_5g_random_pin,
     [241] = get_web_log,
     [242] = clear_web_log,
-    [243] = wifi_advanced_config
+    [243] = wifi_advanced_config,
+    [244] = wifi5_advanced_config
 }
 
 cmdid = uti.get_env_cmdId(envv)

@@ -1839,6 +1839,7 @@ wirelessconfightml.macControl.btnSave = "保存";
 wlan5ghtml.tab_menu.item1 =  "主Wi-Fi设置";
 wlan5ghtml.tab_menu.item2 =  "辅Wi-Fi1设置";
 wlan5ghtml.tab_menu.item3 =  "辅Wi-Fi2设置";
+wlan5ghtml.tab_menu.item4 =  "Wi-Fi高级设置";
 wlan5ghtml.tab_menu.connectedList = "连接客户端列表";
 wlan5ghtml.tab_menu.macControl = "Wi-Fi访问控制";
 wlan5ghtml.tab_menu.wps = "WPS配置";
@@ -1866,7 +1867,7 @@ wlan5ghtml.form1.channel161 = '161 – 5805MHz';
 wlan5ghtml.form1.channel165 = '165 – 5825MHz';
 wlan5ghtml.form1.maxStation = "最大连接用户数:";
 wlan5ghtml.form1.maxStationCmt = "取值范围:1~<span class=\"max_station\">32</span>";
-wlan5ghtml.form1.Mode = '工作模式:';
+wlan5ghtml.form1.Mode = 'Wi-Fi工作模式:';
 wlan5ghtml.form1.na = '11A';
 wlan5ghtml.form1.ac = '11NA';
 wlan5ghtml.form1.an_ac = '11AC';
@@ -1892,11 +1893,11 @@ wlan5ghtml.form1.notNull = '不能为空';
 
 
 wlan5ghtml.helper.title1 = 'WiFi功能';
-wlan5ghtml.helper.item1 = '选中时开启无线路由器Wi-Fi功能；不选中时关闭无线路由器Wi-Fi功能,网络只能使用有线方式连接.默认开启.';
+wlan5ghtml.helper.item1 = '选中时开启无线路由器Wi-Fi功能；不选中时关闭无线路由器Wi-Fi功能,网络只能使用有线方式连接.';
 wlan5ghtml.helper.title2 = 'SSID广播';
-wlan5ghtml.helper.item2 = '选中时开启SSID广播,其他无线设备可以通过搜索网络搜索到本机的SSID；不选中时关闭SSID广播,不能搜索到本机的SSID,但是通过手工输入SSID,其他客户端可以连接上.默认开启.';
+wlan5ghtml.helper.item2 = '选中时开启SSID广播,其他无线设备可以通过搜索网络搜索到本机的SSID；不选中时关闭SSID广播,不能搜索到本机的SSID,但是通过手工输入SSID,其他客户端可以连接上.';
 wlan5ghtml.helper.wmmTh = 'WMM';
-wlan5ghtml.helper.wmmTd = '选中时开启Wi-Fi WMM；不选中时关闭Wi-Fi WMM.默认开启.';
+wlan5ghtml.helper.wmmTd = '选中时开启Wi-Fi WMM；不选中时关闭Wi-Fi WMM.';
 wlan5ghtml.helper.title3 = '无线网络标识(SSID)';
 wlan5ghtml.helper.item3 = 'SSID可以简单理解为无线网络的名称,机身及包装标识可见此SSID默认名称.SSID名称由最多不超过32个字符的字母和数字组成,区分大小写.';
 wlan5ghtml.helper.title4 = '信道';
@@ -1923,5 +1924,7 @@ wlan5ghtml.helper.item10 = '<li>1、MAC:不可编辑.</li>' +
     '<li>5、发射功率: 可编辑(取值范围1-23), 默认采用主机的发射功率</li>';
 wlan5ghtml.helper.title11 = "发射功率";
 wlan5ghtml.helper.item11 = "专业人员设置项,用户一般不用更改.";
+wlan5ghtml.helper.title12 = "带宽";
+wlan5ghtml.helper.item12 = "可以选择20MHz，40MHz或者80MHz";
 
 LANGUAGE_FLUX_MOUNT = "本月流量";

@@ -6,6 +6,7 @@
         TempUtil.render('wlform1-template', 'form', wlan5ghtml.form1);
         TempUtil.render('wlform1-template1', 'form1', wlan5ghtml.form1);
         TempUtil.render('wlform1-template2', 'form2', wlan5ghtml.form1);
+        TempUtil.render('wlform1-template3', 'form3', wlan5ghtml.form1);
         TempUtil.render('macInfoContainer-template', 'macInfoContainer', wirelessconfightml.macInfoContainer);
         TempUtil.render('macControl-template', 'macControl',wirelessconfightml.macControl);
         Page.render('#fwHead', '#fwHead_template');
@@ -62,6 +63,10 @@
                 id = parseInt(id, 10);
 
             });
+        }
+
+        if(!Page.getShowHideByBit(0)) {
+            $("#walnInfo4").hide(0);
         }
 
         if(!Page.getShowHideByBit(1)){
@@ -271,6 +276,15 @@
             var pannelIndex = $lis.index(this);
             $boxes.eq(pannelIndex).show().siblings().hide();
             $('#helper' + pannelIndex).show().siblings().hide();
+            if(pannelIndex == "3"){
+                 Page.getHelperPage2('html/config/wlan5gConfig.html');
+                 $('.helper_box').show();
+            }else if(pannelIndex == "0" ||pannelIndex == "1" || pannelIndex == "2"){
+                Page.getHelperPage('html/config/wlan5gConfig.html');
+                $('.helper_box').show();
+            }else{
+                $('.helper_box').hide();
+            }
             switch (pannelIndex) {
                 case 0:
                     Page.postJSON({
@@ -305,12 +319,7 @@
                             }
                             $wmm.attr('old',data.wmm ||  0);
 
-
-                            Page.setFormFieldValue2("channel", data.channel);
                             Page.setFormFieldValue2("ssid", data.ssid);
-                            Page.setFormFieldValue2("wifiWorkMode", data.mode);
-                            Page.setFormFieldValue2("bandWidth", data.bandwidth);
-                            Page.setFormFieldValue2("maxStation", data.maxassoc);
                             var encryp = data.encryption.split("+")[0];
                             var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
                             Page.setFormFieldValue2("authenticationType", encryp);
@@ -321,10 +330,9 @@
 
                         }
                     });
-                    Page.getHelperPage('html/config/wlan5gConfig.html');
-                    $('.helper_box').show();
                     break;
                 case 1:
+                    break;
                 case 2:
                     Page.postJSON({
                         json: { cmd: RequestCmd.SSIDLIST_INFO,wifiId: $wifiId.val() },
@@ -364,9 +372,20 @@
 
                         }
                     });
-                    $('.helper_box').show();
                     break;
                 case 3:
+                Page.postJSON({
+                        json: { cmd: RequestCmd.WIFI5_INFO },
+                        success: function(datas) {
+                            var data = datas.data;                                        
+                            Page.setFormFieldValue2("maxStation", data.maxassoc);
+                            Page.setFormFieldValue2("channel", data.channel);
+                            Page.setFormFieldValue2("wifiWorkMode", data.mode);
+                            Page.setFormFieldValue2("bandWidth", data.bandwidth);
+                        }
+                    });
+                    break;
+                case 4:
                     if (firstRequest) {
                         Page.postJSON({
                             returnHtml: true,
@@ -382,10 +401,9 @@
                             }
                         });
                     }
-                    $('.helper_box').hide();
                     break;
 
-                case 4:
+                case 5:
                     Page.postJSON({
                         json: {
                             cmd: RequestCmd.WIFI5_MAC_CONTROL,
@@ -401,10 +419,9 @@
                             }
                         }
                     });
-                    $('.helper_box').hide();
                     break;
 
-                case 5:
+                case 6:
                     Page.postJSON({
                         json: {
                             cmd: RequestCmd.WPS5_PIN_GET,
@@ -419,7 +436,6 @@
                             }
                         }
                     });
-                    $('.helper_box').hide();
                     break;
             }
         });
@@ -600,6 +616,66 @@
 
         });
 
+        var $btn3Save = $('input[id^=btn3Save]');
+        $btn3Save.click(function() {
+            $(this).attr("disabled",true);
+            var count = 0;
+            var $form = $('#form3');
+            if(!CheckUtil.checkForm($form, wireless_rules, wireless_messages)){
+                $(this).attr("disabled",false);
+                return false;
+            }
+
+            var json = JSON.parmsToJSON($form);
+
+            if(json.key == $('#key').attr('old')){
+                delete json["key"];
+                count++;
+            }else {
+                if (!CheckUtil.checkPwd(json.key)) {
+                    AlertUtil.alertMsg(showText.keyCkeckMsg);
+                    $(this).attr("disabled", false);
+                    return false;
+                }
+            }
+
+            if(json.maxStation ==  $("#maxStation").attr('old')){
+                delete json["maxStation"];
+                count++;
+            }
+            if(json.channel ==  $("#channel").attr('old')){
+                delete json["channel"];
+                count++;
+            }
+            if(json.wifiWorkMode ==  $("#wifiWorkMode").attr('old')){
+                delete json["wifiWorkMode"];
+                count++;
+            }
+            if(json.ht ==  $("#ht").attr('old')){
+                delete json["ht"];
+                count++;
+            }
+            
+            if(count == 4){
+                AlertUtil.alertMsg(CHECK.required.noChanges);
+                $(this).attr("disabled",false);
+                return false;
+            }
+
+            json.cmd = RequestCmd.WIFI5_ADVANCED_CONFIG;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                    $lis.eq(id).click();
+                },
+                complete: function(){
+                    $('#btn3Save').attr("disabled",false);
+                }
+            });
+
+        });
+
 
     });
 
@@ -622,6 +698,7 @@
                 <li id="walnInfo"><a href="javascript:void(0);"><%- item1 %></a></li>
                 <li id="walnInfo1"><a href="javascript:void(0);"><%- item2 %></a></li>
                 <li id="walnInfo3"><a href="javascript:void(0);"><%- item3 %></a></li>
+                <li id="walnInfo4"><a href="javascript:void(0);"><%- item4 %></a></li>
                 <li id="connectedList"><a href="javascript:void(0);"><%- connectedList %></a></li>
                 <li ><a href="javascript:;"><%- macControl %></a></li>
                 <li ><a href="javascript:;"><%- wps %></a></li>
@@ -659,53 +736,6 @@
                             <tr  class="wifi_disable_hide" style="display:none;">
                                 <th><%- ssid %></th>
                                 <td><input type="text" id="ssid" name="ssid" class="normal" maxlength="64"/></td>
-                            </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;">
-                                <th><%- channel %></th>
-                                <td><select id="channel" name="channel">
-                                    <option value="auto"><%- auto %></option>
-                                    <option value="36"><%- channel36 %></option>
-                                    <option value="40"><%- channel40 %></option>
-                                    <option value="44"><%- channel44 %></option>
-                                    <option value="48"><%- channel48 %></option>
-                                    <!--
-                                                        <option value="52"><%- channel52 %></option>
-                                                        <option value="56"><%- channel56 %></option>
-                                                        <option value="60"><%- channel60 %></option>
-                                                        <option value="64"><%- channel64 %></option>
-                                    -->
-                                    <option value="149"><%- channel149 %></option>
-                                    <option value="153"><%- channel153 %></option>
-                                    <option value="157"><%- channel157 %></option>
-                                    <option value="161"><%- channel161 %></option>
-                                    <option value="165"><%- channel165 %></option>
-                                </select></td>
-                            </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;">
-                                <th><%- Mode %></th>
-                                <td>
-                                    <select id="wifiWorkMode" name="wifiWorkMode">
-                                        <option value="11"><%- na %></option>
-                                        <option value="14"><%- ac %></option>
-                                        <option value="15"><%- an_ac %></option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr id="bandWidthTr"  class="wifi_disable_hide" style="display:none;">
-                                <th><%- bandWidth %></th>
-                                <td>
-                                    <select name="bandWidth" id="bandWidth">
-                                        <option value="20"><%- bandWidth20 %></option>
-                                        <option value="20+40"><%- bandWidth40 %></option>
-                                        <option value="80"><%- bandWidth80 %></option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;">
-                                <th><%- maxStation %></th>
-                                <td>
-                                    <input type="text" id="maxStation" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
-                                </td>
                             </tr>
                             <tr  class="wifi_disable_hide" style="display:none;">
                                 <th><%- authenticationType %></th>
@@ -894,6 +924,60 @@
                             <tr>
                                 <th>&nbsp;</th>
                                 <td><input type="button" id="btn2Save2" value="<%- btnSave %>" /></td>
+                            </tr>
+                        </table>
+                    </script>
+                </form>
+            </div>
+
+            <div class="main_box">
+                <form id="form3">
+                    <script type="text/template" id="wlform1-template3">
+                        <table class="detail" cellspacing="0">    
+                            <tr class="wifi_disable_hide" style="display:none;">
+                                    <th><%- maxStation %></th>
+                                    <td>
+                                        <input type="text" id="maxStation" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
+                                    </td>
+                                </tr>                         
+                            <tr class="wifi_disable_hide" style="display:none;">
+                                <th><%- channel %></th>
+                                <td><select id="channel" name="channel">
+                                    <option value="auto"><%- auto %></option>
+                                    <option value="36"><%- channel36 %></option>
+                                    <option value="40"><%- channel40 %></option>
+                                    <option value="44"><%- channel44 %></option>
+                                    <option value="48"><%- channel48 %></option>
+                                    <option value="149"><%- channel149 %></option>
+                                    <option value="153"><%- channel153 %></option>
+                                    <option value="157"><%- channel157 %></option>
+                                    <option value="161"><%- channel161 %></option>
+                                    <option value="165"><%- channel165 %></option>
+                                </select></td>
+                            </tr>
+                            <tr class="wifi_disable_hide" style="display:none;">
+                                <th><%- Mode %></th>
+                                <td>
+                                    <select id="wifiWorkMode" name="wifiWorkMode">
+                                        <option value="11"><%- na %></option>
+                                        <option value="14"><%- ac %></option>
+                                        <option value="15"><%- an_ac %></option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr id="bandWidthTr"  class="wifi_disable_hide" style="display:none;">
+                                <th><%- bandWidth %></th>
+                                <td>
+                                    <select name="bandWidth" id="bandWidth">
+                                        <option value="20"><%- bandWidth20 %></option>
+                                        <option value="20+40"><%- bandWidth40 %></option>
+                                        <option value="80"><%- bandWidth80 %></option>
+                                    </select>
+                                </td>
+                            </tr>                                               
+                            <tr>
+                                <th>&nbsp;</th>
+                                <td><input type="button" id="btn3Save" value="<%- btnSave %>"/></td>
                             </tr>
                         </table>
                     </script>
