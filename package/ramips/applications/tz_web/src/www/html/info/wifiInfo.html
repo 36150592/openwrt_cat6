@@ -108,12 +108,6 @@
                             values.push(DOC.status.closed);
                         }
 
-                        names.push(DOC.wlan.ssid);
-                        values.push(data2.ssid || loading);
-
-                        names.push(DOC.net.mac);
-                        values.push(data2.mac || loading);
-
                         names.push(DOC.wlan.ssidBroadcast);
                         if(data2.hidden_ssid == "0"){
                             values.push(DOC.status.opened);
@@ -121,21 +115,27 @@
                             values.push(DOC.status.closed);
                         }
 
-                       names.push(DOC.wlan.secMode);
-                        if(data2.encryption){
-                            var encryp = data2.encryption.split("+")[0];
-                            values.push(getWlanSecMode(encryp));
-                        }else{
-                            values.push(loading);
-                        }
+                        names.push(DOC.wlan.ssid);
+                        values.push(data2.ssid || loading);
+
+                        names.push(DOC.net.mac);
+                        values.push(data2.mac || loading);
+
+                    //    names.push(DOC.wlan.secMode);
+                    //     if(data2.encryption){
+                    //         var encryp = data2.encryption.split("+")[0];
+                    //         values.push(getWlanSecMode(encryp));
+                    //     }else{
+                    //         values.push(loading);
+                    //     }
 
                         //values.push(FormatUtil.formatField(getWlanSecMode(data.encKey.trim(), data.wpa.trim(), data.wpaKeyMgmt.trim(), data.wpaPairwise.trim())));
 
                         names.push(DOC.wlan.channel);
                         values.push(data2.channel || loading);
 
-                        names.push(DOC.wlan.txPower);
-                        values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
+                        // names.push(DOC.wlan.txPower);
+                        // values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
 
 
                         wirelessHtml = Page.createTable2(DOC.title.wlan2g, names, values, names.length, 1).replace("<td>", "<td>");
@@ -165,16 +165,11 @@
                         values.push(mode);
 
                         names.push(DOC.wlan.wifi);
-                        if(data2.status == "0")
+                        if(data2.status == "0") {
                             values.push(DOC.status.opened);
-                        else
+                        } else {
                             values.push(DOC.status.closed);
-
-                        names.push(DOC.wlan.ssid);
-                        values.push(data2.ssid || loading);
-
-                        names.push(DOC.net.mac);
-                        values.push(data2.mac || loading);
+                        }
 
                         names.push(DOC.wlan.ssidBroadcast);
                         if(data2.hidden_ssid == "0"){
@@ -182,20 +177,26 @@
                         } else {
                             values.push(DOC.status.closed);
                         }
+                           
+                        names.push(DOC.wlan.ssid);
+                        values.push(data2.ssid || loading);
 
-                        names.push(DOC.wlan.secMode);
-                        if(data2.encryption){
-                            var encryp = data2.encryption.split("+")[0];
-                            values.push(getWlanSecMode(encryp));
-                        }else{
-                            values.push(loading);
-                        }
+                        names.push(DOC.net.mac);
+                        values.push(data2.mac || loading);                       
+
+                        // names.push(DOC.wlan.secMode);
+                        // if(data2.encryption){
+                        //     var encryp = data2.encryption.split("+")[0];
+                        //     values.push(getWlanSecMode(encryp));
+                        // }else{
+                        //     values.push(loading);
+                        // }
 
                         names.push(DOC.wlan.channel);
                         values.push(data2.channel || loading);
 
-                        names.push(DOC.wlan.txPower);
-                        values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
+                        // names.push(DOC.wlan.txPower);
+                        // values.push(data2.txpower ? FormatUtil.formatField(data2.txpower, "dBm") : loading);
                                  
                         wlan5gHtml = Page.createTable2(DOC.title.wlan5g, names, values, names.length, 1).replace("<td>", "<td>");
                     }
