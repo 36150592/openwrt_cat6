@@ -145,7 +145,9 @@ var RequestCmd = {
     SYSTEM_LOG: 241,
     SYS_CLEAR_LOG: 242,
     WIFI_ADVANCED_CONFIG: 243,
-    WIFI5_ADVANCED_CONFIG: 244
+    WIFI5_ADVANCED_CONFIG: 244,
+    WAN_MAC_GET: 245,
+    WAN_MAC_SETTINGS: 246
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
@@ -160,6 +162,7 @@ var MenuItem = {
     WLAN_5G_CONFIG: { cmd: RequestCmd.WLAN_5G_CONFIG, url: "html/config/wlan5gConfig.html" },
     ADVANCED_CONFIG: { cmd: RequestCmd.BASIC_CONFIG, url: "html/advance/advancedConfig.html" },
     APN_CONFIG: { cmd: RequestCmd.GET_APN_CONFIG, url: "html/config/apnConfig.html" },
+    WAN_SETTINGS: { cmd: RequestCmd.WAN_SETTINGS, url: "html/advance/wanSettings.html" },
     ROUTE_SETTING: { cmd: RequestCmd.ROUTE_LIST_GET, url: "html/advance/routeIndex.html" },
     TR069_SETTING: { cmd: RequestCmd.TR069_CONFIG, url: "html/advance/tr069Index.html" },
     QUICK_SETTINGS: { cmd: RequestCmd.QUICK_SETTINGS, url: "html/advance/quickSettingsIndex.html" },

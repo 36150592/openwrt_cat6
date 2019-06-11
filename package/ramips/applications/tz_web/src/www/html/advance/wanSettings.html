@@ -1,0 +1,112 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+
+
+    $(document).ready(function(){
+      
+        Page.render('#tabsitems', '#tabsitems-template');
+        Page.render('#form', '#wlform1-template');
+
+         Page.postJSON({
+                json: {
+                    cmd: RequestCmd.WAN_MAC_GET
+                },
+                success: function(datas) {
+
+                    $("#mac").val(datas.data.mac);
+                    $("#mac").attr("disabled",true);
+                    if(datas.data.model == "wan"){
+                        $("input[value='wan']").prop("checked",true);
+                        $(".hide_mac_input").show(0);
+                    }else{
+                        $("input[value='lan']").prop("checked",true);
+                        $(".hide_mac_input").hide(0);
+                    }
+
+                }
+            });
+         $("input[name='wanModel']").change(function(){
+             if($(this).val() == "wan"){
+                $(".hide_mac_input").show(0);
+            }else{
+                $(".hide_mac_input").hide(0);
+            }
+         })
+        $("#edit").change(function(){
+            if($(this).is(":checked")){
+                $("#mac").attr("disabled",false);
+            }else{
+                $("#mac").attr("disabled",true);
+            }
+        })
+        
+        $("#btnSaveMac").on("click",function(){
+            $(this).attr("disabled",true);
+            var json = {};
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.WAN_MAC_SETTINGS;
+            json.mac = $("#mac").val();
+            if(!CheckUtil.checkMac(json.mac)){
+                AlertUtil.alertMsg(CHECK.format.mac);
+                $("#btnSaveMac").attr("disabled",false);
+                return false;
+            }
+            json.model = $("input[name='wanModel']:checked").val();
+            Page.postJSON({
+                 json: json,
+                 success:function(data){
+                    $("#btnSaveMac").attr("disabled",false);
+                    if(data.success == true){
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+                    }
+                 }
+             })
+
+        })
+
+    });
+
+
+
+</script>
+<div class="detail_box">
+    <div class="tab_menu">
+        <ul class="tabs" id="tabsitems">
+            <script type="text/template" id="tabsitems-template">
+                <li id="walnInfo" ><a href="javascript:;"><%- MENU.setting.wan %></a></li>
+            </script>
+        </ul>
+    </div>
+    <div class="tab_menu_bottom"></div>
+    <div>
+        <div class="tab_boxes" >
+            <div  class="main_box">
+                <form id="form">
+                    <script type="text/template" id="wlform1-template">
+                         <table class="detail" cellspacing="0">
+                            <tr>
+                                <th><%- wirelessconfightml.prompt.wan%><%- colon %></th>
+                                <td>
+                                    <input type="radio" name="wanModel" value="wan"><%- wirelessconfightml.prompt.wan%> &nbsp;&nbsp;
+                                    <input type="radio" name="wanModel" value="lan"><%- wirelessconfightml.prompt.lan%>&nbsp;&nbsp;
+                                </td>
+                            </tr>
+                            <tr class="hide_mac_input">
+                                <th><%- wirelessconfightml.prompt.mac%></th>
+                                <td> <input type="text" id="mac">&nbsp;<input type="checkbox" id="edit"><%- wirelessconfightml.prompt.edit%>&nbsp<span class="cmt">(<%- lbl.example %><%- colon %>B8:AC:6F:BB:7E:3F)</td>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <td><input type="button" id="btnSaveMac" value="<%- btn.save %>" /></td>
+                            </tr>
+                         </table>
+                    </script>
+                </form>
+			
+        </div>
+    </div>
+</div>
+<!-- <div class="helper_box" >
+    <div id="helper"></div>
+</div> -->

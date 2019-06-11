@@ -2563,6 +2563,51 @@ function wifi5_advanced_config()
 
 end
 
+function wan_mac_get()
+    local tz_answer={}
+    local data_array={}
+
+    data_array["model"] = network.network_get_lan_wan_mode() or {}
+    data_array["mac"] = network.network_get_wan_mac() or {}
+
+    tz_answer["success"] = true
+    tz_answer["cmd"] = 245
+    tz_answer["data"] = data_array
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+end
+
+function wan_mac_settings()
+    local tz_answer = {}
+    local mac = {}
+    local model = {}
+    local ret
+    
+    model = tz_req["model"] 
+    mac = tz_req["mac"]
+    tz_answer["cmd"] = 246
+    ret = network.network_set_wan_mac(mac)
+
+    if (not ret) 
+        then 
+        tz_answer["setMac"] = false 
+    end
+
+    if(model ~= nil)
+        then
+        ret = network.network_set_lan_wan_mode(model)
+        if(not ret)
+            then
+            tz_answer["setModel"] = false
+        end    
+    end
+
+    tz_answer["success"] = true
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end
+
 local switch = {
     [0] = get_sysinfo,
     [1] = get_systime,
@@ -2663,7 +2708,9 @@ local switch = {
     [241] = get_web_log,
     [242] = clear_web_log,
     [243] = wifi_advanced_config,
-    [244] = wifi5_advanced_config
+    [244] = wifi5_advanced_config,
+    [245] = wan_mac_get,
+    [246] = wan_mac_settings,
 }
 
 cmdid = uti.get_env_cmdId(envv)
