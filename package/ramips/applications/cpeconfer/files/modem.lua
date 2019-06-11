@@ -1175,14 +1175,15 @@ function modem_module.modem_disable_auto_dial()
 	return ret1
 end
 
+--default auto dial is enable .see also   dialtool2 and /bin/mutilapn
 function modem_module.modem_get_auto_dial()
 	local ret = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_AUTO_DIAL")
 
-	if "1" == ret 
+	if "0" == ret 
 	then 
-		return 1
-	else
 		return 0
+	else
+		return 1
 	end
 end
 
