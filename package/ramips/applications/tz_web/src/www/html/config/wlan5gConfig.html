@@ -245,15 +245,31 @@
 
 
         })
-       $btnSaveWps.click(function () {
+       $("#btnSaveWps1").click(function () {
             $(this).attr("disabled",true);
             var json = new Object();
-            
             if($("#wpsEnble").prop("checked")){
                 json.wpsEnble = "1";
             }else{
                 json.wpsEnble = "0";
-            }
+            }    
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.WPS5_PIN_SET;
+            Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.setSuccess);
+                    $lis.eq(6).click();
+                },
+                complete: function(){
+                    $('#btnSaveWps1').attr("disabled",false);
+                }
+            });
+
+        });
+        $('#btnSaveWps2').click(function () {
+            $(this).attr("disabled",true);
+            var json = new Object();
             json.wpsPin = $("#wpsPin").val();       
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.WPS5_PIN_SET;
@@ -264,7 +280,7 @@
                     $lis.eq(6).click();
                 },
                 complete: function(){
-                    $('#btnSaveWps').attr("disabled",false);
+                    $('#btnSaveWps2').attr("disabled",false);
                 }
             });
 
@@ -1028,7 +1044,10 @@
                                     <input type="checkbox" id="wpsEnble" name="wpsEnble" /><%- status.enable %>
                                 </td>
                             </tr>
-
+                             <tr>
+                                <th>&nbsp;</th>
+                                <td><input type="button" id="btnSaveWps1" value="<%- btn.save %>" /></td>
+                            </tr>
                             <tr>
                                 <th><%- lbl.wpsPin %><%- colon %></th>
                                 <td>
@@ -1044,7 +1063,7 @@
                             </tr>
                             <tr>
                                 <th>&nbsp;</th>
-                                <td><input type="button" id="btnSaveWps" value="<%- btn.save %>" /></td>
+                                <td><input type="button" id="btnSaveWps2" value="<%- btn.apply %>" /></td>
                             </tr>
                         </table>
                     </form>
