@@ -587,6 +587,7 @@ model_func_t ModelFunction[] =
     {"cpe_get_MaximumSizeOfVendorLogFile", cpe_get_MaximumSizeOfVendorLogFile},
     {"cpe_get_PersistentOfVendorLogFile", cpe_get_PersistentOfVendorLogFile},
     {"cpe_get_EnableCWMP", cpe_get_EnableCWMP},
+    {"cpe_set_EnableCWMP", cpe_set_EnableCWMP},    
     {"cpe_get_igd_NameOfWLANConfiguration", cpe_get_igd_NameOfWLANConfiguration},
     {"cpe_get_igd_MaxBitRateOfWlan", cpe_get_igd_MaxBitRateOfWlan},
     {"cpe_get_igd_Channel", cpe_get_igd_Channel},

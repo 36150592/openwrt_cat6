@@ -1518,7 +1518,15 @@ int cpe_add_igd_WANConnectionDevice(cwmp_t * cwmp, parameter_node_t * param_node
 
 int cpe_get_EnableCWMP(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
 {    
-	get_single_config_attr("uci get tozed.cfg.tr069_app_enable 2>/dev/null", param);
+	uci_get_single_config_attr("uci get tozed.cfg.tr069_app_enable 2>/dev/null", param);
+	if(!strcmp(param,"y"))
+	{
+		strcpy(param, "true");
+		
+	}else{
+		strcpy(param, "false");
+	    
+	}
     *value = param;
     
     return FAULT_CODE_OK;
@@ -1526,6 +1534,7 @@ int cpe_get_EnableCWMP(cwmp_t * cwmp, const char * name, char ** value, pool_t *
 
 int cpe_set_EnableCWMP(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
 {
+
 	if(!strcmp(value, "true"))
 		uci_set_single_config_attr("uci set tozed.cfg.tr069_app_enable=y 2>/dev/null&&uci commit tozed", "y");
 	else
