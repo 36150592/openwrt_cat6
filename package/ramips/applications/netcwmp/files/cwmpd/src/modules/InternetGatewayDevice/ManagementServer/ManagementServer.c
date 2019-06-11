@@ -1403,9 +1403,6 @@ int cpe_set_igd_ms_period_en(cwmp_t * cwmp, const char * name, const char * valu
     {
         cwmp_conf_set("cwmp:enable","0");
     }
-    else{
-        return FAULT_CODE_9007;
-    }
     return FAULT_CODE_OK;
 }
 
