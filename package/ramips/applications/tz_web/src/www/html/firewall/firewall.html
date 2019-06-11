@@ -1134,14 +1134,14 @@
 
         switch(Page.menuItem.cmd) {
             case RequestCmd.PORT_FILTER:
-                setLisState([0, 1]);
+                setLisState([0, 1, 2, 8]);
                 $lis.eq(0).click();
                 break;
 
-            case RequestCmd.MAC_FILTER:
-                setLisState([2]);
-                $lis.eq(2).click();
-                break;
+            // case RequestCmd.MAC_FILTER:
+            //     setLisState([2]);
+            //     $lis.eq(2).click();
+            //     break;
 
             case RequestCmd.OTHER_FILTER:
                 setLisState([3]);
@@ -1168,10 +1168,10 @@
                 $lis.eq(7).click();
                 break;
 				
-			case RequestCmd.DEFAULT_FILTER:
-                setLisState([8]);
-                $lis.eq(8).click();
-                break;
+			// case RequestCmd.DEFAULT_FILTER:
+            //     setLisState([8]);
+            //     $lis.eq(8).click();
+            //     break;
         }
         $detailBox.show();
     });
