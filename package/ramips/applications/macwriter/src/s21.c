@@ -2,6 +2,72 @@
 #include <stdlib.h>
 
 #include "utility.h"
+#define LED_SIGNAL "/sys/class/leds/blue:signal"
+#define LED_SIGNAL1 "/sys/class/leds/blue:signal1"
+#define LED_SIGNAL2 "/sys/class/leds/blue:signal2"
+#define LED_SIGNAL3 "/sys/class/leds/blue:signal3"
+#define LED_SIGNAL4 "/sys/class/leds/blue:signal4"
+#define LED_SIGNAL5 "/sys/class/leds/blue:signal5"
+#define LED_NORMAL_STATUS "/sys/class/leds/blue:status"
+#define LED_EXCEPTION_STATUS "/sys/class/leds/red:status"
+#define LED_PHONE "/sys/class/leds/blue:phone"
+#define LED_WIFI "/sys/class/leds/blue:wifi"
+#define LED_WIFI_5G "/sys/class/leds/blue:wifi-5g"
+#define LED_WPS "/sys/class/leds/blue:wps"
+char* leds[] = {
+ LED_SIGNAL ,
+ LED_SIGNAL1,
+ LED_SIGNAL2,
+ LED_SIGNAL3,
+ LED_SIGNAL4,
+ LED_SIGNAL5,
+ LED_NORMAL_STATUS,
+ LED_EXCEPTION_STATUS,
+ LED_PHONE,
+ LED_WIFI,
+ LED_WIFI_5G,
+ LED_WPS,
+ NULL
+};
+void led_all_blink()
+{
+	int i = 0;
+	for(i = 0; leds[i] != NULL; i++)
+	{
+		char cmd[128] = "";
+		sprintf(cmd, "echo timer > %s/trigger", leds[i]);
+		system(cmd);
+	}
+}
+
+void led_all_on()
+{
+	int i = 0;
+	for(i = 0; leds[i] != NULL; i++)
+	{
+		char cmd1[128] = "";
+		char cmd2[128] = "";
+		sprintf(cmd1, "echo none > %s/trigger", leds[i]);
+		sprintf(cmd2, "echo 1 > %s/brightness", leds[i]);
+		system(cmd1);
+		system(cmd2);
+	}
+}
+
+void led_all_off()
+{
+	int i = 0;
+	for(i = 0; leds[i] != NULL; i++)
+	{
+		char cmd1[128] = "";
+		char cmd2[128] = "";
+		sprintf(cmd1, "echo none > %s/trigger", leds[i]);
+		sprintf(cmd2, "echo 0 > %s/brightness", leds[i]);
+		system(cmd1);
+		system(cmd2);
+	}
+}
+
 
 static void regular_imei_to_bm_format_imei(char* regular_imei, char* bm_format_imei)
 {
@@ -243,11 +309,11 @@ static void upgrade_system_handle(char* get_buf, char* set_buf)
 	//upgrade_system ftp://192.168.3.123/home/system.bin md5sum
 	char buf[128] = {0};
 	char *temp = NULL;
-	char md5sum[128] = {0}; 
-	char addr[128] = {0};
+	char md5sum[512] = {0}; 
+	char addr[512] = {0};
 
 	temp = strtok(get_buf, " ");
-	temp = strtok(get_buf, NULL);
+	temp = strtok(NULL, " ");
 	if(!temp)
 	{
 		strcpy(set_buf, "error:NULL addr\n");
@@ -255,15 +321,16 @@ static void upgrade_system_handle(char* get_buf, char* set_buf)
 	}
 	strcpy(addr, temp);
 	
-	temp = strtok(get_buf, NULL);
+	temp = strtok(NULL, " ");
 	if(!temp)
 	{
 		strcpy(set_buf, "error:NULL md5sum\n");
 		return ;
 	}
+
 	strcpy(md5sum, temp);
-	
-	sprintf(buf, "wget %s -O /tmp/system.bin", temp);
+	sprintf(buf, "wget %s -O /tmp/system.bin", addr);
+
 	int ret = system(buf);
 
 	if(ret != 0)
@@ -277,13 +344,23 @@ static void upgrade_system_handle(char* get_buf, char* set_buf)
 		strcpy(set_buf, "error:check md5sum fail\n");
 		return ;
 	}
-	
-	ret = system("flashcp -v /tmp/system.bin /dev/mtd3");
 
-	if(ret != 0)
-		strcpy(set_buf, "error:upgrade fail\n");
-	else
-		strcpy(set_buf, "upgrade success\n");
+	int pid = fork();
+
+	if(pid == 0){
+		led_all_blink();
+		printf("after led_all_blink\n");
+		ret = system("flashcp -v /tmp/system.bin /dev/mtd3");
+		printf("flashcp ret = %d\n", ret);
+
+		 if(ret != 0)
+			led_all_off();
+		 else	
+			led_all_on();
+		exit(0);
+	}
+	
+	strcpy(set_buf, "upgrade success\n");
 
 //	system("reboot -f")
 	return ;
@@ -299,7 +376,7 @@ static void update_config_handle(char* get_buf, char* set_buf)
 
 	int ret = -1;
 	temp = strtok(get_buf, " ");
-	temp = strtok(get_buf, NULL);
+	temp = strtok(NULL, " ");
 	if(!temp)
 	{
 		strcpy(set_buf, "error:NULL addr\n");
@@ -307,15 +384,13 @@ static void update_config_handle(char* get_buf, char* set_buf)
 	}
 	strcpy(addr, temp);
 	
-	temp = strtok(get_buf, NULL);
+	/*temp = strtok(NULL, " ");
 	if(!temp)
 	{
 		strcpy(set_buf, "error:NULL md5sum\n");
 		return ;
 	}
-	strcpy(md5sum, temp);
-
-
+	strcpy(md5sum, temp);*/
 	
 	sprintf(buf, "wget %s -O /tmp/config.zip", addr);
 	ret = system(buf);
@@ -325,11 +400,11 @@ static void update_config_handle(char* get_buf, char* set_buf)
 		return ;
 	}
 
-	if(check_md5sum("/tmp/config.zip", md5sum))
+	/*if(check_md5sum("/tmp/config.zip", md5sum))
 	{
 		strcpy(set_buf, "error:check md5sum fail\n");
 		return ;
-	}
+	}*/
 
 
 	ret = system("/etc/tozed/config_update /tmp/config.zip 0");
