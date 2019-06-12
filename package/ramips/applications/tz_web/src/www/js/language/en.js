@@ -1347,6 +1347,7 @@ TAB.fw.portFiltering = "Port Filtering";
 TAB.fw.portMapping = "Port Mapping";
 TAB.fw.speedLimit = "Speed Limit";
 TAB.fw.urlFiltering = "URL Filtering";
+TAB.fw.urlDefaulte = "URL Default Settings";
 TAB.fw.upnpStatus = "UPNP Status:";
 TAB.fw.upnpDescribe = "The Universal Plug and Play (UPnP) service allows intelligent connection between two UPnP devices using port forwarding. UPnP devices can obtain IP addresses automatically and access the Internet dynamically.";
 TAB.fw.upnpprotocol = "Port Mapping Protocol";

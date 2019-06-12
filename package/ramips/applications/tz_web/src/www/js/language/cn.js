@@ -1321,6 +1321,7 @@ TAB.fw.portFiltering = "端口过滤";
 TAB.fw.portMapping = "端口映射";
 TAB.fw.speedLimit = "网速限制";
 TAB.fw.urlFiltering = "URL过滤";
+TAB.fw.urlDefaulte = "URL默认设置";
 TAB.fw.upnpStatus = "UPNP 状态:";
 TAB.fw.upnpDescribe = "UPnP（Universal Plug and Play，即插即用）服务通过端口转发，可以实现任意两个UPnP设备之间的智能互联。UPnP设备可以自动获得IP地址，并动态接入因特网。";
 TAB.fw.upnpprotocol = "端口映射的协议";

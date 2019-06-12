@@ -2608,6 +2608,37 @@ function wan_mac_settings()
 
 end
 
+function firewall_url_default_get()
+    local tz_answer = {}
+    local data_array = {}
+    tz_answer["cmd"] = 247
+    data_array = firewall.firewall_get_url_default_action() or {}
+    tz_answer["success"] = true
+    tz_answer["data"] = data_array
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end
+
+function firewall_url_default_set()
+    local tz_answer = {}
+    local data_array = {}
+    local ret
+    local url_default = {}
+    tz_answer["cmd"] = 248
+    url_default = tz_req["url_default"]
+    ret = firewall.firewall_set_url_default_action(url_default)
+    if(not ret)
+        then
+        tz_answer["url_default"] = false
+     end   
+    tz_answer["success"] = true
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+    os.execute("/etc/init.d/firewall restart > /dev/null 2>&1 &")
+
+end
+
 local switch = {
     [0] = get_sysinfo,
     [1] = get_systime,
@@ -2711,6 +2742,8 @@ local switch = {
     [244] = wifi5_advanced_config,
     [245] = wan_mac_get,
     [246] = wan_mac_settings,
+    [247] = firewall_url_default_get,
+    [248] = firewall_url_default_set,
 }
 
 cmdid = uti.get_env_cmdId(envv)

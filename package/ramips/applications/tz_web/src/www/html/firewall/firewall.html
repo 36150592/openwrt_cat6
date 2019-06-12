@@ -3,6 +3,7 @@
 <script type="text/javascript">
     $(document).ready(function() {
         Page.render('#fwTabs', '#fwTabs_template', TAB.fw);
+        Page.render('#url_default_box', '#urldefaultBox_template', DOC);
         Page.render('#fwBtns', '#fwBtns_template', DOC);
         Page.render('#default_box', '#defaultBox_template', DOC);
 
@@ -28,7 +29,8 @@
 
             var hasEnableLink = true;
             currentPannelIndex = pannelIndex;
-            if (pannelIndex == 8) {
+            if (pannelIndex == 8 || pannelIndex == 9) {
+                getUrlDefault();
                 $lblShift.hide();
                 $btnShifts.hide();
                 $btnAdd.hide();
@@ -151,6 +153,46 @@
                     $btnApply.enable();
                 }
             });
+        });
+
+
+        function getUrlDefault(){
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.FIREWALL_URL_GET,
+                    method: JSONMethod.GET
+                },
+                success:function(data){
+                    if(data.data == "ACCEPT"){
+                        $("input[value='ACCEPT']").prop("checked",true);
+                    }else if(data.data == "DROP"){
+                        $("input[value='DROP']").prop("checked",true);
+                    }
+                }
+
+            })
+
+
+        }
+
+        $("#btnSaveDefault2").on("click",function(){
+            $(this).disable();
+            var json = new Object();
+            json.cmd = RequestCmd.FIREWALL_URL_SET;
+            json.method = JSONMethod.POST;
+            json.url_default = $("input[name='acceptAll2']:checked").val();
+            Page.postJSON({
+                json:json,
+                success:function(data){
+                    if(data.success == true){
+                        AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
+                    }
+                },
+                complete:function(){
+                    $("#btnSaveDefault2").enable();
+                }
+
+            })
         });
 
         function showEditBox(data)
@@ -353,7 +395,7 @@
             hasEnableLink: true,
             pannelIndex: 0,
             selectedIndex: 0,
-            listBoxIds: ['port_box', 'ip_box', 'mac_box', 'port_mapping_box', 'url_box', 'ip_mac_binding_box', 'speed_limit_box', 'acl_box', 'default_box'],
+            listBoxIds: ['port_box', 'ip_box', 'mac_box', 'port_mapping_box', 'url_box', 'ip_mac_binding_box', 'speed_limit_box', 'acl_box', 'default_box',"url_default_box"],
             editBoxId: 'edit_box',
             btnSaveId: 'btnSaveRule',
 			lanArr:[],
@@ -373,6 +415,7 @@
                 'html/firewall/ipMacBinding.html',
                 'html/firewall/speedLimit.html',
                 'html/firewall/aclFilter.html',
+                '',
                 ''
 
             ],
@@ -1131,17 +1174,11 @@
                 $lis.eq(arr[i]).show();
             }
         }
-
         switch(Page.menuItem.cmd) {
             case RequestCmd.PORT_FILTER:
                 setLisState([0, 1, 2, 8]);
                 $lis.eq(0).click();
                 break;
-
-            // case RequestCmd.MAC_FILTER:
-            //     setLisState([2]);
-            //     $lis.eq(2).click();
-            //     break;
 
             case RequestCmd.OTHER_FILTER:
                 setLisState([3]);
@@ -1149,7 +1186,7 @@
                 break;
 
             case RequestCmd.URL_FILTER:
-                setLisState([4]);
+                setLisState([4,9]);
                 $lis.eq(4).click();
                 break;
 
@@ -1167,11 +1204,6 @@
                 setLisState([7]);
                 $lis.eq(7).click();
                 break;
-				
-			// case RequestCmd.DEFAULT_FILTER:
-            //     setLisState([8]);
-            //     $lis.eq(8).click();
-            //     break;
         }
         $detailBox.show();
     });
@@ -1190,6 +1222,7 @@
                 <li><a href="javascript:;"><%- speedLimit %></a></li>
                 <li><a href="javascript:;"><%- alcFiltering %></a></li>
                 <li><a href="javascript:;"><%- defaultSetting %></a></li>
+                <li><a href="javascript:;"><%- urlDefaulte %></a></li>
             </script>
         </ul>
     </div>
@@ -1243,6 +1276,26 @@
                 -->
             </script>
         </div>
+
+       <div id="url_default_box">
+             <script type="text/template" id="urldefaultBox_template">
+                <fieldset style="width: 60%;padding: 10px 40px;line-height: 25px;">
+                    <legend><%- lbl.ipv4FilterRule %></legend>
+                    <div>
+                        <input type="radio" name="acceptAll2" value="ACCEPT" checked="checked" />&nbsp;<%= lbl.accept %>
+                    </div>
+                    <div>
+                        <input type="radio" name="acceptAll2" value="DROP" />&nbsp;<%= lbl.reject %>
+                    </div>
+                    <br />
+                    <div class="tab_btns" >
+                        <input id="btnSaveDefault2" type="button" value="<%- btn.save %>" />
+                    </div>
+                </fieldset>
+
+            </script>
+        </div>
+
     </div>
     <div class="tab_btns" id="fwBtns">
         <script type="text/template" id="fwBtns_template">

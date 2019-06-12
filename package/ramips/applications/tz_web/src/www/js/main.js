@@ -147,7 +147,9 @@ var RequestCmd = {
     WIFI_ADVANCED_CONFIG: 243,
     WIFI5_ADVANCED_CONFIG: 244,
     WAN_MAC_GET: 245,
-    WAN_MAC_SETTINGS: 246
+    WAN_MAC_SETTINGS: 246,
+    FIREWALL_URL_GET: 247,
+    FIREWALL_URL_SET: 248
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
