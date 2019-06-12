@@ -100,7 +100,7 @@ check_is_docker()
 }
 
 download_flag=.flag_download_something_2018_12_20
-LASTDOCS=.doc20190402
+LASTDOCS=.doc20190612
 download_something()
 {
 	if [ ! -f ${download_flag} ]; then
