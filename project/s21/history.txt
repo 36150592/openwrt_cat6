@@ -1,3 +1,59 @@
+v1.08
+web: 修复了Login页左侧在小屏幕显示不完整的问题（董锡文）
+web: 完善wps功能，在wps功能中添加随机PIN码,在手机端可以输入连接(2.4g和5.8g)（向杰）
+web: 如果SIM卡锁PIN,在状态栏提示解PIN所在的地方（向杰）
+tr069: 修改MNO_WANNetConfigInfo 下节点数据 ECGI SignalQuality FrequencyPoint CQI（江义波）
+lanrecord: 解决经过lanrecord的数据包默认accept的问题，改为return（封远钊）
+防火墙：解决默认规则为拒绝时端口过滤不生效问题（封远钊）
+防火墙：解决默认规则为DROP时不生效问题（封远钊）
+防火墙：修复pin puk次数更新慢问题（封远钊）
+防火墙：解决默认规则为拒绝时ip过滤不生效问题（封远钊）
+配置：增加ntp配置（封远钊）
+web: 解决2.4G和5.8G在IE下显示不出来(由switch关键字导致)（向杰）
+web: 解决静态IP绑定和upnp在IE8不显示问题（向杰）
+防火墙：增加读取/设置 url默认规则的接口（封远钊）
+web: 实现了一个新增的System Log页面，包括读取显示系统日志和清除日志的功能（董锡文）
+web: 在开启PIN码验证和关闭PIN码验证给提醒次数，以及puk（向杰）
+dialtool2: 实现ipv4v6双栈情况下的ipv4,v6同时拨号，并支持断拨号重连.（郑达）
+web: 修复tr069和dmz等页面保存没有提醒bug（向杰）
+配置：解决锁band配置不对问题（封远钊）
+配置：增加设备型号、sn可配置字段（封远钊）
+web: 修复了页面弹出框部分显示不全的问题（董锡文）
+新增lan/wan模式切换功能（封远钊，向杰）
+web: 优化状态栏的Lan和wan，只显示对应的Lan和Wan（向杰）
+tr069: 解决SignalQuality为空的bug（江义波）
+web: 修复了main.js文件SYS_LOG重命名的问题（董锡文）
+web: 优化登录界面Login框（向杰）
+增加wan mac地址设置功能（封远钊）
+web: 解决wps设置重启wifi的bug（封远钊）
+web: 修复了状态栏内容显示不正常的问题（董锡文）
+web: 实现了APN Settings页面所有分页的Help信息内容（董锡文）
+web: 实现了新增的TR069页面右侧的的Help内容显示（董锡文）
+web: 修复了多个页面弹窗的标题内容显示问题（董锡文）
+web: 修复了Advanced Settings页面的NetWork Setting分页的字段名显示不正确问题（董锡文）
+ipv6: 在添加ipv6路由规则时，去掉匹配v6前缀从wan口出去的规则.（郑达）
+web: 解决显示sn不对问题（郑达）
+web: 实现了新增的WiFi-2.4G Settings页面的Wi-Fi Advanced Settings分页的所有内容显示（董锡文）
+web: 优化系统信息中状态信息没加载数据前，帮助信息跑到右边来（向杰）
+web: 配置控制2.4g和5.8g辅wifi（向杰）
+wifi: 设置2.4g wifi默认规则,ZLT S21-2.4G-XXXXXX（郑达）
+wifi: 完善5.8g wifi的配置设置（郑达）
+web: 修复了WiFi Infomation页面右侧的内容显示不正确问题（董锡文）
+web: 修复了WiFi-2.4G页面所有分页右侧的help信息显示问题（董锡文）
+web: 实现了新增的WiFi-5G Settings页面的Wi-Fi Advanced Settings分页的所有内容显示（董锡文）
+web: 修复了WiFi-2.4G Settings页面和WiFi-5G Settings页面的Wi-Fi Access Control分页和WPS Settings分页点击保存会跳转页面的问题（董锡文）
+产测工具：解决写sn号位置不正确问题（封远钊）
+设置自动拨号为默认拨号方式（封远钊）
+tr069: 解决cpe_set_EnableCWMP函数不能被调用问题（江义波）
+tr069: 解决PeriodicInformEnable设置问题（江义波）
+web: 实现了将Firewall模块下的Default Settings页面和MAC Filter页面合并到Filtering Rules页面（董锡文）
+web: 整理了WiFi-2.4G Settings页面的Wi-Fi Advanced Settings分页的Wi-Fi Mode字段（董锡文）
+web: wps功能中PBC和PIN码分开设置（向杰）
+web: 在设备设置中添加WAN配置网页(即MAC克隆)（向杰）
+
+
+
+
 v1.07
 web: 新增info页面（董锡文）
 web: 修正login页面内容显示（董锡文）
