@@ -1053,7 +1053,7 @@ end
 
 function firewall_module.firewall_get_url_default_action()
 
-	local cmd =  string.format("'iptables -I INPUT -p udp -m udp --dport 53 -j DROP##%s'",FIREWALL_URL_DEFAULT_ACTION)
+	local cmd =  string.format("'iptables -I INPUT -p udp -m udp --dport 53 -j DROP ##%s'",FIREWALL_URL_DEFAULT_ACTION)
 	local f = io.popen("cat ".. FIREWALL_CUSTOM_CONFIG_FILE .. " | grep ^"..cmd.." | wc -l")
 	if nil ~= f
 	then
