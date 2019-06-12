@@ -37,7 +37,7 @@ static void imei_handle(char* get_buf, char* set_buf)
 	memset(t_receive_buf, 0, sizeof(t_receive_buf));
 
 	//get imei
-	if(strlen(get_buf) < 5)
+	if(strlen(get_buf) < 6)
 	{
 		print(">>>>>>read imei");
 		char imei_in_modem[20] = "";
@@ -348,15 +348,15 @@ static void update_config_handle(char* get_buf, char* set_buf)
 int s21_precess(char* receive_buf, char* send_message)
 {
 	print("in s21_precess\n");
-	if(strstr(receive_buf,"imei"))
+	if(strstr(receive_buf,"imei "))
 		imei_handle(receive_buf,send_message);
-	else if(strstr(receive_buf,"mac"))
+	else if(strstr(receive_buf,"mac "))
 		mac_handle(receive_buf,send_message);
-	else if(strstr(receive_buf,"sn"))
+	else if(strstr(receive_buf,"sn "))
 		sn_handle(receive_buf,send_message);
-	else if(strstr(receive_buf,"upgrade_system"))
+	else if(strstr(receive_buf,"upgrade_system "))
 		upgrade_system_handle(receive_buf,send_message);
-	else if(strstr(receive_buf,"update_config"))
+	else if(strstr(receive_buf,"update_config "))
 		update_config_handle(receive_buf,send_message);
 	else
 		return FALSE;
