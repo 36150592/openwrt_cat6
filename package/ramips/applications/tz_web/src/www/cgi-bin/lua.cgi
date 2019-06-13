@@ -2368,6 +2368,8 @@ function get_login_info()
     data_array["factory_imei"] = system.system_get_tozed_factory_info()['imei'] 
     data_array["software_version"] = system.system_get_tozed_system_info()['software_version'] 
     data_array["config_version"] = system.system_get_tozed_system_info()['config_version']
+    data_array["device_sn"] = system.system_get_tozed_system_info()['device_sn'] 
+    data_array["version_type"] = system.get_divice_version()['type']
     data_array["modem_act"] = modem.modem_get_status()['act'] 
     data_array["modem_rsrp"] = modem.modem_get_status()['rsrp']
     data_array["modem_rssi"] = modem.modem_get_status()['rssi'] 

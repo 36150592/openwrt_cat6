@@ -190,14 +190,24 @@
                             netState = getNetState(datas.modem_act);
                 
 
-
+                        names_device.push(DOC.device.model);
                         names_device.push(DOC.device.softwarVersion);
                         names_device.push(DOC.device.configVersion);
                         names_device.push(DOC.device.imei);
+                        names_device.push(DOC.device.sn);
 
+                        values_device.push(datas.version_type || loading);
                         values_device.push(datas.software_version || loading);
                         values_device.push(datas.config_version || loading);
                         values_device.push(datas.factory_imei || loading);
+                        var sn = loading;
+                        if(!!datas.device_sn){
+                            sn = datas.device_sn
+                        }
+                        else if(datas.version_type && datas.factory_imei){
+                            sn = datas.version_type + datas.factory_imei
+                        }
+                        values_device.push(sn);
 
                   
                         if (!!datas.wan_ipaddr) {
