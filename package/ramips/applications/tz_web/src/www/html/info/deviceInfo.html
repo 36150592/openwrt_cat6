@@ -16,7 +16,9 @@
                     names.push(device.configVersion);
 					names_run.push(DOC.lbl.runtime);
                     names_run.push(DOC.lbl.loadAvg);
-                    names_run.push(DOC.lbl.memory);
+                    names_run.push(DOC.lbl.memoryTotal);
+                    names_run.push(DOC.lbl.memoryFree);
+                    names_run.push(DOC.lbl.memoryCache);
 
 					if(Page.Level == 1){
 						names.push(device.inlinesoftVersion);
@@ -77,9 +79,9 @@
                     var runtime = ConvertUtil.timeStamp(data_system.runtime || 0);
                     values_run.push(runtime);
                     values_run.push((data_system.cpu_average1 || loading) + ", " + (data_system.cpu_average5 || loading) + ", " + (data_system.cpu_average15 || loading));
-                    values_run.push("MemTotal "+ (data_system.mem_total ? FormatUtil.formatField(data_system.mem_total, 'KB') : loading) +
-                                    "MemFree " + (data_system.mem_free ? FormatUtil.formatField(data_system.mem_free, 'KB') : loading) +
-                                    "Cached  " + (data_system.mem_cache ? FormatUtil.formatField(data_system.mem_cache, 'KB') : loading));
+                    values_run.push(data_system.mem_total ? FormatUtil.formatField(data_system.mem_total, 'KB') : loading);
+                    values_run.push(data_system.mem_free ? FormatUtil.formatField(data_system.mem_free, 'KB') : loading);
+                    values_run.push(data_system.mem_cache ? FormatUtil.formatField(data_system.mem_cache, 'KB') : loading);
 
 
                     var sys_html = Page.createTable(DOC.title.device, names, values, names.length, 2).replace("<td>", "<td style=\"width:32%;\">");
