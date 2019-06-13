@@ -1335,6 +1335,11 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="隐藏"/>
 		<default value="0"/>
 	</config>
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_16" type="select" bit_offset="16" bit_count="1" description="WEB 普通用户显示 WAN配置 菜单" detail="WEB 普通用户显示 WAN配置 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
 
 	 <config name="TZWEB_USER_SHOW_HIDE_PREF" type="bitcomposite" format="hex" lower_case="false" description="web普通用户网页显示-隐藏设置" detail="web普通用户网页显示-隐藏设置" class_name="MODEM_CONFIG_FIELD">
 		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_0"/>
@@ -1353,6 +1358,7 @@ class_name="MODEM_CONFIG_FIELD">
 		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_13"/>
 		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_14"/>
 		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_15"/>
+		<depend value="TZ_WEB_SHOW_HIDE_USER_PREF_16"/>
 		<default value="0"/>
 	</config>
 
@@ -1451,7 +1457,11 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="隐藏"/>
 		<default value="0"/>
 	</config>
-
+	<config name="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_16" type="select" bit_offset="16" bit_count="1" description="WEB 高级用户显示 WAN配置 菜单" detail="WEB 高级用户显示 WAN配置 菜单" class_name="WEB_CONFIG_FIELD">
+		<option value="1" description="显示"/>
+		<option value="0" description="隐藏"/>
+		<default value="0"/>
+	</config>
 	 <config name="TZWEB_OPERATOR_SHOW_HIDE_PREF" type="bitcomposite" format="hex" lower_case="false" description="web高级用户网页显示-隐藏设置" detail="web高级用户网页显示-隐藏设置" class_name="MODEM_CONFIG_FIELD">
 		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_0"/>
 		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_1"/>
@@ -1469,6 +1479,7 @@ class_name="MODEM_CONFIG_FIELD">
 		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_13"/>
 		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_14"/>
 		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_15"/>
+		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_16"/>
 		<default value="0"/>
 	</config>
 	
