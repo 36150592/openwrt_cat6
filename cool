@@ -217,7 +217,7 @@ if [ -f ${TOPDIR}/project/${project}/key-message ]; then
 	if [ ${project} = "w13" ]; then
 		echo "type=P11IDU" >> ${TOPDIR}/project/${project}/rootfs/version
 	else
-		echo "type=${project}" >> ${TOPDIR}/project/${project}/rootfs/version
+		echo "projectType=${project}" >> ${TOPDIR}/project/${project}/rootfs/version
 	fi
 	echo "branch=${TZ_BRANCH_NAME}" >> ${TOPDIR}/project/${project}/rootfs/version
 	echo "os=${TZ_RELEASE_NAME}" >> ${TOPDIR}/project/${project}/rootfs/version
