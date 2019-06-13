@@ -198,6 +198,7 @@
         });
         var clearTimeout2;
         function getRandomCode(time) {
+          clearTimeout(clearTimeout2);
           if(time > 0){
                 time --;
                 $("#pinTime").text(time);
