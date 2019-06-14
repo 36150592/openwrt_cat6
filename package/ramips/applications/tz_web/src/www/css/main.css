@@ -846,13 +846,13 @@ ul, ul li {
 
 #menu li.current a {
 	color: #0085D0;
-	background: url("../images/anhui/arrow.gif") no-repeat 6px 10px;
+	background: url("../images/anhui/arrow.gif") no-repeat 6px 9px;
 	background-color: #CADBF0;
 }
 
 #menu li a:hover {
 	color: #990000;
-	background: url("../images/anhui/arrow.gif") no-repeat 6px 12px;
+	background: url("../images/anhui/arrow.gif") no-repeat 6px 9px;
 	background-color: #fff;
 }
 
