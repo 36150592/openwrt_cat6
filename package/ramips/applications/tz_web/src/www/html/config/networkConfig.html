@@ -32,7 +32,7 @@
             var sb = new StringBuilder();
 
             sb.append(String.format('<table class="list" cellspacing="0"  style="margin-top: 0px"><tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3}</th><th>{4}</th></tr>',
-                DOC.table.rowNo, DOC.device.name, DOC.net.mac, DOC.net.ip, DOC.net.connectionTime));
+                DOC.table.rowNo, DOC.net.host, DOC.net.mac, DOC.net.ip, DOC.net.disConnectionTime));
             for (var i = 0; i < length; i++) {
                 var item = ipMacs[i];
                 sb.append(String.format('<tr><td>{0}</td>', i + 1));
