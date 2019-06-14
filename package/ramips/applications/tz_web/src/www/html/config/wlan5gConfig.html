@@ -194,17 +194,20 @@
                 }
             });
         });
-        var clearTimeout2;
+        var clearTimeout2 = null;
         function getRandomCode(time) {
-          clearTimeout(clearTimeout2);
+          if(clearTimeout2) {
+              window.clearTimeout(clearTimeout2);
+              clearTimeout2 = null;
+          }  
           if(time > 0){
                 time --;
                 $("#pinTime").text(time);
           }else{
                 $("#btnClose").click();
-                clearTimeout(clearTimeout2);
+                return
           }
-           clearTimeout2 = setTimeout(function() { 
+           clearTimeout2 = window.setTimeout(function() { 
                getRandomCode(time);
            },1000);
         }
