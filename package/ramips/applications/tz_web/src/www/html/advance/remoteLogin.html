@@ -173,6 +173,8 @@
             $mask.show();
             $btnSaveIp.hide();
             $btnEditIp.show();
+            $btnSaveIp2.hide();
+            $btnEditIp2.hide();
             $('#edit_title').text(DOC.table.edit + DOC.lbl.remoteIp);
             SysUtil.setBoxStyle1($box);
             $('#ipList').val($(this).parent().parent().children('td').eq(0).text());
@@ -185,7 +187,7 @@
             $mask.show();
             $btnSaveIp.hide();
             $btnEditIp.hide();
-            $btnSaveIp.hide();
+            $btnSaveIp2.hide();
             $btnEditIp2.show();
             $('#edit_title').text(DOC.table.edit + DOC.lbl.remoteIp);
             SysUtil.setBoxStyle1($box);
