@@ -26,7 +26,7 @@
             var sb = new StringBuilder();
 
             sb.append(String.format('<table class="list" cellspacing="0"><tr><th>{0}</th><th>{1}</th><th>MAC<th>{2}</th></th><th>SSID</th><th>{3}</th></tr>',
-                showText.no,DOC.device.name,DOC.net.ip,showText.rate));
+                showText.no,DOC.net.host,DOC.net.ip,showText.rate));
             for (var i = 0; i < length; i++) {
                 var item = macInfos[i];
                 var ipaddr = "-",name = "-";
