@@ -343,7 +343,7 @@
                             $('#encryptAlgorithm').attr('old',data.encryption.substring(encryp.length +1));
                             Page.setFormFieldValue2("key", data.key);
 
-
+                            $('#btnSave').attr("disabled",false);
                         }
                     });
                     break;
@@ -507,22 +507,22 @@
                 delete json["ssid"];
                 count++;
             }
-            if(json.channel ==  $("#channel").attr('old')){
-                delete json["channel"];
-                count++;
-            }
-            if(json.wifiWorkMode ==  $("#wifiWorkMode").attr('old')){
-                delete json["wifiWorkMode"];
-                count++;
-            }
-            if(json.bandWidth ==  $("#bandWidth").attr('old')){
-                delete json["bandWidth"];
-                count++;
-            }
-            if(json.maxStation ==  $("#maxStation").attr('old')){
-                delete json["maxStation"];
-                count++;
-            }
+            // if(json.channel ==  $("#channel").attr('old')){
+            //     delete json["channel"];
+            //     count++;
+            // }
+            // if(json.wifiWorkMode ==  $("#wifiWorkMode").attr('old')){
+            //     delete json["wifiWorkMode"];
+            //     count++;
+            // }
+            // if(json.bandWidth ==  $("#bandWidth").attr('old')){
+            //     delete json["bandWidth"];
+            //     count++;
+            // }
+            // if(json.maxStation ==  $("#maxStation").attr('old')){
+            //     delete json["maxStation"];
+            //     count++;
+            // }
             if(json.authenticationType == $("#authenticationType").attr('old')){
                 delete json["authenticationType"];
                 count++;
@@ -533,7 +533,7 @@
                 delete json["encryptAlgorithm"];
                 count++;
             }
-            if(count == 11){
+            if(count == 7){
                 AlertUtil.alertMsg(CHECK.required.noChanges);
                 $(this).attr("disabled",false);
                 return false;
@@ -545,10 +545,10 @@
                 success: function(data) {
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(0).click();
-                },
-                complete: function(){
-                    $('#btnSave').attr("disabled",false);
                 }
+                // complete: function(){
+                //     $('#btnSave').attr("disabled",false);
+                // }
             });
 
         });

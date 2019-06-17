@@ -346,12 +346,12 @@
                             }
                             $wmm.attr('old',data.wmm ||  0);
 
-                            Page.setFormFieldValue2("txPower", data.txpower);
-                            Page.setFormFieldValue2("maxStation", data.maxassoc);
-                            Page.setFormFieldValue2("channel", data.channel);
+                            // Page.setFormFieldValue2("txPower", data.txpower);
+                            // Page.setFormFieldValue2("maxStation", data.maxassoc);
+                            // Page.setFormFieldValue2("channel", data.channel);
                             Page.setFormFieldValue2("ssid", data.ssid);
-                            Page.setFormFieldValue2("wifiWorkMode", data.mode);
-                            Page.setFormFieldValue2("ht", data.ht);
+                            // Page.setFormFieldValue2("wifiWorkMode", data.mode);
+                            // Page.setFormFieldValue2("ht", data.ht);
                             var encryp = data.encryption.split("+")[0];
                             var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
                             Page.setFormFieldValue2("authenticationType", encryp);
@@ -359,6 +359,7 @@
                             $('#encryptAlgorithm').attr('old',data.encryption.substring(encryp.length +1));
                             Page.setFormFieldValue2("key", data.key);
 
+                            $('#btnSave').attr("disabled",false);
                         }
                     });
                     break;
@@ -525,26 +526,26 @@
                 delete json["ssid"];
                 count++;
             }
-            if(json.txPower ==  $("#txPower").attr('old')){
-                delete json["txPower"];
-                count++;
-            }
-            if(json.maxStation ==  $("#maxStation").attr('old')){
-                delete json["maxStation"];
-                count++;
-            }
-            if(json.channel ==  $("#channel").attr('old')){
-                delete json["channel"];
-                count++;
-            }
-            if(json.wifiWorkMode ==  $("#wifiWorkMode").attr('old')){
-                delete json["wifiWorkMode"];
-                count++;
-            }
-            if(json.ht ==  $("#ht").attr('old')){
-                delete json["ht"];
-                count++;
-            }
+            // if(json.txPower ==  $("#txPower").attr('old')){
+            //     delete json["txPower"];
+            //     count++;
+            // }
+            // if(json.maxStation ==  $("#maxStation").attr('old')){
+            //     delete json["maxStation"];
+            //     count++;
+            // }
+            // if(json.channel ==  $("#channel").attr('old')){
+            //     delete json["channel"];
+            //     count++;
+            // }
+            // if(json.wifiWorkMode ==  $("#wifiWorkMode").attr('old')){
+            //     delete json["wifiWorkMode"];
+            //     count++;
+            // }
+            // if(json.ht ==  $("#ht").attr('old')){
+            //     delete json["ht"];
+            //     count++;
+            // }
             if(json.authenticationType == $("#authenticationType").attr('old')){
                 delete json["authenticationType"];
                 count++;
@@ -555,7 +556,7 @@
                 delete json["encryptAlgorithm"];
                 count++;
             }
-            if(count == 12){
+            if(count == 7){
                 AlertUtil.alertMsg(CHECK.required.noChanges);
                 $(this).attr("disabled",false);
                 return false;
@@ -567,10 +568,10 @@
                 success: function(data) {
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(0).click();
-                },
-                complete: function(){
-                    $('#btnSave').attr("disabled",false);
                 }
+                // complete: function(){
+                //     $('#btnSave').attr("disabled",false);
+                // }
             });
 
         });
