@@ -1,0 +1,98 @@
+Index: odhcpd-2015-11-19/src/config.c
+===================================================================
+--- odhcpd-2015-11-19.orig/src/config.c
++++ odhcpd-2015-11-19/src/config.c
+@@ -583,6 +583,7 @@ void odhcpd_reload(void)
+ 		clean_interface(i);
+ 
+ 	struct uci_package *dhcp = NULL;
++	struct uci_package *network = NULL;
+ 	if (!uci_load(uci, "dhcp", &dhcp)) {
+ 		struct uci_element *e;
+ 		uci_foreach_element(&dhcp->sections, e) {
+@@ -608,10 +609,77 @@ void odhcpd_reload(void)
+ 	bool any_dhcpv6_slave = false, any_ra_slave = false, any_ndp_slave = false;
+ 
+ 	// Test for
++	uci_load(uci, "network", &network);
+ 	list_for_each_entry(i, &interfaces, head) {
+ 		if (i->master)
+ 			continue;
+ 
++		//read dns from /tmp/resolv.conf.auto
++	    char wan_section_name[64] = {0};
++	    if(network != NULL){
++	      struct uci_element *e;
++	      uci_foreach_element(&network->sections, e) {
++	        struct uci_section *s = uci_to_section(e);
++	        if (!strcmp(s->type, "interface"))
++	        {
++	          
++	          const char * value1 = NULL;
++	          const char * value2 = NULL;
++	          value1 = uci_lookup_option_string(uci, s, "route_lan_section");
++	          value2 = uci_lookup_option_string(uci, s, "proto");
++	          if(value1 && strcmp(value1 ,i->name) == 0 &&
++	            value2 && strcmp(value2,"dhcpv6") == 0)
++	          {
++	            strcpy(wan_section_name, s->e.name);
++	          }
++	        }
++	      }
++
++	    }
++
++	    if(wan_section_name[0] != 0)
++	    {
++	      FILE* resolv_fd=fopen("/tmp/resolv.conf.auto","r+");
++	      char resolv_buffer[1024] = {0};
++	      bool is = false;
++	      while(fgets(resolv_buffer, 1024, resolv_fd))
++	      {
++	        if(strstr(resolv_buffer,wan_section_name) != NULL)
++	        {
++	        	is = true;
++	        	continue;
++	        }
++
++	        if(is && strstr(resolv_buffer,"#") != NULL)
++	        {
++	        	is = false;
++	        	continue;
++	        }
++	    
++	        if(is)
++	        {
++	          
++				char *p = strtok(resolv_buffer, " ");
++				p = strtok(NULL, " ");
++				i->dns = realloc(i->dns,(++i->dns_cnt) * sizeof(*i->dns));
++				if (!i->dns)
++					continue;
++				struct in6_addr addr6;
++				p[strlen(p)-1] = 0;
++				int ret =inet_pton(AF_INET6, p, &addr6);
++				if(1 == ret )
++				{
++				i->dns[i->dns_cnt - 1] = addr6;
++				}
++	          
++	        }
++	        
++	      }
++
++	    	fclose(resolv_fd);
++	    }
++
++
+ 		if (i->dhcpv6 == RELAYD_HYBRID || i->dhcpv6 == RELAYD_RELAY)
+ 			any_dhcpv6_slave = true;
+ 
+@@ -681,6 +749,7 @@ void odhcpd_reload(void)
+ 	}
+ 
+ 	uci_unload(uci, dhcp);
++	uci_unload(uci,network);
+ 	uci_free_context(uci);
+ }
+ 

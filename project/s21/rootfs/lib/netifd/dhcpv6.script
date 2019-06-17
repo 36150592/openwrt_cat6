@@ -6,6 +6,7 @@
 d_log()
 {
         #echo "$@" >> /tmp/ipv6.log
+        echo -n ""
 }
 
 setup_interface () {
@@ -14,6 +15,20 @@ setup_interface () {
 
 	d_log "in dns...\n"
 	
+	local lan_section=`uci get network.$INTERFACE.route_lan_section`
+	if [ $lan_section"" == "" ];then
+		local wan_inter=`uci get network.$INTERFACE.ifname`
+		if [ $wan_inter"" == "bmwan0" ];then
+			lan_section="lan"
+		elif [ $wan_inter"" == "bmwan1" ];then
+			lan_section="lan1"
+		elif [ $wan_inter"" == "bmwan2" ];then
+			lan_section="lan2"
+		else
+			lan_section="lan1"
+		fi
+	fi
+
 	# Merge RA-DNS
 	for radns in $RA_DNS; do
 		d_log "    in radns: $radns"
@@ -25,10 +40,13 @@ setup_interface () {
 		[ "$duplicate" = 0 ] && RDNSS="$RDNSS $radns"
 	done
 
+	#uci delete dhcp.${lan_section}.dns
 	for dns in $RDNSS; do
 		d_log "    in dns for two: $dns"
+		#uci add_list dhcp.${lan_section}.dns=$dns
 		proto_add_dns_server "$dns"
 	done
+	#uci commit
 
 	for radomain in $RA_DOMAINS; do
 		d_log "in radomain: $radomain"
@@ -153,10 +171,13 @@ setup_interface () {
 
 		if [ -z "$gw" -o "$duplicate" = 1 ]; then
 			d_log "            add ipv6 route 1: " "$addr" "$mask" "$gw" "$metric" "$valid"
+			ip addr add ${addr}/$mask dev br-${lan_section}
 			#proto_add_ipv6_route "$addr" "$mask" "$gw" "$metric" "$valid"
 		else
 			for prefix in $PREFIXES $ADDRESSES; do
 				local paddr="${prefix%%,*}"
+				d_log "lan-addr = ${paddr%:*/*}"
+				ip addr add ${paddr%:*/*}/${paddr##*/} dev br-${lan_section}
 				d_log "            add ipv6 route 2: " "$addr" "$mask" "$gw" "$metric" "$valid" "$paddr"
 				proto_add_ipv6_route "$addr" "$mask" "$gw" "$metric" "$valid" "$paddr"
 			done
@@ -176,6 +197,8 @@ setup_interface () {
 
 	d_log ">>>>>>>>will send_update to $INTERFACE"
 	proto_send_update "$INTERFACE"
+
+
 
 	MAPTYPE=""
 	MAPRULE=""
