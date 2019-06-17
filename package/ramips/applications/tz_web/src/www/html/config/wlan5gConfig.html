@@ -33,8 +33,8 @@
             var length = macInfos.length;
             var sb = new StringBuilder();
 
-            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>{0}</th><th>{1}</th><th>{2}</th><th>MAC<th>{3}</th></th><th>SSID</th><th>{4}</th></tr>',
-                showText.no,showText.edit,DOC.net.host,DOC.net.ip,showText.rate));
+            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>{0}</th><th>{1}</th><th>MAC<th>{2}</th></th><th>SSID</th><th>{3}</th></tr>',
+                showText.no,DOC.net.host,DOC.net.ip,showText.rate));
             for (var i = 0; i < length; i++) {
                 var item = macInfos[i];
                 var ipaddr = "-",name = "-";
@@ -47,7 +47,7 @@
                     }
                 }
                 sb.append(String.format('<tr><td>{0}</td>', i + 1));
-                sb.append(String.format('<td><a id="edit{0}" href="javascript:;">{1}</a></td>', i, showText.edit));
+                // sb.append(String.format('<td><a id="edit{0}" href="javascript:;">{1}</a></td>', i, showText.edit));
                 sb.append(String.format('<td id="name{0}">{1}</td>', i,name ));
                 sb.append(String.format('<td id="mac{0}">{1}</td>', i, item.mac));
                 sb.append(String.format('<td id="ip{0}">{1}</td>', i,ipaddr ));
