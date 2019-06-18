@@ -4,7 +4,7 @@ PKG_NAME:=libosip2-4.1.0
 PKG_RELEASE:=1
 
 
-PKG_BUILD_DIR := $(BUILD_DIR)/customer/$(PKG_NAME)
+PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 PKG_BUILD_DEPENDS :=
 CMAKE_INSTALL:=0
 PKG_FIXUP:=autoreconf
@@ -14,11 +14,11 @@ include $(INCLUDE_DIR)/package.mk
 #TARGET_LDFLAGS+=-L$(BUILD_DIR)/sequans-apps-r4.1.x/obj/host/openwrt/lib
 #TARGET_CFLAGS+=-I$(BUILD_DIR)/sequans-apps-r4.1.x/obj/host/openwrt/include -DSQN_HOST -DSQN_NO_CVT -L$(BUILD_DIR)/sequans-apps-r4.1.x/obj/host/openwrt/lib
 #TARGET_CFLAGS+=-I$(STAGING_DIR)/usr/sqn/include -DSQN_HOST -DSQN_NO_CVT -L$(STAGING_DIR)/usr/lib
-TARGET_CFLAGS+=-I$(STAGING_DIR)/usr/sqn/include -DSQN_HOST -DSQN_NO_CVT -L$(STAGING_DIR)/usr/sqn/lib
-TARGET_CFLAGS += -I ${STAGING_DIR}/usr/include/libxml2
-TARGET_CFLAGS += -I ${STAGING_DIR}/usr/include/cmdlib
+#TARGET_CFLAGS+=-I$(STAGING_DIR)/usr/sqn/include -DSQN_HOST -DSQN_NO_CVT -L$(STAGING_DIR)/usr/sqn/lib
+#TARGET_CFLAGS += -I ${STAGING_DIR}/usr/include/libxml2
+#TARGET_CFLAGS += -I ${STAGING_DIR}/usr/include/cmdlib
 
-MAKE_FLAGS += EXTRA_LDFLAGS_FOR_LINK_CMDLIB="-lcmdlib"
+#MAKE_FLAGS += EXTRA_LDFLAGS_FOR_LINK_CMDLIB="-lcmdlib"
 
 CONFIGURE_ARGS += --prefix=/usr --disable-shared \
 	--enable-static \
@@ -35,10 +35,11 @@ CONFIGURE_ARGS += --prefix=/usr --disable-shared \
 	--disable-minisize
 
 define Package/libosip2-4.1.0
-  SECTION:=cpe
-  CATEGORY:=CPE
+  SECTION:=MTK Properties
+  CATEGORY:=MTK Properties
   DEPENDS:=
   TITLE:=libosip2-4.1.0
+  SUBMENU:=Applications
 endef
 
 define Package/libosip2-4.1.0/description

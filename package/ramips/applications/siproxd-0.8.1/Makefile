@@ -4,20 +4,12 @@ PKG_NAME:=siproxd-0.8.1
 PKG_RELEASE:=1
 
 
-PKG_BUILD_DIR := $(BUILD_DIR)/customer/$(PKG_NAME)
-PKG_BUILD_DEPENDS :=
-CMAKE_INSTALL:=0
+PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
 include $(INCLUDE_DIR)/package.mk
 
-#TARGET_LDFLAGS+=-L$(BUILD_DIR)/sequans-apps-r4.1.x/obj/host/openwrt/lib
-#TARGET_CFLAGS+=-I$(BUILD_DIR)/sequans-apps-r4.1.x/obj/host/openwrt/include -DSQN_HOST -DSQN_NO_CVT -L$(BUILD_DIR)/sequans-apps-r4.1.x/obj/host/openwrt/lib
-#TARGET_CFLAGS+=-I$(STAGING_DIR)/usr/sqn/include -DSQN_HOST -DSQN_NO_CVT -L$(STAGING_DIR)/usr/lib
-TARGET_CFLAGS+=-I$(STAGING_DIR)/usr/sqn/include -DSQN_HOST -DSQN_NO_CVT -L$(STAGING_DIR)/usr/sqn/lib
-TARGET_CFLAGS += -I ${STAGING_DIR}/usr/include/libxml2
-TARGET_CFLAGS += -I ${STAGING_DIR}/usr/include/cmdlib
-
-MAKE_FLAGS += EXTRA_LDFLAGS_FOR_LINK_CMDLIB="-lcmdlib"
+#TARGET_CFLAGS+=-I$(STAGING_DIR)/usr/sqn/include -DSQN_HOST -DSQN_NO_CVT -L$(STAGING_DIR)/usr/sqn/lib
+#TARGET_CFLAGS += -I ${STAGING_DIR}/usr/include/libxml2
 
 CONFIGURE_ARGS += -disable-shared \
 				--prefix=/usr \
@@ -28,10 +20,11 @@ CONFIGURE_ARGS += -disable-shared \
 
 
 define Package/siproxd-0.8.1
-  SECTION:=cpe
-  CATEGORY:=CPE
+  SECTION:=MTK Properties
+  CATEGORY:=MTK Properties
   DEPENDS:=+libltdl +libpthread libosip2-4.1.0
   TITLE:=siproxd-0.8.1
+  SUBMENU:=Applications
 endef
 
 define Package/siproxd-0.8.1/description
