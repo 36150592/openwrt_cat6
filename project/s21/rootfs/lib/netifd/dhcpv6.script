@@ -9,15 +9,49 @@ d_log()
         echo -n ""
 }
 
+local wan_sections_v6=""
+load_interface() {
+        local cfgfile="$1"
+        DEVICES=
+        config_cb() {
+                local type="$1"
+                local section="$2"
+
+                config_get TYPE "$CONFIG_SECTION" TYPE
+                case "$TYPE" in
+                        interface)
+							local type=""
+			                config_get proto "$CONFIG_SECTION" proto
+
+							if [ $proto"" == "dhcpv6" -a $CONFIG_SECTION"" != "loopback" -a `echo $wan_interfaces | grep $ifname |wc -l ` == "0" ]
+							then
+		                        wan_sections_v6="$wan_sections_v6 $CONFIG_SECTION"
+							fi                                    
+                        ;;
+                esac                     
+        }                                
+        config_load "${cfgfile:-network}"
+}        
+
+
 setup_interface () {
 	local device="$1"
 	proto_init_update "*" 1
 
 	d_log "in dns...\n"
 	
+	load_interface
 	local lan_section=`uci get network.$INTERFACE.route_lan_section`
+	local wan_inter=`uci get network.$INTERFACE.ifname`
+	local primary_apn=`uci get network.$INTERFACE.primary_apn`
+	local land_wan=`uci get network.$INTERFACE.land_wan`
+	local next_holt=""
+	local lan_prefix=""
+	local table_num=10
+	local is_set_addr=true
+	local is_set_route=true
 	if [ $lan_section"" == "" ];then
-		local wan_inter=`uci get network.$INTERFACE.ifname`
+		
 		if [ $wan_inter"" == "bmwan0" ];then
 			lan_section="lan"
 		elif [ $wan_inter"" == "bmwan1" ];then
@@ -28,6 +62,39 @@ setup_interface () {
 			lan_section="lan1"
 		fi
 	fi
+
+	[ `cat /etc/iproute2/rt_tables | grep "${wan_inter}_v6" | wc -l` == "0" ] && {
+
+		while [ `cat /etc/iproute2/rt_tables | grep "^$table_num	" | wc -l` != 0 ]
+		do
+			table_num=$(($table_num+1))
+		done				
+		echo "$table_num	${wan_inter}_v6" >> /etc/iproute2/rt_tables 
+	}	
+
+	[ $land_wan"" != "1"  ] && {
+
+		if [ $primary_apn"" == "1" ];then
+			local land_inter=""
+			for temp in $wan_sections_v6
+			do
+				config_get xland_wan $temp land_wan
+				if [ $xland_wan"" == "1" ];then
+					config_get land_inter $temp ifname
+				fi
+			done
+
+			if [ `ip -6 route | grep "default" | grep $land_inter"" | wc -l ` != "0" ];then
+				is_set_addr=false
+				is_set_route=false
+			fi
+		else
+			is_set_addr=true
+			is_set_route=false
+		fi
+
+	}
+
 
 	# Merge RA-DNS
 	for radns in $RA_DNS; do
@@ -147,6 +214,7 @@ setup_interface () {
 	d_log "    3--RA_ADDRESSES = $RA_ADDRESSES" 
 	d_log "    3--ADDRESSES = $ADDRESSES"
 
+
 	for entry in $RA_ROUTES; do
 		d_log "        in entry 3: $entry"
 		local duplicate=0
@@ -171,15 +239,33 @@ setup_interface () {
 
 		if [ -z "$gw" -o "$duplicate" = 1 ]; then
 			d_log "            add ipv6 route 1: " "$addr" "$mask" "$gw" "$metric" "$valid"
-			ip addr add ${addr}/$mask dev br-${lan_section}
+			lan_prefix=${addr}/$mask
+			
+			[ $is_set_addr == true ] && {
+				if [ `echo ${addr}/$mask | grep "::/" | wc -l ` -gt 0 ];then
+
+					for temp in `ip addr show dev  br-${lan_section} | grep inet6 | grep global  |  awk '{print $2}'`
+					do
+						ip addr del $temp dev br-${lan_section}
+					done
+
+					ip addr add ${addr}/$mask dev br-${lan_section}
+				fi
+			}
+
+	
 			#proto_add_ipv6_route "$addr" "$mask" "$gw" "$metric" "$valid"
 		else
 			for prefix in $PREFIXES $ADDRESSES; do
-				local paddr="${prefix%%,*}"
-				d_log "lan-addr = ${paddr%:*/*}"
-				ip addr add ${paddr%:*/*}/${paddr##*/} dev br-${lan_section}
+				#local paddr="${prefix%%,*}"
+				#d_log "lan-addr = ${paddr%:*/*}"
+				#ip addr add ${paddr%:*/*}/${paddr##*/} dev br-${lan_section}
+				next_holt=$gw
 				d_log "            add ipv6 route 2: " "$addr" "$mask" "$gw" "$metric" "$valid" "$paddr"
-				proto_add_ipv6_route "$addr" "$mask" "$gw" "$metric" "$valid" "$paddr"
+				[ $is_set_route == true ] && {
+					d_log "set route ..."
+					proto_add_ipv6_route "$addr" "$mask" "$gw" "$metric" "$valid" "$paddr"
+				}
 			done
 		fi
 	done
@@ -198,7 +284,21 @@ setup_interface () {
 	d_log ">>>>>>>>will send_update to $INTERFACE"
 	proto_send_update "$INTERFACE"
 
+	if [ $next_holt"" != "" -a ${lan_prefix}"" != "" ];then
+		d_log "setup ip -6 rule next_holt = ${next_holt} lan_prefix = ${lan_prefix}"
+		ip -6 route flush table ${wan_inter}_v6	
+		ip -6 route add table ${wan_inter}_v6 default via $next_holt dev $wan_inter proto static  metric 512
+		ip -6 route add table  ${wan_inter}_v6 ${lan_prefix} dev br-${lan_section} proto static  metric 256
+		
+		ip -6 rule del lookup ${wan_inter}_v6
+		while [ $? -eq 0 ]
+		do
+			ip -6 rule del lookup ${wan_inter}_v6
+		done
 
+		ip -6 rule add from ${lan_prefix} lookup ${wan_inter}_v6
+		ip -6 rule add to ${lan_prefix} lookup ${wan_inter}_v6
+	fi
 
 	MAPTYPE=""
 	MAPRULE=""

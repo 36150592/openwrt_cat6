@@ -194,6 +194,8 @@ dial_mutilapn2()
 . /lib/functions.sh
 local wan_interfaces=""
 local wan_sections=""
+local wan_sections_v6=""
+local wan_interfaces_v6=""
 load_interface() {
         local cfgfile="$1"
         DEVICES=
@@ -207,12 +209,18 @@ load_interface() {
 						local type=""
 						local ifname=""
 		                config_get ifname "$CONFIG_SECTION" ifname
+		                config_get proto "$CONFIG_SECTION" proto
 		                config_get type "$CONFIG_SECTION" type
 
 						if [ $type"" != "bridge"  -a $CONFIG_SECTION != "loopback" -a `echo $wan_interfaces | grep $ifname |wc -l ` == "0" ]
 						then
-	                        wan_sections="$wan_sections $CONFIG_SECTION"
-							wan_interfaces="$wan_interfaces $ifname"
+							if [ $proto"" == "dhcp" ];then
+	                        	wan_sections="$wan_sections $CONFIG_SECTION"
+								wan_interfaces="$wan_interfaces $ifname"
+							elif [ $proto"" == "dhcpv6" ];then
+	                        	wan_sections_v6="$wan_sections_v6 $CONFIG_SECTION"
+								wan_interfaces_v6="$wan_interfaces_v6 $ifname"
+							fi
 						fi
 						
                     ;;
@@ -498,6 +506,41 @@ check_route()
 			return
 		fi
 
+	fi
+
+	## when the land does not connect , let the primary apn set to main route
+	local land_inter=""
+	local primary_inter=""
+	local lan_section=""
+	for temp in $wan_sections_v6
+	do
+		config_get xland_wan $temp land_wan
+		if [ $xland_wan"" == "1" ];then
+			config_get land_inter $temp ifname
+		fi
+	done
+
+	ping6 -w 3  -I $land_inter 2400:da00::6666 > /dev/null
+	if [ $? != '0' ];then
+		for temp in $wan_sections_v6
+		do
+			config_get xprimary_apn $temp primary_apn
+			if [ $xprimary_apn"" == "1" ];then
+				config_get primary_inter $temp ifname
+				config_get lan_section $temp route_lan_section
+			fi
+		done
+		
+		local next_holt=`ip -6 route list table ${primary_inter}_v6 | grep default | awk '{print $2}'`
+		ip -6 route add default via $next_holt dev ${primary_inter}  proto static  metric 512
+
+		#delete the ipv6 address 
+		for temp in `ip addr show dev  br-${lan_section} | grep inet6 | grep global  |  awk '{print $2}'`
+		do
+			ip addr del $temp dev br-${lan_section}
+		done
+		local prefix=`ip -6 route list table ${primary_inter}_v6 | grep br-${lan_section}| awk '{print $1}'`
+		ip addr add ${prefix} dev br-${lan_section}
 	fi
 }
 
