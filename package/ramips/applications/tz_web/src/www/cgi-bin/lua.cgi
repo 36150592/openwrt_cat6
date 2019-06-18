@@ -2641,6 +2641,54 @@ function firewall_url_default_set()
 
 end
 
+function get_home_info()
+    local data_array = {}
+
+    -- data_array["wan"] = network.network_get_wan_info()
+    -- data_array["4g"] = network.network_get_4g_net_info()
+    -- data_array["4g1"] = network.network_get_4g1_net_info()
+    -- data_array["4g2"] = network.network_get_4g2_net_info()
+
+    data_array['systime'] = os.time() 
+
+    local sys_status = {}
+    data_array['sys_status'] = sys_status
+    local data_wifi = {}
+    local sim_status = sim.sim_get_status() or {}
+    local modem_status = modem.modem_get_status() or {}
+    sys_status["is_sim_exist"] = sim_status["is_sim_exist"] or ''
+    sys_status["card_status"] = sim_status["card_status"] or ''
+    sys_status["2g_register_status"] = modem_status["2g_register_status"] or ''
+    sys_status["3g_register_status"] = modem_status["3g_register_status"] or ''
+    sys_status["4g_register_status"] = modem_status["4g_register_status"] or ''
+    sys_status["rsrp"] = modem_status["rsrp"]
+    sys_status["signal_lvl"] = modem_status["signal_lvl"]
+    sys_status["network_link_stauts"] = modem_status["network_link_stauts"]
+    sys_status["ethInter"] = network.network_get_interface_up_down_status() or ''
+    local array = wifi.wifi_get_dev()
+    for k, v in pairs(array) do
+        if (v["band"] == "2.4G") then
+            data_wifi['status'] = wifi.wifi_get_enable_status(v['wifi_id'])
+        end
+        if (v["band"] == "5G") then
+            data_wifi['status5'] = wifi.wifi_get_enable_status(v['wifi_id'])
+        end
+    end
+    sys_status["wifi"] = data_wifi
+
+    data_array['sim_card_status'] = sim.sim_get_status()['card_status'] or ''
+
+    data_array['web_language_select_enable'] = system.system_get_web_info()['web_language_select_enable']
+
+    local tz_answer = {}
+    tz_answer["success"] = true
+    tz_answer["cmd"] = 249
+    tz_answer["data"] = data_array
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end
+
 local switch = {
     [0] = get_sysinfo,
     [1] = get_systime,
@@ -2746,6 +2794,7 @@ local switch = {
     [246] = wan_mac_settings,
     [247] = firewall_url_default_get,
     [248] = firewall_url_default_set,
+    [249] = get_home_info
 }
 
 cmdid = uti.get_env_cmdId(envv)

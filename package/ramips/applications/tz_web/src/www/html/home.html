@@ -2,8 +2,93 @@
 
 <script type="text/javascript">
     $(document).ready(function() {   
-          StatusUtil.getSysStatus();
+
+        //   StatusUtil.getSysStatus();
         Page.render('#container', '#index_template', DOC);
+
+        function getHomeInfo() {
+            var sysStatus = null; 
+            Page.postJSON({
+                json: {
+                    // asynss:true,
+                    cmd: RequestCmd.GET_HOME_INFO
+                },
+                success: function(datas) {
+                    
+                    var datas = datas.data;
+                    var timeTo = new Date(parseInt(datas.systime)*1000).toLocaleString();
+                    var time = timetrans(datas.systime);
+                    $('#sysTime').text(time);
+                    var timestamp = new Date(datas.systime1).getTime();
+                    var timestamp = (new Date()).getTime();
+                    var systime = datas.systime;
+                    var intervalId2 = setInterval(function () {
+                        var time = timetrans(systime);
+                        $('#sysTime').text(time);
+                        systime ++;
+                    },1000)
+
+                    sysStatus = datas.sys_status;
+                    
+                    Page.isShowLangu = datas.web_language_select_enable;
+                    if(datas.web_language_select_enable == "1"){
+                        $("#languageSelect").show();
+                        $(".tr_language").show();
+                    }else{
+                        $("#languageSelect").hide();
+                        $(".tr_language").hide();
+                    }            
+               
+                    var wifiStatus = sysStatus.wifi;
+                    var interStatus = sysStatus.ethInter;
+                    $('#wifiInfo').html(StatusUtil.formatWiFiInfo(wifiStatus.status));
+                    $('#wifiInfo5g').html(StatusUtil.format5gWiFiInfo(wifiStatus.status5));
+                    $('#simInfo').html(StatusUtil.formatSimInfo(sysStatus.is_sim_exist));
+                    for(var i=0;i<interStatus.length;i++){
+                        if(i< 3){
+                            var j=i+1;
+                            $('#lan'+j).html(StatusUtil.formatNetInterfaceInfo(interStatus[i], "Lan"+j));
+                            if(interStatus[i] == "0"){
+                                $('#lan'+j).hide(0);
+                            }
+                        }else if(i == 3){
+                            $('#wan1').html(StatusUtil.formatNetInterfaceInfo(interStatus[3], "Lan4/Wan"));
+                            if(interStatus[3] == "0"){
+                                $('#wan1').hide(0);
+                            }
+                        }
+                    }
+                    sessionStorage["2g_register_status"] = sysStatus["2g_register_status"];
+                    sessionStorage["3g_register_status"] = sysStatus["3g_register_status"];
+                    sessionStorage["4g_register_status"] = sysStatus["4g_register_status"];
+                    sessionStorage["rsrp"] = sysStatus.rsrp;
+                    sessionStorage["signal_lvl"] = sysStatus.signal_lvl;
+                    sessionStorage["wifi_status"] = wifiStatus.status;
+                    sessionStorage["wifi5_status"] = wifiStatus.status5;
+                    sessionStorage["network_link_stauts"] = sysStatus.network_link_stauts;
+                    if(sysStatus.card_status == 0) {
+                        var singalLevel = sysStatus.signal_lvl;
+                        var netInfo = StatusUtil.formatSingalLevel(singalLevel);
+                        $('#netInfo').html(netInfo);
+                    }else{
+                        var netInfo = StatusUtil.formatSingalLevel(0);
+                        $('#netInfo').html(netInfo);
+                    }
+                    if(datas.sim_card_status == '1'){
+                        $("#simPInPosition").text(DOC.title.simPInPosition);
+                    }
+
+                }
+            })
+        };
+        getHomeInfo();
+
+        var timeout = null;
+        if(timeout) {
+            clearTimeout(timeout);
+            timeout = null
+        }
+        timeout = setTimeout(StatusUtil.getSysStatus, 10000);
         
         var Pageauth = Page.AUTH;
         var Infoauth = parseInt(Pageauth.substr(Pageauth.length-2),16).toString(2);
@@ -82,7 +167,7 @@
         $languageSelect.html(Page.getLanguageList(Page.language)).change(function() {
             Page.changeLanguage($languageSelect);
         });
-         Page.getLanguageConfig();
+        //  Page.getLanguageConfig();
         /* LANGUAGE END */
 
         function setMenuItem(itemId) {
@@ -189,26 +274,26 @@
 
         }
 
-        function showSysTime() {
-            Page.postJSON({
-                json: {
-                    cmd: RequestCmd.GET_SYSTEM_TIME
-                },
-                success: function(data) {
-                  var timeTo = new Date(parseInt(data.systime)*1000).toLocaleString();
-                  var time = timetrans(data.systime);
-                   $('#sysTime').text(time);
-                 var timestamp = new Date(data.systime1).getTime();
-                var timestamp = (new Date()).getTime();
-                  var systime = data.systime;
-                    var intervalId2 = setInterval(function () {
-                        var time = timetrans(systime);
-                        $('#sysTime').text(time);
-                        systime ++;
-                    },1000)
-                }
-            });
-        }
+        // function showSysTime() {
+        //     Page.postJSON({
+        //         json: {
+        //             cmd: RequestCmd.GET_SYSTEM_TIME
+        //         },
+        //         success: function(data) {
+        //           var timeTo = new Date(parseInt(data.systime)*1000).toLocaleString();
+        //           var time = timetrans(data.systime);
+        //            $('#sysTime').text(time);
+        //          var timestamp = new Date(data.systime1).getTime();
+        //         var timestamp = (new Date()).getTime();
+        //           var systime = data.systime;
+        //             var intervalId2 = setInterval(function () {
+        //                 var time = timetrans(systime);
+        //                 $('#sysTime').text(time);
+        //                 systime ++;
+        //             },1000)
+        //         }
+        //     });
+        // }
         
         function timetrans(date){
             var date = new Date(date*1000);//如果date为13位不需要乘1000
@@ -226,7 +311,7 @@
       
         $('#menu h3').eq(0).next().find("a").eq(0).click();
         $('#container').show();
-        showSysTime();
+        // showSysTime();
         listenOperation ();
         
 
