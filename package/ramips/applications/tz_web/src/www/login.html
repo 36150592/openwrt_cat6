@@ -36,7 +36,6 @@
                 success: function (datas) {
                     var datas = datas.data,
                         language = datas.language;
-                    console.log(datas)
                     Page.languageList = ConvertUtil.parseHex(FormatUtil.formatValue('6') || "3E");
                     Page.language = language.web_language.toUpperCase();
                     $("script[src^='js/language/']").remove();
