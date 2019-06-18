@@ -33,14 +33,14 @@ load_interface() {
 							local type=""
 			                config_get ifname "$CONFIG_SECTION" ifname
 			                config_get type "$CONFIG_SECTION" type
+			                config_get proto "$CONFIG_SECTION" proto
 			                if [  $type ];then
 								if [ $type == "bridge" ]
-			                                	then 
-							       		lan_sections="$lan_sections $CONFIG_SECTION"
-
-			                                	fi
+	                            then 
+					       			lan_sections="$lan_sections $CONFIG_SECTION"
+	                            fi
 							else
-								if [ $CONFIG_SECTION != "loopback" -a `echo $wan_interfaces | grep $ifname |wc -l ` == "0" ]
+								if [ $proto"" == "dhcp" -a $CONFIG_SECTION"" != "loopback" -a `echo $wan_interfaces | grep $ifname |wc -l ` == "0" ]
 								then
 			                        wan_sections="$wan_sections $CONFIG_SECTION"
 									wan_interfaces="$wan_interfaces $ifname"
