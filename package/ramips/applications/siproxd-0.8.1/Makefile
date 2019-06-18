@@ -40,8 +40,7 @@ endef
 
 define Package/siproxd-0.8.1/install
 	cd ${PKG_BUILD_DIR} && make install DESTDIR=${1}
-	rm -rf ${1}/etc/*
-	rm -rf ${1}/usr/lib/siproxd/*
+	$(INSTALL_BIN) src/siproxd.conf $(1)/etc/
 endef
 
 
