@@ -2450,7 +2450,7 @@ function get_web_log()
 
     local tz_answer = {}
     tz_answer["success"] = true
-    tz_answer["cmd"] = 239
+    tz_answer["cmd"] = 241
     tz_answer["data"] = data_array
     result_json = cjson.encode(tz_answer)
     print(result_json)
@@ -2464,7 +2464,7 @@ function clear_web_log()
 
     local tz_answer = {}
     tz_answer["success"] = true
-    tz_answer["cmd"] = 240
+    tz_answer["cmd"] = 242
     -- tz_answer["data"] = data_array
     result_json = cjson.encode(tz_answer)
     print(result_json)
