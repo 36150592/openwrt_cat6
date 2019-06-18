@@ -364,44 +364,78 @@
                     });
                     break;
                  case 1:
+                    Page.postJSON({
+                        json: { cmd: RequestCmd.SSIDLIST_INFO,wifiId: $wifiId.val() },
+                        success: function(datas) {                                                
+                            var data = datas.data[1];
+                            if(data.status == 0){
+                                $(".wifi_disable_hide1").show();
+                                $('#wifiOpen1').prop('checked', true);
+                            }else {
+                                $(".wifi_disable_hide1").hide();
+                                $('#wifiOpen1').prop('checked', false);
+                            }
+                            $('#wifiOpen1').attr('old',data.status);
+
+                            if (data.hidden_ssid == 0) {
+                                $('#broadcast1').prop('checked', true);
+                            } else {
+                                $('#broadcast1').prop('checked', false);
+                            }
+                            $('#broadcast1').attr('old', data.hidden_ssid || 1);
+
+                            if (data.wmm == 1) {
+                                $('#wmm1').prop('checked', true);
+                            } else {
+                                $('#wmm1').prop('checked', false);
+                            }
+                            $('#wmm1').attr('old', data.wmm || 0);
+                            $('#secondaryId1').val(data.secondary_id);
+                            Page.setFormFieldValue2("ssid1", data.ssid);
+                            Page.setFormFieldValue2("authenticationType1", data.encryption);
+                            $("#encryptAlgorithm1 > input[value=" + data.encry_algorithms + "]").attr("checked",true);
+                            $('#encryptAlgorithm1').attr('old',data.encry_algorithms);
+                            Page.setFormFieldValue2("key1", data.password);
+                            $('#btn2Save1').attr("disabled",false);
+                        }
+                    });
                     break;
                 case 2:
                     Page.postJSON({
                         json: { cmd: RequestCmd.SSIDLIST_INFO,wifiId: $wifiId.val() },
-                        success: function(datas) {
-                            var data = datas.data;
-                            for(var i = 1; i <= data.length; i++) {
-                                if(data[i].status == 0){
-                                    $(".wifi_disable_hide" + i).show();
-                                    $('#wifiOpen' + i).prop('checked', true);
+                        success: function(datas) {                        
+                            var data = datas.data[2];
+                                if(data.status == 0){
+                                    $(".wifi_disable_hide2").show();
+                                    $('#wifiOpen2').prop('checked', true);
                                 }else {
-                                    $(".wifi_disable_hide" + i).hide();
-                                    $('#wifiOpen' + i).prop('checked', false);
+                                    $(".wifi_disable_hide2").hide();
+                                    $('#wifiOpen2').prop('checked', false);
                                 }
-                                $('#wifiOpen' + i).attr('old',data[i].status);
+                                $('#wifiOpen2').attr('old',data.status);
 
-                                if (data[i].hidden_ssid == 0) {
-                                    $('#broadcast' + i).prop('checked', true);
+                                if (data.hidden_ssid == 0) {
+                                    $('#broadcast2').prop('checked', true);
                                 } else {
-                                    $('#broadcast' + i).prop('checked', false);
+                                    $('#broadcast2').prop('checked', false);
                                 }
-                                $('#broadcast' + i).attr('old', data[i].hidden_ssid || 1);
+                                $('#broadcast2').attr('old', data.hidden_ssid || 1);
 
-                                if (data[i].wmm == 1) {
-                                    $('#wmm' + i).prop('checked', true);
+                                if (data.wmm == 1) {
+                                    $('#wmm2').prop('checked', true);
                                 } else {
-                                    $('#wmm' + i).prop('checked', false);
+                                    $('#wmm2').prop('checked', false);
                                 }
-                                $('#wmm' + i).attr('old', data[i].wmm || 0);
+                                $('#wmm2').attr('old', data.wmm || 0);
 
-                                $('#secondaryId' + i).val(data[i].secondary_id);
-                                Page.setFormFieldValue2("ssid" +i, data[i].ssid);
-                                Page.setFormFieldValue2("authenticationType" +i, data[i].encryption);
-                                $("#encryptAlgorithm" + i+">input[value=" +data[i].encry_algorithms +"]").attr("checked",true);
-                                $('#encryptAlgorithm'+i).attr('old',data[i].encry_algorithms);
-                                Page.setFormFieldValue2("key" +i, data[i].password);
-                            }
-
+                                $('#secondaryId2').val(data.secondary_id);
+                                Page.setFormFieldValue2("ssid2", data.ssid);
+                                Page.setFormFieldValue2("authenticationType2", data.encryption);
+                                $("#encryptAlgorithm2 > input[value=" +data.encry_algorithms +"]").attr("checked",true);
+                                $('#encryptAlgorithm2').attr('old',data.encry_algorithms);
+                                Page.setFormFieldValue2("key2", data.password);
+                         
+                            $('#btn2Save2').attr("disabled",false);
                         }
                     });
                     break;
@@ -647,10 +681,10 @@
                 success: function(data) {
                     AlertUtil.alertMsg(PROMPT.saving.success);
                     $lis.eq(id).click();
-                },
-                complete: function(){
-                    $('#btn2Save'+id).attr("disabled",false);
                 }
+                // complete: function(){
+                //     $('#btn2Save'+id).attr("disabled",false);
+                // }
             });
 
         });
