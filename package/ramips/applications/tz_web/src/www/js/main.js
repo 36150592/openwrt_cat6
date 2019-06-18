@@ -139,7 +139,7 @@ var RequestCmd = {
     FW_UPNP_DISABLE:235,
     FW_UPNP:236,
     GET_INFO: 237,
-    GET_LOGIN_INFO: 238,
+    GET_LOGIN_RIGHT_INFO: 238,
     OPEN_RANDOM_PIN:239,
     OPEN_5G_RANDOM_PIN:240,
     SYSTEM_LOG: 241,
@@ -150,7 +150,8 @@ var RequestCmd = {
     WAN_MAC_SETTINGS: 246,
     FIREWALL_URL_GET: 247,
     FIREWALL_URL_SET: 248,
-    GET_HOME_INFO: 249
+    GET_HOME_INFO: 249,
+    GET_LOGIN_INFO: 250
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
