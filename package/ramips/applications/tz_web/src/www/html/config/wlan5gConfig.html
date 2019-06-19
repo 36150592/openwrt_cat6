@@ -339,9 +339,15 @@
                             var encryp = data.encryption.split("+")[0];
                             var encrypType = '"'+data.encryption.substring(encryp.length +1) +'"';
                             Page.setFormFieldValue2("authenticationType", encryp);
-                            $("#encryptAlgorithm>input[value=" + encrypType +"]").attr("checked",true);
-                            $('#encryptAlgorithm').attr('old',data.encryption.substring(encryp.length +1));
-                            Page.setFormFieldValue2("key", data.key);
+                            if(encrypType === '""') {
+                                $('#encrypt_algorithm').hide();
+                                $('#password').hide();  
+                            }
+                            if(encrypType !== '""') {
+                                $("#encryptAlgorithm>input[value=" + encrypType +"]").attr("checked",true);
+                                $('#encryptAlgorithm').attr('old',data.encryption.substring(encryp.length +1));
+                                Page.setFormFieldValue2("key", data.key);
+                            }                          
 
                             $('#btnSave').attr("disabled",false);
                         }
@@ -378,9 +384,14 @@
                             $('#secondaryId1').val(data.secondary_id);
                             Page.setFormFieldValue2("ssid1", data.ssid);
                             Page.setFormFieldValue2("authenticationType1", data.encryption);
-                            $("#encryptAlgorithm1 > input[value=" + "'" + data.encry_algorithms + "'" + "]").attr("checked",true);
-                            $('#encryptAlgorithm1').attr('old',data.encry_algorithms);
-                            Page.setFormFieldValue2("key1", data.password);
+                            if($('#authenticationType1').val() == "none") {
+                                $('#encrypt_algorithm1').hide();
+                                $('#password1').hide();
+                            }else {
+                                $("#encryptAlgorithm1 > input[value=" + "'" + data.encry_algorithms + "'" + "]").attr("checked",true);
+                                $('#encryptAlgorithm1').attr('old',data.encry_algorithms);
+                                Page.setFormFieldValue2("key1", data.password);
+                            }                         
                         
                             $('#btn2Save1').attr("disabled",false);
                         }
@@ -417,9 +428,14 @@
                                 $('#secondaryId2').val(data.secondary_id);
                                 Page.setFormFieldValue2("ssid2", data.ssid);
                                 Page.setFormFieldValue2("authenticationType2", data.encryption);
-                                $("#encryptAlgorithm2 > input[value=" + "'" + data.encry_algorithms + "'" + "]").attr("checked",true);
-                                $('#encryptAlgorithm2').attr('old',data.encry_algorithms);
-                                Page.setFormFieldValue2("key2", data.password);
+                                if($('#authenticationType2').val() == "none") {
+                                    $('#encrypt_algorithm2').hide();
+                                    $('#password2').hide();
+                                }else {
+                                    $("#encryptAlgorithm2 > input[value=" + "'" + data.encry_algorithms + "'" + "]").attr("checked",true);
+                                    $('#encryptAlgorithm2').attr('old',data.encry_algorithms);
+                                    Page.setFormFieldValue2("key2", data.password);
+                                }                               
                             
                                 $('#btn2Save2').attr("disabled",false);
                         }
@@ -507,85 +523,113 @@
             $(this).attr("disabled",true);
             var count = 0;
             var $form = $('#form');
-            if(!CheckUtil.checkForm($form, wireless_rules, wireless_messages)){
-                $(this).attr("disabled",false);
-                return false;
-            }
             var json = JSON.parmsToJSON($form);
 
-            if(json.key == $('#key').attr('old')){
+            if($('#authenticationType').val() == "none") {
+                delete json["encryptAlgorithm"];
                 delete json["key"];
-                count++;
-            }else {
-                if (!CheckUtil.checkPwd(json.key)) {
-                    AlertUtil.alertMsg(showText.keyCkeckMsg);
-                    $(this).attr("disabled", false);
+
+                json.wifiOpen = json.wifiOpen ? '0' : '1';
+                json.broadcast = json.broadcast ? '0' : '1';
+                json.wmm = json.wmm ? '1' : '0';
+
+                if(json.wifiOpen ==  $wifiOpen.attr('old')){
+                    delete json["wifiOpen"];
+                    count++;
+                }
+                if(json.broadcast ==  $broadcast.attr('old')){
+                    delete json["broadcast"];
+                    count++;
+                }
+                if(json.wmm ==  $wmm.attr('old')){
+                    delete json["wmm"];
+                    count++;
+                }
+                if(json.ssid ==  $("#ssid").attr('old')){
+                    delete json["ssid"];
+                    count++;
+                }
+                if(json.authenticationType == $("#authenticationType").attr('old')){
+                    delete json["authenticationType"];
+                    count++;
+                }
+
+                if(count == 5){
+                    AlertUtil.alertMsg(CHECK.required.noChanges);
+                    $(this).attr("disabled",false);
                     return false;
                 }
-            }
-            json.wifiOpen = json.wifiOpen ? '0' : '1';
-            json.broadcast = json.broadcast ? '0' : '1';
-            json.wmm = json.wmm ? '1' : '0';
 
-            if(json.wifiOpen ==  $wifiOpen.attr('old')){
-                delete json["wifiOpen"];
-                count++;
-            }
-            if(json.broadcast ==  $broadcast.attr('old')){
-                delete json["broadcast"];
-                count++;
-            }
-            if(json.wmm ==  $wmm.attr('old')){
-                delete json["wmm"];
-                count++;
-            }
-            if(json.ssid ==  $("#ssid").attr('old')){
-                delete json["ssid"];
-                count++;
-            }
-            // if(json.channel ==  $("#channel").attr('old')){
-            //     delete json["channel"];
-            //     count++;
-            // }
-            // if(json.wifiWorkMode ==  $("#wifiWorkMode").attr('old')){
-            //     delete json["wifiWorkMode"];
-            //     count++;
-            // }
-            // if(json.bandWidth ==  $("#bandWidth").attr('old')){
-            //     delete json["bandWidth"];
-            //     count++;
-            // }
-            // if(json.maxStation ==  $("#maxStation").attr('old')){
-            //     delete json["maxStation"];
-            //     count++;
-            // }
-            if(json.authenticationType == $("#authenticationType").attr('old')){
-                delete json["authenticationType"];
-                count++;
-            }
-
-            if(json.encryptAlgorithm == $('#encryptAlgorithm').attr('old'))
-            {
-                delete json["encryptAlgorithm"];
-                count++;
-            }
-            if(count == 7){
-                AlertUtil.alertMsg(CHECK.required.noChanges);
-                $(this).attr("disabled",false);
-                return false;
-            }
-
-            json.cmd = RequestCmd.WIRELESS5_CONFIG;
-            Page.postJSON({
-                json: json,
-                success: function(data) {
-                    AlertUtil.alertMsg(PROMPT.saving.success);
-                    $lis.eq(0).click();
+                json.cmd = RequestCmd.WIRELESS5_CONFIG;
+                Page.postJSON({
+                    json: json,
+                    success: function(data) {
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+                        $lis.eq(0).click();
+                    }
+                });
+            }else {
+                if(!CheckUtil.checkForm($form, wireless_rules, wireless_messages)){
+                    $(this).attr("disabled",false);
+                    return false;
                 }
-                // complete: function(){
-                //     $('#btnSave').attr("disabled",false);
-                // }
-            });
+            
+                if(json.key == $('#key').attr('old')){
+                    delete json["key"];
+                    count++;
+                }else {
+                    if (!CheckUtil.checkPwd(json.key)) {
+                        AlertUtil.alertMsg(showText.keyCkeckMsg);
+                        $(this).attr("disabled", false);
+                        return false;
+                    }
+                }
+
+                json.wifiOpen = json.wifiOpen ? '0' : '1';
+                json.broadcast = json.broadcast ? '0' : '1';
+                json.wmm = json.wmm ? '1' : '0';
+
+                if(json.wifiOpen ==  $wifiOpen.attr('old')){
+                    delete json["wifiOpen"];
+                    count++;
+                }
+                if(json.broadcast ==  $broadcast.attr('old')){
+                    delete json["broadcast"];
+                    count++;
+                }
+                if(json.wmm ==  $wmm.attr('old')){
+                    delete json["wmm"];
+                    count++;
+                }
+                if(json.ssid ==  $("#ssid").attr('old')){
+                    delete json["ssid"];
+                    count++;
+                }
+                if(json.authenticationType == $("#authenticationType").attr('old')){
+                    delete json["authenticationType"];
+                    count++;
+                }
+
+                if(json.encryptAlgorithm == $('#encryptAlgorithm').attr('old'))
+                {
+                    delete json["encryptAlgorithm"];
+                    count++;
+                }
+                if(count == 7){
+                    AlertUtil.alertMsg(CHECK.required.noChanges);
+                    $(this).attr("disabled",false);
+                    return false;
+                }
+
+                json.cmd = RequestCmd.WIRELESS5_CONFIG;
+                Page.postJSON({
+                    json: json,
+                    success: function(data) {
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+                        $lis.eq(0).click();
+                    }
+                });
+            }      
 
         });
 
@@ -596,76 +640,116 @@
             $(this).attr("disabled",true);
             var count = 0;
             var $form = $('#form'+id);
-            if(!CheckUtil.checkForm($form, wireless_rules, wireless_messages)){
-                $(this).attr("disabled",false);
-                return false;
-            }
             var json = JSON.parmsToJSON($form);
 
-            if(json.key == $('#key' +id).attr('old')){
+            if($('#authenticationType' + id).val() == "none") {
+                delete json["encryptAlgorithm"];
                 delete json["key"];
-                count++;
-            }else {
-                if (!CheckUtil.checkPwd(json.key)) {
-                    AlertUtil.alertMsg(showText.keyCkeckMsg);
-                    $(this).attr("disabled", false);
+
+                json.wifiOpen = json.wifiOpen ? '0' : '1';
+                json.broadcast = json.broadcast ? '0' : '1';
+                json.wmm = json.wmm ? '1' : '0';
+
+                if(json.wifiOpen ==  $("#wifiOpen" +id).attr('old')){
+                    delete json["wifiOpen"];
+                    count++;
+                }
+                if(json.broadcast == $("#broadcast" +id).attr('old')){
+                    delete json["broadcast"];
+                    count++;
+                }
+                if(json.wmm ==   $('#wmm' + id).attr('old')){
+                    delete json["wmm"];
+                    count++;
+                }
+                if(json.ssid ==  $('#ssid' + id).attr('old')){
+                    delete json["ssid"];
+                    count++;
+                }
+                if(json.authenticationType == $("#authenticationType" +id).attr('old')){
+                    delete json["authenticationType"];
+                    count++;
+                }
+
+                if(count == 5){
+                    AlertUtil.alertMsg(CHECK.required.noChanges);
+                    $(this).attr("disabled",false);
                     return false;
                 }
-            }
 
-            json.wifiOpen = json.wifiOpen ? '0' : '1';
-            json.broadcast = json.broadcast ? '0' : '1';
-            json.wmm = json.wmm ? '1' : '0';
-
-            if(json.wifiOpen ==  $("#wifiOpen" +id).attr('old')){
-                delete json["wifiOpen"];
-                count++;
-            }
-            if(json.broadcast == $("#broadcast" +id).attr('old')){
-                delete json["broadcast"];
-                count++;
-            }
-            if(json.wmm ==   $('#wmm' + id).attr('old')){
-                delete json["wmm"];
-                count++;
-            }
-            if(json.ssid ==  $('#ssid' + id).attr('old')){
-                delete json["ssid"];
-                count++;
-            }
-            if(json.wifiWorkMode ==  $('#wifiWorkMode' + id).attr('old')){
-                delete json["wifiWorkMode"];
-                count++;
-            }
-            if(json.authenticationType == $("#authenticationType" +id).attr('old')){
-                delete json["authenticationType"];
-                count++;
-            }
-
-            if(json.encryptAlgorithm == $('#encryptAlgorithm' +id).attr('old'))
-            {
-                delete json["encryptAlgorithm"];
-                count++;
-            }
-            if(count == 8){
-                AlertUtil.alertMsg(CHECK.required.noChanges);
-                $(this).attr("disabled",false);
-                return false;
-            }
-
-            json.cmd = RequestCmd.SSIDLIST_CONFIG;
-            json.wifiId = $wifiId.val();
-            Page.postJSON({
-                json: json,
-                success: function(data) {
-                    AlertUtil.alertMsg(PROMPT.saving.success);
-                    $lis.eq(id).click();
+                json.cmd = RequestCmd.SSIDLIST_CONFIG;
+                json.wifiId = $wifiId.val();
+                Page.postJSON({
+                    json: json,
+                    success: function(data) {
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+                        $lis.eq(id).click();
+                    }
+                });
+            }else {
+                if(!CheckUtil.checkForm($form, wireless_rules, wireless_messages)){
+                    $(this).attr("disabled",false);
+                    return false;
                 }
-                // complete: function(){
-                //     $('#btn2Save'+id).attr("disabled",false);
-                // }
-            });
 
+                if(json.key == $('#key' +id).attr('old')){
+                delete json["key"];
+                count++;
+                }else {
+                    if (!CheckUtil.checkPwd(json.key)) {
+                        AlertUtil.alertMsg(showText.keyCkeckMsg);
+                        $(this).attr("disabled", false);
+                        return false;
+                    }
+                }
+
+                json.wifiOpen = json.wifiOpen ? '0' : '1';
+                json.broadcast = json.broadcast ? '0' : '1';
+                json.wmm = json.wmm ? '1' : '0';
+
+                if(json.wifiOpen ==  $("#wifiOpen" +id).attr('old')){
+                    delete json["wifiOpen"];
+                    count++;
+                }
+                if(json.broadcast == $("#broadcast" +id).attr('old')){
+                    delete json["broadcast"];
+                    count++;
+                }
+                if(json.wmm ==   $('#wmm' + id).attr('old')){
+                    delete json["wmm"];
+                    count++;
+                }
+                if(json.ssid ==  $('#ssid' + id).attr('old')){
+                    delete json["ssid"];
+                    count++;
+                }
+                if(json.authenticationType == $("#authenticationType" +id).attr('old')){
+                    delete json["authenticationType"];
+                    count++;
+                }
+
+                if(json.encryptAlgorithm == $('#encryptAlgorithm' +id).attr('old'))
+                {
+                    delete json["encryptAlgorithm"];
+                    count++;
+                }
+                if(count == 7){
+                    AlertUtil.alertMsg(CHECK.required.noChanges);
+                    $(this).attr("disabled",false);
+                    return false;
+                }
+
+                json.cmd = RequestCmd.SSIDLIST_CONFIG;
+                json.wifiId = $wifiId.val();
+                Page.postJSON({
+                    json: json,
+                    success: function(data) {
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+                        $lis.eq(id).click();
+                    }
+                });
+            }
+           
         });
 
         var $btn3Save = $('input[id^=btn3Save]');
@@ -728,6 +812,35 @@
 
         });
 
+        $('#authenticationType').change(function() {
+        if($('#authenticationType').val() == "none") {
+            $('#encrypt_algorithm').hide();
+            $('#password').hide();
+        }else {
+            $('#encrypt_algorithm').show();
+            $('#password').show();
+        }
+        });
+
+        $('#authenticationType1').change(function() {
+            if($('#authenticationType1').val() == "none") {
+                $('#encrypt_algorithm1').hide();
+                $('#password1').hide();
+            }else {
+                $('#encrypt_algorithm1').show();
+                $('#password1').show();
+            }
+        });
+
+        $('#authenticationType2').change(function() {
+            if($('#authenticationType2').val() == "none") {
+                $('#encrypt_algorithm2').hide();
+                $('#password2').hide();
+            }else {
+                $('#encrypt_algorithm2').show();
+                $('#password2').show();
+            }
+        });
 
     });
 
@@ -800,7 +913,7 @@
                                     </select>
                                 </td>
                             </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;">
+                            <tr  class="wifi_disable_hide" style="display:none;" id="encrypt_algorithm">
                                 <th><%- encryptAlgorithmTh %></th>
                                 <td>
                                     <label id="encryptAlgorithm">
@@ -816,7 +929,7 @@
                                 </td>
 
                             </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;">
+                            <tr  class="wifi_disable_hide" style="display:none;" id="password">
                                 <th><%- key %></th>
                                 <td>
                                     <input type="password" name="key" maxlength="63" id="key"/>
@@ -874,7 +987,7 @@
                                     </select>
                                 </td>
                             </tr>
-                            <tr class="wifi_disable_hide1" style="display:none;">
+                            <tr class="wifi_disable_hide1" style="display:none;" id="encrypt_algorithm1">
                                 <th><%- encryptAlgorithmTh %></th>
                                 <td>
                                     <label id="encryptAlgorithm1">
@@ -889,7 +1002,7 @@
                                     </label>
                                 </td>
                             </tr>
-                            <tr class="wifi_disable_hide1" style="display:none;">
+                            <tr class="wifi_disable_hide1" style="display:none;" id="password1">
                                 <th><%- key %></th>
                                 <td>
                                     <input type="password" name="key" maxlength="63" id="key1"/>
@@ -949,7 +1062,7 @@
                                     </select>
                                 </td>
                             </tr>
-                            <tr class="wifi_disable_hide2" style="display:none;">
+                            <tr class="wifi_disable_hide2" style="display:none;" id="encrypt_algorithm2">
                                 <th><%- encryptAlgorithmTh %></th>
                                 <td>
                                     <label id="encryptAlgorithm2">
@@ -964,7 +1077,7 @@
                                     </label>
                                 </td>
                             </tr>
-                            <tr class="wifi_disable_hide2" style="display:none;">
+                            <tr class="wifi_disable_hide2" style="display:none;" id="password2">
                                 <th><%- key %></th>
                                 <td>
                                     <input type="password" name="key" maxlength="63" id="key2"/>
