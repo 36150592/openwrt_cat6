@@ -378,7 +378,7 @@
                             $('#secondaryId1').val(data.secondary_id);
                             Page.setFormFieldValue2("ssid1", data.ssid);
                             Page.setFormFieldValue2("authenticationType1", data.encryption);
-                            $("#encryptAlgorithm1 > input[value=" +data.encry_algorithms +"]").attr("checked",true);
+                            $("#encryptAlgorithm1 > input[value=" + "'" + data.encry_algorithms + "'" + "]").attr("checked",true);
                             $('#encryptAlgorithm1').attr('old',data.encry_algorithms);
                             Page.setFormFieldValue2("key1", data.password);
                         
@@ -417,7 +417,7 @@
                                 $('#secondaryId2').val(data.secondary_id);
                                 Page.setFormFieldValue2("ssid2", data.ssid);
                                 Page.setFormFieldValue2("authenticationType2", data.encryption);
-                                $("#encryptAlgorithm2 > input[value=" +data.encry_algorithms +"]").attr("checked",true);
+                                $("#encryptAlgorithm2 > input[value=" + "'" + data.encry_algorithms + "'" + "]").attr("checked",true);
                                 $('#encryptAlgorithm2').attr('old',data.encry_algorithms);
                                 Page.setFormFieldValue2("key2", data.password);
                             

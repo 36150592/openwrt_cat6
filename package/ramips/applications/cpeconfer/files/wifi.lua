@@ -1195,7 +1195,14 @@ function wifi_module.wifi_secondary_get_ssid_list()
 				temp["network"] = s["network"]
 				local arr = split(s["encryption"], '+')
 				temp["encryption"] = arr[1] or "none"
-				temp["encry_algorithms"] = arr[2] or "none"
+				if nil ~= arr[3] 
+				then
+					temp["encry_algorithms"] = arr[2] .. "+" .. arr[3] or "none"
+				end
+				if nil == arr[3]
+				then
+					temp["encry_algorithms"] = arr[2] or "none"
+				end
 				temp["connect_sta_number"] = s["maxassoc"] 
 				temp["wmm"] = s["wmm"] or "1"
 				temp["macaddr"] = get_wifi_mac(s["ifname"])
@@ -1203,13 +1210,12 @@ function wifi_module.wifi_secondary_get_ssid_list()
 				i = i+1
 
 			end
-
 		end)
 
 
 		
     end)
-
+	-- util.web_log(ssid_list)
     return ssid_list
 
 end
