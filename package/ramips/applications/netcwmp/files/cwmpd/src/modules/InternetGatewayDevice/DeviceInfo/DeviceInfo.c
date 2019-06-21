@@ -1189,7 +1189,7 @@ int https_port_get_form_url(char *acs_url,char *result)
 	int index,num;
 	if (acs_url == NULL)
 	{
-		strcpy(param,"443");
+		strcpy(param,"8888");
 		return 0;
 	}
 	int length= strlen(acs_url);
@@ -1217,7 +1217,7 @@ int cpe_get_igd_https_Port(cwmp_t * cwmp, const char * name, char ** value, pool
 	{
        https_port_get_form_url(cwmp->acs_url,param);
 	}else{
-	strcpy(param,"443");
+	strcpy(param,"8888");
 	}
 	*value = param;
 	return FAULT_CODE_OK;

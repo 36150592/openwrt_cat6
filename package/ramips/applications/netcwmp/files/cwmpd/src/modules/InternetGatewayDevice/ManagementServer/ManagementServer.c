@@ -1676,6 +1676,60 @@ int cpe_set_NetworkPriority(cwmp_t * cwmp, const char * name, const char * value
 	return FAULT_CODE_9003;
 }
 
+int cpe_get_EnableWAN(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{    
+	uci_get_single_config_attr("uci get tozed.cfg.tr069_wan_enable 2>/dev/null", param);
+	if(!strcmp(param,"y"))
+	{
+		strcpy(param, "true");
+		
+	}else{
+		strcpy(param, "false");
+	    
+	}
+    *value = param;
+    
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_EnableWAN(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
+{
+
+
+	if(!strcmp(value, "true"))
+		uci_set_single_config_attr("uci set tozed.cfg.tr069_wan_enable=y 2>/dev/null&&uci commit tozed", "y");
+	else
+		uci_set_single_config_attr("uci set tozed.cfg.tr069_wan_enable=n 2>/dev/null&&uci commit tozed", "n");
+ 	
+    return FAULT_CODE_OK;
+}
+
+int cpe_get_igd_wan_Port(cwmp_t * cwmp, const char * name, char ** value, pool_t * pool)
+{    
+	uci_get_single_config_attr("uci get tozed.cfg.tr069_wan_port 2>/dev/null", param);
+	if(strlen(param)== 0)
+	{
+		strcpy(param, "8888");
+		
+	}
+    *value = param;
+    
+    return FAULT_CODE_OK;
+}
+
+int cpe_set_igd_wan_Port(cwmp_t * cwmp, const char * name, const char * value, int length, callback_register_func_t callback_reg)
+{
+	char command[128];
+
+	if(value !=NULL)
+	{
+		sprintf(command, "uci set tozed.cfg.tr069_wan_port=%s 2>/dev/null&&uci commit tozed", value);
+		uci_set_single_config_attr(command, "y");
+	}
+    return FAULT_CODE_OK;
+}
+
+
 #ifdef  PERIODREADDEVICE
 extern float uplink, downlink, uplink_min, uplink_max, downlink_min, downlink_max;
 extern pthread_mutex_t refresh_linkrate_lock;

@@ -259,6 +259,7 @@
 #define SYS_LOG_FILE_NAME "/usr/websys.log"
 #define SYS_TMP_LOG_FILE_NAME "/tmp/websys.log"
 #define TR069_INFORM_FLAG_FILE "/tmp/.tr069_inform_flag"
+#define TR069_INTERVAL_TIME_FILE "/tmp/.tr069_interval_time"
 #define TR069_COOKIE_FILE "/tmp/.tr069_cookie"
 #define TR069_UPDATE_SYS "SYS"
 #define TR069_UPDATE_CFG "CFG"

@@ -287,6 +287,10 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
 	int is_boot_success = 0;
 	int is_first_heart_beat = 1;
 	int reconnect_count = 0;
+    int seconds;
+    char cmdbuf[128]={0};
+    char value[64]={0};
+    FILE* file_handle;    
 
     while (TRUE)
     {
@@ -303,6 +307,43 @@ void cwmp_agent_start_session(cwmp_t * cwmp)
 				remove(TR069_INFORM_FLAG_FILE);
 	    		start_heart_beat(cwmp);
 			}
+
+            // set INTERVAL_TIME
+			if(cmd_file_exist(TR069_INTERVAL_TIME_FILE)){
+
+                file_handle=fopen( TR069_INTERVAL_TIME_FILE,"rb" );
+                //打开文件失败
+                if( file_handle == NULL )
+                {
+                    
+                }
+                else
+                {
+                    //读取文件的内容
+                   
+                    fread( value,sizeof( value ),1,file_handle );
+
+                    seconds = atoi(value);
+	                if (seconds <= 30) 
+                    {
+                        strcpy(value,"30");
+                    }else if(seconds > 240) {
+                         strcpy(value,"240");
+                    }
+                    if(cwmp_conf_get_int("cwmp:interval") != seconds)
+                    {
+                        cwmp_conf_set("cwmp:interval",value);
+                        
+                        sprintf(cmdbuf,"uci -q set tozed.cfg.tr069_PeriodicInformInterval=%d;uci -q commit tozed", seconds);
+
+                        system(cmdbuf); 
+                    }
+                }
+                //关掉文件句柄
+                fclose( file_handle );
+				remove(TR069_INTERVAL_TIME_FILE);
+			}
+            
 
             /*cnt++;
             if(cnt==5){

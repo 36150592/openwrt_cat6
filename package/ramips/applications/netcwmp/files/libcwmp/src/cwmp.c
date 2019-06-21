@@ -5104,7 +5104,7 @@ int process_lock_cell(const char *value) {
 void kill_httpd() {
 
 	char pid[20], userName[20], shellcmd[256], buffer[256];
-	strcpy(shellcmd, "ps | grep httpd | grep \"tzwww\" | grep -v grep");
+	strcpy(shellcmd, "ps | grep mini_httpd | grep \"tz_www\" | grep -v grep");
 
 	int count = 0;
 	while(count++ < 10) {
@@ -5130,7 +5130,7 @@ static char login_status[16];
 int get_remote_login_status(char **value) {
 
 	char buffer[256];
-	uci_get_single_config_attr("uci get dhcp.lan.https 2>/dev/null", buffer);
+	get_single_config_attr(TZ_ALLOW_LOGIN_FROM_WAN, buffer);
 	if (strncmp(buffer, STR_YES, sizeof(STR_YES)) == 0) {
 		strcpy(login_status, "1");
 	} else {
@@ -5148,7 +5148,7 @@ int process_remote_login(int enabled) {
 	if (enabled) {
 		kill_httpd();
 		
-		strcpy(shellcmd, "/usr/sbin/httpd -h /tzwww -c /etc/httpd.conf");
+		strcpy(shellcmd, "/bin/mini_httpd -C /tz_www/mini_httpd.conf");
 		system(shellcmd);
 
 		set_single_config_attr(TZ_ALLOW_LOGIN_FROM_WAN, STR_YES);
@@ -5157,7 +5157,7 @@ int process_remote_login(int enabled) {
 		kill_httpd();
 
 		get_single_config_attr(AP_IP_ADDRESS, ip);
-		sprintf(shellcmd, "/usr/sbin/httpd -h /tzwww -p %s -c /etc/httpd.conf", ip);
+		sprintf(shellcmd, "/bin/mini_httpd -C /tz_www/mini_httpd.conf", ip);
 		system(shellcmd);
 		
 		set_single_config_attr(TZ_ALLOW_LOGIN_FROM_WAN, STR_NO);
