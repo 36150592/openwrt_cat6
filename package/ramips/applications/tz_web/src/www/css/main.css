@@ -1634,6 +1634,7 @@ ul.tabs a.current {
 }
 
 #main .login_left {
+	overflow: auto;
 	box-sizing: border-box;
 	width: 70%;
 	height: 100%;
@@ -1651,6 +1652,7 @@ ul.tabs a.current {
 }
 
 #main .login_left_m {
+	height: 1px !important;
 	background: url("../images/anhui/left_m.gif");
 }
 
@@ -1661,7 +1663,6 @@ ul.tabs a.current {
 #login_container {
 	width: 100%;
 	height: 100%;
-	top: 100px;
 }
 
 #login_container .login_background_container {
@@ -1825,7 +1826,7 @@ ul.tabs a.current {
 	top: 0;
 	left: 70.11%;
 	width: 30%;
-	height: auto;
+	height: 100%;
 }
 
 .login_right table th{
