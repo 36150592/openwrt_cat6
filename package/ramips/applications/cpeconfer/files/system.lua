@@ -1628,5 +1628,12 @@ function system_module.system_ddns_get_status()
 	io.close(f)
 	return res
 end
-return system_module
 
+function system_module.system_login_get_session_timeout()
+
+	local timeout = x:get("tozed", "web", "TZ_SESSION_TIMEOUT")
+	util.web_log(timeout)
+	return timeout
+end
+
+return system_module

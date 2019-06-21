@@ -39,6 +39,12 @@ else
 	cfg -a TZ_WEB_OPERATOR_SHOW_HIDE_PREF="FFFF" --section web
 fi
 
+if [ "${TZWEB_SESSION_TIMEOUT}" != "" ]; then
+	cfg -a TZ_SESSION_TIMEOUT="${TZWEB_SESSION_TIMEOUT}" --section web
+else
+	cfg -a TZ_SESSION_TIMEOUT="20" --section web
+fi
+
 
 cfg -c
 

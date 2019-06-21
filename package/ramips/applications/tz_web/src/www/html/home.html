@@ -106,7 +106,6 @@
         infoMenu.push(new MenuBody("WIFI_INFO", MENU.info.wifi));
         infoMenu.push(new MenuBody("DEVICE_INFO", MENU.info.version));
         menus.push(infoMenu);
-        
         var settingMenu = new MenuHead("setting_menu", MENU.setting.head);
         settingMenu.push(new MenuBody("NETWORK_CONFIG", MENU.setting.dhcp));
         settingMenu.push(new MenuBody("WIRELESS_CONFIG", MENU.settingWifi.wifi));
@@ -258,21 +257,44 @@
             $('#progress_box').hide();
         });
         
-        function listenOperation () {
-            var maxTime = 20; // seconds
-            var time = maxTime;
-            $('body').on('keydown mousemove mousedown', function(e){
-                time = maxTime; // reset
-            });
-            var intervalId = setInterval(function(){
-                time--;
-                if(time <= 0) {
-                    clearInterval(intervalId);
-                    $('#logout').click();
-                }
-            }, 1000*60);
+        // function listenOperation () {
+        //     var maxTime = 20; // seconds
+        //     var time = maxTime;
+        //     $('body').on('keydown mousemove mousedown', function(e){
+        //         time = maxTime; // reset
+        //     });
+        //     var intervalId = setInterval(function(){
+        //         time--;
+        //         if(time <= 0) {
+        //             clearInterval(intervalId);
+        //             $('#logout').click();
+        //         }
+        //     }, 1000*60);
 
-        }
+        // }
+
+            function loginSessionTimeout() {
+                // timeout的单位是分钟
+                var timeout = parseFloat(sessionStorage['timeout']),
+                time = timeout;
+                timer = null;
+                if(timer) {
+                    clearTimeout(timer);
+                    timer = null;
+                }
+                timer = setTimeout(function() {
+                    $('#logout').click();
+                }, time * 60 * 1000) 
+                $('body').on('keydown mousemove mousedown', function(){
+                    time = timeout; // reset
+                    clearTimeout(timer);
+                    timer = setTimeout(function() {
+                        $('#logout').click();
+                    }, time  * 60 * 1000) 
+                });    
+                    
+            };
+           
 
         // function showSysTime() {
         //     Page.postJSON({
@@ -312,9 +334,8 @@
         $('#menu h3').eq(0).next().find("a").eq(0).click();
         $('#container').show();
         // showSysTime();
-        listenOperation ();
-        
-
+        // listenOperation ();
+        loginSessionTimeout();
 		
     });
 	

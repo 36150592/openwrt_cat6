@@ -1482,6 +1482,9 @@ class_name="MODEM_CONFIG_FIELD">
 		<depend value="TZ_WEB_SHOW_HIDE_OPERATOR_PREF_16"/>
 		<default value="0"/>
 	</config>
+	<config name="TZWEB_SESSION_TIMEOUT" type="text"  description="WEB 会话超时" detail="WEB 会话超时" class_name="WEB_CONFIG_FIELD">
+		<default value="20"/>
+	</config>
 	
 	
 </project>

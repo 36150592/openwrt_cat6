@@ -310,6 +310,7 @@
                                     sessionStorage['level'] = data.level;
                                     sessionStorage['loginFail'] = 0;
                                     sessionStorage['failTime'] = "";
+                                    sessionStorage['timeout'] = data.timeout;
                                     location.href = Page.getUrl("index.html");
                                 },
                                 fail: function (data) {

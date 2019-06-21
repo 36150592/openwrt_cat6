@@ -93,12 +93,14 @@ function login()
         local fileDir = "/tmp/sessionsave/."
         local fileName = string.format("%s%s%s", fileDir, sessionId, logintime)
         local file1 = io.open(fileName, "w")
+        local timeout = system.system_login_get_session_timeout()
         io.input(file1)
         file1:write("updateTime:" .. logintime)
         io.close(file1)
 
         tz_answer["success"] = true
         tz_answer["sessionId"] = sessionId .. logintime
+        tz_answer["timeout"] = timeout
 
         local web_info = {}
         web_info = system.system_get_web_info()
@@ -537,7 +539,6 @@ function get_dhcp_list()
 end
 
 function set_wifi()
-
     local tz_answer = {}
     tz_answer["cmd"] = 2
     local ret
