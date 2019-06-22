@@ -1,0 +1,34 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2007-2012 OpenWrt.org
+
+START=61
+STOP=85
+
+set_sip_alg_port(){
+	sed -i s/^sip_listen_port.*/sip_listen_port\ =\ $1/ /etc/siproxd.conf
+}
+
+
+start(){
+
+	alg_enable=`cfg -g sip_alg_enable`
+	alg_port=`cfg -g sip_alg_port`
+
+	if [ "${alg_port}" = "" ]; then
+		alg_port=5060
+	fi
+
+	if [ "${alg_enable}" = "1" ]; then
+		port_exist=`grep sip_listen_port /etc/siproxd.conf | grep $alg_port`
+		if [ "${port_exist}" = "" ]; then
+			set_sip_alg_port $alg_port
+		fi
+
+		iptables -t nat -A PREROUTING -i br0 -p udp -m udp --dport $alg_port -j REDIRECT
+		/bin/siproxd &
+	fi
+}
+
+stop(){
+    killall -9 siproxd
+}

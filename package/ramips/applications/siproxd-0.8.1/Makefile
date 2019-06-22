@@ -39,8 +39,16 @@ define Build/Prepare
 endef
 
 define Package/siproxd-0.8.1/install
-	cd ${PKG_BUILD_DIR} && make install DESTDIR=${1}
+	pwd
+	$(INSTALL_DIR) $(1)/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/siproxd $(1)/bin
+
+	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_BIN) src/siproxd.conf $(1)/etc/
+
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/siproxd.init $(1)/etc/init.d/siproxd
+
 endef
 
 
