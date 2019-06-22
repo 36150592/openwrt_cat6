@@ -896,7 +896,7 @@ end
 -- return:
 --		boolean true if success false if fail
 function wifi_module.wifi_set_bandwidth(wifi_id,mode)
-	if "20" == mode or "20+40" ==mode or "80" == mode
+	if "20" == mode or "40" ==mode or "80" == mode
 	then
 		local section = common_get_section_name_by_index(wifi_id)
 		local band
@@ -910,7 +910,7 @@ function wifi_module.wifi_set_bandwidth(wifi_id,mode)
 			if "20" == mode
 			then
 				mode = "0"
-			elseif "20+40" == mode
+			elseif "40" == mode
 			then
 				mode = "1"
 			elseif "80" == mode
@@ -925,7 +925,7 @@ function wifi_module.wifi_set_bandwidth(wifi_id,mode)
 
 	    return common_config_set(wifi_id, "ht", "HT_BW", mode)
 	else
-		debug("input error: must be [20 20+40 80]")
+		debug("input error: must be [20 40 80]")
 		return false
 	end
 end

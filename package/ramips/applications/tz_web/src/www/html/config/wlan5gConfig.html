@@ -445,11 +445,17 @@
                 Page.postJSON({
                         json: { cmd: RequestCmd.WIFI5_INFO },
                         success: function(datas) {
-                            var data = datas.data;                                        
+                            var data = datas.data;                           
                             Page.setFormFieldValue2("maxStation", data.maxassoc);
                             Page.setFormFieldValue2("channel", data.channel);
                             Page.setFormFieldValue2("wifiWorkMode", data.mode);
                             Page.setFormFieldValue2("bandWidth", data.bandwidth);
+                            
+                            if($('#wifiWorkMode').val() !== "15") {
+                                $("#bandWidth option[value='80']").hide();
+                            }else {
+                                $("#bandWidth option[value='80']").show();
+                            }
                         }
                     });
                     break;
@@ -738,7 +744,6 @@
                     $(this).attr("disabled",false);
                     return false;
                 }
-
                 json.cmd = RequestCmd.SSIDLIST_CONFIG;
                 json.wifiId = $wifiId.val();
                 Page.postJSON({
@@ -761,20 +766,7 @@
                 $(this).attr("disabled",false);
                 return false;
             }
-
             var json = JSON.parmsToJSON($form);
-
-            if(json.key == $('#key').attr('old')){
-                delete json["key"];
-                count++;
-            }else {
-                if (!CheckUtil.checkPwd(json.key)) {
-                    AlertUtil.alertMsg(showText.keyCkeckMsg);
-                    $(this).attr("disabled", false);
-                    return false;
-                }
-            }
-
             if(json.maxStation ==  $("#maxStation").attr('old')){
                 delete json["maxStation"];
                 count++;
@@ -787,11 +779,10 @@
                 delete json["wifiWorkMode"];
                 count++;
             }
-            if(json.ht ==  $("#ht").attr('old')){
-                delete json["ht"];
+            if(json.bandWidth ==  $("#bandWidth").attr('old')){
+                delete json["bandWidth"];
                 count++;
             }
-            
             if(count == 4){
                 AlertUtil.alertMsg(CHECK.required.noChanges);
                 $(this).attr("disabled",false);
@@ -803,7 +794,7 @@
                 json: json,
                 success: function(data) {
                     AlertUtil.alertMsg(PROMPT.saving.success);
-                    $lis.eq(id).click();
+                    $lis.eq(3).click();
                 },
                 complete: function(){
                     $('#btn3Save').attr("disabled",false);
@@ -842,6 +833,22 @@
             }
         });
 
+        $('#wifiWorkMode').change(function() {
+            if($('#bandWidth').val() == "80") {
+                if($('#wifiWorkMode').val() !== "15") {
+                    $('#bandWidth option:eq(0)').attr('selected','selected');
+                    $("#bandWidth option[value='80']").hide();
+                }else {
+                    $("#bandWidth option[value='80']").show();
+                }
+            }else {
+                if($('#wifiWorkMode').val() !== "15") {
+                    $("#bandWidth option[value='80']").hide();
+                }else {
+                    $("#bandWidth option[value='80']").show();
+                }
+            }                             
+        });
     });
 
     function showPsw(id){
@@ -1135,7 +1142,7 @@
                                 <td>
                                     <select name="bandWidth" id="bandWidth">
                                         <option value="20"><%- bandWidth20 %></option>
-                                        <option value="20+40"><%- bandWidth40 %></option>
+                                        <option value="40"><%- bandWidth40 %></option>
                                         <option value="80"><%- bandWidth80 %></option>
                                     </select>
                                 </td>
