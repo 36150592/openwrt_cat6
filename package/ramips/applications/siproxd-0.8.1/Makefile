@@ -39,7 +39,6 @@ define Build/Prepare
 endef
 
 define Package/siproxd-0.8.1/install
-	pwd
 	$(INSTALL_DIR) $(1)/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/siproxd $(1)/bin
 
