@@ -6,8 +6,10 @@ local TZ_REMOTE_DEFAULT_LIST=`cfg -g  TZ_REMOTE_DEFAULT_LIST --section remote_co
 local TZ_REMOTE_LOGIN_LIST=`cfg -g  TZ_REMOTE_LOGIN_LIST --section remote_control`
 local TZ_REMOTE_PING=`cfg -g  TZ_REMOTE_PING --section remote_control`
 local TZ_REMOTE_PING_LIST=`cfg -g  TZ_REMOTE_PING_LIST --section remote_control`
+local TZ_REMOTE_DEFAULT_LIST_AUTH=`cfg -g TZ_REMOTE_DEFAULT_LIST_AUTH --section remote_control`
 local TZ_DMZ_ENABLE=`cfg -g TZ_DMZ_ENABLE --section dmz`
 local TZ_ARP_LIST=`cfg -g TZ_ARP_ITEM --section arp_bind`
+
 if [ $REMOTE_MINI_HTTP_LISTEN_PORT'' == '' ];then
         REMOTE_MINI_HTTP_LISTEN_PORT=80
 fi
@@ -15,6 +17,8 @@ fi
 if [ $REMOTE_MINI_HTTPS_LISTEN_PORT'' == '' ];then
         REMOTE_MINI_HTTPS_LISTEN_PORT=443
 fi
+
+
 
 
 #the abobe lines can not be move to other position
@@ -78,8 +82,8 @@ drop_wan(){
                 if [ $wan'' == '' ];then
                         continue
                 fi
-		iptables -I INPUT -i $wan -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j DROP
-		iptables -I INPUT -i $wan -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j DROP
+                iptables -I INPUT -i $wan -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j DROP
+                iptables -I INPUT -i $wan -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j DROP
 
                 iptables -I INPUT -i $wan -p tcp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j DROP
                 iptables -I INPUT -i $wan -p udp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j DROP
@@ -91,16 +95,18 @@ drop_wan(){
 turn_off_remote_web_login(){
 	drop_wan
 
-        for ip in $TZ_REMOTE_DEFAULT_LIST
-        do
-                if [ $ip'' == '' ];then
-                        continue
-                fi
-                iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
-                iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
-                iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
-                iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
-        done
+        if [ "${TZ_REMOTE_DEFAULT_LIST_AUTH}" = "1" ]; then
+            for ip in $TZ_REMOTE_DEFAULT_LIST
+            do
+                    if [ $ip'' == '' ];then
+                            continue
+                    fi
+                    iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
+                    iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
+            done
+        fi
+
+       
 }
 
 turn_on_remote_web_login(){
@@ -111,8 +117,6 @@ turn_on_remote_web_login(){
                 if [ $ip'' == '' ];then
                         continue
                 fi
-                iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
-                iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
                 iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
                 iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
         done
@@ -122,8 +126,6 @@ turn_on_remote_web_login(){
                 if [ $ip'' == '' ];then
                         continue
                 fi
-                iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
-                iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTP_LISTEN_PORT -j ACCEPT
                 iptables -I INPUT -s $ip -p tcp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
                 iptables -I INPUT -s $ip -p udp --dport $REMOTE_MINI_HTTPS_LISTEN_PORT -j ACCEPT
         done
@@ -137,10 +139,12 @@ turn_off_remote_ping(){
                 if [ $wan'' == '' ];then
                         continue
                 fi
-		iptables  -I INPUT -i $wan -p icmp -j DROP
+                iptables  -I INPUT -i $wan -p icmp -j DROP
                 iptables  -I INPUT -i $wan -p icmp --icmp-type 0 -j ACCEPT
 	done
 
+
+    if [ "${TZ_REMOTE_DEFAULT_LIST_AUTH}" = "1" ]; then
         for ip in $TZ_REMOTE_DEFAULT_LIST
         do
                 if [ $ip'' == '' ];then
@@ -148,6 +152,7 @@ turn_off_remote_ping(){
                 fi
                 iptables -I INPUT -s $ip -p icmp  -j ACCEPT
         done
+    fi
 }
 
 

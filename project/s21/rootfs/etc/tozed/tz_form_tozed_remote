@@ -15,6 +15,13 @@ chmod 777 ${MODEM_CONFIG_LOAD_FILE}
 
 cfg -a TZ_REMOTE_LOGIN="${TZSYSTEM_REMOTE_LOGIN}" --section remote_control
 cfg -a TZ_REMOTE_PING="${TZSYSTEM_REMOTE_PING}" --section remote_control
+
+if [ "${TZSYSTEM_REMOTE_DEFAULT_LIST_AUTH}" = "1" ]; then
+	cfg -a TZ_REMOTE_DEFAULT_LIST_AUTH=1 --section remote_control
+else
+	cfg -a TZ_REMOTE_DEFAULT_LIST_AUTH=0 --section remote_control
+fi
+
 cfg -d TZSYSTEM_REMOTE_DEFAULT_LIST --section remote_control
 for temp in ${TZSYSTEM_REMOTE_DEFAULT_LIST}
 do
