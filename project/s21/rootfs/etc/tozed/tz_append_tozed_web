@@ -1,0 +1,35 @@
+#!/bin/sh
+
+web_param_list="\n
+TZWEB_SHOW_LANGUAGE_SELECT="TZ_WEB_SHOW_LANGUAGE_SELECT"\n
+TZWEB_PREFERRED_LANGUAGE="TZ_WEB_LANGUAGE"\n
+TZWEB_USER_SHOW_HIDE_PREF="TZ_WEB_USER_SHOW_HIDE_PREF"\n
+TZWEB_OPERATOR_SHOW_HIDE_PREF="TZ_WEB_OPERATOR_SHOW_HIDE_PREF"\n
+TZWEB_SESSION_TIMEOUT="TZ_SESSION_TIMEOUT"\n
+TZWEB_HTTPS_PORT="TZ_HTTPS_PORT"\n
+"
+
+param_file_web=/tmp/.param_file_web
+extern_file=$1
+
+if [ ! -e "${extern_file}" ]; then
+	exit
+fi
+
+cat $extern_file | grep TZWEB_ > ${param_file_web}
+
+
+#
+while read line
+do
+        name=`echo $line | awk -F "=" '{print$1}' | awk '{print $2}'`
+        value=`echo $line | awk -F "=" '{print$2}' | awk -F '"' '{print $2}'`
+
+        name_in_web_param=`echo -e ${web_param_list} | grep ${name} | awk -F "=" '{print $2}'`
+        if [ -n "${name_in_web_param}" ]; then
+        	uci set tozed.web.${name_in_web_param}="${value}"
+        fi
+
+done < ${param_file_web}
+
+cfg -c

@@ -3,6 +3,7 @@
 remote_param_list="\n
 TZSYSTEM_REMOTE_LOGIN="TZ_REMOTE_LOGIN"\n
 TZSYSTEM_REMOTE_PING="TZ_REMOTE_PING"\n
+TZSYSTEM_REMOTE_DEFAULT_LIST_AUTH="TZ_REMOTE_DEFAULT_LIST_AUTH"\n
 "
 
 param_file_remote=/tmp/.param_file_remote
