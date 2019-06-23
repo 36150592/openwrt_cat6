@@ -6,7 +6,14 @@ STOP=75
 
 start(){
     /bin/mini_httpd -C /tz_www/mini_httpd.conf  &
-    /bin/mini_httpd -C /tz_www/mini_httpd_https.conf  &
+
+    https_port=`cfg -g TZ_HTTPS_PORT --section web`
+    if [ "${https_port}" = ""]; then
+    	/bin/mini_httpd -C /tz_www/mini_httpd_https.conf  &
+    else
+    	/bin/mini_httpd -C /tz_www/mini_httpd_https.conf  -p ${https_port} &
+    fi
+    
 }
 
 stop(){

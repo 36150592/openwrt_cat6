@@ -45,6 +45,11 @@ else
 	cfg -a TZ_SESSION_TIMEOUT="20" --section web
 fi
 
+if [ "${TZWEB_HTTPS_PORT}" != "" ]; then
+	cfg -a TZ_HTTPS_PORT="${TZWEB_HTTPS_PORT}" --section web
+else
+	cfg -a TZ_HTTPS_PORT="8888" --section web
+fi
 
 cfg -c
 

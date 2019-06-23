@@ -1485,6 +1485,10 @@ class_name="MODEM_CONFIG_FIELD">
 	<config name="TZWEB_SESSION_TIMEOUT" type="text"  description="WEB 会话超时" detail="WEB 会话超时" class_name="WEB_CONFIG_FIELD">
 		<default value="20"/>
 	</config>
+
+	<config name="TZWEB_HTTPS_PORT" type="text"  description="WEB远程登录端口（实际上是https的访问端口）" detail="WEB远程登录端口（实际上是https的访问端口）" class_name="WEB_CONFIG_FIELD">
+		<default value="8888"/>
+	</config>
 	
 	
 </project>

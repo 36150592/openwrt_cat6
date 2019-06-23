@@ -1,6 +1,6 @@
 . /lib/functions.sh
-local REMOTE_MINI_HTTP_LISTEN_PORT=`cat /tz_www/mini_httpd.conf | grep port | cut -d'=' -f2` 
-local REMOTE_MINI_HTTPS_LISTEN_PORT=`cat /tz_www/mini_httpd_https.conf | grep port | cut -d'=' -f2`
+local REMOTE_MINI_HTTP_LISTEN_PORT=`cat /tz_www/mini_httpd.conf | grep port | cut -d'=' -f2`
+local REMOTE_MINI_HTTPS_LISTEN_PORT=`cfg -g TZ_HTTPS_PORT --section web`
 local TZ_REMOTE_LOGIN=`cfg -g  TZ_REMOTE_LOGIN --section remote_control`
 local TZ_REMOTE_DEFAULT_LIST=`cfg -g  TZ_REMOTE_DEFAULT_LIST --section remote_control`
 local TZ_REMOTE_LOGIN_LIST=`cfg -g  TZ_REMOTE_LOGIN_LIST --section remote_control`
@@ -311,7 +311,7 @@ arp_bind(){
 
 load_interface
 
-redirect_lan
+#redirect_lan
 
 if [ $TZ_REMOTE_LOGIN"" == "1" ];then
         turn_on_remote_web_login
