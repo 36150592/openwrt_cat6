@@ -44,5 +44,17 @@ if [ "${TZSYSTEM_SN_GENERATE_TYPE}" != "" ]; then
 	cfg -a TZ_SYSTEM_SN_GENERATE_TYPE=${TZSYSTEM_SN_GENERATE_TYPE} --section system
 fi
 
+if [ "${TZSYSTEM_SIP_ALG_ENABLE}" = "0" ]; then
+	cfg -a sip_alg_enable="0" --section system
+else
+	cfg -a sip_alg_enable="1" --section system
+fi
+
+if [ "${TZSYSTEM_SIP_ALG_PORT}" != "" ]; then
+	cfg -a sip_alg_port="${TZSYSTEM_SIP_ALG_PORT}" --section system
+else
+	cfg -a sip_alg_port="5060" --section system
+fi
+
 cfg -c
 
