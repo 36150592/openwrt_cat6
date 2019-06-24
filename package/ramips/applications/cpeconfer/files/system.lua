@@ -1637,16 +1637,32 @@ function system_module.system_login_get_session_timeout()
 end
 
 function system_module.system_set_sip_alg(enable, port)
-	if "0" == enable
+	if nil ~= enable
 	then
-		x:set(TOZED_CONFIG_FILE, "system", "sip_alg_enable", enable)
-		x:commit(TOZED_CONFIG_FILE)
-		return 0
+		if "0" == enable
+		then
+			x:set(TOZED_CONFIG_FILE, "system", "sip_alg_enable", enable)
+			x:commit(TOZED_CONFIG_FILE)
+			return true
+		else
+			if nil ~= port
+			then
+				x:set(TOZED_CONFIG_FILE, "system", "sip_alg_enable", enable)
+				x:set(TOZED_CONFIG_FILE, "system", "sip_alg_port", port)
+				x:commit(TOZED_CONFIG_FILE)
+				return true
+			else
+				x:set(TOZED_CONFIG_FILE, "system", "sip_alg_enable", "")
+				x:set(TOZED_CONFIG_FILE, "system", "sip_alg_port", "")
+				x:commit(TOZED_CONFIG_FILE)
+				return false
+			end
+		end
 	else
-		x:set(TOZED_CONFIG_FILE, "system", "sip_alg_enable", enable)
-		x:set(TOZED_CONFIG_FILE, "system", "sip_alg_port", port)
+		x:set(TOZED_CONFIG_FILE, "system", "sip_alg_enable", "")
+		x:set(TOZED_CONFIG_FILE, "system", "sip_alg_port", "")
 		x:commit(TOZED_CONFIG_FILE)
-		return 0
+		return false
 	end
 end
 
