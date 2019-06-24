@@ -14,6 +14,13 @@
 
         var editIndex = 0;
 
+        var rules = {
+            remoteLoginPort: {required: true, range: [0, 65535]}
+        };
+
+        var messages = {
+            remoteLoginPort: {required: CHECK.required.remotePort, range: CHECK.range.port}
+        };
 
         if(sessionStorage['level'] == "1"){
             $("#dafulteIpList").show();
@@ -107,7 +114,17 @@
         }else{
             enableRemoteLogin = 0;
         }
+
+        var $remoteLoginPort = $('#remoteLoginPort').val();
+        var $form = $('#childForm');
+        var json = JSON.parmsToJSON($form);
+        if(!CheckUtil.checkForm($form, rules, messages)) {
+            $('#btnSave').attr("disabled",false);
+            return;
+        }
+
         var json = {};
+            json.remoteLoginPort = $remoteLoginPort;
             json.dataList1 = ipArray;
             json.dataList2 = ipArray2;
             json.pingFlag = enableRemoteLogin;
@@ -235,6 +252,7 @@
                     cmd: RequestCmd.GET_WEB_LIST
                 },
                 success: function(datas) {
+                        $('#remoteLoginPort').val(datas.data.remoteLoginPort);
                         createIpListTable(datas.data.webList);
                         createIpListTable2(datas.data.defultList);
                          if(datas.data.webFlag == true){
@@ -261,6 +279,12 @@
                         <th><%- lbl.remoteLogin %><%- colon %></th>
                         <td>
                             <input type="checkbox" id="enableRemoteLogin" name="enableRemoteLogin" /><%- status.enable %>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><%- lbl.remotePort %><%- colon %></th>
+                        <td>
+                            <input type="text" id="remoteLoginPort" name="remoteLoginPort" />
                         </td>
                     </tr>
                     <tr>

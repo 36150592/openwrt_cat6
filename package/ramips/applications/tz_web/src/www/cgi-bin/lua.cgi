@@ -1975,6 +1975,7 @@ function get_web_list()
     local tz_answer = {}
     tz_answer["cmd"] = 217
     local data_array = {}
+    data_array["remoteLoginPort"] = firewall.firewall_remote_get_web_login_port()
     data_array["defultList"] = firewall.firewall_remote_get_default_list()
     data_array["webList"] = firewall.firewall_remote_get_web_login_list()
     data_array["webFlag"] = firewall.firewall_remote_get_web_login()
@@ -1989,9 +1990,14 @@ end
 function set_web_list()
     local ret
     local tz_answer = {}
+    local remoteLoginPort = tz_req["remoteLoginPort"]
     local dataList1 = tz_req["dataList1"]
     local dataList2 = tz_req["dataList2"]
     local pingFlag = tonumber(tz_req["pingFlag"])
+    if (nil ~= remoteLoginPort) then
+        ret = firewall.firewall_remote_set_web_login_port(remoteLoginPort)
+        if (not ret) then tz_answer["success"] = false end
+    end
     if (nil ~= dataList1) then
         ret = firewall.firewall_remote_set_web_login_list(dataList1)
         if (not ret) then tz_answer["success"] = false end
@@ -2489,6 +2495,7 @@ function wifi_advanced_config()
     local maxStation = tonumber(tz_req["maxStation"])
     local channel = tz_req["channel"]
     local mode = tonumber(tz_req["wifiWorkMode"])
+    local ht = tz_req["ht"]
 
     if (nil ~= txPower) then
         ret = wifi.wifi_set_txpower(id, txPower)

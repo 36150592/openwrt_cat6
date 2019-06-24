@@ -1651,6 +1651,28 @@ function firewall_module.firewall_remote_set_web_login_list(list)
 	return x:commit(TOZED_CONFIG_FILE)
 end
 
+-- input:the digit number that refers to the remote port
+-- return:true for set success ,false for set fail
+function firewall_module.firewall_remote_set_web_login_port(remoteLoginPort)
+	if nil == remoteLoginPort
+	then
+		x:set(TOZED_CONFIG_FILE, "web", "TZ_HTTPS_PORT", "")
+		x:commit(TOZED_CONFIG_FILE)
+		return false
+	else
+		x:set(TOZED_CONFIG_FILE, "web", "TZ_HTTPS_PORT", remoteLoginPort)
+		x:commit(TOZED_CONFIG_FILE)
+		return true
+	end
+end
+
+-- input:none
+-- return:the digit number that refers to the remote port
+function firewall_module.firewall_remote_get_web_login_port()
+	local remoteLoginPort = x:get(TOZED_CONFIG_FILE, "web", "TZ_HTTPS_PORT")
+	return remoteLoginPort
+end
+
 
 -- input:none
 -- return:true for turn on the remote ping , false for turn off
