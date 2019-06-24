@@ -251,57 +251,6 @@ local function common_config_get(wifi_id, option, dat_option)
 	return string.gsub(value,"\n","")
 end
 
-
-
-local function txpower_percent_to_dbm(txpower)
- 	if 100 >= txpower and 91 <= txpower
-    then
-    	return 23
-    elseif 90 >= txpower and 61 <= txpower
-    then
-    	return 22
-    elseif 60 >= txpower and 31 <= txpower
-    then
-    	return 20
-    elseif 30 >= txpower and 16 <= txpower
-    then
-    	return 17
-    elseif 15 >= txpower and 10 <= txpower
-    then
-    	return 14
-    elseif 9 >= txpower and 0 <= txpower 
-    then
-    	return 11
-	end
-
-    return -1
-
-end
-
-local function txpower_dbm_to_percent(txpower)
-	local value = 100
-
-	if 23 == txpower
-	then
-		value = 100
-	elseif txpower >20 and txpower <=22
-	then
-		value = 75
-	elseif txpower >17 and txpower <= 20
-	then
-		value = 50
-	elseif txpower > 14 and txpower <= 17
-	then
-		value = 25
-	elseif txpower > 9 and txpower <= 14
-	then
-		value = 12
-	else
-		value = 5
-	end
-	return value
-end
-
 local function get_wifi_mac(ifname)
 
 	if nil == ifname or "" == ifname
@@ -424,7 +373,7 @@ function wifi_module.wifi_get_dev()
 					temp["wifi_id"] = v
 				elseif k == "txpower"
 				then
-					temp["txpower"] = txpower_percent_to_dbm(tonumber(v))
+					temp["txpower"] = tonumber(v)
 				else
 					temp[k] = v
 				end
@@ -720,16 +669,16 @@ end
 --		number wifi_id get by wifi_get_dev
 -- return:
 -- 		number
---		the number of txpower in dbm
+--		the number of txpower in percent
 function wifi_module.wifi_get_txpower(wifi_id)
     local txpower =  common_config_get(wifi_id, "txpower", "TxPower")
-    return txpower_percent_to_dbm(tonumber(txpower))
+    return tonumber(txpower)
 end
 
 --txpower
 -- input:
 --		wifi_id(number) -->get by wifi_get_dev
---		txpower(number) [0 ,23] wifi tx power in percent
+--		txpower(number) wifi tx power in percent 0 ~ 100
 -- return:boolean
 --		true if success  false if fail
 function wifi_module.wifi_set_txpower(wifi_id,txpower)
@@ -739,14 +688,13 @@ function wifi_module.wifi_set_txpower(wifi_id,txpower)
 		return false
 	end
 
-	if txpower < 0 or txpower > 23
+	if txpower < 0 or txpower > 100
 	then
-		debug("input error: txpower must  range [0,23]")
+		debug("input error: txpower must  range [0,100]")
 		return false
 	end
-	local value = txpower_dbm_to_percent(txpower)
 
-    return common_config_set(wifi_id, "txpower", "TxPower", value)
+    return common_config_set(wifi_id, "txpower", "TxPower", txpower)
 end
 
 --hidden ssid
