@@ -1,3 +1,36 @@
+v1.09
+web: 在防火墙中添加url默认设置（向杰）
+修改设备型号为S21（郑达）
+web: 修复wifi页面隐藏问题（董锡文）
+web: 实现了Login页面型号和SN号的内容显示（董锡文）
+web: 修复了DHCP Settings页面Main DHCP Setting分页的Main DNS和Vice DNS字段命名不规范问题（董锡文）
+web: 修复了Version Infomation页面的Memory字段显示问题，将Memory字段拆分为Memory Total、Memory Free以及Memory Cache三个字段（董锡文）
+web: 修复了WiFi-2.4G Settings和WiFi-5G Settings页面的WPS Settings分页弹窗倒计时到0秒自动关闭弹窗后再次点击所有弹窗会造成当前弹窗立刻闪退的问题（董锡文）
+web: 添加配置控制 WAN配置的显示和隐藏（董锡文）
+web: 修复了Advanced Settings页面Remote Ping分页点击Edit弹窗异常的问题（董锡文）
+web: 优化了WiFi-2.4G Settings和Wifi-5G Settings页面的WPS Settings分页的定时器（董锡文）
+web: 去除了WiFi-5G Settings页面Connected List分页表体的Edit列（董锡文）
+解决url默认规则获取错误问题（封远钊）
+产测工具：升级和升配置后通过亮灯来标记状态（封远钊）
+实现ipv6 多路拨号并分配Global ipv6 地址到底下lan设备、下发dns（封远钊）
+web: 优化了首屏加载速度（董锡文）
+web: 优化了登录页的加载速度（董锡文）
+ipv6 添加无线网络策略路由（暂时不包括有线V6，有线V6 未测试）（封远钊）
+添加ipv6 nat（封远钊）
+添加判别V4 V6 网口，防止ipv4 v6 配置冲突重叠（封远钊）
+web: 修复了WiFi-2.4G Settings和WiFi-5G Settings页面的Auxiliary Wi-Fi1 Settings和Auxiliary Wi-Fi2 Settings分页选择Encrypt Algorithm的TKIP/AES并保存后并不是选择TKIP/AES而是选择AES的问题（董锡文）
+web: 去除了Wan Infomation页面主辅APN的MAC Address字段（董锡文）
+web: 修复了登录页分辨率过低时登录有右侧部分信息和左侧登录背景图部分看不到的问题，实现成可滚动（董锡文）
+tr069: 实现编辑主动上报时间不用重启tr069客户端功能，添加https节点（江义波）
+实现了登录后的会话超时的时间可配置（董锡文）
+实现sip alg功能（郑达）
+web: 修复了WiFi-5G Settings页面Wi-Fi Advanced Settings分页选择Wi-Fi Mode字段的值不为11AC时仍然可以在Bandwidth字段选择80MHz的问题（董锡文）
+配置: 支持配置网页的https端口.（郑达）
+添加wan访问列表权限控制配置，并且只允许通过https访问设备web.（郑达）
+web: 将WiFi-2.4G Settings和WiFi-5G页面的Main WiFi-Settings、Auxiliary Wi-Fi1 Settings、AuxiLiary Wi-Fi2 Settings以及Wi-Fi Advanced Settings分页Save之后先set再get数据回来更新页面状态，修改为只将当前页面的分页所修改的数据set之后不用把数据get回来更新页面状态（董锡文）
+
+
+
 v1.08
 web: 修复了Login页左侧在小屏幕显示不完整的问题（董锡文）
 web: 完善wps功能，在wps功能中添加随机PIN码,在手机端可以输入连接(2.4g和5.8g)（向杰）
