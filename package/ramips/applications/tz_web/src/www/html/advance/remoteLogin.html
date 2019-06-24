@@ -22,7 +22,13 @@
             remoteLoginPort: {required: CHECK.required.remotePort, range: CHECK.range.port}
         };
 
-        if(sessionStorage['level'] == "1"){
+        if(!Page.getShowHideByBit(17)){
+            $('#remoteIpList').hide();
+        }else {
+            $('#remoteIpList').show();
+        };
+
+        if(sessionStorage['level'] == "1"){    
             $("#dafulteIpList").show();
         }else{
             $("#dafulteIpList").hide();
@@ -125,8 +131,12 @@
 
         var json = {};
             json.remoteLoginPort = $remoteLoginPort;
-            json.dataList1 = ipArray;
-            json.dataList2 = ipArray2;
+            if(Page.getShowHideByBit(17)) {
+                json.dataList1 = ipArray;
+            };
+            if(sessionStorage['level'] == "1") {
+                json.dataList2 = ipArray2;
+            };           
             json.pingFlag = enableRemoteLogin;
             json.method = JSONMethod.POST;
             json.cmd = RequestCmd.SET_WEB_LIST;
@@ -287,7 +297,7 @@
                             <input type="text" id="remoteLoginPort" name="remoteLoginPort" />
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="remoteIpList">
                         <th><%- lbl.remoteIpList %><%- colon %></th>
                         <td>
                             <input id="btnAdd" type="button" value="<%- lbl.addRemoteIp %>" />
