@@ -151,7 +151,8 @@ var RequestCmd = {
     FIREWALL_URL_GET: 247,
     FIREWALL_URL_SET: 248,
     GET_HOME_INFO: 249,
-    GET_LOGIN_INFO: 250
+    GET_LOGIN_INFO: 250,
+    SET_LOGIN_USER: 251
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },

@@ -2764,6 +2764,36 @@ function get_login_info()
 
 end
 
+function set_login_user()
+    local ret
+    local tz_answer = {}
+
+    local newUsername = tz_req["newUsername"]
+    local oldPasswd = tz_req["oldPasswd"]
+    local newPasswd = tz_req["newPasswd"]
+
+    if (nil ~= oldPasswd) then
+        ret = system.system_check_login_oldpasswd(oldPasswd)
+        if (not ret) then 
+            tz_answer["message"] = false else
+            if (nil ~= newUsername) then
+                ret = system.system_set_login_username(newUsername)
+                if (ret) then tz_answer["usrMsg"] = true else tz_answer["usrMsg"] = false end
+            end
+            if (nil ~= newPasswd) then
+                ret = system.system_set_login_newpasswd(newPasswd)
+                if (ret) then tz_answer["message"] = true end
+            end
+        end
+    end
+  
+    tz_answer["success"] = true
+    tz_answer["cmd"] = 251
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end
+
 local switch = {
     [0] = get_sysinfo,
     [1] = get_systime,
@@ -2870,7 +2900,8 @@ local switch = {
     [247] = firewall_url_default_get,
     [248] = firewall_url_default_set,
     [249] = get_home_info,
-    [250] = get_login_info
+    [250] = get_login_info,
+    [251] = set_login_user
 }
 
 cmdid = uti.get_env_cmdId(envv)

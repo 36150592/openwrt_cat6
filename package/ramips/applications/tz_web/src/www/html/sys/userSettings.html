@@ -1,0 +1,88 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();  
+
+        var rules = {
+                newUsername: { required: true, rangelength: [2, 20] },
+                oldPasswd: { required: true },
+                newPasswd: { required: true, rangelength: [6, 20] },
+                newPasswd2: { required: true, rangelength: [6, 20], equalTo: '#newPasswd' }
+            },
+            messages = {
+                newUsername: { required: CHECK.required.newUsername, rangelength: CHECK.range.username },
+                oldPasswd: { required: CHECK.required.oldPasswd },
+                newPasswd: { required: CHECK.required.newPasswd, rangelength: CHECK.range.passwd },
+                newPasswd2: { required: CHECK.required.duplicateNewPasswd, rangelength: CHECK.range.passwd, equalTo: CHECK.format.passwdNotSame }
+            };
+
+        var $btnSave = $('#btnSave');
+
+        $btnSave.click(function(){
+            var $form = $('#form1');
+            if(!CheckUtil.checkForm($form, rules, messages)){
+                return false;
+            }
+            var json = JSON.parmsToJSON($form);
+
+            Page.postJSON({
+                $id: $btnSave,
+                json: {
+                    cmd: RequestCmd.SET_LOGIN_USER,
+                    method: JSONMethod.POST,
+                    newUsername: json.newUsername,
+                    oldPasswd: Md5.md5(json.oldPasswd),
+                    newPasswd: Md5.md5(json.newPasswd)
+                },
+                success: function(data) {
+                    $('#newUsername').val('');
+                    $('#oldPasswd').val('');
+                    $('#newPasswd').val('');
+                    $('#newPasswd2').val('');
+                    if(!data.message) {
+                        AlertUtil.alertMsg(PROMPT.saving.previousPasswd);
+                    }else if(!data.usrMsg){
+                        AlertUtil.alertMsg(PROMPT.saving.userNameFail);
+                    }else {
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+                    }           
+                }
+            });
+        });
+
+    });
+</script>
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="form1" enctype="multipart/form-data" method="post">
+            <table class="detail" cellspacing="0">
+                <tr>
+                        <th><%- sys.newUsername %><%- colon %></th>
+                        <td><input type="text" id="newUsername" name="newUsername" class="normal" maxlength="20" /></td>
+                    </tr>
+                <tr>
+                        <th><%- sys.oldPasswd %><%- colon %></th>
+                        <td><input type="password" id="oldPasswd" name="oldPasswd" class="normal" maxlength="20" /></td>
+                    </tr>
+                    <tr>
+                        <th><%- sys.newPasswd %><%- colon %></th>
+                        <td><input type="password" id="newPasswd" name="newPasswd" class="normal" maxlength="20" /></td>
+                    </tr>
+                    <tr>
+                        <th><%- sys.duplicateNewPasswd %><%- colon %></th>
+                        <td><input type="password" id="newPasswd2" name="newPasswd2" class="normal" maxlength="20" /></td>
+                    </tr>
+                    <tr>
+                        <th>&nbsp;</th>
+                        <td><input type="button" id="btnSave" value="<%- btn.save %>"/></td>
+                    </tr>
+            </table>
+        </form>
+    </script>
+</div>
+
+
+
