@@ -467,7 +467,7 @@
                             }
                         });
                         break;
-                case 4:    
+                case 4:
                     if (firstRequest) {
                             Page.postJSON({
                                 json: {
@@ -1242,7 +1242,14 @@
                                     <tr class="wifi_disable_hide">
                                             <th><%- txPower %></th>
                                             <td>
-                                                <input type="text" id="txPower" name="txPower" maxlength="4" class="txt2" />&nbsp;dBm<span class="cmt">(<%- txPowerCmt %>)</span>
+                                                <select id="txPower" name="txPower">
+                                                    <option value="100" selected="selected" title="<%- auto %>"><%- auto %></option>
+                                                    <option value="75">75%</option>
+                                                    <option value="50">50%</option>
+                                                    <option value="25">25%</option>
+                                                    <option value="12.5">12.5%</option>
+                                                    <option value="3">3%</option>
+                                                </select>
                                             </td>
                                         </tr>
             
@@ -1256,7 +1263,7 @@
                                         <tr class="wifi_disable_hide">
                                             <th><%- channel %></th>
                                             <td><select id="channel" name="channel">
-                                                <option value="auto"><%- auto %></option>
+                                                <option value="auto" title="<%- auto %>"><%- auto %></option>
                                                 <option value="1" class="ch_opt">1</option>
                                                 <option value="2" class="ch_opt">2</option>
                                                 <option value="3" class="ch_opt">3</option>
