@@ -1680,4 +1680,41 @@ function system_module.system_get_sip_alg()
 	end
 end
 
+function system_module.system_set_login_username(newUsername)
+	if (nil ~= newUsername and #newUsername >= 2 and  #newUsername <=20)
+	then
+		x:set(TOZED_CONFIG_FILE, "cfg", "TZ_USERNAME", newUsername)
+		x:commit(TOZED_CONFIG_FILE)
+		return true
+	else
+		return false
+	end
+end
+
+function system_module.system_check_login_oldpasswd(oldPasswd)
+	if nil ~= oldPasswd
+	then
+		local tz_username = x:get(TOZED_CONFIG_FILE, "cfg", "TZ_PASSWD")
+		if tz_username == oldPasswd
+		then
+			return true
+		else 
+			return false
+		end
+	else
+		return false
+	end	
+end
+
+function system_module.system_set_login_newpasswd(newPasswd)
+	if nil ~= newPasswd
+	then
+		x:set(TOZED_CONFIG_FILE, "cfg", "TZ_PASSWD", newPasswd)
+		x:commit(TOZED_CONFIG_FILE)
+		return true
+	else
+		return false
+	end
+end
+
 return system_module
