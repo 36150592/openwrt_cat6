@@ -152,7 +152,9 @@ var RequestCmd = {
     FIREWALL_URL_SET: 248,
     GET_HOME_INFO: 249,
     GET_LOGIN_INFO: 250,
-    SET_LOGIN_USER: 251
+    SET_LOGIN_USER: 251,
+    GET_SIP_CONFIG:252,
+    SET_SIP_CONFIG:253
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },
@@ -167,6 +169,7 @@ var MenuItem = {
     WLAN_5G_CONFIG: { cmd: RequestCmd.WLAN_5G_CONFIG, url: "html/config/wlan5gConfig.html" },
     ADVANCED_CONFIG: { cmd: RequestCmd.BASIC_CONFIG, url: "html/advance/advancedConfig.html" },
     APN_CONFIG: { cmd: RequestCmd.GET_APN_CONFIG, url: "html/config/apnConfig.html" },
+    SIP_CONFIG: { cmd: RequestCmd.GET_SIP_CONFIG, url: "html/config/voiceSettingsIndex.html" },
     WAN_SETTINGS: { cmd: RequestCmd.WAN_SETTINGS, url: "html/advance/wanSettings.html" },
     ROUTE_SETTING: { cmd: RequestCmd.ROUTE_LIST_GET, url: "html/advance/routeIndex.html" },
     TR069_SETTING: { cmd: RequestCmd.TR069_CONFIG, url: "html/advance/tr069Index.html" },

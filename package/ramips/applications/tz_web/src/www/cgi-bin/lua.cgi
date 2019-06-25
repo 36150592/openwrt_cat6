@@ -2500,7 +2500,10 @@ function wifi_advanced_config()
     if (nil ~= txPower) then
         ret = wifi.wifi_set_txpower(id, txPower)
         if (not ret) then tz_answer["setTxpower"] = false end
+    else 
+       tz_answer["setTxpower"] = false 
     end
+    
 
     if (nil ~= maxStation) then
         ret = wifi.wifi_set_connect_sta_number(id, maxStation)
@@ -2794,6 +2797,35 @@ function set_login_user()
 
 end
 
+function get_sip_data()
+
+    local tz_answer = {}
+    tz_answer["cmd"] = 252
+    tz_answer["success"] = true
+    tz_answer["data"] = system.system_get_sip_alg()
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end 
+
+function set_sip_data()
+    local ret
+    local tz_answer = {}
+    local enable = tz_req["enable"]
+    if (nil ~= enable) then
+        local port = tz_req["port"];
+        ret = system.system_set_sip_alg(enable,port)
+        if (not ret) 
+            then tz_answer["success"] = false
+        end 
+    end
+    tz_answer["cmd"] = 253
+    tz_answer["success"] = true
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+end
+
+
 local switch = {
     [0] = get_sysinfo,
     [1] = get_systime,
@@ -2901,7 +2933,9 @@ local switch = {
     [248] = firewall_url_default_set,
     [249] = get_home_info,
     [250] = get_login_info,
-    [251] = set_login_user
+    [251] = set_login_user,
+    [252] = get_sip_data,
+    [253] = set_sip_data
 }
 
 cmdid = uti.get_env_cmdId(envv)
@@ -2909,7 +2943,7 @@ if cmdid ~= nil then
     uti.web_log(cmdid)
     if "5" == cmdid then upload_file() end
 else
-  --data1=io.read();
+    --data1=io.read();
     local content_len = uti.get_env_content_len(envv)
     data1 = uti.read_stdin(content_len)
     tz_req = cjson.decode(data1)
@@ -2946,4 +2980,3 @@ else
     end
 
 end
-

@@ -77,6 +77,7 @@ var DOC = {
 	week:{},
 	lan:{},
 	info:{},
+	sip:{},
 	
 	networkMode: { helper: {} },
 	dial: { helper: {} },
