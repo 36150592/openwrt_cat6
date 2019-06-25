@@ -1966,7 +1966,7 @@ wlan5ghtml.helper.item10 = '<li>1. MAC: Not editable' +
 wlan5ghtml.helper.title11 = "TX Power";
 wlan5ghtml.helper.item11 = "Professionals settings, users generally do not change.";
 wlan5ghtml.helper.title12 = "Bandwidth";
-wlan5ghtml.helper.item12 = "Be able to select 20HMz, 40MHz or 80MHz";
+wlan5ghtml.helper.item12 = "Be able to select 20or40HMz, 40MHz or 80MHz";
 
 
 LANGUAGE_FLUX_MOUNT = "Month Usage";

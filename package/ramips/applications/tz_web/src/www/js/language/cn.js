@@ -1942,6 +1942,6 @@ wlan5ghtml.helper.item10 = '<li>1、MAC:不可编辑.</li>' +
 wlan5ghtml.helper.title11 = "发射功率";
 wlan5ghtml.helper.item11 = "专业人员设置项,用户一般不用更改.";
 wlan5ghtml.helper.title12 = "带宽";
-wlan5ghtml.helper.item12 = "可以选择20MHz，40MHz或者80MHz";
+wlan5ghtml.helper.item12 = "可以选择20MHz，20或40HMz或者80MHz";
 
 LANGUAGE_FLUX_MOUNT = "本月流量";
