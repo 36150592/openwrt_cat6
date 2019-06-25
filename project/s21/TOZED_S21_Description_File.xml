@@ -1356,7 +1356,7 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="隐藏"/>
 		<default value="0"/>
 	</config>
-	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_17" type="select" bit_offset="16" bit_count="1" description="WEB 高级用户显示 高级设置 -> 远程登录: 远程登录IP列表" detail="WEB 高级用户显示 高级设置 -> 远程登录: 远程登录IP列表" class_name="WEB_CONFIG_FIELD">
+	<config name="TZ_WEB_SHOW_HIDE_USER_PREF_17" type="select" bit_offset="17" bit_count="1" description="WEB 普通用户显示 高级设置 -> 远程登录: 远程登录IP列表" detail="WEB 普通用户显示 高级设置 -> 远程登录: 远程登录IP列表" class_name="WEB_CONFIG_FIELD">
 		<option value="1" description="显示"/>
 		<option value="0" description="隐藏"/>
 		<default value="0"/>
