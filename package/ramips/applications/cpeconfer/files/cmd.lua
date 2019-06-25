@@ -1083,6 +1083,44 @@ function modem_reload_config()
 	end
 end
 
+function modem_enable_ecgi_lock()
+	local ret = modem.modem_enable_ecgi_lock()
+	print(ret)
+end
+
+function modem_disable_ecgi_lock()
+	local ret = modem.modem_disable_ecgi_lock()
+	print(ret)
+end
+
+function modem_get_ecgi_lock()
+	local ret = modem.modem_get_ecgi_lock()
+	print(ret)
+end
+
+function modem_get_ecgi_lock_id_list()
+	print("in modem_get_ecgi_lock_id_list")
+	local list= modem.modem_get_ecgi_lock_id_list()
+	for k,v in pairs(list)
+	do
+		print(k, " = ", v)
+	end
+
+end
+
+function modem_set_ecgi_lock_id_list()
+	print("in modem_set_ecgi_lock_id_list")
+	local list = {"b3b12c39402", "b3b22c39402", "b3b32c39402", "b3b02c39402"}
+	--local list = nil
+	local ret = modem.modem_set_ecgi_lock_id_list(list)
+	if ret
+	then
+		print("set success")
+	else
+		print("set fail")
+	end
+end
+
 function modem_enable_auto_dial()
 	local ret = modem.modem_enable_auto_dial()
 	print(ret)
@@ -2551,6 +2589,11 @@ local api_func = {
 	["modem_enable_auto_dial"] = modem_enable_auto_dial,
 	["modem_disable_auto_dial"] = modem_disable_auto_dial,
 	["modem_get_auto_dial"] = modem_get_auto_dial,
+	["modem_enable_ecgi_lock"] = modem_enable_ecgi_lock,
+	["modem_disable_ecgi_lock"] = modem_disable_ecgi_lock,
+	["modem_get_ecgi_lock"] = modem_get_ecgi_lock,
+	["modem_get_ecgi_lock_id_list"] = modem_get_ecgi_lock_id_list,
+	["modem_set_ecgi_lock_id_list"] = modem_set_ecgi_lock_id_list,
 
 	--network
 	["network_get_wan_info"] = network_get_wan_info,

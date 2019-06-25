@@ -56,5 +56,17 @@ cfg -a TZ_MUTILAPN2_ENABLE="${TZMODEM_APN2_ENABLE}" --section $UCI_SECTION
 cfg -a TZ_MUTILAPN2_NAT="${TZMODEM_APN2_NAT}" --section $UCI_SECTION
 cfg -a TZ_MUTILAPN2_NAT_LOOKBACK="${TZMODEM_APN2_NATLOOKBACK}" --section $UCI_SECTION
 
+if [ "${TZMODEM_ENABLE_ECGI_LOCK}" = "1" ]; then
+	cfg -a TZ_ENABLE_ECGI_LOCK=1 --section $UCI_SECTION 
+else
+	cfg -a TZ_ENABLE_ECGI_LOCK=0 --section $UCI_SECTION
+fi
+
+cfg -d TZ_ECGI_ID_LIST --section $UCI_SECTION
+for temp in ${TZMODEM_ECGI_ID_LIST}
+do
+	cfg -p TZ_ECGI_ID_LIST="${temp}" --section $UCI_SECTION
+done
+
 cfg -c
 

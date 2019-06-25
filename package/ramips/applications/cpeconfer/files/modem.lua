@@ -1187,4 +1187,64 @@ function modem_module.modem_get_auto_dial()
 	end
 end
 
+-- enable ecgi lock 
+-- input:none
+-- true if success, false if fail
+function modem_module.modem_enable_ecgi_lock()
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_ECGI_LOCK",1)
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
+-- disable ecgi lock 
+-- input:none
+-- true if success, false if fail
+function modem_module.modem_disable_ecgi_lock()
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_ECGI_LOCK",0)
+	local ret1 = x:commit(TOZED_CONFIG_FILE)
+	os.execute("/etc/init.d/dialtool2 restart")
+	return ret1
+end
+
+-- get the ecgi lock enable setting 
+-- input:none
+-- return:number
+--	1:enable
+--  0:disable
+function modem_module.modem_get_ecgi_lock()
+	local ret = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_ECGI_LOCK")
+
+	if "1" == ret 
+	then 
+		return 1
+	else
+		return 0
+	end
+end
+
+-- get ecgi cell id list
+-- input:none
+-- return:the array of  mcc+mnc+ecgi  in hex, may be nil array
+function modem_module.modem_get_ecgi_lock_id_list()
+	local ret = x:get(TOZED_CONFIG_FILE,UCI_SECTION_DIALTOOL2, "TZ_ECGI_ID_LIST")
+	if nil == ret 
+	then
+		return {}
+	end
+	
+	return ret
+end
+
+-- set ecgi cell id list
+-- input:the array of  mcc+mnc+ecgi  in hex
+-- return:true if success, false if fail
+function modem_module.modem_set_ecgi_lock_id_list(list)
+	if nil == list
+	then
+		x:set(TOZED_CONFIG_FILE,UCI_SECTION_DIALTOOL2, "TZ_ECGI_ID_LIST", "")
+	else
+		x:set(TOZED_CONFIG_FILE,UCI_SECTION_DIALTOOL2, "TZ_ECGI_ID_LIST", list)
+	end
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
 return modem_module

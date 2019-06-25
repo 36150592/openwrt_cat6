@@ -544,6 +544,64 @@ check_route()
 	fi
 }
 
+#2019.6.25 fengyz
+lock_ecgi()
+{
+	
+	local ecgi_enable=`uci get tozed.modem.TZ_ENABLE_ECGI_LOCK`
+	if [ $ecgi_enable"" == "1" ];then
+
+		local ecgi=` cat /tmp/.system_info_dynamic | grep CELL_ID | awk -F ':' '{print $2}'`
+		local plmn=`cat /tmp/.system_info_dynamic | grep PLMN | awk -F ':' '{print $2}'`
+		local ecgi_lock_list=`uci get tozed.modem.TZ_ECGI_ID_LIST`
+
+		local ecgi_hex=`printf "%X" $ecgi | tr '[a-z]' '[A-Z]'` 
+		local plmn_hex=`printf "%X" $plmn | tr '[a-z]' '[A-Z]'`
+
+		if [ $ecgi_hex"" == "" -o $plmn_hex"" == "" ];then
+			return
+		fi 
+
+		local lan_section=""
+		for temp in $wan_sections;do
+		
+			config_get primary_apn $temp primary_apn
+			if [ $primary_apn"" == "1" ];then
+				config_get lan_section $temp route_lan_section
+			fi
+		done
+
+
+		for temp in $ecgi_lock_list
+		do
+			local len=`echo $temp | wc -m`
+			local lock_ecgi=`echo ${temp:$(($len -8)):7} | tr '[a-z]' '[A-Z]'`
+			local lock_plmn=`echo ${temp:0:$(($len -8))} | tr '[a-z]' '[A-Z]'`
+			
+			if [ $lock_ecgi"" == "" -o $lock_plmn"" == "" ];then
+				continue
+			fi 
+
+			if [ $ecgi_hex"" == $lock_ecgi"" -a $plmn_hex"" == $lock_plmn"" ];then
+					logger "ecgi_lock:remove forbidden network status"
+					iptables -D FORWARD -i br-${lan_section} -m comment --comment "ecgi network forbidden" -j DROP
+					rm -f /tmp/.ecgi_network_forbidden
+					return 
+			fi
+
+		done
+
+		logger "ecgi_lock:enter forbidden network status"
+		local count=`iptables -S | grep "ecgi network forbidden" | wc -l`
+		if [ $count"" == "0" ];then
+			iptables -I FORWARD -i br-${lan_section} -m comment --comment "ecgi network forbidden" -j DROP
+		fi
+		touch /tmp/.ecgi_network_forbidden
+
+	fi
+
+}
+
 check_netlink()
 {
 	while [ 1 ] 
@@ -571,6 +629,8 @@ check_netlink()
 		refresh_eth
 		logger "check_route"
 		check_route
+		logger "lock_ecgi"
+		lock_ecgi
 		logger "Sleep ..."
 		sleep 30
 	done

@@ -697,6 +697,16 @@ bitcomposite表示使用位进行组合的配置字段
 		<option value="0" description="关闭" />
         	<default value="1" />
 	</config>
+    
+    <config name="TZMODEM_ENABLE_ECGI_LOCK" type="select" description="ECGI 锁小区开关" detail="ECGI 小区锁开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="1" description="开启" />
+		<option value="0" description="关闭" />
+        	<default value="0" />
+	</config>
+    
+    <config name="TZMODEM_ECGI_ID_LIST" type="text" description="ECGI 锁小区列表" detail="每组数据由mcc+mnc+ecgi 构成 以十六进制表示 空格分隔" maxlength="512" class_name="MODEM_CONFIG_FIELD"  >
+        	<default value="" />
+	</config>
 
 	<config name="TZ_LOCK_BAND_ENABLE" type="select" description="锁频开关" detail="锁频开关打开后，频段支持选项才能生效" class_name="MODEM_CONFIG_FIELD">
 		<option value="1" description="开启"/>
