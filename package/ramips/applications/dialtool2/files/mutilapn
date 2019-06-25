@@ -520,28 +520,34 @@ check_route()
 		fi
 	done
 
-	ping6 -w 3  -I $land_inter 2400:da00::6666 > /dev/null
-	if [ $? != '0' ];then
-		for temp in $wan_sections_v6
-		do
-			config_get xprimary_apn $temp primary_apn
-			if [ $xprimary_apn"" == "1" ];then
-				config_get primary_inter $temp ifname
-				config_get lan_section $temp route_lan_section
-			fi
-		done
-		
-		local next_holt=`ip -6 route list table ${primary_inter}_v6 | grep default | awk '{print $2}'`
-		ip -6 route add default via $next_holt dev ${primary_inter}  proto static  metric 512
+	[ $land_inter"" != "" ] && {
 
-		#delete the ipv6 address 
-		for temp in `ip addr show dev  br-${lan_section} | grep inet6 | grep global  |  awk '{print $2}'`
-		do
-			ip addr del $temp dev br-${lan_section}
-		done
-		local prefix=`ip -6 route list table ${primary_inter}_v6 | grep br-${lan_section}| awk '{print $1}'`
-		ip addr add ${prefix} dev br-${lan_section}
-	fi
+		ping6 -w 3  -I $land_inter 2400:da00::6666 > /dev/null
+		if [ $? != '0' ];then
+			for temp in $wan_sections_v6
+			do
+				config_get xprimary_apn $temp primary_apn
+				if [ $xprimary_apn"" == "1" ];then
+					config_get primary_inter $temp ifname
+					config_get lan_section $temp route_lan_section
+					local next_holt=`ip -6 route list table ${primary_inter}_v6 | grep default | awk '{print $2}'`
+					ip -6 route add default via $next_holt dev ${primary_inter}  proto static  metric 512
+
+					#delete the ipv6 address 
+					for temp in `ip addr show dev  br-${lan_section} | grep inet6 | grep global  |  awk '{print $2}'`
+					do
+						ip addr del $temp dev br-${lan_section}
+					done
+					local prefix=`ip -6 route list table ${primary_inter}_v6 | grep br-${lan_section}| awk '{print $1}'`
+					ip addr add ${prefix} dev br-${lan_section}
+				fi
+			done
+			
+			
+		fi
+
+	} 
+
 }
 
 #2019.6.25 fengyz
