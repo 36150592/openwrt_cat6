@@ -1200,9 +1200,7 @@ end
 -- true if success, false if fail
 function modem_module.modem_disable_ecgi_lock()
 	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_ECGI_LOCK",0)
-	local ret1 = x:commit(TOZED_CONFIG_FILE)
-	os.execute("/etc/init.d/dialtool2 restart")
-	return ret1
+	return x:commit(TOZED_CONFIG_FILE)
 end
 
 -- get the ecgi lock enable setting 
@@ -1245,6 +1243,38 @@ function modem_module.modem_set_ecgi_lock_id_list(list)
 		x:set(TOZED_CONFIG_FILE,UCI_SECTION_DIALTOOL2, "TZ_ECGI_ID_LIST", list)
 	end
 	return x:commit(TOZED_CONFIG_FILE)
+end
+
+-- enable data roam
+-- input:none
+-- true if success, false if fail
+function modem_module.modem_enable_roam()
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_ROAM",1)
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
+-- disable data roam
+-- input:none
+-- true if success, false if fail
+function modem_module.modem_disable_roam()
+	x:set(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_ROAM",0)
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
+-- get the data roam enable setting 
+-- input:none
+-- return:number
+--	1:enable
+--  0:disable
+function modem_module.modem_get_roam()
+	local ret = x:get(TOZED_CONFIG_FILE, UCI_SECTION_DIALTOOL2, "TZ_ENABLE_ROAM")
+
+	if "1" == ret 
+	then 
+		return 1
+	else
+		return 0
+	end
 end
 
 return modem_module

@@ -3,11 +3,52 @@
 
 START=60
 STOP=85
-start(){
+start(){ 
     cfg -e --section modem |grep -v 'export value' |  awk '{print $2}' | grep "TZ_DIALTOOL2" > /tmp/dialtool2_config
     cfg -e --section modem |grep -v 'export value' |  awk '{print $2}' | grep "TZ_ENABLE_AUTO_DIAL" >> /tmp/dialtool2_config
-    /bin/dialtool_new -s /tmp/dialtool2_config  -p /tmp/.dialtool_new.pid &
-    /bin/mutilapn 2> /dev/null &
+    local roam_enable=` cfg -e --section modem | grep -v 'export value' |  grep "TZ_ENABLE_ROAM" | awk -F '=' '{print $2}'`
+    local roam_status=""
+    local reg_status=""
+    if [ $roam_enable"" == "" ];then
+	     roam_enable="0"
+    fi
+
+    if [ $roam_enable"" == "0" ];then
+      local count=20
+      while [ $count -gt 0 ]
+      do
+        local temp=`sendat -e at^sysinfo | grep "^\^SYSINFO:" | awk -F ':' '{print $2}' | sed s/\ //g `	
+        local reg_status=`echo $temp | awk -F ',' '{print $1}' `	
+        local roam_status=`echo $temp | awk -F ',' '{print $3}' `	
+        echo "reg_status = $reg_status"	
+        echo "roam_status = $roam_status"	
+        [ $reg_status"" == "2" -a $roam_status"" != "" ] && break;	
+
+        sleep 1
+        count=$(($count-1))
+      done
+
+
+      if [ $roam_status"" == "" ];then
+        logger "can not get the roam_status from at. return now."
+        return
+      fi
+
+      if [ $roam_enable"" == "0" -a $roam_status"" == "1" ];then
+        logger "is in roam status but roam_enable is off , so do not dial "
+        touch /tmp/.roam_forbidden_network
+      	return  
+      fi
+   fi
+
+
+   if [ -f /tmp/.roam_forbidden_network ];then
+	   rm /tmp/.roam_forbidden_network
+   fi
+  
+   logger "start to dial..." 
+   /bin/dialtool_new -s /tmp/dialtool2_config  -p /tmp/.dialtool_new.pid &
+   /bin/mutilapn 2> /dev/null &
 }
 
 stop(){

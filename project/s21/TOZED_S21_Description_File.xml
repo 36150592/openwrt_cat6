@@ -133,7 +133,6 @@ bitcomposite表示使用位进行组合的配置字段
 			<default value="0"/>
 	</config>
 
-
 	<!--2.用户配置-->
 	<config name="TZUSER_CUSTOMER" type="select" description="使用客户" detail="使用该配置的客户" class_name="USER_CONFIG_FIELD"  >
 		<option value="Dialog" description="斯里兰卡--DIALOG" />
@@ -698,6 +697,13 @@ bitcomposite表示使用位进行组合的配置字段
         	<default value="1" />
 	</config>
     
+    <config name="TZMODEM_ENABLE_ROAM" type="select" description="漫游开关" detail="漫游开关" class_name="MODEM_CONFIG_FIELD">
+		<option value="1" description="开启" />
+		<option value="0" description="关闭" />
+    	<default value="0" />
+	</config>
+    
+
     <config name="TZMODEM_ENABLE_ECGI_LOCK" type="select" description="ECGI 锁小区开关" detail="ECGI 小区锁开关" class_name="MODEM_CONFIG_FIELD">
 		<option value="1" description="开启" />
 		<option value="0" description="关闭" />
