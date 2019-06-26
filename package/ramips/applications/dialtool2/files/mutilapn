@@ -568,14 +568,9 @@ lock_ecgi()
 			return
 		fi 
 
-		local lan_section=""
-		for temp in $wan_sections;do
-		
-			config_get primary_apn $temp primary_apn
-			if [ $primary_apn"" == "1" ];then
-				config_get lan_section $temp route_lan_section
-			fi
-		done
+		local apn0_ifname=`uci get network.4g.ifname`
+		local apn1_ifname=`uci get network.4g1.ifname`
+		local apn3_ifname=`uci get network.4g3.ifname`
 
 
 		for temp in $ecgi_lock_list
@@ -590,7 +585,17 @@ lock_ecgi()
 
 			if [ $ecgi_hex"" == $lock_ecgi"" -a $plmn_hex"" == $lock_plmn"" ];then
 					logger "ecgi_lock:remove forbidden network status"
-					iptables -D FORWARD -i br-${lan_section} -m comment --comment "ecgi network forbidden" -j DROP
+
+					[ $apn0_ifname"" != "" ] &&{
+						iptables -D OUTPUT -o $apn0_ifname -m comment --comment "ecgi network forbidden" -j DROP
+					}
+					[ $apn1_ifname"" != "" ] &&{
+						iptables -D OUTPUT -o $apn1_ifname -m comment --comment "ecgi network forbidden" -j DROP
+					}
+					[ $apn3_ifname"" != "" ] &&{
+						iptables -D OUTPUT -o $apn3_ifname -m comment --comment "ecgi network forbidden" -j DROP
+					}
+					
 					rm -f /tmp/.ecgi_network_forbidden
 					return 
 			fi
@@ -600,7 +605,15 @@ lock_ecgi()
 		logger "ecgi_lock:enter forbidden network status"
 		local count=`iptables -S | grep "ecgi network forbidden" | wc -l`
 		if [ $count"" == "0" ];then
-			iptables -I FORWARD -i br-${lan_section} -m comment --comment "ecgi network forbidden" -j DROP
+			[ $apn0_ifname"" != "" ] &&{
+				iptables -I OUTPUT -o $apn0_ifname -m comment --comment "ecgi network forbidden" -j DROP
+			}
+			[ $apn1_ifname"" != "" ] &&{
+				iptables -I OUTPUT -o $apn1_ifname -m comment --comment "ecgi network forbidden" -j DROP
+			}
+			[ $apn3_ifname"" != "" ] &&{
+				iptables -I OUTPUT -o $apn3_ifname -m comment --comment "ecgi network forbidden" -j DROP
+			}
 		fi
 		touch /tmp/.ecgi_network_forbidden
 
