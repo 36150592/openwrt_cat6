@@ -154,7 +154,9 @@ var RequestCmd = {
     GET_LOGIN_INFO: 250,
     SET_LOGIN_USER: 251,
     GET_SIP_CONFIG:252,
-    SET_SIP_CONFIG:253
+    SET_SIP_CONFIG:253,
+    GET_ECGI_LOCK:254,
+    SET_ECGI_LOCK:255
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },

@@ -1,0 +1,204 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+        Page.render('#fwHead', '#fwHead_template');
+        Page.render('#fwBody', '#fwBody_template');
+        var showText = wirelessconfightml.prompt; //{}
+
+        var $btnAdd = $('#btnAdd'),
+            $btnClose = $('#btnClose'),
+            $btnSaveId = $('#btnSaveId'),
+            $btnEditId = $('#btnEditId'),
+            $box = $('#edit_box'), 
+            $mask = $('#mask');
+
+        var editIndex = 0;
+
+        $btnAdd.click(function () {
+            $box.addClass('edit_box').show(); 
+            $mask.show();
+            $btnSaveId.show();
+            $btnEditId.hide();
+            $('#edit_title').text(DOC.table.add + DOC.lbl.ecgiLockId);
+            SysUtil.setBoxStyle1($box);
+        });
+
+        $btnClose.click(function() {
+            $box.removeClass('edit_box').hide();
+            $mask.hide();
+            $('#box_ecgi_lock_id').val('');
+        });
+
+        $btnSaveId.click(function () {
+            var id = $('#box_ecgi_lock_id').val().trim().replace(/ /g, '');
+            var ecgiLockIdList = new Array();
+            var $tr=$("#idList table tr");
+            if($tr.length <= 6) {
+                var sb = String.format('<tr><td>{0}</td><td><a href="javascript:;" class="idEdit">{1}</a></td><td><a href="javascript:;" class="idDel">{2}</a></td></tr>',id, showText.edit,showText.del);
+                $("'"+sb+"'").appendTo($('#idList table'));
+                $box.removeClass('edit_box').hide();
+                $mask.hide();
+                $('#box_ecgi_lock_id').val('');
+            }else {
+                AlertUtil.alertMsg(PROMPT.saving.ecgiLockAddId);
+            }       
+        });
+
+        var $ecgiLockEnable=0;
+        $("#btnSave").on("click",function(){
+            $('#btnSave').attr("disabled",true);
+            var ecgiLockIdList = new Array();
+            var $tr=$("#idList table tr");
+            for(var i=1;i<$tr.length;i++){
+                ecgiLockIdList.push($($tr[i]).children("td").eq(0).text());              
+            }
+
+            if($("#ecgiLockEnable").prop("checked")){//返回值
+                ecgiLockEnable = 1;
+            }else{
+                ecgiLockEnable = 0;
+            }
+
+            var $form = $('#childForm');
+            var json = JSON.parmsToJSON($form);
+            var json = {};
+            if(ecgiLockIdList.length !== 0) {
+                json.ecgiLockIdList = ecgiLockIdList; 
+            }else {
+                json.ecgiLockIdList = [""];
+            }              
+            json.ecgiLockEnable = ecgiLockEnable;
+            json.method = JSONMethod.POST;
+            json.cmd = RequestCmd.SET_ECGI_LOCK;
+             Page.postJSON({
+                json: json,
+                success: function(data) {
+                    AlertUtil.alertMsg(PROMPT.saving.success);
+                },
+                complete: function(){
+                    $('#btnSave').attr("disabled",false);
+                }
+            });
+
+
+        });
+
+        $btnEditId.click(function () {
+            var id = $('#box_ecgi_lock_id').val().trim().replace(/ /g, '');
+            $('#idList table tr').eq(editIndex).children('td').eq(0).text(id);
+            $box.removeClass('edit_box').hide();
+            $mask.hide();
+            $('#box_ecgi_lock_id').val('');
+
+        });
+
+        $(document).on('click','a[class="idDel"]',function(){
+            $(this).parent().parent().remove();
+        });
+
+        $(document).on('click','a[class="idEdit"]',function(){
+            $box.addClass('edit_box').show();
+            $mask.show();
+            $btnSaveId.hide();
+            $btnEditId.show();
+            $('#edit_title').text(DOC.table.edit + " " + DOC.lbl.ecgiLockId);
+            SysUtil.setBoxStyle1($box);
+            $('#box_ecgi_lock_id').val($(this).parent().parent().children('td').eq(0).text());
+            editIndex = $('#idList table tr').index($(this).parent().parent());
+        });
+
+        function createIpListTable(idList) {
+            var sb = new StringBuilder();
+            sb.append(String.format('<table class="list" cellspacing="0"><tr><th>ID</th><th>{0}</th><th>{1}</th></tr>',
+                showText.edit,showText.del));
+            for(var i = 0; i < idList.length; i++) {
+                if(idList[i] !== ""){
+                    sb.append(String.format('<tr><td>{0}</td><td><a href="javascript:;" class="idEdit">{1}</a></td><td><a href="javascript:;" class="idDel">{2}</a></td></tr>',idList[i], showText.edit,showText.del));
+                }
+            }
+
+            sb.append('</table>');
+
+            $('#idList').html(sb.toString());
+        }
+
+        function getInfo() {
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.GET_ECGI_LOCK
+                },
+                success: function(datas) {
+                    createIpListTable(datas.data.ecgi_lock_id_list);
+                        if(datas.data.ecgi_lock_enable == "1"){
+                            $("#ecgiLockEnable").prop("checked",true);
+                        }else{
+                            $("#ecgiLockEnable").prop("checked",false);
+                    }
+                }
+            });
+        }
+
+        getInfo();
+
+    });
+</script>
+
+
+<div class="tab_boxes" id="child_container">
+    <script type="text/template" id="child_template">
+        <div>
+            <form id="childForm" >
+                <table class="detail" cellspacing="0">
+                    <tr>
+                        <th><%- lbl.ecgiLockEnable %><%- colon %></th>
+                        <td>
+                            <input type="checkbox" id="ecgiLockEnable" name="ecgiLockEnable" /><%- status.enable %>
+                        </td>
+                    </tr>
+                    <tr id="ecgiLockList">
+                        <th><%- lbl.ecgiLockIdList %><%- colon %></th>
+                        <td>
+                            <input id="btnAdd" type="button" value="<%- lbl.addecgiLockId %>" />
+                            <div id="idList"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>&nbsp;</th>
+                        <td><input type="button" id="btnSave" value="<%- btn.save %>" /></td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+        <span style="clear:both"></span>
+    </script>
+</div>
+
+<div id="edit_box" style="display: none;" >
+    <div class="detail" id="fwHead">
+        <script type="text/template" id="fwHead_template">
+            <div id="edit_title"></div>
+            <div id="edit_close"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
+            <div style="clear:both;"></div>
+        </script>
+    </div>
+    <div id="fwBody">
+        <script type="text/template" id="fwBody_template">
+            <table class="detail" cellspacing="0">
+                <th><%- lbl.ecgiLockId %><%- colon %></th>
+                <td>
+                    <input type="text" id="box_ecgi_lock_id" name="box_ecgi_lock_id" class="large" maxlength="99" /><span class="cmt"><%- lbl.example %><%- colon %>b3b12c39402</span></span>
+                </td>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td>
+                        <input type="button" id="btnSaveId" value="<%- btn.save %>" />
+                        <input type="button" id="btnEditId" value="<%- btn.save %>"/>
+                    </td>
+                </tr>
+            </table>
+        </script>
+    </div>
+</div>

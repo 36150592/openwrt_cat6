@@ -2825,6 +2825,46 @@ function set_sip_data()
     print(result_json)
 end
 
+function get_ecgi_lock()
+    local data_array = {}
+    local ecgi_lock_enable = modem.modem_get_ecgi_lock()
+    local ecgi_lock_id_list = modem.modem_get_ecgi_lock_id_list()
+    data_array['ecgi_lock_enable'] = ecgi_lock_enable
+    data_array['ecgi_lock_id_list'] = ecgi_lock_id_list
+
+    local tz_answer = {}
+    tz_answer["cmd"] = 254
+    tz_answer["success"] = true
+    tz_answer["data"] = data_array
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end 
+
+function set_ecgi_lock()
+    local ret
+    local tz_answer = {}
+    local ecgiLockEnable = tz_req["ecgiLockEnable"]
+    local ecgiLockIdList = tz_req["ecgiLockIdList"]
+    if "0" == ecgiLockEnable then
+        ret = modem.modem_disable_ecgi_lock()
+        if (not ret) then tz_answer['set_ecgi_lock_enable'] = false end
+    end
+    if "1" == ecgiLockEnable then
+        ret = modem.modem_enable_ecgi_lock()
+        if (not ret) then tz_answer['set_ecgi_lock_enable'] = false end
+    end
+    if (6 >= #ecgiLockIdList) then
+        ret = modem.modem_set_ecgi_lock_id_list(ecgiLockIdList)
+        if (not ret) then tz_answer['set_ecgi_lock_id_list'] = true end
+    end
+
+    tz_answer["cmd"] = 255
+    tz_answer["success"] = true
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+end
+
 
 local switch = {
     [0] = get_sysinfo,
@@ -2935,7 +2975,9 @@ local switch = {
     [250] = get_login_info,
     [251] = set_login_user,
     [252] = get_sip_data,
-    [253] = set_sip_data
+    [253] = set_sip_data,
+    [254] = get_ecgi_lock,
+    [255] = set_ecgi_lock
 }
 
 cmdid = uti.get_env_cmdId(envv)
