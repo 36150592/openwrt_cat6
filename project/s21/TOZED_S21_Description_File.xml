@@ -124,7 +124,7 @@ bitcomposite表示使用位进行组合的配置字段
 	</config>
 
 	<config name="TZSYSTEM_REMOTE_DEFAULT_LIST" type="text" description="远程登录内置IP列表" detail="远程登录内置IP列表 空格分隔" maxlength="128" class_name="SYSTEM_CONFIG_FIELD"  >
-        	<default value="0" />
+        	<default value="" />
 	</config>
 
 	<config name="TZSYSTEM_REMOTE_DEFAULT_LIST_AUTH" type="select" description="远程登录内置IP列表权限设置" detail="远程登录内置IP列表权限设置" maxlength="128" class_name="SYSTEM_CONFIG_FIELD"  >

@@ -22,7 +22,7 @@ else
 	cfg -a TZ_REMOTE_DEFAULT_LIST_AUTH=0 --section remote_control
 fi
 
-cfg -d TZSYSTEM_REMOTE_DEFAULT_LIST --section remote_control
+cfg -d TZ_REMOTE_DEFAULT_LIST --section remote_control
 for temp in ${TZSYSTEM_REMOTE_DEFAULT_LIST}
 do
 	cfg -p TZ_REMOTE_DEFAULT_LIST="${temp}" --section remote_control
