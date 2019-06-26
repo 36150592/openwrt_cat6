@@ -22,6 +22,7 @@ local GET_CPU_AVG1_CMD="cat /proc/loadavg | awk '{print $1}'"
 local GET_CPU_AVG5_CMD="cat /proc/loadavg | awk '{print $2}'"
 local GET_CPU_AVG15_CMD="cat /proc/loadavg | awk '{print $3}'"
 local TOZED_DDNS_SECTION="ddns"
+local TOZED_SYSTEM_SECTION="system"
 local SYSTEM_STATIC_FILE="/tmp/.system_info_static"
 
 system_module.sys_info = {
@@ -1330,13 +1331,118 @@ end
 --return:true if success  false if fail
 function system_module.system_ntp_set_date(date_string)
 	
-	if string.match(date_string, "%d+-%d+-%d+ %d+:%d+:%d+") == nil
+	if nil == date_string or string.match(date_string, "%d+-%d+-%d+ %d+:%d+:%d+") == nil
 	then
 		debug("date_string format error")
 		return false
 	end
 
 	return 0 == os.execute(string.format("date -s '%s' > /dev/null", date_string))
+end
+
+--get date time
+--input:none
+--return:date_string(string):the date time in YYYY-MM-DD HH:MM:SS week
+function system_module.system_ntp_get_date()
+
+	--Daylight Saving Time
+	local dstime_enable =  x:get(TOZED_CONFIG_FILE, TOZED_SYSTEM_SECTION, "TZ_SYSTEM_DST_ENABLE")
+
+	if "1" == dstime_enable
+	then
+		local year = tonumber(os.date("%Y"))
+		local start_str = x:get(TOZED_CONFIG_FILE,TOZED_SYSTEM_SECTION, "TZ_SYSTEM_DST_START")
+		local end_str = x:get(TOZED_CONFIG_FILE,TOZED_SYSTEM_SECTION, "TZ_SYSTEM_DST_END")
+		local start_month_day = split(start_str or "1-1","-")
+		local end_month_day = split(end_str or "1-2","-")
+		local s_month = tonumber(start_month_day[1])
+		local s_day = tonumber(start_month_day[2])
+		local e_month = tonumber(end_month_day[1])
+		local e_day = tonumber(end_month_day[2])
+		local start_time = os.time({day=s_day, month=s_month, year=year, hour=0, minute=0, second=0})
+		local end_time = os.time({day=e_day, month=e_month, year=year, hour=0, minute=0, second=0})
+		if start_time > end_time
+		then
+			
+			if  os.time() < end_time or os.time() > start_time
+			then
+				return os.date("%Y-%m-%d %H:%M:%S %A", os.time()+3600)
+			end
+		end
+
+		if os.time() > start_time and os.time() < end_time
+		then
+			return os.date("%Y-%m-%d %H:%M:%S %A", os.time()+3600)
+		end
+	end
+	
+
+	return os.date("%Y-%m-%d %H:%M:%S %A")
+end
+
+-- enable Daylight Saving Time
+function system_module.system_ntp_enable_dst()
+	x:set(TOZED_CONFIG_FILE, TOZED_SYSTEM_SECTION, "TZ_SYSTEM_DST_ENABLE", 1)
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
+-- disable Daylight Saving Time
+function system_module.system_ntp_disable_dst()
+	x:set(TOZED_CONFIG_FILE, TOZED_SYSTEM_SECTION, "TZ_SYSTEM_DST_ENABLE", 0)
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
+-- get Daylight Saving Time enable status
+-- input:none
+-- return:
+--		1:enable
+--		0:disable
+function system_module.system_ntp_get_dst()
+	local enable = x:get(TOZED_CONFIG_FILE, TOZED_SYSTEM_SECTION, "TZ_SYSTEM_DST_ENABLE")
+	if "1" == enable
+	then
+		return 1
+	else
+		return 0
+	end
+end
+
+-- set the Daylight Saving Time start and end time
+-- input:
+--		start: start day in xx-xx format ,like 5-1 mean May 1th
+--		end: end day  in xx-xx format ,like 5-1 mean May 1th
+--	return:true if success , false if fail
+function system_module.system_ntp_set_dst_daterange(start, dend)
+	
+	if nil == start or string.match(start, "%d+-%d+") == nil
+	then
+		debug("date_string format error")
+		return false
+	end
+
+	if nil == dend or string.match(dend, "%d+-%d+") == nil
+	then
+		debug("date_string format error")
+		return false
+	end
+
+	x:set(TOZED_CONFIG_FILE,TOZED_SYSTEM_SECTION, "TZ_SYSTEM_DST_START", start)
+	x:set(TOZED_CONFIG_FILE,TOZED_SYSTEM_SECTION, "TZ_SYSTEM_DST_END", dend)
+
+	return x:commit(TOZED_CONFIG_FILE)
+end
+
+-- get the Daylight Saving Time start and end time
+-- input:none
+-- return:
+--		start: start day in xx-xx format ,like 5-1 mean May 1th
+--		end: end day  in xx-xx format ,like 5-1 mean May 1th
+function system_module.system_ntp_get_dst_daterange()
+
+	local start = x:get(TOZED_CONFIG_FILE,TOZED_SYSTEM_SECTION, "TZ_SYSTEM_DST_START")
+	local  dend = x:get(TOZED_CONFIG_FILE,TOZED_SYSTEM_SECTION, "TZ_SYSTEM_DST_END")
+
+	return start,dend
 end
 
 system_module.lanrecord_current_info = {

@@ -133,6 +133,20 @@ bitcomposite表示使用位进行组合的配置字段
 			<default value="0"/>
 	</config>
 
+	<config name="TZSYSTEM_DST_ENABLE" type="select" description="夏令时开关" detail="夏令时开关" maxlength="6" class_name="SYSTEM_CONFIG_FIELD"  >
+          	<option value="1" description="开启" />
+    		<option value="0" description="关闭" />
+    		<default value="0"/>
+  	</config>
+
+    <config name="TZSYSTEM_DST_START" type="text" description="夏令时开始日期" detail="夏令时开始时间 格式: MM-DD 例如1-2 表示 1月2号 " maxlength="128" class_name="SYSTEM_CONFIG_FIELD"  >
+          <default value="1-1" />
+  </config>
+    
+    <config name="TZSYSTEM_DST_END" type="text" description="夏令时结束日期" detail="夏令时结束时间 格式: MM-DD 例如1-2 表示 1月2号 " maxlength="128" class_name="SYSTEM_CONFIG_FIELD"  >
+          <default value="1-2" />
+  </config>
+
 	<!--2.用户配置-->
 	<config name="TZUSER_CUSTOMER" type="select" description="使用客户" detail="使用该配置的客户" class_name="USER_CONFIG_FIELD"  >
 		<option value="Dialog" description="斯里兰卡--DIALOG" />

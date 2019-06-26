@@ -56,5 +56,23 @@ else
 	cfg -a sip_alg_port="5060" --section system
 fi
 
+if [ "${TZSYSTEM_DST_ENABLE}" != "" ]; then
+	cfg -a TZ_SYSTEM_DST_ENABLE="${TZSYSTEM_DST_ENABLE}" --section system
+else
+	cfg -a TZ_SYSTEM_DST_ENABLE="0" --section system
+fi
+
+if [ "${TZSYSTEM_DST_START}" != "" ]; then
+	cfg -a TZ_SYSTEM_DST_START="${TZSYSTEM_DST_START}" --section system
+else
+	cfg -a TZ_SYSTEM_DST_START="1-1" --section system
+fi
+
+if [ "${TZSYSTEM_DST_END}" != "" ]; then
+	cfg -a TZ_SYSTEM_DST_END="${TZSYSTEM_DST_END}" --section system
+else
+	cfg -a TZ_SYSTEM_DST_END="1-2" --section system
+fi
+
 cfg -c
 

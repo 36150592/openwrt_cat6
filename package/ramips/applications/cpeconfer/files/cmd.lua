@@ -779,8 +779,43 @@ function system_ntp_set_date()
 	else
 		print("set fail")
 	end
-
 end
+
+function system_ntp_get_date()
+	local ret = system.system_ntp_get_date()
+	print(ret)
+end
+
+function system_ntp_enable_dst()
+	local ret = system.system_ntp_enable_dst()
+	print(ret)
+end
+
+function system_ntp_disable_dst()
+	local ret = system.system_ntp_disable_dst()
+	print(ret)
+end
+
+function system_ntp_get_dst()
+	local ret = system.system_ntp_get_dst()
+	if 1 == ret
+	then
+		print("Daylight Saving Time is enable")
+	else
+		print("Daylight Saving Time is disable")
+	end
+end
+
+function system_ntp_set_dst_daterange()
+	local ret = system.system_ntp_set_dst_daterange(tostring(arg[2]), tostring(arg[3]))
+	print(ret)
+end
+
+function system_ntp_get_dst_daterange()
+	local start,dend = system.system_ntp_get_dst_daterange()
+	print("start = ",start," end = ", dend)
+end
+
 
 function system_get_status()
 
@@ -1120,6 +1155,22 @@ function modem_set_ecgi_lock_id_list()
 		print("set fail")
 	end
 end
+
+function modem_enable_roam()
+	local ret = modem.modem_enable_roam()
+	print(ret)
+end
+
+function modem_disable_roam()
+	local ret = modem.modem_disable_roam()
+	print(ret)
+end
+
+function modem_get_roam()
+	local ret = modem.modem_get_roam()
+	print(ret)
+end
+
 
 function modem_enable_auto_dial()
 	local ret = modem.modem_enable_auto_dial()
@@ -2594,6 +2645,9 @@ local api_func = {
 	["modem_get_ecgi_lock"] = modem_get_ecgi_lock,
 	["modem_get_ecgi_lock_id_list"] = modem_get_ecgi_lock_id_list,
 	["modem_set_ecgi_lock_id_list"] = modem_set_ecgi_lock_id_list,
+	["modem_enable_roam"] = modem_enable_roam,
+	["modem_disable_roam"] = modem_disable_roam,
+	["modem_get_roam"] = modem_get_roam,
 
 	--network
 	["network_get_wan_info"] = network_get_wan_info,
@@ -2628,6 +2682,13 @@ local api_func = {
 	["system_ntp_get_server_address"] = system_ntp_get_server_address,
 	["system_ntp_set_server_address"] = system_ntp_set_server_address,
 	["system_ntp_set_date"] = system_ntp_set_date,
+	["system_ntp_get_date"] = system_ntp_get_date,
+	["system_ntp_enable_dst"] = system_ntp_enable_dst,
+	["system_ntp_disable_dst"] = system_ntp_disable_dst,
+	["system_ntp_get_dst"] = system_ntp_get_dst,
+	["system_ntp_set_dst_daterange"] = system_ntp_set_dst_daterange,
+	["system_ntp_get_dst_daterange"] = system_ntp_get_dst_daterange,
+
 	["system_lanrecord_get_history_info"] = system_lanrecord_get_history_info,
 	["system_lanrecord_get_current_info"] = system_lanrecord_get_current_info,
 	["system_export_config"] = system_export_config,
