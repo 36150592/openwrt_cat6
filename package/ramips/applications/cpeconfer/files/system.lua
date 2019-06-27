@@ -321,8 +321,8 @@ function system_module.system_import_config(file_path)
 
 	local super_user = x:get(TOZED_CONFIG_FILE,"cfg","TZ_SUPER_USERNAME")
 	local super_passwd = x:get(TOZED_CONFIG_FILE,"cfg","TZ_SUPER_PASSWD")
-	local test_user = x:get(TOZED_CONFIG_FILE, "cfg", "TZ_TEST_USERNAME")
-	local test_passwd = x:get(TOZED_CONFIG_FILE,"cfg","TZ_TEST_PASSWD")
+	--local test_user = x:get(TOZED_CONFIG_FILE, "cfg", "TZ_TEST_USERNAME")
+	--local test_passwd = x:get(TOZED_CONFIG_FILE,"cfg","TZ_TEST_PASSWD")
 
 	local admin_user = x:get(TOZED_CONFIG_FILE, "cfg", "TZ_USERNAME")
 	local admin_passwd = x:get(TOZED_CONFIG_FILE,"cfg","TZ_PASSWD")
@@ -340,7 +340,7 @@ function system_module.system_import_config(file_path)
 		x:delete(TOZED_CONFIG_FILE,"cfg","TZ_SUPER_PASSWD")
 	end
 
-	if nil ~= test_user
+--[[	if nil ~= test_user
 	then
 		x:set(TOZED_CONFIG_FILE, "cfg","TZ_TEST_USERNAME", test_user)
 		x:set(TOZED_CONFIG_FILE, "cfg","TZ_TEST_PASSWD", test_passwd)
@@ -348,7 +348,7 @@ function system_module.system_import_config(file_path)
 		x:delete(TOZED_CONFIG_FILE,"cfg","TZ_TEST_USERNAME")	
 		x:delete(TOZED_CONFIG_FILE,"cfg","TZ_TEST_PASSWD")
 	end
-
+]]--
 	if nil ~= admin_user
 	then
 		x:set(TOZED_CONFIG_FILE, "cfg","TZ_USERNAME", admin_user)
