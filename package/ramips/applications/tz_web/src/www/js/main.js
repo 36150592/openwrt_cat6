@@ -158,7 +158,9 @@ var RequestCmd = {
     GET_ECGI_LOCK:254,
     SET_ECGI_LOCK:255,
     GET_DAYLIGHT_SAVING_TIME: 256,
-    SET_DAYLIGHT_SAVING_TIME: 257
+    SET_DAYLIGHT_SAVING_TIME: 257,
+    GET_ROAMING: 258,
+    SET_ROAMING: 259
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },

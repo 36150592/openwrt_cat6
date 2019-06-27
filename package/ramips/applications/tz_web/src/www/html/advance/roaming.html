@@ -1,0 +1,59 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript">
+    Page.render();
+
+    var $btnSave = $('#btnSave');
+    Page.postJSON({
+        json: {
+            cmd: RequestCmd.GET_ROAMING
+        },
+        success: function (datas) {
+            var datas = datas.data;
+            $('#roamingEnable').val(datas.roaming_enable);
+        }
+    });
+
+
+    $btnSave.bind('click', function () {
+        $btnSave.attr("disabled",true);
+        var $form = $('#childForm');
+        var json = JSON.parmsToJSON($form);
+        json.roamingEnable = $('#roamingEnable').val();
+        json.cmd = RequestCmd.SET_ROAMING;
+        json.method = JSONMethod.POST;
+     
+        Page.postJSON({
+            json: json,
+            success: function () {
+                AlertUtil.alertMsg(PROMPT.saving.success);
+                $btnSave.attr("disabled",false);
+            }
+        });
+    });
+
+</script>
+
+<div class="tab_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="childForm">
+            <table id="childTable" class="detail" cellspacing="0">
+                <tr id="trDdnsStutas">
+                    <th><%- TAB.advance.dataRoaming %><%- colon %></th>
+                    <td>
+                        <select id="roamingEnable">
+                            <option value="1"><%- DOC.lbl.dataRoamingStart %></option>
+                            <option value="0" selected="selected"><%- DOC.lbl.dataRoamingStop %></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr id="trSave" >
+                    <th>&nbsp;</th>
+                    <td>
+                        <input type="button" id="btnSave" value="<%- btn.save %>"/>
+                    </td>                   
+                </tr>
+            </table>
+        </form>
+    </script>
+</div>

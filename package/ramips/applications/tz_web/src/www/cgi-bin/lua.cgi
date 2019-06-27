@@ -2920,6 +2920,38 @@ function set_daylight_saving_time()
     print(result_json)
 end
 
+function get_roaming()
+    local data_array = {}
+    data_array['roaming_enable'] = modem.modem_get_roam() or ''
+
+    local tz_answer = {}
+    tz_answer["cmd"] = 258
+    tz_answer["success"] = true
+    tz_answer["data"] = data_array
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end 
+
+function set_roaming()
+    local ret
+    local roamingEnable = tz_req["roamingEnable"]
+    if "1" == roamingEnable then
+         ret = modem.modem_enable_roam() or ''
+         if (not ret) then tz_answer['set_roaming'] = false end
+    else
+        ret = modem.modem_disable_roam() or ''
+        if (not ret) then tz_answer['set_roaming'] = false end
+    end
+    if nil == roamingEnable then tz_answer['set_roaming'] = false end
+
+    local tz_answer = {}
+    tz_answer["cmd"] = 259
+    tz_answer["success"] = true
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+end
+
 local switch = {
     [0] = get_sysinfo,
     [1] = get_systime,
@@ -3033,7 +3065,9 @@ local switch = {
     [254] = get_ecgi_lock,
     [255] = set_ecgi_lock,
     [256] = get_daylight_saving_time,
-    [257] = set_daylight_saving_time
+    [257] = set_daylight_saving_time,
+    [258] = get_roaming,
+    [259] = set_roaming
 }
 
 cmdid = uti.get_env_cmdId(envv)
