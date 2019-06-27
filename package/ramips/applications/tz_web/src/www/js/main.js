@@ -156,7 +156,9 @@ var RequestCmd = {
     GET_SIP_CONFIG:252,
     SET_SIP_CONFIG:253,
     GET_ECGI_LOCK:254,
-    SET_ECGI_LOCK:255
+    SET_ECGI_LOCK:255,
+    GET_DAYLIGHT_SAVING_TIME: 256,
+    SET_DAYLIGHT_SAVING_TIME: 257
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },

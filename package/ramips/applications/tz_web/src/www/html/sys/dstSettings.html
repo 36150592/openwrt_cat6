@@ -1,0 +1,171 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript" src="js/jquery.validate.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        Page.render();
+        Page.setStripeTable();
+
+        Page.postJSON({
+            json:{
+                cmd: RequestCmd.GET_DAYLIGHT_SAVING_TIME
+            },
+            success: function(datas){
+                var datas = datas.data;
+				$('#lblTime').text(datas.daylight_saving_time);
+                if(datas.daylight_savings_enable ==  "1"){
+                    $('#daylightSavings').prop("checked", true);
+                    $('.daylightSavingDate').show();
+                    Page.setFormFieldValue2("daylightSavingStartDate", datas.daylight_saving_start_date);
+                    Page.setFormFieldValue2("daylightSavingEndDate", datas.daylight_saving_end_date);
+                }else{
+                    $('#daylightSavings').prop("checked", false);
+                    $('.daylightSavingDate').hide();
+                }
+                $('#daylightSavings').attr('old',datas.daylight_savings_enable);
+            }
+        });
+
+        jQuery.validator.addMethod("checkDaylightSavingStartDate", function(value, element) {
+            var reg = new RegExp(/^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/);
+            return this.optional(element) || reg.test(value)
+        }, PROMPT.tips.daylightSavingStartDate);
+
+        jQuery.validator.addMethod("checkDaylightSavingEndDate", function(value, element) {
+            var reg = new RegExp(/^(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/);
+            return this.optional(element) || reg.test(value)
+        }, PROMPT.tips.daylightSavingEndDate);
+
+        var rules = {
+                daylightSavingStartDate: { required: true, checkDaylightSavingStartDate: true },
+                daylightSavingEndDate: { required: true, checkDaylightSavingEndDate: true }
+            },
+            messages = {
+                daylightSavingStartDate: { required: CHECK.required.daylightSavingStartDate },
+                daylightSavingEndDate: { required: CHECK.required.daylightSavingEndDate } 
+            };
+
+        var $btnSave = $('#btnSave');
+        $btnSave.bind('click', function() {
+            $(this).attr("disabled",true);
+            var count = 0;
+            var $form = $('#form1');
+            var json = JSON.parmsToJSON($form);  
+            json.method = JSONMethod.POST;
+            json["daylightSavings"] = json["daylightSavings"] == "on" ? '1' : '0';
+
+            if(json["daylightSavings"] == "0") {
+                delete json["daylightSavingStartDate"];
+                delete json["daylightSavingEndDate"];
+                
+                if(json["daylightSavings"] ==  $('#daylightSavings').attr('old')) {
+                    AlertUtil.alertMsg(CHECK.required.noChanges);
+                    $(this).attr("disabled",false);
+                    return;
+                };
+                json.cmd = RequestCmd.SET_DAYLIGHT_SAVING_TIME;
+                Page.postJSON({
+                    json: json,
+                    success: function(data) {
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+
+                        $('#daylightSavings').attr('old', "0");
+
+                        $btnSave.attr("disabled",false);
+                    }
+                });
+            };
+            if(json["daylightSavings"] == "1") {
+                if(!CheckUtil.checkForm($form, rules, messages)){
+                    $(this).attr("disabled",false);
+                    return;
+                }    
+                
+                if(json["daylightSavings"] ==  $('#daylightSavings').attr('old')) {
+                    delete json["daylightSavings"];
+                    count++;
+                }
+
+                if(json.daylightSavingStartDate ==  $("#daylightSavingStartDate").attr('old')){
+                    delete json["daylightSavingStartDate"];
+                    count++;
+                }
+
+                if(json.daylightSavingEndDate ==  $("#daylightSavingEndDate").attr('old')){
+                    delete json["daylightSavingEndDate"];
+                    count++;
+                }
+
+                if(count == 3){
+                    AlertUtil.alertMsg(CHECK.required.noChanges);
+                    $(this).attr("disabled",false);
+                    return false;
+                }
+
+            
+                json.cmd = RequestCmd.SET_DAYLIGHT_SAVING_TIME;
+                    Page.postJSON({
+                        json: json,
+                        success: function(data) {
+                            AlertUtil.alertMsg(PROMPT.saving.success);
+
+                            $('#daylightSavings').attr('old', "1");
+                            $("#daylightSavingStartDate").attr('old', $("#daylightSavingStartDate").val());
+                            $("#daylightSavingEndDate").attr('old', $("#daylightSavingEndDate").val());
+
+                            $btnSave.attr("disabled",false);
+                        }
+                    });
+                }
+        });
+
+        $('#daylightSavings').change(function() {
+            if($('#daylightSavings').prop("checked") == true) {
+                $('.daylightSavingDate').show();
+            }else {
+                $('.daylightSavingDate').hide();
+            };
+        });
+    });
+</script>
+
+<div class="detail_box" id="child_container">
+    <script type="text/template" id="child_template">
+        <form id="form1">
+            <table class="detail" cellspacing="0">
+                <tr>
+                    <th><%- sys.daylightSavingTime %><%- colon %></th>
+                    <td><label id="lblTime"></label></td>
+                </tr>
+                <tr>
+                    <th><%- sys.daylightSavings %><%- colon %></th>
+                    <td>
+                        <input type="checkbox" id="daylightSavings" name="daylightSavings" class="inputs_lan" /><%- sys.ntpEnabled %>
+                    </td>
+                </tr>
+                <tr class="daylightSavingDate">
+                    <th><%- sys.daylightSavingStartDate %><%- colon %></th>
+                    <td><input type="text" id="daylightSavingStartDate" name="daylightSavingStartDate" class="middle" maxlength="30" /></td>
+                </tr>
+                <tr class="daylightSavingDate">
+                    <th>&nbsp;</th>
+                    <td><strong><%- sys.daylightSavingStartDateTips %></strong></td>
+                </tr>
+                <tr class="daylightSavingDate">
+                    <th><%- sys.daylightSavingEndDate %><%- colon %></th>
+                    <td><input type="text" id="daylightSavingEndDate" name="daylightSavingEndDate" class="middle" maxlength="30" /></td>
+                </tr>
+                <tr class="daylightSavingDate">
+                    <th>&nbsp;</th>
+                    <td><strong><%- sys.daylightSavingEndDateTips %></strong></td>
+                </tr>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td><input type="button" id="btnSave" value="<%- btn.save %>"/></td>
+                </tr>
+            </table>
+        </form>
+    </script>
+</div>
+

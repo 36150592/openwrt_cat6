@@ -2874,6 +2874,51 @@ function set_ecgi_lock()
     print(result_json)
 end
 
+function get_daylight_saving_time()
+    local data_array = {}
+
+    data_array['daylight_saving_time'] = system.system_ntp_get_date() or ''
+    data_array['daylight_savings_enable'] = system.system_ntp_get_dst() or ''
+    local start, dend = system.system_ntp_get_dst_daterange()
+    data_array['daylight_saving_start_date'] = start
+    data_array['daylight_saving_end_date'] = dend
+
+    local tz_answer = {}
+    tz_answer["cmd"] = 256
+    tz_answer["success"] = true
+    tz_answer["data"] = data_array
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end 
+
+function set_daylight_saving_time()
+    local ret
+    local daylightSavings = tz_req["daylightSavings"]
+    local daylightSavingStartDate = tz_req["daylightSavingStartDate"]
+    local daylightSavingEndDate = tz_req["daylightSavingEndDate"]
+
+    if "1" == daylightSavings then
+        ret = system.system_ntp_enable_dst() 
+        if(not ret) then tz_answer['daylight_savings_enable'] = false end 
+
+        if (nil ~= daylightSavingStartDate and nil ~= daylightSavingEndDate) then
+            ret = system.system_ntp_set_dst_daterange(daylightSavingStartDate, daylightSavingEndDate)
+            if(not ret) then tz_answer['daylight_saving_date'] = false end 
+        else 
+            tz_answer['daylight_saving_date'] = false
+        end
+    else
+        ret = system.system_ntp_disable_dst()
+        if(not ret) then tz_answer['daylight_savings_disable'] = false end 
+    end
+
+    local tz_answer = {}
+    tz_answer["cmd"] = 257
+    tz_answer["success"] = true
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+end
 
 local switch = {
     [0] = get_sysinfo,
@@ -2986,7 +3031,9 @@ local switch = {
     [252] = get_sip_data,
     [253] = set_sip_data,
     [254] = get_ecgi_lock,
-    [255] = set_ecgi_lock
+    [255] = set_ecgi_lock,
+    [256] = get_daylight_saving_time,
+    [257] = set_daylight_saving_time
 }
 
 cmdid = uti.get_env_cmdId(envv)

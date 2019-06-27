@@ -16,7 +16,8 @@ var TAB = {
 	isp: {},
 	route: {},
 	ddns: {},
-	tools: {}
+	tools: {},
+	timeSetting: {}
 };
 
 var PROMPT = {
