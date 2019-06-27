@@ -323,6 +323,10 @@ function system_module.system_import_config(file_path)
 	local super_passwd = x:get(TOZED_CONFIG_FILE,"cfg","TZ_SUPER_PASSWD")
 	local test_user = x:get(TOZED_CONFIG_FILE, "cfg", "TZ_TEST_USERNAME")
 	local test_passwd = x:get(TOZED_CONFIG_FILE,"cfg","TZ_TEST_PASSWD")
+
+	local admin_user = x:get(TOZED_CONFIG_FILE, "cfg", "TZ_USERNAME")
+	local admin_passwd = x:get(TOZED_CONFIG_FILE,"cfg","TZ_PASSWD")
+	
 	local pci = x:get(TOZED_CONFIG_FILE,"modem","TZ_DIALTOOL2_LTE_PCI_LOCK")
 	local earfcn = x:get(TOZED_CONFIG_FILE,"modem","TZ_DIALTOOL2_LTE_EARFCN_LOCK")
 	local ret = os.execute("dd if="..file_path.." |openssl des3 -d -k tz18c6 | tar zxf - -C /")
@@ -345,6 +349,14 @@ function system_module.system_import_config(file_path)
 		x:delete(TOZED_CONFIG_FILE,"cfg","TZ_TEST_PASSWD")
 	end
 
+	if nil ~= admin_user
+	then
+		x:set(TOZED_CONFIG_FILE, "cfg","TZ_USERNAME", admin_user)
+		x:set(TOZED_CONFIG_FILE, "cfg","TZ_PASSWD", admin_passwd)
+	else
+		x:delete(TOZED_CONFIG_FILE,"cfg","TZ_USERNAME")	
+		x:delete(TOZED_CONFIG_FILE,"cfg","TZ_PASSWD")
+	end
 
 	if nil ~= pci
 	then
@@ -363,7 +375,7 @@ end
 -- input:file_path :the absolute path of the package which you want to export
 -- return:true if success , false if fail
 function system_module.system_export_config(file_path)
-	return 0 == os.execute("tar -zcf  - /etc/config/* |openssl des3 -salt -k tz18c6 | dd of="..file_path)
+	return 0 == os.execute("tar -zcf  - /etc/config/* /etc/firewall.user |openssl des3 -salt -k tz18c6 | dd of="..file_path)
 end
 
 
