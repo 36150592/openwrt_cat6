@@ -197,7 +197,7 @@ local function get_dns(section)
 
 	while nil ~= res
 	do
-		if string.find(res,section) ~= nil
+		if "# Interface "..section == res
 		then
 			res = f:read()
 			if nil ~= res
@@ -212,6 +212,7 @@ local function get_dns(section)
 				temp = string.gmatch(res,"%d+%.%d+%.%d+%.%d+")
 				dns2 = temp()
 			end
+			break
 		end
 
 		res=f:read()
