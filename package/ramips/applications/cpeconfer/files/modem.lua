@@ -256,8 +256,8 @@ function modem_module.modem_get_status()
 
 		local array = split(res,":")
 		--print(array[1],"=", array[2])
-		local key = string.gsub(array[1],"\t","")
-		local value = string.gsub(array[2],"\t","")
+		local key = string.gsub(array[1] or "","\t","")
+		local value = string.gsub(array[2] or "","\t","")
 		key = string.lower(key)
 		
 		if  match_status_key(key)
@@ -332,8 +332,8 @@ function modem_module.modem_get_info()
 
 		local array = split(res,":")
 		--print(array[1],"=", array[2])
-		local key = string.gsub(array[1],"\t","")
-		local value = string.gsub(array[2],"\t","")
+		local key = string.gsub(array[1] or "","\t","")
+		local value = string.gsub(array[2] or "","\t","")
 		key = string.lower(key)
 		
 		local keys = split(key,"_")
@@ -1119,8 +1119,8 @@ function modem_module.modem_get_mutilapn_status()
 
 		local array = split(res,":")
 		--print(array[1],"=", array[2])
-		local key = string.gsub(array[1],"\t","")
-		local value = string.gsub(array[2],"\t","")
+		local key = string.gsub(array[1] or "","\t","")
+		local value = string.gsub(array[2] or "","\t","")
 		local ar = split(value,",")
 
 		if string.find(key,"APN1") ~= nil
@@ -1135,20 +1135,25 @@ function modem_module.modem_get_mutilapn_status()
 		elseif string.find(key,"ETH") ~= nil
 		then
 			pointer = eth
+		else
+			pointer = nil
 		end
 
-		pointer["type"] = ar[1]
-		pointer["ipaddr"]  = ar[2]
-		pointer["netmask"]  = ar[3]
-		pointer["ifname"]  = ar[4]
-		pointer["lan_gate_ip"]  = ar[5]
-		pointer["lan_gate_netmask"]  = ar[6]
-		pointer["ssid"] = ar[7]
-		if nil == pointer["ipaddr"] or "" == pointer["ipaddr"]
+		if nil ~= pointer 
 		then
-			pointer["dial_status"] =  0
-		else
-			pointer["dial_status"] =  1
+			pointer["type"] = ar[1]
+			pointer["ipaddr"]  = ar[2]
+			pointer["netmask"]  = ar[3]
+			pointer["ifname"]  = ar[4]
+			pointer["lan_gate_ip"]  = ar[5]
+			pointer["lan_gate_netmask"]  = ar[6]
+			pointer["ssid"] = ar[7]
+			if nil == pointer["ipaddr"] or "" == pointer["ipaddr"]
+			then
+				pointer["dial_status"] =  0
+			else
+				pointer["dial_status"] =  1
+			end
 		end
 
 		res = f:read()
