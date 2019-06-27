@@ -51,7 +51,9 @@
             Page.postJSON({
                json: json,
                success: function(data) {
-                   AlertUtil.alertMsg(PROMPT.saving.success);
+                   if(data.success){
+                       SysUtil.rebootDevice(PROMPT.tips.rebootMessage);
+                   }
                }
            });
     })

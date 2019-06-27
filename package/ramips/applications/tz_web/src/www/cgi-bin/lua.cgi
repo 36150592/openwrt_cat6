@@ -2807,9 +2807,11 @@ end
 function get_sip_data()
 
     local tz_answer = {}
+    local data_arr = {}
+    data_arr = system.system_get_sip_alg()
     tz_answer["cmd"] = 252
     tz_answer["success"] = true
-    tz_answer["data"] = system.system_get_sip_alg()
+    tz_answer["data"] = data_arr
     result_json = cjson.encode(tz_answer)
     print(result_json)
 
