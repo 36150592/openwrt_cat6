@@ -2708,15 +2708,22 @@ function get_login_info()
     local data_wifi = {}
     local sim_status = sim.sim_get_status() or {}
     local modem_status = modem.modem_get_status() or {}
+    local network_interface_up_down_status = network.network_get_interface_up_down_status() or {}
+    local system_web_info = system.system_get_web_info() or {}
+    local system_tozed_factory_info = system.system_get_tozed_factory_info() or {}
+    local system_tozed_system_info = system.system_get_tozed_system_info() or {}
+    local divice_version = system.get_divice_version() or {}
+    local network_wan_info = network.network_get_wan_info() or {}
+    local network_4g_net_info = network.network_get_4g_net_info() or {}
     sys_status["is_sim_exist"] = sim_status["is_sim_exist"] or ''
     sys_status["card_status"] = sim_status["card_status"] or ''
     sys_status["2g_register_status"] = modem_status["2g_register_status"] or ''
     sys_status["3g_register_status"] = modem_status["3g_register_status"] or ''
     sys_status["4g_register_status"] = modem_status["4g_register_status"] or ''
-    sys_status["rsrp"] = modem_status["rsrp"]
-    sys_status["signal_lvl"] = modem_status["signal_lvl"]
-    sys_status["network_link_stauts"] = modem_status["network_link_stauts"]
-    sys_status["ethInter"] = network.network_get_interface_up_down_status() or ''
+    sys_status["rsrp"] = modem_status["rsrp"] or ''
+    sys_status["signal_lvl"] = modem_status["signal_lvl"] or ''
+    sys_status["network_link_stauts"] = modem_status["network_link_stauts"] or ''
+    sys_status["ethInter"] = network_interface_up_down_status or ''
     local array = wifi.wifi_get_dev()
     for k, v in pairs(array) do
         if (v["band"] == "2.4G") then
@@ -2728,35 +2735,35 @@ function get_login_info()
     end
     sys_status["wifi"] = data_wifi
 
-    data_array['sim_card_status'] = sim.sim_get_status()['card_status'] or ''
+    data_array['sim_card_status'] = sim_status['card_status'] or ''
 
     local language = {}
     data_array['language'] = language
-    language['web_language_select_enable'] = system.system_get_web_info()['web_language_select_enable']
-    language['web_language'] = system.system_get_web_info()['web_language']
+    language['web_language_select_enable'] = system_web_info['web_language_select_enable']
+    language['web_language'] = system_web_info['web_language']
     
     local main_info = {}
     data_array['main_info'] = main_info
-    main_info["factory_imei"] = system.system_get_tozed_factory_info()['imei'] 
-    main_info["software_version"] = system.system_get_tozed_system_info()['software_version'] 
-    main_info["config_version"] = system.system_get_tozed_system_info()['config_version']
-    main_info["device_sn"] = system.system_get_tozed_system_info()['device_sn'] 
-    main_info["version_type"] = system.get_divice_version()['type']
-    main_info["modem_act"] = modem.modem_get_status()['act'] 
-    main_info["modem_rsrp"] = modem.modem_get_status()['rsrp']
-    main_info["modem_rssi"] = modem.modem_get_status()['rssi'] 
-    main_info["modem_rsrq"] = modem.modem_get_status()['rsrq'] 
-    main_info["modem_sinr"] = modem.modem_get_status()['sinr'] 
-    main_info["wan_ipaddr"] = network.network_get_wan_info()['ipaddr'] 
-    main_info["wan_netmask"] = network.network_get_wan_info()['netmask'] 
-    main_info["wan_gateway"] = network.network_get_wan_info()['gateway'] 
-    main_info["wan_first_dns"] = network.network_get_wan_info()['first_dns']
-    main_info["wan_second_dns"] = network.network_get_wan_info()['second_dns'] 
-    main_info["fourg_ipaddr"] = network.network_get_4g_net_info()['ipaddr'] 
-    main_info["fourg_netmask"] = network.network_get_4g_net_info()['netmask'] 
-    main_info["fourg_gateway"] = network.network_get_4g_net_info()['gateway'] 
-    main_info["fourg_dns1"] = network.network_get_4g_net_info()['first_dns'] 
-    main_info["fourg_dns2"] = network.network_get_4g_net_info()['second_dns'] 
+    main_info["factory_imei"] = system_tozed_factory_info['imei'] 
+    main_info["software_version"] = system_tozed_system_info['software_version'] 
+    main_info["config_version"] = system_tozed_system_info['config_version']
+    main_info["device_sn"] = system_tozed_system_info['device_sn'] 
+    main_info["version_type"] = divice_version['type']
+    main_info["modem_act"] = modem_status['act'] 
+    main_info["modem_rsrp"] = modem_status['rsrp']
+    main_info["modem_rssi"] = modem_status['rssi'] 
+    main_info["modem_rsrq"] = modem_status['rsrq'] 
+    main_info["modem_sinr"] = modem_status['sinr'] 
+    main_info["wan_ipaddr"] = network_wan_info['ipaddr'] 
+    main_info["wan_netmask"] = network_wan_info['netmask'] 
+    main_info["wan_gateway"] = network_wan_info['gateway'] 
+    main_info["wan_first_dns"] = network_wan_info['first_dns']
+    main_info["wan_second_dns"] = network_wan_info['second_dns'] 
+    main_info["fourg_ipaddr"] = network_4g_net_info['ipaddr'] 
+    main_info["fourg_netmask"] = network_4g_net_info['netmask'] 
+    main_info["fourg_gateway"] = network_4g_net_info['gateway'] 
+    main_info["fourg_dns1"] = network_4g_net_info['first_dns'] 
+    main_info["fourg_dns2"] = network_4g_net_info['second_dns'] 
 
     local tz_answer = {}
     tz_answer["success"] = true
