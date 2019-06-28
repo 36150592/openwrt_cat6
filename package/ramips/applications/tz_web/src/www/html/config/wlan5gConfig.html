@@ -451,11 +451,20 @@
                             Page.setFormFieldValue2("wifiWorkMode", data.mode);
                             Page.setFormFieldValue2("bandWidth", data.bandwidth);
                             
-                            if($('#wifiWorkMode').val() !== "15") {
-                                $("#bandWidth option[value='80']").hide();
+                            if($('#bandWidth').val() == "80") {
+                                if($('#wifiWorkMode').val() !== "15") {
+                                    $('#bandWidth option:eq(0)').attr('selected','selected');
+                                    $("#bandWidth option[value='80']").hide();
+                                }else {
+                                    $("#bandWidth option[value='80']").show();
+                                }
                             }else {
-                                $("#bandWidth option[value='80']").show();
-                            }
+                                if($('#wifiWorkMode').val() !== "15") {
+                                    $("#bandWidth option[value='80']").hide();
+                                }else {
+                                    $("#bandWidth option[value='80']").show();
+                                }
+                            }; 
                         }
                     });
                     break;
