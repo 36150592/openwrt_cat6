@@ -2660,13 +2660,15 @@ function get_home_info()
     -- data_array["4g1"] = network.network_get_4g1_net_info()
     -- data_array["4g2"] = network.network_get_4g2_net_info()
 
-    data_array['systime'] = os.time() 
+    data_array['systime'] = os.time() or ''
 
     local sys_status = {}
     data_array['sys_status'] = sys_status
     local data_wifi = {}
     local sim_status = sim.sim_get_status() or {}
     local modem_status = modem.modem_get_status() or {}
+    local system_web_info = system.system_get_web_info() or {}
+
     sys_status["is_sim_exist"] = sim_status["is_sim_exist"] or ''
     sys_status["card_status"] = sim_status["card_status"] or ''
     sys_status["2g_register_status"] = modem_status["2g_register_status"] or ''
@@ -2687,9 +2689,9 @@ function get_home_info()
     end
     sys_status["wifi"] = data_wifi
 
-    data_array['sim_card_status'] = sim.sim_get_status()['card_status'] or ''
+    data_array['sim_card_status'] = sim_status['card_status'] or ''
 
-    data_array['web_language_select_enable'] = system.system_get_web_info()['web_language_select_enable']
+    data_array['web_language_select_enable'] = system_web_info['web_language_select_enable']
 
     local tz_answer = {}
     tz_answer["success"] = true
