@@ -1750,7 +1750,6 @@ end
 function system_module.system_login_get_session_timeout()
 
 	local timeout = x:get("tozed", "web", "TZ_SESSION_TIMEOUT")
-	util.web_log(timeout)
 	return timeout
 end
 
