@@ -29,6 +29,7 @@
                    }else{
                          $("#apnNatLookBack2").attr("checked",true);
                    }
+                   $('#apn_mtu').val(apnData.mtu);
                    $("#selectType").val(apnData.ip_stack);
                    $("#apn_profile").val(apnData.profile_name);
                    $("#selectAuthentication").val(apnData.auth_type);
@@ -59,14 +60,21 @@
         }
       });
 
+      var rules = {
+            apnMTU: { required: true, range: [600, 1500] },
+        },messages = {
+            apnMTU: { required: CHECK.required.mtu, range: CHECK.format.mtu },
+        };
 
       $("#btnSave").on("click",function(){
+            $(this).attr("disabled",false);
         var apnEnable,selectType,apn_profile,selectAuthentication,apn_user_name,apn_user_password,apn_name,apn_apnNat;
             if($("#apnEnable").is(":checked")){
                 apnEnable = 1;
             }else{
                 apnEnable = 0;
             }
+            apn_mtu = $('#apn_mtu').val();
             selectType =  $("#selectType").val();
             apn_profile =  $("#apn_profile").val();
             selectAuthentication =  $("#selectAuthentication").val();
@@ -75,7 +83,10 @@
             apn_name =  $("#apn_name").val();
             apn_apnNat = $("input[name='apnNat']:checked").val();
             $form = $("#form");
-          
+            if(!CheckUtil.checkForm($form, rules, messages)){
+                $(this).attr("disabled",false);
+                return;
+            }
 
           var json={},json2= new Object();
           json.enable = parseInt(apnEnable,10);
@@ -84,7 +95,7 @@
           json.auth_type = parseInt(selectAuthentication,10);
           json.username = apn_user_name;
           json.apn_name = apn_name;
-          json.mtu = 1500;
+          json.mtu = apn_mtu;
           json.password = apn_user_password;
           json.nat = apn_apnNat;
           json.nat_lookback = $("input[name='apnNatLookBack']:checked").val();
@@ -136,6 +147,12 @@
                     <input type="text" name="apnName" id="apn_name">
                 </td>
             </tr>
+            <tr>
+                <th><%-DOC.apn.mtu %><%- colon %></th>
+                <td>
+                    <input type="text" name="apnMTU" id="apn_mtu">
+                </td>
+            </tr>
             <tr id="apn_type">
                 <th>
                     <%-DOC.apn.type %><%- colon %>
@@ -159,7 +176,7 @@
                     </select>
                 </td>
             </tr>
-             
+        
             <tr class="hideNone" style="display:none;">
                 <th><%-DOC.apn.user %><%- colon %></th>
                 <td>
@@ -195,6 +212,9 @@
 
             <div class="helper_name"><%- DOC.apnHelper.title5 %></div>
             <div class="helper_desc"><%- DOC.apnHelper.name5 %></div>
+
+            <div class="helper_name"><%- DOC.apnHelper.title8 %></div>
+            <div class="helper_desc"><%- DOC.apnHelper.name8 %></div>
 
             <div class="helper_name"><%- DOC.apnHelper.title6 %></div>
             <div class="helper_desc"><%- DOC.apnHelper.name6 %></div>
