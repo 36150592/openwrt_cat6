@@ -75,11 +75,11 @@ check_br()
 
 sleep 60
 
-if [ ! -f /etc/reboot_count ]; then
-        echo 0 > /etc/reboot_count
+if [ ! -f /root/reboot_count ]; then
+        echo 0 > /root/reboot_count
 fi
 
-reboot_num=`cat /etc/reboot_count`
+reboot_num=`cat /root/reboot_count`
 
 wait_num=0
 
@@ -91,20 +91,24 @@ do
         check_wifi_58g
         check_br
 
-    ping -w 5 www.baidu.com
+    ping -I bmwan0 -w 5 114.114.114.114
     status_4g=$?
 
-	echo "status_58g_wifi=" ${status_58g_wifi}
-	echo "status_24g_wifi=" ${status_24g_wifi}
-	echo "status_br_wifi=" ${status_br_wifi}
-	echo "status_4g=" ${status_4g}
+    ping -I bmwan1 -w 5 114.114.114.114
+    status_4g_1=$?
 
-	if [ "${status_58g_wifi}" = "ok" -a "${status_24g_wifi}" = "ok" -a "$status_br_wifi" = "ok"  -a $status_4g"" == "0" ]; then
+    ping -I bmwan2 -w 5 114.114.114.114
+    status_4g_2=$?
+
+    ping6 -w 5 2400:da00::6666
+    status_4g_v6=$?
+
+	if [ "${status_58g_wifi}" = "ok" -a "${status_24g_wifi}" = "ok" -a "$status_br_wifi" = "ok"  -a $status_4g"" == "0"  -a $status_4g_1"" == "0"  -a $status_4g_2"" == "0" -a $status_4g_v6"" == "0" ]; then
 		last_reboot_num=`expr ${reboot_num} + 1`
-		echo ${last_reboot_num} > /etc/reboot_count
+		echo ${last_reboot_num} > /root/reboot_count
 
 		if [ $wait_num -gt 3 ];then
-			echo "TIMEOUT" >> /etc/reboot_timeout
+			echo "TIMEOUT" >> /root/reboot_timeout
 		fi
 
 		sleep 10
@@ -114,9 +118,17 @@ do
 	echo "wait_num=" ${wait_num}
 
 	if [ "${wait_num}" = "3" ]; then
-		iwconfig > /etc/record.${reboot_num}.log
-		brctl show >> /etc/record.${reboot_num}.log
-		logread >> /etc/record.${reboot_num}.log
+		iwconfig > /root/record.${reboot_num}.log
+		brctl show >> /root/record.${reboot_num}.log
+		logread >> /root/record.${reboot_num}.log
+
+		echo "status_58g_wifi=" ${status_58g_wifi} >> /root/record.${reboot_num}.log
+		echo "status_24g_wifi=" ${status_24g_wifi} >> /root/record.${reboot_num}.log
+		echo "status_br_wifi=" ${status_br_wifi} >> /root/record.${reboot_num}.log
+		echo "status_4g=" ${status_4g} >> /root/record.${reboot_num}.log
+		echo "status_4g_1=" ${status_4g_1} >> /root/record.${reboot_num}.log
+		echo "status_4g_2=" ${status_4g_2} >> /root/record.${reboot_num}.log
+		echo "status_4g_v6=" ${status_4g_v6} >> /root/record.${reboot_num}.log
 	fi
 
 	wait_num=`expr ${wait_num} + 1`
