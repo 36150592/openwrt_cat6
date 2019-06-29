@@ -277,7 +277,7 @@
             function loginSessionTimeout() {
                 // timeout的单位是分钟
                 var timeout = parseFloat(sessionStorage['timeout']),
-                time = timeout;
+                time = timeout ? timeout : 20;
                 timer = null;
                 if(timer) {
                     clearTimeout(timer);
@@ -287,7 +287,7 @@
                     $('#logout').click();
                 }, time * 60 * 1000) 
                 $('body').on('keydown mousemove mousedown', function(){
-                    time = timeout; // reset
+                    time = timeout ? timeout : 20; // reset
                     clearTimeout(timer);
                     timer = setTimeout(function() {
                         $('#logout').click();
