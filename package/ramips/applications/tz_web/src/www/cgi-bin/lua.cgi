@@ -1192,16 +1192,23 @@ function upload_file()
     local file_len = content_len - string.len(a2) - string.len(a3) -
                          string.len(boundary) * 2 - 10 - 7 + 1
 
-    local a5 = io.read(file_len)
-    if nil ~= a5 then
-        local file_name = uti.get_upload_file_name(a2)
-        local file_path = string.format("%s%s", UploadDir, file_name)
+    local file_name = uti.get_upload_file_name(a2)
+    local file_path = string.format("%s%s", UploadDir, file_name)
 
-        os.execute(string.format("mkdir -p %s", UploadDir))
-        local ff = io.open(file_path, "w")
+    os.execute(string.format("mkdir -p %s", UploadDir))
+    local ff = io.open(file_path, "w")
+
+    while file_len > 100000
+    do
+        local a5 = io.read(100000)
         ff:write(a5)
-        io.close(ff)
+        file_len = file_len - 100000
     end
+
+    local a6 = io.read(file_len)
+    ff:write(a6)
+     
+    io.close(ff)    
 
     tz_answer["success"] = true
     result_json = cjson.encode(tz_answer)
