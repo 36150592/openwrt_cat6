@@ -12,7 +12,7 @@ chmod 777 ${SYSTEM_CONFIG_LOAD_FILE}
 if [ "${TZSYSTEM_SNTP_TIMEZONE}" != "" ]; then
 	uci set  system.@system[0].timezone=${TZSYSTEM_SNTP_TIMEZONE}
 else
-	uci set  system.@system[0].timezone=8
+	uci set  system.@system[0].timezone='CST-8'
 fi
 
 if [ "${TZSYSTEM_SNTP_SERVER}" != "" ]; then
