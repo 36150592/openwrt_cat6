@@ -209,6 +209,7 @@ config wifi-iface
 	option key      '${TZ_24G_WIFI_MAIN_PWD}'
 	option maxassoc '${TZ_24G_WIFI_MAIN_MAX_STATION_NUM}'
 	option disabled '${TZ_24G_WIFI_MAIN_DISABLE}'
+    option wps 'pbc'
 
 config wifi-device      mt7612e
 	option type     mt7612e
@@ -233,6 +234,7 @@ config wifi-iface
 	option key      '${TZ_58G_WIFI_MAIN_PWD}'
 	option maxassoc '${TZ_58G_WIFI_MAIN_MAX_STATION_NUM}'
 	option disabled ${TZ_58G_WIFI_MAIN_DISABLE}
+    option wps 'pbc'
                            
 EOF
 
