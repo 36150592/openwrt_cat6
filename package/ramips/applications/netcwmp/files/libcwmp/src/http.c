@@ -616,7 +616,24 @@ nohost:
     }
 
     cwmp_log_debug("Before parsing host:%s", dest->host);
+    printf("old: dest->host=%s\n",dest->host);
 	parse_domain_name(dest->host);
+
+	//if the the client get out of other apn
+    char apn_alone[64] = "";
+    read_memory("cfg -g tr069_apn_alone",apn_alone,sizeof(apn_alone));
+    util_strip_traling_spaces(apn_alone);
+	if (apn_alone[0] == '1')
+	{
+        char cmd[256] = "";
+		printf("dest->host=%s\n",dest->host);
+        
+        system("iptables -t filter -D OUTPUT -j drop_tr069");
+        system("iptables -t filter -N drop_tr069");
+
+        sprintf(cmd, "iptables -t filter -I drop_tr069 -d %s -o bmwan0 -j DROP", dest->host);
+        system(cmd);
+	}
 	
     cwmp_log_debug(
         "scheme:   [%s]\n"
