@@ -15,11 +15,8 @@
                     
                     var data = datas.data;
                     Page.isNULLToSpace = true;
-                    for(var i = 0; i < data.length; i++)
-                    {
-                        if(!data[i].enable)
-                            continue;
 
+                    if(!!data[0]) {
                         var names_wan = [];
                         var values_wan = [];
                         names_wan.push(DOC.lan.lannet);
@@ -29,14 +26,54 @@
                         names_wan.push(DOC.lan.intermac);
                         names_wan.push(DOC.lan.intername);
 
-                        values_wan.push(data[i].server_ip);
-                        values_wan.push(data[i].netmask);
-                        values_wan.push(data[i].start_ip);
-                        values_wan.push(data[i].end_ip);
-                        values_wan.push(data[i].lan_mac);
-                        values_wan.push("br-"+data[i].interface);
-                        var wan_html = Page.createTable2(data[i].interface.toUpperCase(), names_wan, values_wan, names_wan.length, 1).replace("<td>", "<td>");
-                        $('#'+data[i].interface+"_info").html(wan_html);
+                        values_wan.push(data[0].server_ip);
+                        values_wan.push(data[0].netmask);
+                        values_wan.push(data[0].start_ip);
+                        values_wan.push(data[0].end_ip);
+                        values_wan.push(data[0].lan_mac);
+                        values_wan.push("br-"+data[0].interface);
+                        var wan_html = Page.createTable2(data[0].interface.toUpperCase(), names_wan, values_wan, names_wan.length, 1).replace("<td>", "<td>");
+                        $('#'+data[0].interface+"_info").html(wan_html);
+                    }                     
+
+                    if(Page.getShowHideByBit(2)) {
+                        var names_wan = [];
+                        var values_wan = [];
+                        names_wan.push(DOC.lan.lannet);
+                        names_wan.push(DOC.lan.netmask);
+                        names_wan.push(DOC.lan.beginip);
+                        names_wan.push(DOC.lan.endip);
+                        names_wan.push(DOC.lan.intermac);
+                        names_wan.push(DOC.lan.intername);
+
+                        values_wan.push(data[1].server_ip);
+                        values_wan.push(data[1].netmask);
+                        values_wan.push(data[1].start_ip);
+                        values_wan.push(data[1].end_ip);
+                        values_wan.push(data[1].lan_mac);
+                        values_wan.push("br-"+data[1].interface);
+                        var wan_html = Page.createTable2(data[1].interface.toUpperCase(), names_wan, values_wan, names_wan.length, 1).replace("<td>", "<td>");
+                        $('#'+data[1].interface+"_info").html(wan_html);
+                    }
+
+                    if(Page.getShowHideByBit(19)) {
+                        var names_wan = [];
+                        var values_wan = [];
+                        names_wan.push(DOC.lan.lannet);
+                        names_wan.push(DOC.lan.netmask);
+                        names_wan.push(DOC.lan.beginip);
+                        names_wan.push(DOC.lan.endip);
+                        names_wan.push(DOC.lan.intermac);
+                        names_wan.push(DOC.lan.intername);
+
+                        values_wan.push(data[2].server_ip);
+                        values_wan.push(data[2].netmask);
+                        values_wan.push(data[2].start_ip);
+                        values_wan.push(data[2].end_ip);
+                        values_wan.push(data[2].lan_mac);
+                        values_wan.push("br-"+data[2].interface);
+                        var wan_html = Page.createTable2(data[2].interface.toUpperCase(), names_wan, values_wan, names_wan.length, 1).replace("<td>", "<td>");
+                        $('#'+data[2].interface+"_info").html(wan_html);
                     }
                   
 
