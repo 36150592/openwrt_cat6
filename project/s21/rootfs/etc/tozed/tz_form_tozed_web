@@ -30,13 +30,13 @@ fi
 if [ "${TZWEB_USER_SHOW_HIDE_PREF}" != "" ]; then
 	cfg -a TZ_WEB_USER_SHOW_HIDE_PREF="${TZWEB_USER_SHOW_HIDE_PREF}" --section web
 else
-	cfg -a TZ_WEB_USER_SHOW_HIDE_PREF="BF" --section web
+	cfg -a TZ_WEB_USER_SHOW_HIDE_PREF="800BF" --section web
 fi
 
 if [ "${TZWEB_OPERATOR_SHOW_HIDE_PREF}" != "" ]; then
 	cfg -a TZ_WEB_OPERATOR_SHOW_HIDE_PREF="${TZWEB_OPERATOR_SHOW_HIDE_PREF}" --section web
 else
-	cfg -a TZ_WEB_OPERATOR_SHOW_HIDE_PREF="FFFF" --section web
+	cfg -a TZ_WEB_OPERATOR_SHOW_HIDE_PREF="FFFFFFF" --section web
 fi
 
 if [ "${TZWEB_SESSION_TIMEOUT}" != "" ]; then
