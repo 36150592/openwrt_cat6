@@ -302,6 +302,12 @@ int util_send_cmd(int dev_handle,char *cmd,int* exception_dealwith)
 			char tz_reboot_buff[100] = "";
 			sprintf(tz_reboot_buff,"/etc/rc.d/rc.get_reboot_info %s--%d ",__FILE__,__LINE__);
 			system(tz_reboot_buff);
+			system("echo kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk >> /etc/record");
+			system("date >> /etc/record");
+			system("lsusb >> /etc/record");
+			system("logread >> /etc/record");
+			system("ls /dev/tty* >> /etc/record");
+			system("dmesg >> /etc/record");
 			system("reboot");
 //			exit(0);
 		}
