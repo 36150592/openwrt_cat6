@@ -70,15 +70,15 @@ if [ "${modem_bin}" != "" ]; then
 		if [ "${tmp_result}" == "OK" ]; then
 			echo ">>>>>>>>>>>2"
 			sleep 40
-			tmp_result=`sendat -e "at+bmcmd=BMFTPST" | grep +BMCMD-BMFTPST | awk '{print $2}'`
+			tmp_result=`sendat -e "at+bmcmd=BMFTPST" | grep "60" | wc -l`
 			echo "ret= ${tmp_result}"
-			if [ "${tmp_result}" == "60" ]; then
+			if [ "${tmp_result}" == "1" ]; then
 				echo ">>>>>>>>>>>3"
 				sendat -e "at+bmcmd=SWITCH_BACKUP_BOOT"
 				sleep 50
-				tmp_result=`sendat -e "at+bmcmd=BMFTPST" | grep +BMCMD-BMFTPST | awk '{print $2}'`
+				tmp_result=`sendat -e "at+bmcmd=BMFTPST" | grep "90" | wc -l`
 				echo "ret= ${tmp_result}"
-				if [ "${tmp_result}" == "90" ]; then
+				if [ "${tmp_result}" == "1" ]; then
 					echo ">>>>>>>>>>>4"
 					modem_update_result=1
 				fi

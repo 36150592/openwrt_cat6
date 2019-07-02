@@ -265,6 +265,9 @@ function system_module.update_system(file_path)
 		return -1
 	end
 
+
+    os.execute("mount -o remount,size=100% tmpfs /tmp")
+    os.execute("echo 3 > /proc/sys/vm/drop_caches")
 	os.execute("rm -rf /tmp/updateit")
 	os.execute(string.format("cd /tmp && unzip -P tz18c6 %s updateit", file_path))
 
