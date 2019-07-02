@@ -1,0 +1,124 @@
+#!/bin/sh
+#set -x
+
+get_acs_ip()
+{
+	cut_the_url_head=
+
+	acs_url=$1
+
+	http_head_exist=`echo $acs_url | grep http`
+
+	if [ "${http_head_exist}" = "" ]; then
+		cut_the_url_head=$acs_url
+	else
+		cut_the_url_head=`echo $acs_url | awk -F "//" '{print $2}'`
+	fi
+
+
+	real_acs=`echo $cut_the_url_head | awk -F "/" '{print $1}' | awk -F ":" '{print $1}'`
+
+	if [ "$real_acs" = "" ]; then
+		return
+	fi
+	
+	/tmp/tozed_tool -d $real_acs
+	
+	if [ -e /tmp/tr069_acs_ip ]; then
+		acsip=`cat /tmp/tr069_acs_ip`
+	fi
+
+}
+
+check_tr069()
+{
+	apn_alone=`cfg -g tr069_apn_alone`
+	if [ "${apn_alone}" = "1" ]; then
+		apn_num=`cfg -g tr069_apn_num`
+		tr069_apn=
+		if [ "${apn_num}" = "3" ]; then
+			tr069_apn=bmwan2
+		else if [ "${apn_num}" = "2" ]; then
+			tr069_apn=bmwan1
+		else
+			tr069_apn=bmwan2
+		fi
+		fi
+
+		#check table tr069 exist
+		table_tr069_exist=`cat /etc/iproute2/rt_tables  | grep tr069`
+		if [ "${table_tr069_exist}" = "" ]; then
+			echo 20 tr069 >> /etc/iproute2/rt_tables
+		fi
+
+		tr069_wan_exist=`route -n | grep ${tr069_apn}`
+		if [ "${tr069_wan_exist}" == "" ]; then
+			tr069_check_seconds=5
+			return
+		fi
+
+		#get the tr069 acs's ip
+		tr069_acs_url=`cfg -g tr069_ServerURL`
+		if [ "${tr069_acs_url}" = "" ]; then
+			tr069_check_seconds=60
+			return
+		fi
+		get_acs_ip ${tr069_acs_url}
+
+		if [ "${acsip}" = "" ]; then
+			tr069_check_seconds=5
+			return
+		fi
+
+		#get tr069 wan's gateway
+		tr069_wan_gateway=`ip route show table ${tr069_apn} | grep default | awk '{print $3}'`
+		if [ "${tr069_wan_gateway}" = "" ]; then
+			tr069_check_seconds=5
+			return
+		fi
+
+		rule_tr069_exist=`ip rule | grep tr069`
+		if [ "${rule_tr069_exist}" = "" ]; then
+			ip rule add to ${acsip} table tr069 pref 800
+		fi
+
+		#add table tr069 default route
+		default_route_exist=`ip route show table tr069 | grep default`
+		if [ "${default_route_exist}" = "" ]; then
+			ip route add default via ${tr069_wan_gateway} dev ${tr069_apn} table tr069
+		else
+			old_tr069_wan_gateway=`ip route show table tr069 | grep default | awk '{print $3}'`
+			if [ "${tr069_wan_gateway}" != "${old_tr069_wan_gateway}" ]; then
+				ip route flush table tr069
+				ip route add default via ${tr069_wan_gateway} dev ${tr069_apn} table tr069
+			fi
+		fi
+
+		tr069_check_seconds=60
+		
+		
+	else
+		tr069_check_seconds=1800
+	fi
+}
+
+seconds=0
+tr069_check_seconds=5
+
+while [ true ]
+do
+	#echo "$seconds"
+
+	#tr069
+	if [ `expr $seconds % $tr069_check_seconds` == 0 ]; then
+		echo "will check_tr069"
+		check_tr069
+	fi
+
+	#while last
+	seconds=`expr $seconds + 1`
+	sleep 1
+	if [ $seconds -gt 3600 ]; then
+		seconds=0
+	fi
+done

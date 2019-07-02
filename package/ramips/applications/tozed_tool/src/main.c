@@ -37,6 +37,21 @@ void help_message()
 	printf("-a:\tdecrypt the config file. after decrypt, you will get a param file: %s\n", CONFIG_PARAM_FILE);
 }
 
+void resolv_domain_name(char* domain)
+{
+	char v4[128] = "";
+	char v6[128] = "";
+	int aa = 0;
+	util_resolv_domain_name(domain, v4, v6, &aa);
+	if(v4[0] != 0)
+	{
+		char cmdline[128] = "";
+		sprintf(cmdline, "echo %s > /tmp/tr069_acs_ip", v4);
+		system(cmdline);
+	}
+}
+
+
 char mac[24];
 char mac_5g[24];
 char imei[24];
@@ -96,7 +111,7 @@ int main(int argc, char** argv)
 	printf("mac_5g = %s\n", mac_5g);
 	printf("imei = %s\n", imei);
 	
-	while((ret= getopt(argc,argv,"a:b:c:g:h:w:")) != -1)
+	while((ret= getopt(argc,argv,"a:b:c:d:g:h:w:")) != -1)
 	{
 		switch(ret)
 		{
@@ -155,6 +170,13 @@ int main(int argc, char** argv)
 					}
 				}
 				break;
+
+			case 'd':
+				{
+					char domain_name[120] = "";
+					strncpy(domain_name,optarg,sizeof(domain_name));
+					resolv_domain_name(domain_name);
+				}
 				
 			default:
 				break;

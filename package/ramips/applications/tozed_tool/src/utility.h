@@ -21,4 +21,6 @@ extern void util_strip_traling_r_n_t( char* one_string );
 
 extern void set_param_to_config_tozed(char* name, char* value);
 
+extern int util_resolv_domain_name(const char* domain_name,char* ipv4_addr,char* ipv6_addr,int* result_ind);
+
 #endif
