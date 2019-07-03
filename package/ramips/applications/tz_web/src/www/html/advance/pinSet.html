@@ -92,7 +92,7 @@
                      json: json,
                      success: function(data) {
                         $btnSave.enable();
-                         $("ul.tabs a").eq(4).click();
+                         $("ul.tabs a").eq(5).click();
                          if(ifNeedRestart == false){
                             AlertUtil.alertMsg(PROMPT.saving.success);
                          }else{
@@ -106,7 +106,7 @@
                                     cmd: RequestCmd.QUERY_SIM_STATUS
                                 },
                             success: function(datas) {
-                                 $("ul.tabs a").eq(4).click();
+                                 $("ul.tabs a").eq(5).click();
                                 var pin_left_times = datas.sim.pin_left_times;
                                 if(ifNeedRestart == false){
                                      AlertUtil.alertMsg(PROMPT.saving.pingTimes.format(parseInt(pin_left_times)));
