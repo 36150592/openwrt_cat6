@@ -66,6 +66,7 @@ CONFIG_DEFAULT_iwinfo=y
 CONFIG_DEFAULT_kmod-gpio-button-hotplug=y
 CONFIG_DEFAULT_kmod-leds-gpio=y
 CONFIG_DEFAULT_kmod-ledtrig-usbdev=y
+# CONFIG_DEFAULT_kmod-mt76 is not set
 CONFIG_DEFAULT_kmod-nf-nathelper=y
 CONFIG_DEFAULT_kmod-usb-core=y
 CONFIG_DEFAULT_kmod-usb-ohci=y
@@ -87,6 +88,7 @@ CONFIG_AUDIO_SUPPORT=y
 CONFIG_GPIO_SUPPORT=y
 CONFIG_PCI_SUPPORT=y
 CONFIG_USB_SUPPORT=y
+# CONFIG_RTC_SUPPORT is not set
 CONFIG_USES_DEVICETREE=y
 CONFIG_USES_SQUASHFS=y
 CONFIG_mipsel=y
@@ -2449,6 +2451,8 @@ CONFIG_PACKAGE_kmod-spi-dev=y
 #
 # USB Support
 #
+# CONFIG_PACKAGE_kmod-bm806 is not set
+# CONFIG_PACKAGE_kmod-bm906 is not set
 # CONFIG_PACKAGE_kmod-usb-acm is not set
 # CONFIG_PACKAGE_kmod-usb-atm is not set
 # CONFIG_PACKAGE_kmod-usb-cm109 is not set
@@ -2874,6 +2878,7 @@ CONFIG_PACKAGE_ated=y
 CONFIG_PACKAGE_w13_cpeconfer=y
 CONFIG_PACKAGE_dialtool2=y
 CONFIG_PACKAGE_eth_mac=y
+# CONFIG_PACKAGE_ez-ipupdate is not set
 # CONFIG_PACKAGE_gpio is not set
 # CONFIG_PACKAGE_handover is not set
 # CONFIG_PACKAGE_i2ctest is not set
@@ -2881,13 +2886,19 @@ CONFIG_PACKAGE_eth_mac=y
 # CONFIG_PACKAGE_lanrecord is not set
 # CONFIG_PACKAGE_led_process is not set
 # CONFIG_PACKAGE_libffi is not set
+# CONFIG_PACKAGE_libosip2-4.1.0 is not set
 CONFIG_PACKAGE_macwriter=y
 # CONFIG_PACKAGE_mii_mgr is not set
 CONFIG_PACKAGE_mini_httpd-1.19=y
+# CONFIG_PACKAGE_miniupnpd is not set
+# CONFIG_PACKAGE_mislic is not set
 # CONFIG_PACKAGE_mpstat is not set
 CONFIG_PACKAGE_netcwmp=y
 # CONFIG_PACKAGE_nfc is not set
+# CONFIG_PACKAGE_nvram is not set
 # CONFIG_PACKAGE_pcmtest is not set
+# CONFIG_PACKAGE_peripheral_macwriter is not set
+# CONFIG_PACKAGE_phddns is not set
 CONFIG_PACKAGE_reg=y
 # CONFIG_PACKAGE_samba-server is not set
 CONFIG_PACKAGE_sendat=y
@@ -2904,6 +2915,7 @@ CONFIG_PACKAGE_unzip=y
 # CONFIG_PACKAGE_wapid is not set
 # CONFIG_PACKAGE_watchdog is not set
 # CONFIG_PACKAGE_wpa-supplicant-20 is not set
+# CONFIG_PACKAGE_yaddns is not set
 
 #
 # Drivers
