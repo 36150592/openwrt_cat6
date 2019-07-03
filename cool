@@ -99,10 +99,10 @@ check_is_docker()
 	fi
 }
 
-download_flag=.flag_download_something_2018_12_20
 LASTDOCS=.doc20190612
 download_something()
 {
+	download_flag=.flag_${project}_download_something_2018_12_20
 	if [ ! -f ${download_flag} ]; then
 		touch ${download_flag}
 		wget ${FTPADDR}/${project}/some-bin/factory.bin -O project/${project}/bin/factory.bin
