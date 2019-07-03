@@ -441,9 +441,9 @@ int work_function(void *data)
 		 pGobiDev->mpNetDev->net->type            = ARPHRD_NONE;
 		 pGobiDev->mpNetDev->net->hard_header_len = 0;
 		 pGobiDev->mpNetDev->net->addr_len        = 0;
-		 pGobiDev->mpNetDev->net->flags           = IFF_NOARP | IFF_MULTICAST;
+		 pGobiDev->mpNetDev->net->flags           = IFF_POINTOPOINT | IFF_NOARP | IFF_MULTICAST;
 		 #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 4,4,0 ))
-	//	 set_bit(EVENT_NO_IP_ALIGN, &pGobiDev->mpNetDev->flags);	
+		 set_bit(EVENT_NO_IP_ALIGN, &pGobiDev->mpNetDev->flags);	
 		 #endif
 		 usbnet_change_mtu(pGobiDev->mpNetDev->net, pGobiDev->mpNetDev->net->mtu);	
 #endif
@@ -1852,11 +1852,11 @@ int GobiUSBNetUpdateRxUrbSize(struct net_device *net, u32 target_rx_urb_size)
       dev->rx_urb_size = new_rx_urb_size;
       if (dev->rx_urb_size > old_rx_urb_size) {
          #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,32 ))
-         usbnet_pause_rx(dev);
+         //usbnet_pause_rx(dev);
          #endif
-         usbnet_unlink_rx_urbs(dev);
+         //usbnet_unlink_rx_urbs(dev);
          #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,32 ))
-         usbnet_resume_rx(dev);
+         //usbnet_resume_rx(dev);
          #endif
       }
    }

@@ -1618,7 +1618,10 @@ void bm916_init(int*  Dial_proc_state)
 					log_info("imsi:%s,%d\n",ptr_tmp,__LINE__);
 					*Dial_proc_state=Dial_State_BMMODODR;
 				}
-			}				
+				
+			}
+			else
+					*Dial_proc_state=Dial_State_CPIN_QUERY;
 			break;
 
 		case Dial_State_BMMODODR:

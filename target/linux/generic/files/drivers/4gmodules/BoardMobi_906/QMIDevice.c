@@ -126,6 +126,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <linux/netdevice.h>
 #include <net/sch_generic.h>
 #include <linux/if_arp.h>
+#include <asm/ptrace.h>
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 4,11,0 ))
 #include <linux/sched/signal.h>
 #endif
@@ -331,6 +332,8 @@ static int gobi_qmimux_open(struct net_device *dev)
    struct net_device *real_dev = priv->real_dev;
    unsigned short oflags;
    DBG("\n");
+   printk("gobi_debug netdevname %s devname %s\n", real_dev->name, dev->name);
+   printk("gobi_debug open_flags 0x%x 0x%x 0x%x\n", priv->real_dev->flags, IFF_UP, IFF_RUNNING);
    if (!(priv->real_dev->flags & (IFF_UP|IFF_RUNNING)))
    {
       printk("Adaptor Not Up\n");
@@ -342,6 +345,8 @@ static int gobi_qmimux_open(struct net_device *dev)
       netif_carrier_on(real_dev);
    }
    
+
+   printk("qmimux_open debug\n"); 
    netif_carrier_on(real_dev);
    netif_start_queue(real_dev);
    netif_carrier_on(dev);
@@ -408,14 +413,14 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
    hdr->pkt_len = cpu_to_be16(len);//qcmap padding length
    skb->dev = priv->real_dev;
    NETDBG("mux_id:0x%x\n",priv->mux_id);
-#if DEBUG  
+#if 0   
    //why should check the hdr header you have settled before, commented by qiao 2019.4.24
    if(iIsValidQmuxSKB(skb)==0)
    {
       NETDBG( "Invalid Packet\n" );
       return NETDEV_TX_BUSY;
    }
-   //skb length has settled before,commented by qiao 2019.4.24
+   //skb length has settled before,fuck the first writer. commented by qiao 2019.4.24
    skb = GobiNetDriverQmuxTxFixup( skb, GFP_ATOMIC,priv->mux_id); 
    if (skb == NULL)
    {
@@ -817,6 +822,8 @@ void GobiSetDownReason(
    {
       pDev->iNetLinkStatus = eNetDeviceLink_Disconnected;
    }
+   printk("downreason %s\n", pDev->mpNetDev->net->name);
+   //dump_stack();
    netif_carrier_off( pDev->mpNetDev->net );
 }
 
@@ -6404,7 +6411,7 @@ void QMIWDSCallback(
          else
          {
             DBG( "Net device link is disconnected\n" );
-            GobiSetDownReason( pDev, NO_NDIS_CONNECTION );
+            //GobiSetDownReason( pDev, NO_NDIS_CONNECTION );
          }
       }
    }
@@ -8396,7 +8403,7 @@ static void qmimux_setup(struct net_device *dev)
 	dev->type            = ARPHRD_NONE;
 	dev->hard_header_len = 0;
 	dev->addr_len        = 0;
-	dev->flags           = IFF_NOARP | IFF_MULTICAST;
+	dev->flags           = IFF_POINTOPOINT | IFF_NOARP | IFF_MULTICAST;
 	dev->netdev_ops      = &gobi_qmimux_netdev_ops;
 //	dev->needs_free_netdev = true;
 }

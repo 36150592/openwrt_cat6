@@ -799,7 +799,7 @@ static int usb_id2dev(char* dev_name, char *id, int len)
 		return 0;
 	}	
 	FILE *f; 
-	sprintf(buff, "ls -l /sys/bus/usb-serial/drivers/option1 | grep %s | cut -b 58-64", id);
+	sprintf(buff, "ls -l /sys/bus/usb-serial/drivers/GobiSerial\\ driver | grep %s | cut -b 58-64", id);
 	 f=popen(buff,"r");
 	 if( NULL != f ) 
     	{   
