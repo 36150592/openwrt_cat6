@@ -40,7 +40,7 @@ $(document).ready(function(){
             json: json,
             success: function(data) {
                  SysUtil.rebootDevice(PROMPT.tips.rebootMessage);
-				 $("ul.tabs a").eq(0).click();
+				//  $("ul.tabs a").eq(0).click();
             },
             complete: function(){
                 $('#btnSave').attr("disabled",false);
