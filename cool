@@ -105,8 +105,8 @@ download_something()
 {
 	if [ ! -f ${download_flag} ]; then
 		touch ${download_flag}
-		wget ${FTPADDR}/s21/some-bin/factory.bin -O project/${project}/bin/factory.bin
-		wget ${FTPADDR}/s21/some-bin/old-all.bin -O project/${project}/bin/old-all.bin
+		wget ${FTPADDR}/${project}/some-bin/factory.bin -O project/${project}/bin/factory.bin
+		wget ${FTPADDR}/${project}/some-bin/old-all.bin -O project/${project}/bin/old-all.bin
 			
 	fi
         if [ ! -e $LASTDOCS ] ; then
