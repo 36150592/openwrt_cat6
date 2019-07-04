@@ -42,7 +42,7 @@ local function led_off(path)
 	local ret1 = os.execute(string.format("echo none > %s/trigger", path))
 	local ret2 = os.execute(string.format("echo 0 > %s/brightness", path))
 
-	return 0 == re1 and 0 == ret2
+	return 0 == ret1 and 0 == ret2
 end
 
 local function led_blink_slow(path)
