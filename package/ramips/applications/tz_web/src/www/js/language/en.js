@@ -839,6 +839,7 @@ DOC.sys.selectCfgFile = "Select Configuration File";
 DOC.sys.selectUpdateFile = "Select Upgrade File";
 DOC.sys.systemTime = "System Time";
 DOC.sys.timezone = "Timezone";
+DOC.sys.userSettingsTip = "Tip: Only the username and password of the normal user can be modified";
 DOC.table.add = "Add ";
 DOC.table.changeFilterMode = "Change Filter Mode";
 DOC.table.del = "Delete";

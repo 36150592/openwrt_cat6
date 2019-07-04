@@ -1944,6 +1944,14 @@ ul.tabs a.current {
 	padding: 10px;
 }
 
+.user_settings_tip {
+	padding: 2px;
+	margin: 0;
+	text-align: left;
+	font-size: 16px;
+	color: #333;
+	font-weight: bold;
+}
 
 
 

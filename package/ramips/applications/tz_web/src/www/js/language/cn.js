@@ -840,6 +840,7 @@ DOC.sys.selectCfgFile = "请选择配置文件";
 DOC.sys.selectUpdateFile = "请选择升级文件";
 DOC.sys.systemTime = "系统当前时间";
 DOC.sys.timezone = "时区";
+DOC.sys.userSettingsTip = "提示：只允许修改普通用户的用户名和密码";
 DOC.table.add = "添加";
 DOC.table.changeFilterMode = "更改过滤模式";
 DOC.table.del = "删除";
