@@ -58,7 +58,7 @@
                  success:function(data){
                     $("#btnSaveMac").attr("disabled",false);
                     if(data.success == true){
-                        AlertUtil.alertMsg(PROMPT.saving.success);
+                        SysUtil.rebootDevice(PROMPT.tips.rebootMessage);
                     }
                  }
              })
