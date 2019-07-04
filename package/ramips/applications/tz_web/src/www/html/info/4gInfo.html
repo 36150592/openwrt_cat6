@@ -78,6 +78,13 @@
 
 
     loadPage3();
+
+    if(window.timeoutStart4G) {
+        window.time4g = setInterval(function() {  
+            loadPage3()
+        }, 10000)
+    }
+
     Page.getHelperPage('html/info/4gInfo.html');
     $('.helper_box').show();
     });

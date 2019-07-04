@@ -203,6 +203,13 @@
 
 
         loadPage();
+
+        if(window.timeoutStartWan) {
+            window.timeWan = setInterval(function() {
+                loadPage()
+            }, 10000)
+        }
+
         Page.getHelperPage('html/info/wanInfo.html');
         $('.helper_box').show();
 

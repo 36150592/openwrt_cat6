@@ -332,7 +332,29 @@
             return Y+M+D+h+m+s;
         }
         
-      
+        // 页面轮询
+        window.timeoutStart4G = false;
+        window.timeoutStartWan = false;
+        window.time4g = null;
+        window.timeWan = null;
+        $('#menu').click(function() {
+            if(window.timeoutStart4G || window.timeoutStartWan) {
+                clearInterval(window.time4g);
+                clearInterval(window.timeWan);
+                return;
+            }else {
+                return;
+            }
+        });
+        $('#FourG_INFO').click(function() {
+            window.timeoutStart4G = true;
+            window.timeoutStartWan = false;
+        });
+        $('#WAN_INFO').click(function() {
+            window.timeoutStartWan = true;
+            window.timeoutStart4G = false;
+        });  
+
         $('#menu h3').eq(0).next().find("a").eq(0).click();
         $('#container').show();
         // showSysTime();
