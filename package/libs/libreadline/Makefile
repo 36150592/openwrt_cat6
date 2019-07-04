@@ -60,12 +60,15 @@ define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/include
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/readline $(1)/usr/include/
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/lib{history,readline}.{a,so,so.6,so.6.3} $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/lib{history,readline}.a $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/../shlib/lib{history,readline}.{so,so.6,so.6.3} $(1)/usr/lib/
 endef
 
 define Package/libreadline/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/lib{history,readline}.{so,so.6,so.6.3} $(1)/usr/lib/
+	cd $(PKG_INSTALL_DIR)/../shlib/ && ln -sf libreadline.so.6.3 libreadline.so.6 && ln -sf libreadline.so.6 libreadline.so
+	cd $(PKG_INSTALL_DIR)/../shlib/ && ln -sf libhistory.so.6.3 libhistory.so.6 && ln -sf libhistory.so.6 libhistory.so	
+	$(CP) $(PKG_INSTALL_DIR)/../shlib/lib{history,readline}.{so,so.6,so.6.3} $(1)/usr/lib/
 endef
 
 $(eval $(call BuildPackage,libreadline))
