@@ -13,7 +13,8 @@ $(document).ready(function(){
             },
             success: function(datas) {
                  var data = datas.data;
-                 Page.setFormFieldValue2("networkMode", data.act);
+                 $("#networkMode").val("networkMode", data.act);
+                 $("#networkMode").attr('old', data.act)
 
             }
         });
@@ -44,6 +45,7 @@ $(document).ready(function(){
             },
             complete: function(){
                 $('#btnSave').attr("disabled",false);
+                $("#networkMode").attr('old', $("#networkMode").val());
             }
         });
 
@@ -62,9 +64,9 @@ $(document).ready(function(){
                 <tr>
                     <th><%- lte.networkMode %><%- colon %></th>
                     <td><select id="networkMode" name="networkMode">
-                        <option value="1" selected="selected"><%- networkMode.modePriorityVal1 %></option>
-                        <option value="2"><%- networkMode.modePriorityVal1_1 %></option>
-                        <option value="3"><%- networkMode.modePriorityVal2 %></option>
+                        <option value="2"><%- networkMode.modePriorityVal1 %></option>
+                        <option value="1"><%- networkMode.modePriorityVal1_1 %></option>
+                        <option value="4"><%- networkMode.modePriorityVal2 %></option>
                         <option value="3"><%- networkMode.modePriorityVal2_1 %></option>
                         <option value="0"><%- networkMode.modePriorityVal %></option>
                     </select></td>
