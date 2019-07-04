@@ -10,6 +10,45 @@ macaddr_add() {
 	echo $oui:$nic
 }
 
+set_wired_lan()
+{
+	wan_mode=`cfg -g TZ_WIRED_WAN_MODE --section system`
+	if [ "${wan_mode}" = "" ]; then
+		wan_mode="0"
+	fi
+
+	apn1_action=`cfg -g TZ_APN1_ACTION --section system`
+	apn2_action=`cfg -g TZ_APN2_ACTION --section system`
+
+	apn_num=
+
+	if [ "${apn1_action}" = "3" ]; then
+		apn_num=1
+	else if [ "${apn2_action}" = "3" ]; then
+		apn_num=2
+	else
+		apn_num=0
+	fi
+	fi
+
+	if [ "${apn_num}" = "0" ]; then
+		if [ "${wan_mode}" = "1" ]; then
+			cpeconfer network_set_wired_lan_mode lan-lan-lan-wan 0
+		else
+			cpeconfer network_set_wired_lan_mode lan-lan-lan-lan 0
+		fi
+	else
+		if [ "${wan_mode}" = "1" ]; then
+			cpeconfer network_set_wired_lan_mode lan-lan-iptv-wan ${apn_num}
+		else
+			cpeconfer network_set_wired_lan_mode lan-lan-iptv-lan ${apn_num}
+		fi
+	fi
+
+
+}
+
+
 FORM_CONFIG_STATION=/tmp/form_config/
 DHCP_CONFIG_LOAD_FILE=${FORM_CONFIG_STATION}/dhcp
 FACTORY_CONFIG_FILE=/etc/tozed_param
@@ -189,3 +228,5 @@ config switch_vlan
 	option ports '6t'
 
 EOF
+
+set_wired_lan

@@ -410,7 +410,7 @@ function network_module.network_set_wired_lan_mode(mode,iptv_use_apn_num)
 				then
 					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 2 3 4 6t")
 				else
-					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 6t")
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 4 6t")
 				end
  			elseif "lan-lan-iptv-wan" == mode
 			then
@@ -509,8 +509,8 @@ function network_module.network_set_lan_wan_mode(mode)
 
 	local iptv_use_apn_num = 0
 
-	local apn1_action = x:get("tozed", "cfg", "TZSYSTEM_APN1_ACTION")
-	local apn2_action = x:get("tozed", "cfg", "TZSYSTEM_APN2_ACTION")
+	local apn1_action = x:get("tozed", "system", "TZ_APN1_ACTION")
+	local apn2_action = x:get("tozed", "system", "TZ_APN2_ACTION")
 
 	if "3" == apn1_action
 	then

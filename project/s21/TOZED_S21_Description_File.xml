@@ -1600,7 +1600,7 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="用于多ssid"/>
 		<option value="1" description="用于tr069管理"/>
 		<option value="2" description="用于voip语音"/>
-		<option value="3" description="用于IPTV业务"/>
+		<option value="3" description="用于IPTV业务，会占用lan3用于iptv口"/>
 		<default value="0"/>
 	</config>
 
@@ -1608,7 +1608,13 @@ class_name="MODEM_CONFIG_FIELD">
 		<option value="0" description="用于多ssid"/>
 		<option value="1" description="用于tr069管理"/>
 		<option value="2" description="用于voip语音"/>
-		<option value="3" description="用于IPTV业务"/>
+		<option value="3" description="用于IPTV业务，会占用lan3用于iptv口"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZSYSTEM_WIRED_WAN_MODE" type="select"  description="有线wan口模式设置" detail="有线wan口模式设置" class_name="SYSTEM_CONFIG_FIELD">
+		<option value="0" description="充当LAN口使用"/>
+		<option value="1" description="充当WAN口使用"/>
 		<default value="0"/>
 	</config>
 	

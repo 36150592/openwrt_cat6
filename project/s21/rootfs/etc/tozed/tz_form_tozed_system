@@ -74,5 +74,23 @@ else
 	cfg -a TZ_SYSTEM_DST_END="1-2" --section system
 fi
 
+if [ "${TZSYSTEM_APN1_ACTION}" != "" ]; then
+	cfg -a TZ_APN1_ACTION="${TZSYSTEM_APN1_ACTION}" --section system
+else
+	cfg -a TZ_APN1_ACTION="0" --section system
+fi
+
+if [ "${TZSYSTEM_APN2_ACTION}" != "" ]; then
+	cfg -a TZ_APN2_ACTION="${TZSYSTEM_APN2_ACTION}" --section system
+else
+	cfg -a TZ_APN2_ACTION="0" --section system
+fi
+
+if [ "${TZSYSTEM_WIRED_WAN_MODE}" != "" ]; then
+	cfg -a TZ_WIRED_WAN_MODE="${TZSYSTEM_WIRED_WAN_MODE}" --section system
+else
+	cfg -a TZ_WIRED_WAN_MODE="0" --section system
+fi
+
 cfg -c
 
