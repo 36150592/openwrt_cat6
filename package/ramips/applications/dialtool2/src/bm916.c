@@ -2515,6 +2515,8 @@ void bm916_deamon(int* Dial_proc_state)
 							ptr_tmp3[0]='\0';
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
+
+						memset(global_dial_vars.cell_id, 0, sizeof(global_dial_vars.cell_id));
 						strncpy(global_dial_vars.cell_id,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2533,6 +2535,8 @@ void bm916_deamon(int* Dial_proc_state)
 							ptr_tmp3[0]='\0';
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
+
+						memset(global_dial_vars.pci, 0, sizeof(global_dial_vars.pci));
 						strncpy(global_dial_vars.pci,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2552,6 +2556,7 @@ void bm916_deamon(int* Dial_proc_state)
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
 
+						memset(global_dial_vars.signal_rssi_value, 0, sizeof(global_dial_vars.signal_rssi_value));
 						strncpy(global_dial_vars.signal_rssi_value,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2570,7 +2575,7 @@ void bm916_deamon(int* Dial_proc_state)
 							ptr_tmp3[0]='\0';
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
-
+						memset(global_dial_vars.signal_rsrp, 0, sizeof(global_dial_vars.signal_rsrp));
 						strncpy(global_dial_vars.signal_rsrp,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2589,7 +2594,7 @@ void bm916_deamon(int* Dial_proc_state)
 							ptr_tmp3[0]='\0';
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
-
+						memset(global_dial_vars.signal_rsrq, 0, sizeof(global_dial_vars.signal_rsrq));
 						strncpy(global_dial_vars.signal_rsrq,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2609,6 +2614,7 @@ void bm916_deamon(int* Dial_proc_state)
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
 
+						memset(global_dial_vars.signal_sinr, 0, sizeof(global_dial_vars.signal_sinr));
 						strncpy(global_dial_vars.signal_sinr,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2627,6 +2633,8 @@ void bm916_deamon(int* Dial_proc_state)
 							ptr_tmp3[0]='\0';
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
+
+						memset(global_dial_vars.active_band, 0, sizeof(global_dial_vars.active_band));
 						strncpy(global_dial_vars.active_band,ptr_tmp3,strlen(ptr_tmp3));
 						global_dial_vars.active_band[strlen(global_dial_vars.active_band)] = 0;
 
@@ -2646,7 +2654,8 @@ void bm916_deamon(int* Dial_proc_state)
 							ptr_tmp3[0]='\0';
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
-
+						
+						memset(global_dial_vars.active_channel, 0, sizeof(global_dial_vars.active_channel));
 						strncpy(global_dial_vars.active_channel,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2666,6 +2675,7 @@ void bm916_deamon(int* Dial_proc_state)
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
 
+						memset(global_dial_vars.earfcn, 0, sizeof(global_dial_vars.earfcn));
 						strncpy(global_dial_vars.earfcn,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2685,6 +2695,7 @@ void bm916_deamon(int* Dial_proc_state)
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
 
+						memset(global_dial_vars.enodebid, 0, sizeof(global_dial_vars.enodebid));
 						strncpy(global_dial_vars.enodebid,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2704,8 +2715,12 @@ void bm916_deamon(int* Dial_proc_state)
 							ptr_tmp3[0]='\0';
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
+
+						memset(global_dial_vars.tac, 0, sizeof(global_dial_vars.tac));
 						strncpy(global_dial_vars.tac,ptr_tmp3,strlen(ptr_tmp3));
+						
 						//web get tac(4g)/lac(2g,3g) only from lac_id
+						memset(global_dial_vars.lac_id, 0, sizeof(global_dial_vars.lac_id));
 						strncpy(global_dial_vars.lac_id,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2727,6 +2742,7 @@ void bm916_deamon(int* Dial_proc_state)
 							}
 							ptr_tmp3=strip_head_tail_space(buffer_tmp);
 							//log_info("%s_%d:%s\n",__FUNCTION__,__LINE__,ptr_tmp3);
+							memset(global_dial_vars.lac_id, 0, sizeof(global_dial_vars.lac_id));
 							strncpy(global_dial_vars.lac_id,ptr_tmp3,strlen(ptr_tmp3));
 						}
 						*Dial_proc_state=Dial_State_CEREG_QUERY;
@@ -2748,6 +2764,7 @@ void bm916_deamon(int* Dial_proc_state)
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
 
+						memset(global_dial_vars.rrc_status, 0, sizeof(global_dial_vars.rrc_status));
 						strncpy(global_dial_vars.rrc_status,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2768,6 +2785,7 @@ void bm916_deamon(int* Dial_proc_state)
 						}			
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
 
+						memset(global_dial_vars.cqi, 0, sizeof(global_dial_vars.cqi));
 						strncpy(global_dial_vars.cqi,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
@@ -2790,6 +2808,8 @@ void bm916_deamon(int* Dial_proc_state)
 							ptr_tmp3[0]='\0';
 						}
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
+
+						memset(global_dial_vars.mcs, 0, sizeof(global_dial_vars.mcs));
 						strncpy(global_dial_vars.mcs,ptr_tmp3,strlen(ptr_tmp3));
 
 					}
