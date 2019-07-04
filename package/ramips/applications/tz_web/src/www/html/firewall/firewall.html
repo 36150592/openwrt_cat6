@@ -293,9 +293,9 @@
                 json: json,
                 success: function(data) {
                     if (data.success == "success") {
-                        AlertUtil.alertMsg(PROMPT.status.applyRuleSuccess);
+                        AlertUtil.alertMsg(PROMPT.saving.success);
                     } else {
-                        AlertUtil.alertMsg(PROMPT.status.applyRuleFail);
+                        AlertUtil.alertMsg(PROMPT.saving.fail);
                     }
                     $btnSaveDefault.attr("disabled", false);
                 }
