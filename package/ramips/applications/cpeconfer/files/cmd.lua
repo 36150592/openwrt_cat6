@@ -1021,6 +1021,12 @@ function network_set_lan_wan_mode()
 	print(ret)
 end
 
+function network_set_wired_lan_mode()
+	print("network_get_lan_wan_mode")
+	local ret = network.network_set_wired_lan_mode(tostring(arg[2]), tonumber(arg[3]))
+	print(ret)
+end
+
 function network_get_interface_up_down_status()
 	print("network_get_interface_up_down_status")
 	local info = network.network_get_interface_up_down_status()
@@ -2657,6 +2663,7 @@ local api_func = {
 	["network_get_interface_up_down_status"] = network_get_interface_up_down_status,
 	["network_set_lan_wan_mode"] = network_set_lan_wan_mode,
 	["network_get_lan_wan_mode"] = network_get_lan_wan_mode,
+	["network_set_wired_lan_mode"] = network_set_wired_lan_mode,
 	["network_set_wan_mac"] = network_set_wan_mac,
 	["network_get_wan_mac"] = network_get_wan_mac,
 

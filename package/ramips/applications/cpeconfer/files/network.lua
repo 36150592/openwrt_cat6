@@ -365,6 +365,135 @@ function network_module.network_get_interface_up_down_status()
 	return ar
 end
 
+
+
+-- set the wired lan interface mode ,restart the system to take effect
+-- input:
+--mode
+--		lan-lan-lan-lan : all the eth ports are set to be lan 
+--		lan-lan-lan-wan :  port4 is set to wan
+--		lan-lan-iptv-lan : port3 is set to iptv
+--      lan-lan-iptv-wan : port3 is set to iptv, port4 is set to wan
+
+--iptv_use_apn_num
+--0: main apn
+--1: apn1
+--2: apn2
+
+-- output:
+--		true if success , false if fail
+function network_module.network_set_wired_lan_mode(mode,iptv_use_apn_num)
+	if "lan-lan-lan-lan" ~= mode and "lan-lan-iptv-lan" ~= mode and "lan-lan-iptv-wan" ~= mode and "lan-lan-lan-wan" ~= mode 
+	then
+		debug("input mode error,it should be: lan-lan-lan-lan, lan-lan-lan-wan, lan-lan-iptv-lan, lan-lan-iptv-wan")
+		return false
+	end
+
+	if iptv_use_apn_num == nil
+	then
+		iptv_use_apn_num=0
+	end
+
+	x:foreach(NETWORK_CONFIG_FILE, "switch_vlan", function(s)
+
+		if "1" == s["vlan"]
+		then
+			if "lan-lan-lan-lan" == mode
+			then
+				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 2 3 4 6t")
+			elseif "lan-lan-lan-wan" == mode
+			then
+ 				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 2 3 6t")
+ 			elseif "lan-lan-iptv-lan" == mode
+			then
+				if iptv_use_apn_num == 0
+				then
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 2 3 4 6t")
+				else
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 6t")
+				end
+ 			elseif "lan-lan-iptv-wan" == mode
+			then
+				if iptv_use_apn_num == 0
+				then
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 2 3 6t")
+				else
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 6t")
+				end
+ 			end
+ 		elseif "2" == s["vlan"]
+ 		then
+ 			if "lan-lan-lan-lan" == mode
+			then
+				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+			elseif "lan-lan-lan-wan" == mode
+			then
+ 				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","4 6t")
+ 			elseif "lan-lan-iptv-lan" == mode
+			then
+ 				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+ 			elseif "lan-lan-iptv-wan" == mode
+			then
+ 				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","4 6t")
+ 			end
+		elseif "3" == s["vlan"]
+ 		then
+			if "lan-lan-lan-lan" == mode
+			then
+				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+			elseif "lan-lan-lan-wan" == mode
+			then
+ 				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+ 			elseif "lan-lan-iptv-lan" == mode
+			then
+				if iptv_use_apn_num == 1
+				then
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","2 6t")
+				else
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+				end
+ 			elseif "lan-lan-iptv-wan" == mode
+			then
+ 				if iptv_use_apn_num == 1
+				then
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","2 6t")
+				else
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+				end
+ 			end
+		elseif "4" == s["vlan"]
+ 		then
+ 			if "lan-lan-lan-lan" == mode
+			then
+				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+			elseif "lan-lan-lan-wan" == mode
+			then
+ 				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+ 			elseif "lan-lan-iptv-lan" == mode
+			then
+				if iptv_use_apn_num == 2
+				then
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","2 6t")
+				else
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+				end
+ 			elseif "lan-lan-iptv-wan" == mode
+			then
+ 				if iptv_use_apn_num == 2
+				then
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","2 6t")
+				else
+					x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
+				end
+ 			end
+		end
+	end)
+
+	return x:commit(NETWORK_CONFIG_FILE)
+end
+
+
+
 -- set the lan/wan mode ,restart the system to take effect
 -- input:string
 --		lan:set to lan mode--> all the eth ports are set to be lan 
@@ -378,30 +507,38 @@ function network_module.network_set_lan_wan_mode(mode)
 		return false
 	end
 
-	x:foreach(NETWORK_CONFIG_FILE, "switch_vlan", function(s)
+	local iptv_use_apn_num = 0
 
-		if "1" == s["vlan"]
+	local apn1_action = x:get("tozed", "cfg", "TZSYSTEM_APN1_ACTION")
+	local apn2_action = x:get("tozed", "cfg", "TZSYSTEM_APN2_ACTION")
+
+	if "3" == apn1_action
+	then
+		iptv_use_apn_num = 1
+	elseif "3" == apn2_action
+	then
+		iptv_use_apn_num = 2
+	end
+
+	if mode == "lan"
+	then
+		if iptv_use_apn_num == 0
 		then
-			if "lan" == mode
-			then
-				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 2 3 4 6t")
-			elseif "wan" == mode
-			then
- 				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","0 1 2 3 6t")
- 			end
- 		elseif "2" == s["vlan"]
- 		then
- 			if "lan" == mode
-			then
-				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","6t")
-			elseif "wan" == mode
-			then
- 				x:set(NETWORK_CONFIG_FILE,s[".name"],"ports","4 6t")
- 			end
+			network_module.network_set_wired_lan_mode("lan-lan-lan-lan", 0)
+		else
+			network_module.network_set_wired_lan_mode("lan-lan-iptv-lan", iptv_use_apn_num)
 		end
-	end)
+	else
+		if iptv_use_apn_num == 0
+		then
+			network_module.network_set_wired_lan_mode("lan-lan-lan-wan", 0)
+		else
+			network_module.network_set_wired_lan_mode("lan-lan-iptv-wan", iptv_use_apn_num)
+		end
+	end
 
-	return x:commit(NETWORK_CONFIG_FILE)
+	return true
+
 end
 
 -- get the lan/wan mode ,restart the system to take effect
@@ -414,10 +551,10 @@ function network_module.network_get_lan_wan_mode()
 	local mode = "lan"
 	x:foreach(NETWORK_CONFIG_FILE, "switch_vlan", function(s)
 
-		if "1" == s["vlan"] and "0 1 2 3 4 6t" == s["ports"]
+		if "2" == s["vlan"] and "6t" == s["ports"]
 		then
 			mode = "lan"
-		elseif "1" == s["vlan"] and "0 1 2 3 6t" == s["ports"]
+		elseif "2" == s["vlan"] and "4 6t" == s["ports"]
 		then
 			mode = "wan"
 		end

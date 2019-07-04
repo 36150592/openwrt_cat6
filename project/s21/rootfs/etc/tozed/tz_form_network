@@ -171,11 +171,21 @@ config switch
 config switch_vlan
 	option device 'switch0'
 	option vlan '1'
-	option ports '0 1 2 3 6t'
+	option ports '0 1 2 3 4 6t'
 
 config switch_vlan
 	option device 'switch0'
 	option vlan '2'
-	option ports '4 6t'
+	option ports '6t'
+
+config switch_vlan
+	option device 'switch0'
+	option vlan '3'
+	option ports '6t'
+
+config switch_vlan
+	option device 'switch0'
+	option vlan '4'
+	option ports '6t'
 
 EOF

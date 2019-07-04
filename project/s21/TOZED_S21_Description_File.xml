@@ -1595,6 +1595,22 @@ class_name="MODEM_CONFIG_FIELD">
 	<config name="TZSYSTEM_SIP_ALG_PORT" type="text"  description="SIP ALG 端口" detail="SIP ALG 端口" class_name="SYSTEM_CONFIG_FIELD">
 		<default value="5060"/>
 	</config>
+
+	<config name="TZSYSTEM_APN1_ACTION" type="select"  description="APN 1 功能作用" detail="APN 1 功能作用" class_name="SYSTEM_CONFIG_FIELD">
+		<option value="0" description="用于多ssid"/>
+		<option value="1" description="用于tr069管理"/>
+		<option value="2" description="用于voip语音"/>
+		<option value="3" description="用于IPTV业务"/>
+		<default value="0"/>
+	</config>
+
+	<config name="TZSYSTEM_APN2_ACTION" type="select"  description="APN 2 功能作用" detail="APN 2 功能作用" class_name="SYSTEM_CONFIG_FIELD">
+		<option value="0" description="用于多ssid"/>
+		<option value="1" description="用于tr069管理"/>
+		<option value="2" description="用于voip语音"/>
+		<option value="3" description="用于IPTV业务"/>
+		<default value="0"/>
+	</config>
 	
 </project>
 
