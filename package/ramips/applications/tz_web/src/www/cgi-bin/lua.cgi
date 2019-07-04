@@ -922,11 +922,24 @@ function get_routerinfo()
     print(result_json)
 end
 
-function firewall_restart()
+function set_default_settings()
+    local ret
+    local action = tz_req["action"]
+
+    if (nil ~= action) then
+        ret = firewall.firewall_set_default_action(action) or ''
+        if (not ret) then 
+            tz_answer["success"] = "fail" 
+        else
+            ret = firewall.firewall_restart() or ''
+            uti.web_log(ret)
+            if (ret ~= "success") then tz_answer["success"] = "fail" end
+        end
+    end  
 
     local tz_answer = {}
     tz_answer["cmd"] = 20
-    tz_answer["success"] = firewall.firewall_restart()
+    tz_answer["success"] = ret
     result_json = cjson.encode(tz_answer)
     print(result_json)
 
@@ -1122,23 +1135,13 @@ function port_redirect()
 
 end
 
-function default_action()
+function get_default_settings()
+    local action = firewall.firewall_get_default_action() or ''
 
     local tz_answer = {}
     tz_answer["cmd"] = 28
-
-    local action = tz_req["action"]
-    local getfun = tz_req["getfun"]
-
-    if (getfun) then
-        local data = firewall.firewall_get_default_action() or ''
-        tz_answer["action"] = data
-        tz_answer["success"] = true
-    else
-        tz_answer["success"] = firewall.firewall_set_default_action(action)
-
-    end
-
+    tz_answer["success"] = true
+    tz_answer["action"] = action
     result_json = cjson.encode(tz_answer)
     print(result_json)
 
@@ -2978,7 +2981,7 @@ local switch = {
     [10] = get_datetime,
     [11] = set_datetime,
     [19] = deal_at,
-    [20] = firewall_restart,
+    [20] = set_default_settings,
     [21] = port_filter,
     [22] = ip_filter,
     [23] = mac_filter,
@@ -2986,7 +2989,7 @@ local switch = {
     [25] = speed_limit,
     [26] = url_filtet,
     [27] = port_redirect,
-    [28] = default_action,
+    [28] = get_default_settings,
     [29] = acl_filter,
     [39] = clear_allrule,
     [43] = get_diviceinfo,

@@ -275,16 +275,6 @@ var CookieUtil = {
     }
 };
 
-var InputUtil = {
-    setRadiosSelectedValue: function($radios, value) {
-        $radios.each(function(){
-            if($(this).val() == value.toString()){
-                $(this).attr("checked", "checked");
-            }
-        });
-    },
-};
-
 var FormatUtil = {
     formatValue: function (value) {
         if (!value || value == "NULL") {
