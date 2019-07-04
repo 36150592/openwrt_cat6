@@ -3,8 +3,6 @@
 <script type="text/javascript">
     $(document).ready(function() {
         Page.render();
-
-
         var $btnSave = $('#btnSave');
         var $tr069 = $('.tr069'),
             $noticeInterval = $('#noticeInterval'),
@@ -28,6 +26,9 @@
                $tr069.show();
              }else{
                 $tr069.hide();
+                $noticeEnabled.prop("checked",false);
+                $acsAuthEnabled.prop("checked",false);
+                $cpeAuthEnabled.prop("checked",false);
              }
         }
         function isShowtrNotice(){
