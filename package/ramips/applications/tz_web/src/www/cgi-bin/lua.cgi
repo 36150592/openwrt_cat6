@@ -2005,16 +2005,24 @@ function set_web_list()
         ret = firewall.firewall_remote_set_web_login_port(remoteLoginPort)
         if (not ret) then tz_answer["success"] = false end
     end
-    if (nil ~= dataList1) then
+    if (0 ~= #dataList1) then
         ret = firewall.firewall_remote_set_web_login_list(dataList1)
+        if (not ret) then tz_answer["success"] = false end
+    else
+        local loginList = nil
+        ret = firewall.firewall_remote_set_web_login_list(loginList)
         if (not ret) then tz_answer["success"] = false end
     end
     if (nil ~= pingFlag) then
         ret = firewall.firewall_remote_set_web_login(pingFlag)
         if (not ret) then tz_answer["success"] = false end
     end
-    if (nil ~= dataList2) then
+    if (0 ~= #dataList2) then
         ret = firewall.firewall_remote_set_default_list(dataList2)
+        if (not ret) then tz_answer["success"] = false end
+    else
+        local defaultList = nil
+        ret = firewall.firewall_remote_set_default_list(defaultList)
         if (not ret) then tz_answer["success"] = false end
     end
 

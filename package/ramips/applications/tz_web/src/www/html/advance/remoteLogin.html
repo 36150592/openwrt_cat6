@@ -262,10 +262,23 @@
                     cmd: RequestCmd.GET_WEB_LIST
                 },
                 success: function(datas) {
-                        $('#remoteLoginPort').val(datas.data.remoteLoginPort);
-                        createIpListTable(datas.data.webList);
-                        createIpListTable2(datas.data.defultList);
-                         if(datas.data.webFlag == true){
+                        var datas = datas.data,
+                            webList,
+                            defultList;
+                        $('#remoteLoginPort').val(datas.remoteLoginPort);
+                        if(!datas.webList) {
+                            webList = [""];
+                        }else {
+                            webList = datas.webList;
+                        };
+                        if(!datas.defultList) {
+                            defultList = [""]
+                        }else {
+                            defultList = datas.defultList;
+                        }
+                        createIpListTable(webList);
+                        createIpListTable2(defultList);
+                         if(datas.webFlag == true){
                                 $("#enableRemoteLogin").prop("checked",true);
                             }else{
                                 $("#enableRemoteLogin").prop("checked",false);
