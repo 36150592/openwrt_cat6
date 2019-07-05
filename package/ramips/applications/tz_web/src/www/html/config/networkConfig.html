@@ -24,8 +24,11 @@
         var $box = $('#edit_box'), $mask = $('#mask'), $btnSaveMac = $('#btnSaveMac'), $btnEditMac = $('#btnEditMac'), $btnSaveControl = $('.btnSaveControl'), $btnAdd0 = $('#btnAdd0'), $btnAdd1 = $('#btnAdd1'), $btnAdd2 = $('#btnAdd2'), $btnClose = $('#btnClose');
 
         if (!Page.getShowHideByBit(2)) {
-            $(".isShowDhcp").hide();
-        }
+            $(".isShowDhcp1").hide();
+        };
+        if (!Page.getShowHideByBit(19)) {
+            $(".isShowDhcp2").hide();
+        };
         function createIpMacTable() {
 
             var length = ipMacs.length;
@@ -625,8 +628,8 @@
         <ul class="tabs" id="tabsitems">
             <script type="text/template" id="tabsitems-template">
                 <li><a href="javascript:;"><%- item1 %></a></li>
-                <li class="isShowDhcp"><a href="javascript:;"><%- item3 %></a></li>
-                <li class="isShowDhcp"><a href="javascript:;"><%- item4 %></a></li>
+                <li class="isShowDhcp1"><a href="javascript:;"><%- item3 %></a></li>
+                <li class="isShowDhcp2"><a href="javascript:;"><%- item4 %></a></li>
                 <li><a href="javascript:;"><%- item5 %></a></li>
             </script>
         </ul>
