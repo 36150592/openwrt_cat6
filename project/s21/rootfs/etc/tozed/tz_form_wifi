@@ -222,7 +222,7 @@ config wifi-device      mt7612e
 	option country	CN
 	option channel  auto
 	option autoch   0
-	option mode     11
+	option mode     15
     
 config wifi-iface
 	option device   mt7612e
