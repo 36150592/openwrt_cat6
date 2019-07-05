@@ -580,6 +580,7 @@ DOC.login.passwd = "密码";
 DOC.login.registerCode = "注册码";
 DOC.login.username = "用户名";
 DOC.lte.networkMode = "网络模式";
+DOC.lte.band = "带宽";
 DOC.lte.bandwidth = "带宽";
 DOC.lte.cellId = "Cell ID";
 DOC.lte.currentBand = "当前所在的频段";

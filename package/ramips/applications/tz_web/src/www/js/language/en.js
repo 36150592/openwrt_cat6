@@ -578,6 +578,7 @@ DOC.login.passwd = "Password";
 DOC.login.registerCode = "Register Code";
 DOC.login.username = "Username";
 DOC.lte.networkMode = "Network Mode";
+DOC.lte.band = "Band";
 DOC.lte.bandwidth = "Bandwidth";
 DOC.lte.cellId = "Cell ID";
 DOC.lte.cqi = "CQI";

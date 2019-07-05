@@ -47,6 +47,7 @@
                     names_net.push(DOC.lte.cqi);
                     names_net.push(DOC.lte.mcs);
                     names_net.push(DOC.lte.plmn);
+                    names_net.push(DOC.lte.band);
 
                     //var netState = StatusUtil.getNetState(data.signalLevel, data.eregStat, data.act, 0);
                     var netState = getNetState(data_modem.act);
@@ -67,6 +68,7 @@
                     values_net.push(data_modem.cqi || loading);
                     values_net.push(data_modem.mcs ||loading);
                     values_net.push(data_modem.plmn || loading);
+                    values_net.push(data_modem.band || loading);
                     sysInfo_plmn = data_modem.plmn; 
                      var net_html = Page.createTable2(DOC.title.network, names_net, values_net, names_net.length, 1).replace("<td>", "<td>");
                      $('#net_info').html(net_html);
