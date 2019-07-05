@@ -1,6 +1,6 @@
-bit_offset="0"		WEB 用户显示 辅 的2.4g wifi设置菜单页
+﻿bit_offset="0"		WEB 用户显示 辅 的2.4g wifi设置菜单页
 bit_offset="1"		WEB 用户显示 辅 的5.8g wifi设置菜单页
-bit_offset="2"		WEB 用户显示 辅 的dhcp设置菜单页
+bit_offset="2"		WEB 用户显示 辅 的dhcp1设置菜单页
 bit_offset="3"		WEB 用户显示 设备配置->APN配置 菜单
 bit_offset="4"		WEB 用户显示 设备配置->APN配置 多apn（另外两路apn）菜单
 bit_offset="5"		WEB 用户显示 网络工具菜单
@@ -16,3 +16,7 @@ bit_offset="14"		WEB 用户显示 高级设置 -> tr069设置 菜单
 bit_offset="15"		WEB 用户显示 静态路由设置 菜单
 bit_offset="16"		WEB 用户显示 WAN配置 菜单
 bit_offset="17"		WEB 用户显示 高级设置 -> 远程登录: 远程登录IP列表
+bit_offset="18"	      	WEB 用户显示 高级设置 -> ECGI 菜单
+bit_offset="19"		WEB 用户显示 辅 的dhcp2设置菜单页
+bit_offset="20"		WEB 用户显示 高级设置 -> DDNS 菜单
+bit_offset="21"		WEB 用户显示 UPNP 菜单
