@@ -1354,32 +1354,32 @@ input.txt4 {
 	background-position: left -1679px;
 }
 
-.singal0, .singal0_lock {
+.signal-1, .singal0_lock {
 	background: url("../images/anhui/singalLevel.gif") no-repeat 0 0px;
 }
 
-.singal1 {
+.signal0 {
+	background: url("../images/anhui/singalLevel.gif") no-repeat 0 -273px;
+}
+
+.signal1 {
 	background: url("../images/anhui/singalLevel.gif") no-repeat 0 -25px;
 }
 
-.singal2 {
+.signal2 {
 	background: url("../images/anhui/singalLevel.gif") no-repeat 0 -50px;
 }
 
-.singal3 {
+.signal3 {
 	background: url("../images/anhui/singalLevel.gif") no-repeat 0 -75px;
 }
 
-.singal4 {
+.signal4 {
 	background: url("../images/anhui/singalLevel.gif") no-repeat 0 -100px;
 }
 
-.singal5 {
+.signal5 {
 	background: url("../images/anhui/singalLevel.gif") no-repeat 0 -125px;
-}
-
-.singal6 {
-	background: url("../images/anhui/singalLevel.gif") no-repeat 0 -273px;
 }
 
 .singal2_0 {

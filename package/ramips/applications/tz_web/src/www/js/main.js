@@ -639,17 +639,14 @@ var StatusUtil = {
 
     formatSingalLevel: function(signalLevel, preCss, content) {
         var ddl = DOC.ddl;
-        var signals = [ddl.signalLevel0, ddl.signalLevel1, ddl.signalLevel2, ddl.signalLevel3, ddl.signalLevel4, ddl.signalLevel5];
+        var signals = [ddl.signalLevelNone, ddl.signalLevel0, ddl.signalLevel1, ddl.signalLevel2, ddl.signalLevel3, ddl.signalLevel4, ddl.signalLevel5];
         var theSignalLevel = parseInt(signalLevel, 10);
-        if(isNaN(theSignalLevel) || theSignalLevel > 5 || theSignalLevel < 0){
-            theSignalLevel = 0;
-        }
-        if(theSignalLevel == 0){
-            theSignalLevel = 6;
-        }
-        var title = DOC.lte.signalLevel + DOC.colon + signals[theSignalLevel];
+        if(theSignalLevel === undefined || theSignalLevel === "" || theSignalLevel > 5 || theSignalLevel < 0){
+            theSignalLevel = -1;
+        };
+        var title = DOC.lte.signalLevel + DOC.colon + signals[parseInt(theSignalLevel) + 1];
 
-        return String.format("<div class=\"singal singal{0}\" title=\"{1}\">{2}</div>", (preCss || "") + theSignalLevel, title, content || "");
+        return String.format("<div class=\"signal{0}\" title=\"{1}\" style=\"width: 20px;height: 20px;\">{2}</div>", (preCss || "") + theSignalLevel, title, content || "");
     },
     formatSimInfo: function(state) {
         var theState = parseInt(state, 10);
