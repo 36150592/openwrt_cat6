@@ -639,10 +639,12 @@ var StatusUtil = {
 
     formatSingalLevel: function(signalLevel, preCss, content) {
         var ddl = DOC.ddl;
+        var theSignalLevel
         var signals = [ddl.signalLevelNone, ddl.signalLevel0, ddl.signalLevel1, ddl.signalLevel2, ddl.signalLevel3, ddl.signalLevel4, ddl.signalLevel5];
-        var theSignalLevel = parseInt(signalLevel, 10);
-        if(theSignalLevel === undefined || theSignalLevel === "" || theSignalLevel > 5 || theSignalLevel < 0){
+        if(signalLevel === undefined || signalLevel === "" || signalLevel > 5 || signalLevel < 0){
             theSignalLevel = -1;
+        }else {
+            theSignalLevel = parseInt(signalLevel, 10);
         };
         var title = DOC.lte.signalLevel + DOC.colon + signals[parseInt(theSignalLevel) + 1];
 
