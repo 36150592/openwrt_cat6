@@ -2050,46 +2050,55 @@ function set_tr069_config()
     local acsAuthEnabled = tz_req["acsAuthEnabled"]
     local cpeAuthEnabled = tz_req["cpeAuthEnabled"]
     local noticeInterval = tz_req["noticeInterval"]
-
-    ret = system.system_set_tr069_app_enable(enabled)
-
-    ret = system.system_set_tr069_ServerURL(url)
-    if (not ret) then tz_answer["success"] = false end
-
-    if (nil ~= noticeEnabled) then
-        ret = system.system_set_tr069_PeriodicInformEnable(noticeEnabled)
-        if (not ret) then tz_answer["success"] = false end
-    end
-    ret = system.system_set_tr069_PeriodicInformInterval(noticeInterval)
-    if (not ret) then tz_answer["success"] = false end
-
-    if (nil ~= acsAuthEnabled) then
-        ret = system.system_set_tr069_tr069_ACS_auth(acsAuthEnabled)
-        if (not ret) then tz_answer["success"] = false end
-    end
-    ret = system.system_set_tr069_ServerUsername(userName)
-    if (not ret) then tz_answer["success"] = false end
-
-    ret = system.system_set_tr069_ServerPassword(passwd)
-    if (not ret) then tz_answer["success"] = false end
-
-    if (nil ~= cpeAuthEnabled) then
-        ret = system.system_set_tr069_tr069_tr069_CPE_auth(cpeAuthEnabled)
-        if (not ret) then tz_answer["success"] = false end
-    end
-
-    ret = system.system_set_tr069_ConnectionRequestUname(linkUserName)
-    if (not ret) then tz_answer["success"] = false end
-
-    ret = system.system_set_tr069_ConnectionRequestPassword(linkPasswd)
-    if (not ret) then tz_answer["success"] = false end
+    local flag =  tonumber(tz_req["flag"])
 
     tz_answer["success"] = true
     tz_answer["cmd"] = 219
 
-    result_json = cjson.encode(tz_answer)
-    print(result_json)
-    os.execute("/etc/init.d/netcwmp restart > /dev/null 2>&1 &")
+    if (flag == 1) then
+        ret = system.system_set_tr069_PeriodicInformInterval(noticeInterval)
+        if (not ret) then tz_answer["success"] = false end
+        os.execute("echo " .. noticeInterval .. " > /tmp/.tr069_interval_time")
+        result_json = cjson.encode(tz_answer)
+        print(result_json)
+    else
+        ret = system.system_set_tr069_app_enable(enabled)
+        ret = system.system_set_tr069_ServerURL(url)
+        if (not ret) then tz_answer["success"] = false end
+
+        if (nil ~= noticeEnabled) then
+            ret = system.system_set_tr069_PeriodicInformEnable(noticeEnabled)
+            if (not ret) then tz_answer["success"] = false end
+        end
+
+        ret = system.system_set_tr069_PeriodicInformInterval(noticeInterval)
+        if (not ret) then tz_answer["success"] = false end
+
+        if (nil ~= acsAuthEnabled) then
+            ret = system.system_set_tr069_tr069_ACS_auth(acsAuthEnabled)
+            if (not ret) then tz_answer["success"] = false end
+        end
+        ret = system.system_set_tr069_ServerUsername(userName)
+        if (not ret) then tz_answer["success"] = false end
+
+        ret = system.system_set_tr069_ServerPassword(passwd)
+        if (not ret) then tz_answer["success"] = false end
+
+        if (nil ~= cpeAuthEnabled) then
+            ret = system.system_set_tr069_tr069_tr069_CPE_auth(cpeAuthEnabled)
+            if (not ret) then tz_answer["success"] = false end
+        end
+
+        ret = system.system_set_tr069_ConnectionRequestUname(linkUserName)
+        if (not ret) then tz_answer["success"] = false end
+
+        ret = system.system_set_tr069_ConnectionRequestPassword(linkPasswd)
+        if (not ret) then tz_answer["success"] = false end
+
+        result_json = cjson.encode(tz_answer)
+        print(result_json)
+        os.execute("/etc/init.d/netcwmp restart > /dev/null 2>&1 &")
+    end
     
 end
 

@@ -1,7 +1,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <script type="text/javascript">
-    $(document).ready(function() {
+    $(document).ready(function () {
         Page.render();
         var $btnSave = $('#btnSave');
         var $tr069 = $('.tr069'),
@@ -16,169 +16,188 @@
             $noticeEnabled = $('#noticeEnabled'),
             $acsAuthEnabled = $('#acsAuthEnabled'),
             $cpeAuthEnabled = $('#cpeAuthEnabled');
-            $tr069.hide();
-            $(".trNotice").hide();
-            $(".trAcs").hide();
-            $(".trCpe").hide();
+        $tr069.hide();
+        $(".trNotice").hide();
+        $(".trAcs").hide();
+        $(".trCpe").hide();
 
-        function isShowenabled(){
-             if($("#enabled").prop("checked")){
-               $tr069.show();
-             }else{
+        function isShowenabled() {
+            if ($("#enabled").prop("checked")) {
+                $tr069.show();
+            } else {
                 $tr069.hide();
-                $noticeEnabled.prop("checked",false);
-                $acsAuthEnabled.prop("checked",false);
-                $cpeAuthEnabled.prop("checked",false);
-             }
+            }
         }
-        function isShowtrNotice(){
-             if($("#noticeEnabled").prop("checked")){
-               $(".trNotice").show();
-             }else{
+        function isShowtrNotice() {
+            if ($("#noticeEnabled").prop("checked") && $("#enabled").prop("checked")) {
+                $(".trNotice").show();
+            } else {
                 $(".trNotice").hide();
-             }
+            }
         }
 
-        function isShowtrAcs(){
-            if($("#acsAuthEnabled").prop("checked")){
+        function isShowtrAcs() {
+            if ($("#acsAuthEnabled").prop("checked") && $("#enabled").prop("checked")) {
                 $(".trAcs").show();
-             }else{
+            } else {
                 $(".trAcs").hide();
-             }
+            }
         }
 
-        function isShowtrCpe(){
-             if($("#cpeAuthEnabled").prop("checked")){
+        function isShowtrCpe() {
+            if ($("#cpeAuthEnabled").prop("checked") && $("#enabled").prop("checked")) {
                 $(".trCpe").show();
-             }else{
+            } else {
                 $(".trCpe").hide();
-             }
+            }
         }
 
-        $("#enabled").change(function(){
-           isShowenabled();
-           isShowtrNotice();
-           isShowtrAcs();
-           isShowtrCpe();
-        })
-        $("#noticeEnabled").change(function(){
+        $("#enabled").change(function () {
+            isShowenabled();
             isShowtrNotice();
-        })
-        $("#acsAuthEnabled").change(function(){
-           isShowtrAcs();
-        })
-        $("#cpeAuthEnabled").change(function(){
+            isShowtrAcs();
             isShowtrCpe();
         })
-
+        $("#noticeEnabled").change(function () {
+            isShowtrNotice();
+        })
+        $("#acsAuthEnabled").change(function () {
+            isShowtrAcs();
+        })
+        $("#cpeAuthEnabled").change(function () {
+            isShowtrCpe();
+        })
+        getTr069();
         // 获取TR069数据
-        Page.postJSON({
-            json: {
-                cmd: RequestCmd.TR069_CONFIG,
-                method: JSONMethod.GET
-            },
-            success: function(data) {
-                var datas = data.tr069;
-            if(datas.tr069_app_enable == "y"){
-                $("#enabled").prop("checked",true);
-               $(".tr069").show();
+        function getTr069() {
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.TR069_CONFIG,
+                    method: JSONMethod.GET
+                },
+                success: function (data) {
+                    var datas = data.tr069;
+                    if (datas.tr069_app_enable == "y") {
+                        $("#enabled").prop("checked", true);
+                        $(".tr069").show();
 
-            }else{
-                 $(".tr069").hide();
-                 $("#enabled").prop("checked",false);
-            }
-            $("#url").val(datas.tr069_ServerURL);
+                    } else {
+                        $(".tr069").hide();
+                        $("#enabled").prop("checked", false);
+                    }
+                    $("#enabled").attr("old", datas.tr069_app_enable);
+                    $("#url").val(datas.tr069_ServerURL);
+                    $("#url").attr("old", datas.tr069_ServerURL);
 
-            if(datas.tr069_PeriodicInformEnable == "y"){
-                $(".trNotice").show();
-                $noticeEnabled.prop("checked",true);
-            }else{
-                $noticeEnabled.prop("checked",false);
-                $(".trNotice").hide();
-            }
+                    if (datas.tr069_PeriodicInformEnable == "y") {
+                        $(".trNotice").show();
+                        $noticeEnabled.prop("checked", true);
+                    } else {
+                        $noticeEnabled.prop("checked", false);
+                        $(".trNotice").hide();
+                    }
+                    $noticeEnabled.attr("old", datas.tr069_PeriodicInformEnable)
+                    $("#noticeInterval").val(datas.tr069_PeriodicInformInterval);
+                    $("#noticeInterval").attr("old", datas.tr069_PeriodicInformInterval);
 
-            $("#noticeInterval").val(datas.tr069_PeriodicInformInterval);
+                    if (datas.tr069_ACS_auth == "y") {
+                        $(".trAcs").show();
+                        $acsAuthEnabled.prop("checked", true);
+                    } else {
+                        $('.trAcs').hide();
+                        $acsAuthEnabled.prop("checked", false);
+                    }
+                    $acsAuthEnabled.attr("old", datas.tr069_ACS_auth);
 
-            if(datas.tr069_ACS_auth == "y"){
-                $(".trAcs").show();
-                $acsAuthEnabled.prop("checked",true);
-            }else{
-                $('.trAcs').hide();
-                 $acsAuthEnabled.prop("checked",false);
-            }
+                    if (datas.tr069_CPE_auth == "y") {
+                        $(".trCpe").show();
+                        $cpeAuthEnabled.prop("checked", true);
+                    } else {
+                        $(".trCpe").hide();
+                        $cpeAuthEnabled.prop("checked", false);
+                    }
+                    $cpeAuthEnabled.attr("old", datas.tr069_CPE_auth);
 
-            if(datas.tr069_CPE_auth == "y"){
-                $(".trCpe").show();
-                $cpeAuthEnabled.prop("checked",true);
-            }else{
-                $(".trCpe").hide();
-                 $cpeAuthEnabled.prop("checked",false);
-            }
+                    $("#userName").val(datas.tr069_ServerUsername);
+                    $("#passwd").val(datas.tr069_ServerPassword);
+                    $("#linkUserName").val(datas.tr069_ConnectionRequestUname);
+                    $("#linkPasswd").val(datas.tr069_ConnectionRequestPassword);
 
-            $("#userName").val(datas.tr069_ServerUsername);
-            $("#passwd").val(datas.tr069_ServerPassword);
-            $("#linkUserName").val(datas.tr069_ConnectionRequestUname);
-            $("#linkPasswd").val(datas.tr069_ConnectionRequestPassword);
-           
+                    $("#userName").attr("old", datas.tr069_ServerUsername);
+                    $("#passwd").attr("old", datas.tr069_ServerPassword);
+                    $("#linkUserName").attr("old", datas.tr069_ConnectionRequestUname);
+                    $("#linkPasswd").attr("old", datas.tr069_ConnectionRequestPassword);
 
-
-            }
-        });
+                }
+            });
+        }
         var rules = {
-                noticeInterval: { number: true, min: 10 }
-            },
+            noticeInterval: { required: true, number: true, min: 30 },
+            url: { required: true }
+        },
             messages = {
-                noticeInterval: {  number: CHECK.format.inputNumber, min: CHECK.min.noticeInterval }
+                noticeInterval: { number: CHECK.format.inputNumber, min: CHECK.min.noticeInterval }
             };
 
-        $btnSave.bind('click', function() {
+        $btnSave.bind('click', function () {
             var $form = $('#childForm');
-             if(!CheckUtil.checkForm($form, rules, messages)){
+            if (!CheckUtil.checkForm($form, rules, messages)) {
                 return false;
-             }
+            }
             var json = JSON.parmsToJSON($form);
             json.cmd = RequestCmd.SET_TR069_CONFIG;
             json.method = JSONMethod.POST;
-            if($("#enabled").prop("checked")){
-                 json.enabled = "y";
-            }else{
+            json.flag = "";
+            var temp = 0;
+            if ($("#enabled").prop("checked")) {
+                json.enabled = "y";
+            } else {
                 json.enabled = "n";
-                json.url = "";
-                $("#noticeEnabled").prop("checked",false);
-                $("#acsAuthEnabled").prop("checked",false);
-                $("#cpeAuthEnabled").prop("checked",false);
+                $("#noticeEnabled").prop("checked", false);
+                $("#acsAuthEnabled").prop("checked", false);
+                $("#cpeAuthEnabled").prop("checked", false);
             }
-            if($("#noticeEnabled").prop("checked")){
-                 json.noticeEnabled = "y";
-            }else{
+            if ($("#noticeEnabled").prop("checked")) {
+                json.noticeEnabled = "y";
+            } else {
                 json.noticeEnabled = "n";
-                json.noticeInterval = "";
             }
-            if($("#acsAuthEnabled").prop("checked")){
-                 json.acsAuthEnabled = "y";
-            }else{
-                
+            if ($("#acsAuthEnabled").prop("checked")) {
+                json.acsAuthEnabled = "y";
+            } else {
                 json.userName = "";
                 json.passwd = "";
                 json.acsAuthEnabled = "n";
             }
 
-             if($("#cpeAuthEnabled").prop("checked")){
-                 json.cpeAuthEnabled = "y";
-            }else{
-               
+            if ($("#cpeAuthEnabled").prop("checked")) {
+                json.cpeAuthEnabled = "y";
+            } else {
                 json.cpeAuthEnabled = "n";
                 json.linkUserName = "";
                 json.linkPasswd = "";
             }
-           
-           Page.postJSON({
-               $id: $btnSave,
-               json: json,
-               success: function(data) {
-                   AlertUtil.alertMsg(PROMPT.saving.success);
-               }
-           });
+            if (json.enabled != $("#enabled").attr("old")) temp++;
+            if (json.url != $("#url").attr("old")) temp++;
+            if (json.noticeEnabled != $("#noticeEnabled").attr("old")) temp++;
+            if (json.acsAuthEnabled != $("#acsAuthEnabled").attr("old")) temp++;
+            if (json.cpeAuthEnabled != $("#cpeAuthEnabled").attr("old")) temp++;
+            if (json.userName != $("#userName").attr("old")) temp++;
+            if (json.passwd != $("#passwd").attr("old")) temp++;
+            if (json.linkUserName != $("#linkUserName").attr("old")) temp++;
+            if (json.linkPasswd != $("#linkPasswd").attr("old")) temp++;
+            if (json.noticeInterval != $("#noticeInterval").attr("old") && temp === 0) json.flag = 1;
+
+            Page.postJSON({
+                $id: $btnSave,
+                json: json,
+                success: function (data) {
+                    if (data.success) {
+                        getTr069();
+                        AlertUtil.alertMsg(PROMPT.saving.success);
+                    }
+                }
+            });
         });
     });
 </script>
@@ -278,4 +297,3 @@
         </div>
     </script>
 </div>
-
