@@ -11,7 +11,7 @@
             json: { cmd: RequestCmd.SYSTEM_LOG },
             success: function (data) {
                 var datas = data.data;
-                sysLogContent.text(datas.logs)
+                sysLogContent.html(datas.logs);
             }
         });
 

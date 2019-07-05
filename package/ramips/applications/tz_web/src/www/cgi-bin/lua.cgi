@@ -97,6 +97,8 @@ function login()
         io.input(file1)
         file1:write("updateTime:" .. logintime)
         io.close(file1)
+        uti.web_log(os.date("%Y-%m-%d %H:%M:%S",logintime) .. " - " .. "LOGIN" .. " - " .. "Username:" .. tz_req["username"] .. "</br>")
+        uti.web_log(os.date("%Y-%m-%d %H:%M:%S",logintime) .. " - " .. "LOGIN SUCCESS" .. "</br>")
 
         tz_answer["success"] = true
         tz_answer["sessionId"] = sessionId .. logintime
@@ -123,6 +125,9 @@ function login()
         print(result_json)
         return
     end
+
+    uti.web_log(os.date("%Y-%m-%d %H:%M:%S",logintime) .. " - " .. "LOGIN" .. " - " .. "Username:" .. tz_req["username"] .. "</br>")
+    uti.web_log(os.date("%Y-%m-%d %H:%M:%S",logintime) .. " - " .. "LOGIN FAIL" .. " - " .. "Username or password is incorrect" .. "</br>")
 
     tz_answer["success"] = false
     result_json = cjson.encode(tz_answer)
