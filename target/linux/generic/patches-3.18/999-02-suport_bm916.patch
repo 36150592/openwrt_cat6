@@ -1,0 +1,39 @@
+Index: linux-3.18.23/drivers/usb/serial/option.c
+===================================================================
+--- linux-3.18.23.orig/drivers/usb/serial/option.c
++++ linux-3.18.23/drivers/usb/serial/option.c
+@@ -518,6 +518,8 @@ static void option_instat_callback(struc
+ #define TZ_PRODUCT_P500V3			0x2033
+ 
+ 
++#define TZ_VENDOR_BM906_ID			0x05c6
++#define TZ_PRODUCT_BM906_ID			0x9025
+ 
+ /* some devices interfaces need special handling due to a number of reasons */
+ enum option_blacklist_reason {
+@@ -1076,6 +1078,7 @@ static const struct usb_device_id option
+ 	{ USB_DEVICE(TZ_VENDOR_P500_ID, TZ_PRODUCT_P500V1) }, 							/* TZ P500V1 */
+ 	{ USB_DEVICE(TZ_VENDOR_P500_ID, TZ_PRODUCT_P500V2) }, 							/* TZ P500V2 */
+ 	{ USB_DEVICE(TZ_VENDOR_P500_ID, TZ_PRODUCT_P500V3) },							/* TZ P500V3 */
++	{ USB_DEVICE(TZ_VENDOR_BM906_ID, TZ_PRODUCT_BM906_ID) },							/* TZ BM906 */
+ 	/* Novatel Ovation MC551 a.k.a. Verizon USB551L */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(NOVATELWIRELESS_VENDOR_ID, NOVATELWIRELESS_PRODUCT_MC551, 0xff, 0xff, 0xff) },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(NOVATELWIRELESS_VENDOR_ID, NOVATELWIRELESS_PRODUCT_E362, 0xff, 0xff, 0xff) },
+@@ -1920,6 +1923,17 @@ static int option_probe(struct usb_seria
+ 	    serial->interface->cur_altsetting->desc.bInterfaceNumber == 0x4)
+ 	{
+ 		printk("serial option_probe 0x%X - 0x%X - %d\n", 
++                    le16_to_cpu( serial->dev->descriptor.idVendor ), 
++                    le16_to_cpu( serial->dev->descriptor.idProduct ), 
++                    serial->interface->cur_altsetting->desc.bInterfaceNumber);
++		return -ENODEV;
++	}
++
++	if (dev_desc->idVendor == cpu_to_le16(TZ_VENDOR_BM906_ID) &&
++	    dev_desc->idProduct == cpu_to_le16(TZ_PRODUCT_BM906_ID) &&
++	    serial->interface->cur_altsetting->desc.bInterfaceNumber == 0x4)
++	{
++		printk("serial option_probe 0x%X - 0x%X - %d\n", 
+                     le16_to_cpu( serial->dev->descriptor.idVendor ), 
+                     le16_to_cpu( serial->dev->descriptor.idProduct ), 
+                     serial->interface->cur_altsetting->desc.bInterfaceNumber);
