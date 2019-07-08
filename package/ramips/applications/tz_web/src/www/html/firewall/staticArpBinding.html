@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function () {
-        Page.render();
+        var fm = ["form", "child_container", "formId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'form', DOC);
         Page.setStripeTable();
         var ipMacs = "";
         var $btnSave = $('#btnSave').disable(),
@@ -187,45 +189,47 @@
 </script>
 
 <div class="tab_boxes" id="child_container">
-    <script type="text/template" id="child_template">
-     <form id="form">
-    <div id="routeTh">
-    </div>
-    <div style="margin-top:40px;">
-       <input type="button" id="btnSaveRoute" value="<%- TAB.route.AddroutingTable %>" />
-    &nbsp;&nbsp;&nbsp;&nbsp;<input type="button" id="btnSaveRoute2" value="<%- networktoolhtml.form5.btnSetting %>" />
-    </div> 
-		<div id="edit_box" style="display: none;">
-            <div class="detail" id="fwHead">
-                <div id="edit_title"><%- lbl.pinCode %></div>
-                <div id="edit_close2"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
-                <div style="clear:both;"></div>
+    <div id="formId">
+        <script type="text/template" id="child_template">
+            <!-- <form id="form"> -->
+            <div id="routeTh">
             </div>
-        <div>
-           <table class="detail" cellspacing="0">
-                <tr>
-                     <th><span><%- DOC.apn.isWork %></span></th>
-                        <td>
-                        <select id="networktoolhtml" name="networktoolhtml">
-                            <option value="true">true</option>
-                            <option value="false">false</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                     <th><span><%- net.ip %></span></th>
-                      <td><input type="text" id="macListIp" name="macListIp" class="large" maxlength="30" /><span class="cmt"><%- lbl.example %><%- colon %>192.168.0.1</span></td>
-                </tr>
-                <th><span><%- net.mac %></span></th>
-                <td><input type="text" id="macList" name="macList" class="large" maxlength="30" /><span class="cmt"><%- lbl.example %><%- colon %>B8:AC:6F:BB:7E:3F</span></td>
-               <tr>
-                    <th>&nbsp;</th>
-                    <td><input type="button" id="btnSavePin" value="<%- btn.savePinOk %>"/><input type="button" id="btnEdit" value="<%- btn.savePinOk %>"/></td>
-
-                </tr>
-            </table>
-</div>
-</div>
-</form>
-</script>
+            <div style="margin-top:40px;">
+                <input type="button" id="btnSaveRoute" value="<%- TAB.route.AddroutingTable %>" />
+                &nbsp;&nbsp;&nbsp;&nbsp;<input type="button" id="btnSaveRoute2" value="<%- networktoolhtml.form5.btnSetting %>" />
+            </div> 
+            <div id="edit_box" style="display: none;">
+                <div class="detail" id="fwHead">
+                    <div id="edit_title"><%- lbl.pinCode %></div>
+                    <div id="edit_close2"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
+                    <div style="clear:both;"></div>
+                </div>
+                <div>
+                <table class="detail" cellspacing="0">
+                    <tr>
+                        <th><span><%- DOC.apn.isWork %></span></th>
+                            <td>
+                            <select id="networktoolhtml" name="networktoolhtml">
+                                <option value="true">true</option>
+                                <option value="false">false</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><span><%- net.ip %></span></th>
+                            <td><input type="text" id="macListIp" name="macListIp" class="large" maxlength="30" /><span class="cmt"><%- lbl.example %><%- colon %>192.168.0.1</span></td>
+                    </tr>
+                    <th><span><%- net.mac %></span></th>
+                    <td><input type="text" id="macList" name="macList" class="large" maxlength="30" /><span class="cmt"><%- lbl.example %><%- colon %>B8:AC:6F:BB:7E:3F</span></td>
+                    <tr>
+                        <th>&nbsp;</th>
+                        <td><input type="button" id="btnSavePin" value="<%- btn.savePinOk %>"/><input type="button" id="btnEdit" value="<%- btn.savePinOk %>"/></td>
+    
+                    </tr>
+                </table>
+                </div>
+            </div>
+        <!-- </form> -->
+        </script>
+    </div>
 </div>

@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm = ["form", "child_container", "formId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'form', DOC);
          Page.setStripeTable();
 		var upnpList = "";
 		
@@ -68,34 +70,36 @@
 </script>
 
 <div class="tab_boxes" id="child_container">
-    <script type="text/template" id="child_template">
-    <form id="form">
-    <div style="margin-top:10px;margin-bottom:30px;">
-         <table class="detail" cellspacing="0">
-            <tr style="margin-bottom:20px;">
-                    <h3> <%- TAB.fw.upnpDescribe %></h3>
-            </tr>
-             <tr>
-                <th><span><%- TAB.fw.upnpStatus %> </span></th>
-                <td>
-                    <input type="radio" id="upnpEnable" name="broadcast" value="enable"/><span style="margin-right:50px;"><%- wirelessconfightml.form1.open %></span>
-                    <input type="radio" id="upnpDisable" name="broadcast" value="disable"/><%- DOC.status.disable  %>
-                </td>
-             </tr> 
-            <tr>
-                <th></th>
-                <td>
-            <input type="button" id="btnSaveUpnpStatus" value="<%- networktoolhtml.form5.btnSetting %>" style="margin-top:30px;"/>
-                </td>
-            </tr>
-        </table>
+    <div id="formId">
+        <script type="text/template" id="child_template">
+            <!-- <form id="form"> -->
+            <div style="margin-top:10px;margin-bottom:30px;">
+                <table class="detail" cellspacing="0">
+                    <tr style="margin-bottom:20px;">
+                            <h3> <%- TAB.fw.upnpDescribe %></h3>
+                    </tr>
+                        <tr>
+                        <th><span><%- TAB.fw.upnpStatus %> </span></th>
+                        <td>
+                            <input type="radio" id="upnpEnable" name="broadcast" value="enable"/><span style="margin-right:50px;"><%- wirelessconfightml.form1.open %></span>
+                            <input type="radio" id="upnpDisable" name="broadcast" value="disable"/><%- DOC.status.disable  %>
+                        </td>
+                        </tr> 
+                    <tr>
+                        <th></th>
+                        <td>
+                    <input type="button" id="btnSaveUpnpStatus" value="<%- networktoolhtml.form5.btnSetting %>" style="margin-top:30px;"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <h3>
+                <%- TAB.fw.upnpList %>
+            </h3>
+            <div id="routeTh">
+            </div>
+            <!-- </form> -->
+        </script>
     </div>
-    <h3>
-        <%- TAB.fw.upnpList %>
-    </h3>
-    <div id="routeTh">
-    </div>
-    </form>
-    </script>
 </div>
 

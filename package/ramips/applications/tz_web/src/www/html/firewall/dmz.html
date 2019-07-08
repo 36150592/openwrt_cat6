@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm = ["childForm", "child_container", "childFormId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'childForm', DOC);
 
         Page.postJSON({
             json: {
@@ -63,31 +65,33 @@
 </script>
 
 <div class="tab_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <form id="childForm">
-            <table id="childTable" class="detail" cellspacing="0">
-                <tr id="trDialMode">
+    <div id="childFormId">
+        <script type="text/template" id="child_template">
+            <!-- <form id="childForm"> -->
+                <table id="childTable" class="detail" cellspacing="0">
+                    <tr id="trDialMode">
                         <th><%- CHECK.required.dmzSwitch %></th>
                         <td>
-                           <input type="radio" name="dmzSwich" value="1"><%- DOC.status.enabled %>
+                            <input type="radio" name="dmzSwich" value="1"><%- DOC.status.enabled %>
                             <input type="radio" name="dmzSwich" value="0"><%- DOC.status.disabled %>
                         </td>
                     </tr>
                     <tr id="trIp" style="display:none;">
                         <th><%-  DOC.net.ip %></th>
                         <td>
-                           <input type="text" name="dmzIp" id="dmzIp">
+                            <input type="text" name="dmzIp" id="dmzIp">
                         </td>
                     </tr>
-
-                   
-                  <tr id="trSave">
-                    <th>&nbsp;</th>
-                    <td>
-                        <input type="button" id="btnSave" value="<%- btn.save %>"/>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </script>
+    
+                        
+                    <tr id="trSave">
+                        <th>&nbsp;</th>
+                        <td>
+                            <input type="button" id="btnSave" value="<%- btn.save %>"/>
+                        </td>
+                    </tr>
+                </table>
+            <!-- </form> -->
+        </script>
+    </div>  
 </div>
