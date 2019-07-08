@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm = ["form", "child_container", "formId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'form', DOC);
         Page.setStripeTable();
 		var ipMacs ="";
 		var $btnSave = $('#btnSave').disable(),
@@ -185,22 +187,23 @@
 </script>
 
 <div class="tab_boxes" id="child_container">
-    <script type="text/template" id="child_template">
-        <form id="form">
-    <div id="routeTh">
-    </div>
-    <div style="margin-top:40px;">
-       <input type="button" id="btnSaveRoute" value="<%- TAB.route.AddroutingTable %>" />
-    &nbsp;&nbsp;&nbsp;&nbsp;<input type="button" id="btnSaveRoute2" value="<%- networktoolhtml.form5.btnSetting %>" />
-    </div> 
-		<div id="edit_box" style="display: none;">
-            <div class="detail" id="fwHead">
-                <div id="edit_title"><%- lbl.pinCode %></div>
-                <div id="edit_close2"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
-                <div style="clear:both;"></div>
+    <div id="formId">
+        <script type="text/template" id="child_template">
+            <!-- <form id="form"> -->
+            <div id="routeTh">
             </div>
-            <div>
-            <table class="detail2" cellspacing="0">
+            <div style="margin-top:40px;">
+                <input type="button" id="btnSaveRoute" value="<%- TAB.route.AddroutingTable %>" />
+                &nbsp;&nbsp;&nbsp;&nbsp;<input type="button" id="btnSaveRoute2" value="<%- networktoolhtml.form5.btnSetting %>" />
+            </div> 
+            <div id="edit_box" style="display: none;">
+                <div class="detail" id="fwHead">
+                    <div id="edit_title"><%- lbl.pinCode %></div>
+                    <div id="edit_close2"><input id="btnClose" type="button" value="<%- btn.close %>" /></div>
+                    <div style="clear:both;"></div>
+                </div>
+                <div>
+                <table class="detail2" cellspacing="0">
                 <tr>
                     <th><%-networktoolhtml.form2.th1%></th>
                     <td>
@@ -211,15 +214,15 @@
                         </select>
                     </td>
                 </tr>
-                 <tr>
+                    <tr>
                     <th><%-DOC.net.destinationIp%><%- colon %></th>
                     <td><input type="text" id="destinationIp" name="destinationIp"></td>
                 </tr>
-                 <tr>
+                    <tr>
                     <th><%-DOC.net.mask%><%- colon %></th>
                     <td><input type="text" id="maskNet" name="maskNet"></td>
                 </tr>
-                 <tr>
+                    <tr>
                     <th><%-DOC.net.gateway%><%- colon %></th>
                     <td><input type="text" id="gateway" name="gateway"></td>
                 </tr>
@@ -229,9 +232,10 @@
 
                 </tr>
                 </table>
+                </div>
             </div>
-        </div>
-    </form>
-    </script>
+            <!-- </form> -->
+        </script>
+    </div>
 </div>
 

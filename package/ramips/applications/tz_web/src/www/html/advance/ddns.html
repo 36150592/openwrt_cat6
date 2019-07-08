@@ -1,7 +1,9 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <script type="text/javascript">
-    Page.render();
+    var fm = ["childForm", "child_container", "childFormId"];
+    Page.createForm(fm);
+    TempUtil.render('child_template', 'childForm', DOC);
 
     var $btnSave = $('#btnSave');
     var $ddnsIsShow = $('.ddnsIsShow');
@@ -88,8 +90,9 @@
 </script>
 
 <div class="tab_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <form id="childForm">
+    <div id="childFormId">
+        <script type="text/template" id="child_template">
+            <!-- <form id="childForm"> -->
             <table id="childTable" class="detail" cellspacing="0">
                 <tr id="trDdnsStutas">
                     <th><%- TAB.advance.ddns %></th>
@@ -144,7 +147,8 @@
                         <input type="button" id="btnSave" value="<%- btn.save %>"/>
                     </td>                   
                 </tr>
-            </table>
-        </form>
-    </script>
+            </table>      
+            <!-- </form> -->
+        </script>
+    </div>
 </div>

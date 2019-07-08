@@ -3,7 +3,9 @@
 
 <script type="text/javascript">
     $(document).ready(function(){
-        Page.render();
+        var fm = ["lockPlmnForm", "child_container", "lockPlmnFormId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'lockPlmnForm', DOC);
         Page.setStripeTable();
 
         function getInfo() {
@@ -70,8 +72,9 @@
 
 
 <div class="tab_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <form id="lockPlmnForm">
+    <div id="lockPlmnFormId">
+        <script type="text/template" id="child_template">
+            <!-- <form id="lockPlmnForm"> -->
             <table id="lockPhyCellTable" class="detail" cellspacing="0">
                 <tr>
                     <th><%- lbl.lockPlmn %><%- colon %></th>
@@ -82,7 +85,8 @@
                     <th>&nbsp;</th>
                     <td><input type="button" id="btnSave" value="<%- btn.set %>" /></td>
                 </tr>
-            </table>
-        </form>
-    </script>
+            </table>    
+            <!-- </form> -->
+        </script>
+    </div>
 </div>

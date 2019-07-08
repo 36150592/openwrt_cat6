@@ -2,6 +2,16 @@
 
 <script type="text/javascript">
     $(document).ready(function () {
+        var fm = ["form", "formParent", "formId"];
+        var fm1 = ["form1", "form1Parent", "form1Id"];
+        var fm2 = ["form2", "form2Parent", "form2Id"];
+        var fm3 = ["form3", "form3Parent", "form3Id"];
+        var wpsForm = ["wpsForm", "wpsSet", "wpsFormId"];
+        Page.createForm(fm);
+        Page.createForm(fm1);
+        Page.createForm(fm2);
+        Page.createForm(fm3);
+        Page.createForm(wpsForm);
         TempUtil.render('tabsitems-template', 'tabsitems', wlan5ghtml.tab_menu);
         TempUtil.render('wlform1-template', 'form', wlan5ghtml.form1);
         TempUtil.render('wlform1-template1', 'form1', wlan5ghtml.form1);
@@ -11,7 +21,8 @@
         TempUtil.render('macControl-template', 'macControl',wirelessconfightml.macControl);
         Page.render('#fwHead', '#fwHead_template');
         Page.render('#fwBody', '#fwBody_template');
-        Page.render('#wpsSet', '#wpsSet_template');
+        // Page.render('#wpsSet', '#wpsSet_template');
+        TempUtil.render('wpsSet_template', 'wpsForm', DOC);
         var showText = wirelessconfightml.prompt;
         var $lis = $("ul.tabs a");
         var $boxes = $("div.tab_boxes > div");
@@ -919,280 +930,288 @@
     <div class="tab_menu_bottom"></div>
     <div >
         <div class="tab_boxes">
-            <div class="main_box">
-                <form id="form">
-                    <script type="text/template" id="wlform1-template">
-                        <table class="detail" cellspacing="0">
-                            <tr style = "display:none">
-                                <td> <input type="text" id="wifiId" name="wifiId" /></td>
-                            </tr>
-                            <tr>
-                                <th><%- wifiFunction %></th>
-                                <td>
-                                    <input type="checkbox" id="wifiOpen" name="wifiOpen" /><%- enable %>
-                                </td>
-                            </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;">
-                                <th><%- ssidBd %></th>
-                                <td>
-                                    <input type="checkbox" id="broadcast" name="broadcast" /><%- enable %>
-                                </td>
-                            </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;">
-                                <th><%- wmm %></th>
-                                <td>
-                                    <input type="checkbox" id="wmm" name="wmm" /><%- enable %>
-                                </td>
-                            </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;">
-                                <th><%- ssid %></th>
-                                <td><input type="text" id="ssid" name="ssid" class="normal" maxlength="64"/></td>
-                            </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;">
-                                <th><%- authenticationType %></th>
-                                <td>
-                                    <select name="authenticationType" id="authenticationType">
-                                        <option value="none"><%- openSys %></option>
-                                        <option value="psk"><%- wpa_psk %></option>
-                                        <option value="psk2"><%- wpa2_psk %></option>
-                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;" id="encrypt_algorithm">
-                                <th><%- encryptAlgorithmTh %></th>
-                                <td>
-                                    <label id="encryptAlgorithm">
-                                        <input type="radio" value="none" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- auto %></span>
-                                        <input type="radio" value="tkip" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- tkip %></span>
-                                        <input type="radio" value="ccmp" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- aes %></span>
-                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- tkip_aes %></span>
-                                    </label>
-                                </td>
-
-                            </tr>
-                            <tr  class="wifi_disable_hide" style="display:none;" id="password">
-                                <th><%- key %></th>
-                                <td>
-                                    <input type="password" name="key" maxlength="63" id="key"/>
-                                    <img id="passwordImg" class="passwordImg" onclick="showPsw('')" src="/images/close.png">
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>&nbsp;</th>
-                                <td><input type="button" id="btnSave" value="<%- btnSave %>"/></td>
-                            </tr>
-                        </table>
-                    </script>
-                </form>
+            <div class="main_box" id="formParent">
+                <!-- <form id="form"> -->
+                        <div id="formId">
+                                <script type="text/template" id="wlform1-template">
+                                    <table class="detail" cellspacing="0">
+                                        <tr style = "display:none">
+                                            <td> <input type="text" id="wifiId" name="wifiId" /></td>
+                                        </tr>
+                                        <tr>
+                                            <th><%- wifiFunction %></th>
+                                            <td>
+                                                <input type="checkbox" id="wifiOpen" name="wifiOpen" /><%- enable %>
+                                            </td>
+                                        </tr>
+                                        <tr  class="wifi_disable_hide" style="display:none;">
+                                            <th><%- ssidBd %></th>
+                                            <td>
+                                                <input type="checkbox" id="broadcast" name="broadcast" /><%- enable %>
+                                            </td>
+                                        </tr>
+                                        <tr  class="wifi_disable_hide" style="display:none;">
+                                            <th><%- wmm %></th>
+                                            <td>
+                                                <input type="checkbox" id="wmm" name="wmm" /><%- enable %>
+                                            </td>
+                                        </tr>
+                                        <tr  class="wifi_disable_hide" style="display:none;">
+                                            <th><%- ssid %></th>
+                                            <td><input type="text" id="ssid" name="ssid" class="normal" maxlength="64"/></td>
+                                        </tr>
+                                        <tr  class="wifi_disable_hide" style="display:none;">
+                                            <th><%- authenticationType %></th>
+                                            <td>
+                                                <select name="authenticationType" id="authenticationType">
+                                                    <option value="none"><%- openSys %></option>
+                                                    <option value="psk"><%- wpa_psk %></option>
+                                                    <option value="psk2"><%- wpa2_psk %></option>
+                                                    <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr  class="wifi_disable_hide" style="display:none;" id="encrypt_algorithm">
+                                            <th><%- encryptAlgorithmTh %></th>
+                                            <td>
+                                                <label id="encryptAlgorithm">
+                                                    <input type="radio" value="none" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- auto %></span>
+                                                    <input type="radio" value="tkip" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- tkip %></span>
+                                                    <input type="radio" value="ccmp" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- aes %></span>
+                                                    <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- tkip_aes %></span>
+                                                </label>
+                                            </td>
+            
+                                        </tr>
+                                        <tr  class="wifi_disable_hide" style="display:none;" id="password">
+                                            <th><%- key %></th>
+                                            <td>
+                                                <input type="password" name="key" maxlength="63" id="key"/>
+                                                <img id="passwordImg" class="passwordImg" onclick="showPsw('')" src="/images/close.png">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>&nbsp;</th>
+                                            <td><input type="button" id="btnSave" value="<%- btnSave %>"/></td>
+                                        </tr>
+                                    </table>
+                                </script>
+                        </div>                
+                <!-- </form> -->
             </div>
 
-            <div  class="main_box">
-                <form id="form1">
-                    <script type="text/template" id="wlform1-template1">
-                        <table class="detail" cellspacing="0">
-                            <tr style = "display:none">
-                                <td> <input type="text" id="secondaryId1" name="secondaryId" /></td>
-                            </tr>
-                            <tr>
-                                <th><%- wifiFunction %></th>
-                                <td>
-                                    <input type="checkbox" id="wifiOpen1" name="wifiOpen" /><%- enable %>
-                                </td>
-                            </tr>
-                            <tr  class="wifi_disable_hide1" style="display:none;">
-                                <th><%- ssidBd %></th>
-                                <td>
-                                    <input type="checkbox" id="broadcast1" name="broadcast" /><%- enable %>
-                                </td>
-                            </tr>
-                            <tr  class="wifi_disable_hide1" style="display:none;">
-                                <th><%- wmm %></th>
-                                <td>
-                                    <input type="checkbox" id="wmm1" name="wmm" /><%- enable %>
-                                </td>
-                            </tr>
-
-                            <tr class="wifi_disable_hide1" style="display:none;">
-                                <th><%- ssid %></th>
-                                <td><input type="text" id="ssid1" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
-                            </tr>
-
-                            <tr class="wifi_disable_hide1" style="display:none;">
-                                <th><%- authenticationType %></th>
-                                <td>
-                                    <select name="authenticationType" id="authenticationType1">
-                                        <option value="none"><%- openSys %></option>
-                                        <option value="psk"><%- wpa_psk %></option>
-                                        <option value="psk2"><%- wpa2_psk %></option>
-                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr class="wifi_disable_hide1" style="display:none;" id="encrypt_algorithm1">
-                                <th><%- encryptAlgorithmTh %></th>
-                                <td>
-                                    <label id="encryptAlgorithm1">
-                                        <input type="radio" value="none" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- auto %></span>
-                                        <input type="radio" value="tkip" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- tkip %></span>
-                                        <input type="radio" value="ccmp" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- aes %></span>
-                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- tkip_aes %></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr class="wifi_disable_hide1" style="display:none;" id="password1">
-                                <th><%- key %></th>
-                                <td>
-                                    <input type="password" name="key" maxlength="63" id="key1"/>
-                                    <img id="passwordImg1" class="passwordImg" onclick="showPsw(1)" src="/images/close.png">
-                                </td>
-                            </tr>
-
-
-                            <tr>
-                                <th>&nbsp;</th>
-                                <td><input type="button" id="btn2Save1" value="<%- btnSave %>" /></td>
-                            </tr>
-                        </table>
-                    </script>
-                </form>
+            <div  class="main_box" id="form1Parent">
+                <!-- <form id="form1"> -->
+                        <div id="form1Id">
+                                <script type="text/template" id="wlform1-template1">
+                                    <table class="detail" cellspacing="0">
+                                        <tr style = "display:none">
+                                            <td> <input type="text" id="secondaryId1" name="secondaryId" /></td>
+                                        </tr>
+                                        <tr>
+                                            <th><%- wifiFunction %></th>
+                                            <td>
+                                                <input type="checkbox" id="wifiOpen1" name="wifiOpen" /><%- enable %>
+                                            </td>
+                                        </tr>
+                                        <tr  class="wifi_disable_hide1" style="display:none;">
+                                            <th><%- ssidBd %></th>
+                                            <td>
+                                                <input type="checkbox" id="broadcast1" name="broadcast" /><%- enable %>
+                                            </td>
+                                        </tr>
+                                        <tr  class="wifi_disable_hide1" style="display:none;">
+                                            <th><%- wmm %></th>
+                                            <td>
+                                                <input type="checkbox" id="wmm1" name="wmm" /><%- enable %>
+                                            </td>
+                                        </tr>
+            
+                                        <tr class="wifi_disable_hide1" style="display:none;">
+                                            <th><%- ssid %></th>
+                                            <td><input type="text" id="ssid1" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
+                                        </tr>
+            
+                                        <tr class="wifi_disable_hide1" style="display:none;">
+                                            <th><%- authenticationType %></th>
+                                            <td>
+                                                <select name="authenticationType" id="authenticationType1">
+                                                    <option value="none"><%- openSys %></option>
+                                                    <option value="psk"><%- wpa_psk %></option>
+                                                    <option value="psk2"><%- wpa2_psk %></option>
+                                                    <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr class="wifi_disable_hide1" style="display:none;" id="encrypt_algorithm1">
+                                            <th><%- encryptAlgorithmTh %></th>
+                                            <td>
+                                                <label id="encryptAlgorithm1">
+                                                    <input type="radio" value="none" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- auto %></span>
+                                                    <input type="radio" value="tkip" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- tkip %></span>
+                                                    <input type="radio" value="ccmp" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- aes %></span>
+                                                    <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- tkip_aes %></span>
+                                                </label>
+                                            </td>
+                                        </tr>
+                                        <tr class="wifi_disable_hide1" style="display:none;" id="password1">
+                                            <th><%- key %></th>
+                                            <td>
+                                                <input type="password" name="key" maxlength="63" id="key1"/>
+                                                <img id="passwordImg1" class="passwordImg" onclick="showPsw(1)" src="/images/close.png">
+                                            </td>
+                                        </tr>
+            
+            
+                                        <tr>
+                                            <th>&nbsp;</th>
+                                            <td><input type="button" id="btn2Save1" value="<%- btnSave %>" /></td>
+                                        </tr>
+                                    </table>
+                                </script>
+                        </div>               
+                <!-- </form> -->
             </div>
 
-            <div  class="main_box">
-                <form id="form2">
-                    <script type="text/template" id="wlform1-template2">
-                        <table class="detail" cellspacing="0">
-                            <tr style = "display:none">
-                                <td> <input type="text" id="secondaryId2" name="secondaryId" /></td>
-                            </tr>
-                            <tr>
-                                <th><%- wifiFunction %></th>
-                                <td>
-                                    <input type="checkbox" id="wifiOpen2" name="wifiOpen" /><%- enable %>
-                                </td>
-                            </tr>
-                            <tr class="wifi_disable_hide2" style="display:none;">
-                                <th><%- ssidBd %></th>
-                                <td>
-                                    <input type="checkbox" id="broadcast2" name="broadcast" /><%- enable %>
-                                </td>
-                            </tr>
-                            <tr class="wifi_disable_hide2" style="display:none;">
-                                <th><%- wmm %></th>
-                                <td>
-                                    <input type="checkbox" id="wmm2" name="wmm" /><%- enable %>
-                                </td>
-                            </tr>
-
-                            <tr class="wifi_disable_hide2" style="display:none;">
-                                <th><%- ssid %></th>
-                                <td><input type="text" id="ssid2" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
-                            </tr>
-
-                            <tr class="wifi_disable_hide2" style="display:none;">
-                                <th><%- authenticationType %></th>
-                                <td>
-                                    <select name="authenticationType" id="authenticationType2">
-                                        <option value="none"><%- openSys %></option>
-                                        <option value="psk"><%- wpa_psk %></option>
-                                        <option value="psk2"><%- wpa2_psk %></option>
-                                        <option value="mixed"><%- wpa_wpa2_psk %></option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr class="wifi_disable_hide2" style="display:none;" id="encrypt_algorithm2">
-                                <th><%- encryptAlgorithmTh %></th>
-                                <td>
-                                    <label id="encryptAlgorithm2">
-                                        <input type="radio" value="none" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- auto %></span>
-                                        <input type="radio" value="tkip" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- tkip %></span>
-                                        <input type="radio" value="ccmp" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- aes %></span>
-                                        <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
-                                        &nbsp;<span><%- tkip_aes %></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr class="wifi_disable_hide2" style="display:none;" id="password2">
-                                <th><%- key %></th>
-                                <td>
-                                    <input type="password" name="key" maxlength="63" id="key2"/>
-                                    <img id="passwordImg2" class="passwordImg" onclick="showPsw(2)" src="/images/close.png">
-                                </td>
-                            </tr>
-
-
-                            <tr>
-                                <th>&nbsp;</th>
-                                <td><input type="button" id="btn2Save2" value="<%- btnSave %>" /></td>
-                            </tr>
-                        </table>
-                    </script>
-                </form>
+            <div  class="main_box" id="form2Parent">
+                <!-- <form id="form2"> -->
+                        <div id="formId2">
+                                <script type="text/template" id="wlform1-template2">
+                                    <table class="detail" cellspacing="0">
+                                        <tr style = "display:none">
+                                            <td> <input type="text" id="secondaryId2" name="secondaryId" /></td>
+                                        </tr>
+                                        <tr>
+                                            <th><%- wifiFunction %></th>
+                                            <td>
+                                                <input type="checkbox" id="wifiOpen2" name="wifiOpen" /><%- enable %>
+                                            </td>
+                                        </tr>
+                                        <tr class="wifi_disable_hide2" style="display:none;">
+                                            <th><%- ssidBd %></th>
+                                            <td>
+                                                <input type="checkbox" id="broadcast2" name="broadcast" /><%- enable %>
+                                            </td>
+                                        </tr>
+                                        <tr class="wifi_disable_hide2" style="display:none;">
+                                            <th><%- wmm %></th>
+                                            <td>
+                                                <input type="checkbox" id="wmm2" name="wmm" /><%- enable %>
+                                            </td>
+                                        </tr>
+            
+                                        <tr class="wifi_disable_hide2" style="display:none;">
+                                            <th><%- ssid %></th>
+                                            <td><input type="text" id="ssid2" name="ssid" maxlength="32" class="normal" autocomplete="off" /></td>
+                                        </tr>
+            
+                                        <tr class="wifi_disable_hide2" style="display:none;">
+                                            <th><%- authenticationType %></th>
+                                            <td>
+                                                <select name="authenticationType" id="authenticationType2">
+                                                    <option value="none"><%- openSys %></option>
+                                                    <option value="psk"><%- wpa_psk %></option>
+                                                    <option value="psk2"><%- wpa2_psk %></option>
+                                                    <option value="mixed"><%- wpa_wpa2_psk %></option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr class="wifi_disable_hide2" style="display:none;" id="encrypt_algorithm2">
+                                            <th><%- encryptAlgorithmTh %></th>
+                                            <td>
+                                                <label id="encryptAlgorithm2">
+                                                    <input type="radio" value="none" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- auto %></span>
+                                                    <input type="radio" value="tkip" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- tkip %></span>
+                                                    <input type="radio" value="ccmp" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- aes %></span>
+                                                    <input type="radio" value="ccmp+tkip" name="encryptAlgorithm"/>
+                                                    &nbsp;<span><%- tkip_aes %></span>
+                                                </label>
+                                            </td>
+                                        </tr>
+                                        <tr class="wifi_disable_hide2" style="display:none;" id="password2">
+                                            <th><%- key %></th>
+                                            <td>
+                                                <input type="password" name="key" maxlength="63" id="key2"/>
+                                                <img id="passwordImg2" class="passwordImg" onclick="showPsw(2)" src="/images/close.png">
+                                            </td>
+                                        </tr>
+            
+            
+                                        <tr>
+                                            <th>&nbsp;</th>
+                                            <td><input type="button" id="btn2Save2" value="<%- btnSave %>" /></td>
+                                        </tr>
+                                    </table>
+                                </script>
+                        </div>           
+                <!-- </form> -->
             </div>
 
-            <div class="main_box">
-                <form id="form3">
-                    <script type="text/template" id="wlform1-template3">
-                        <table class="detail" cellspacing="0">    
-                            <tr class="wifi_disable_hide" style="display:none;">
-                                    <th><%- maxStation %></th>
-                                    <td>
-                                        <input type="text" id="maxStation" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
-                                    </td>
-                                </tr>                         
-                            <tr class="wifi_disable_hide" style="display:none;">
-                                <th><%- channel %></th>
-                                <td><select id="channel" name="channel">
-                                    <option value="auto"><%- auto %></option>
-                                    <option value="36"><%- channel36 %></option>
-                                    <option value="40"><%- channel40 %></option>
-                                    <option value="44"><%- channel44 %></option>
-                                    <option value="48"><%- channel48 %></option>
-                                    <option value="149"><%- channel149 %></option>
-                                    <option value="153"><%- channel153 %></option>
-                                    <option value="157"><%- channel157 %></option>
-                                    <option value="161"><%- channel161 %></option>
-                                    <option value="165"><%- channel165 %></option>
-                                </select></td>
-                            </tr>
-                            <tr class="wifi_disable_hide" style="display:none;">
-                                <th><%- Mode %></th>
-                                <td>
-                                    <select id="wifiWorkMode" name="wifiWorkMode">
-                                        <option value="2"><%- na %></option>
-                                        <option value="8"><%- ac %></option>
-                                        <option value="15"><%- an_ac %></option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr id="bandWidthTr"  class="wifi_disable_hide" style="display:none;">
-                                <th><%- bandWidth %></th>
-                                <td>
-                                    <select name="bandWidth" id="bandWidth">
-                                        <option value="20"><%- bandWidth20 %></option>
-                                        <option value="20+40"><%- bandWidth60 %></option>
-                                        <option value="80"><%- bandWidth80 %></option>
-                                    </select>
-                                </td>
-                            </tr>                                               
-                            <tr>
-                                <th>&nbsp;</th>
-                                <td><input type="button" id="btn3Save" value="<%- btnSave %>"/></td>
-                            </tr>
-                        </table>
-                    </script>
-                </form>
+            <div class="main_box" id="form3Parent">
+                <!-- <form id="form3"> -->
+                        <div id="form3Id">
+                                <script type="text/template" id="wlform1-template3">
+                                    <table class="detail" cellspacing="0">    
+                                        <tr class="wifi_disable_hide" style="display:none;">
+                                                <th><%- maxStation %></th>
+                                                <td>
+                                                    <input type="text" id="maxStation" name="maxStation" maxlength="4" class="txt2" /><span class="cmt">(<%= maxStationCmt %>)</span>
+                                                </td>
+                                            </tr>                         
+                                        <tr class="wifi_disable_hide" style="display:none;">
+                                            <th><%- channel %></th>
+                                            <td><select id="channel" name="channel">
+                                                <option value="auto"><%- auto %></option>
+                                                <option value="36"><%- channel36 %></option>
+                                                <option value="40"><%- channel40 %></option>
+                                                <option value="44"><%- channel44 %></option>
+                                                <option value="48"><%- channel48 %></option>
+                                                <option value="149"><%- channel149 %></option>
+                                                <option value="153"><%- channel153 %></option>
+                                                <option value="157"><%- channel157 %></option>
+                                                <option value="161"><%- channel161 %></option>
+                                                <option value="165"><%- channel165 %></option>
+                                            </select></td>
+                                        </tr>
+                                        <tr class="wifi_disable_hide" style="display:none;">
+                                            <th><%- Mode %></th>
+                                            <td>
+                                                <select id="wifiWorkMode" name="wifiWorkMode">
+                                                    <option value="2"><%- na %></option>
+                                                    <option value="8"><%- ac %></option>
+                                                    <option value="15"><%- an_ac %></option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr id="bandWidthTr"  class="wifi_disable_hide" style="display:none;">
+                                            <th><%- bandWidth %></th>
+                                            <td>
+                                                <select name="bandWidth" id="bandWidth">
+                                                    <option value="20"><%- bandWidth20 %></option>
+                                                    <option value="20+40"><%- bandWidth60 %></option>
+                                                    <option value="80"><%- bandWidth80 %></option>
+                                                </select>
+                                            </td>
+                                        </tr>                                               
+                                        <tr>
+                                            <th>&nbsp;</th>
+                                            <td><input type="button" id="btn3Save" value="<%- btnSave %>"/></td>
+                                        </tr>
+                                    </table>
+                                </script>
+                        </div>          
+                <!-- </form> -->
             </div>
 
             <div id="macInfoContainer">
@@ -1230,38 +1249,39 @@
             </div>
 
             <div  id="wpsSet">
+                <div id="wpsFormId">
                 <script type="text/template" id="wpsSet_template">
-                      <form id="wpsForm" >
-                        <table class="detail" cellspacing="0">
-                            <tr>
-                                <th><%- lbl.wpsEnble %><%- colon %></th>
-                                <td>
-                                    <input type="checkbox" id="wpsEnble" name="wpsEnble" /><%- status.enable %>
-                                </td>
-                            </tr>
-                             <tr>
-                                <th>&nbsp;</th>
-                                <td><input type="button" id="btnSaveWps1" value="<%- btn.save %>" /></td>
-                            </tr>
-                            <tr>
-                                <th><%- lbl.wpsPin %><%- colon %></th>
-                                <td>
-                                    <input type="text" id="wpsPin" name="wpsPin"  class="normal"/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th><%- lbl.wpsRandomPin %><%- colon %></th>
-                                <td>
-                                    <input type="button" id="wpsRandomPin" value="<%- lbl.wpsCreatePin %>"/>
-                                    <span id="randomPin" style="margin-left:50px;"></span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>&nbsp;</th>
-                                <td><input type="button" id="btnSaveWps2" value="<%- btn.apply %>" /></td>
-                            </tr>
-                        </table>
-                    </form>
+                      <!-- <form id="wpsForm" > -->
+                                    <table class="detail" cellspacing="0">
+                                            <tr>
+                                                <th><%- lbl.wpsEnble %><%- colon %></th>
+                                                <td>
+                                                    <input type="checkbox" id="wpsEnble" name="wpsEnble" /><%- status.enable %>
+                                                </td>
+                                            </tr>
+                                             <tr>
+                                                <th>&nbsp;</th>
+                                                <td><input type="button" id="btnSaveWps1" value="<%- btn.save %>" /></td>
+                                            </tr>
+                                            <tr>
+                                                <th><%- lbl.wpsPin %><%- colon %></th>
+                                                <td>
+                                                    <input type="text" id="wpsPin" name="wpsPin"  class="normal"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th><%- lbl.wpsRandomPin %><%- colon %></th>
+                                                <td>
+                                                    <input type="button" id="wpsRandomPin" value="<%- lbl.wpsCreatePin %>"/>
+                                                    <span id="randomPin" style="margin-left:50px;"></span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>&nbsp;</th>
+                                                <td><input type="button" id="btnSaveWps2" value="<%- btn.apply %>" /></td>
+                                            </tr>
+                                        </table>               
+                    <!-- </form> -->
                     <span style="clear:both"></span>
                 </script>
             </div>

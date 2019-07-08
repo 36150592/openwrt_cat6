@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm = ["childForm", "child_container", "childFormId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'childForm', DOC);
 
         Page.postJSON({
             json: {
@@ -44,8 +46,9 @@
 </script>
 
 <div class="tab_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <form id="childForm">
+    <div id="childFormId">
+        <script type="text/template" id="child_template">
+            <!-- <form id="childForm"> -->
             <table id="childTable" class="detail" cellspacing="0">
                 <tr id="trDialMode">
                         <th><%- TAB.advance.autoMode %></th>
@@ -56,13 +59,14 @@
                             </select>
                         </td>
                     </tr>
-                  <tr id="trSave">
+                    <tr id="trSave">
                     <th>&nbsp;</th>
                     <td>
                         <input type="button" id="btnSave" value="<%- btn.save %>"/>
                     </td>
                 </tr>
             </table>
-        </form>
-    </script>
+            <!-- </form> -->
+        </script>
+    </div> 
 </div>

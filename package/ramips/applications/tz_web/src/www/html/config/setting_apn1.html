@@ -2,7 +2,10 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm = ["form", "child_container", "formId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'form', DOC);
+        TempUtil.render('helper_template', 'apnHelper', DOC);
         Page.setStripeTable();
         var ApnList= new Array();
         function getData() {
@@ -110,98 +113,103 @@
                  })
       })
 
+      $('#form').addClass("setting_apn_form");
+
     });
 </script>
 
 <div class="tab_boxes" id="child_container">
-    <script type="text/template" id="child_template">
-    <form id="form" class="setting_apn_form">
-         <table class="detail" cellspacing="0" id="apn_box">
-            <tr id="apn_enable">
-                <th>
-                    <label><%-DOC.apn.swich %><%- colon %></label> 
-                </th>
-                <td>
-                    <input type="radio" name="apnEnable" value="1" id="apnEnable"><span><%-DOC.apn.open %></span> &nbsp;&nbsp;&nbsp;&nbsp;
-                    <input type="radio" name="apnEnable" value="0" id="apnDisable"><span><%-DOC.apn.close %></span>
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    <label><%-DOC.apn.nat %><%- colon %></label> 
-                </th>
-                <td>
-
-                    <input type="radio" name="apnNat" id="apnNat1" value="enable"><span><%-DOC.status.enable %></span>&nbsp;&nbsp;&nbsp;&nbsp;
-                    <input type="radio" name="apnNat" id="apnNat2" value="disable"><span><%-DOC.status.disable %></span> 
-                </td>
-            </tr>
-             <tr>
-                <th>
-                    <label><%-DOC.apn.natLookBack %><%- colon %></label> 
-                </th>
-                <td>
-
-                    <input type="radio" name="apnNatLookBack"  id="apnNatLookBack1" value="enable"><span><%-DOC.status.enable %></span>&nbsp;&nbsp;&nbsp;&nbsp;
-                    <input type="radio" name="apnNatLookBack" id="apnNatLookBack2" value="disable"><span><%-DOC.status.disable %></span> 
-                </td>
-            </tr>
-             <tr>
-                <th><%-TAB.basic.apn %><%- colon %></th>
-                <td>
-                    <input type="text" name="apnName" id="apn_name">
-                </td>
-            </tr>
-            <tr>
-                <th><%-DOC.apn.mtu %><%- colon %></th>
-                <td>
-                    <input type="text" name="apnMTU" id="apn_mtu">
-                </td>
-            </tr>
-            <tr id="apn_type">
-                <th>
-                    <%-DOC.apn.type %><%- colon %>
-                </th>
-                <td>
-               <select style="width:150px;" id="selectType">
-                    <option value="IP">IPV4</option>
-                    <option value="IPV6">IPV6</option>
-                    <option value="IPV4V6">IPV4V6</option>
-               </select>
-               </td>
-            </tr>
-            <tr id="apn_authentication">
-                <th><%-DOC.apn.authentication %><%- colon %></th>
-                <td>
-                    <select style="width:150px;" id="selectAuthentication">
-                        <option value="0">NONE</option>
-                        <option value="1">PAP</option>
-                        <option value="2">CHAP</option>
-                        <option value="3">PAP&CHAP</option>
+    <div id="formId">
+        <script type="text/template" id="child_template">
+    <!-- <form id="form" class="setting_apn_form"> -->  
+            <table class="detail" cellspacing="0" id="apn_box">
+                <tr id="apn_enable">
+                    <th>
+                        <label><%-DOC.apn.swich %><%- colon %></label> 
+                    </th>
+                    <td>
+                        <input type="radio" name="apnEnable" value="1" id="apnEnable"><span><%-DOC.apn.open %></span> &nbsp;&nbsp;&nbsp;&nbsp;
+                        <input type="radio" name="apnEnable" value="0" id="apnDisable"><span><%-DOC.apn.close %></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <label><%-DOC.apn.nat %><%- colon %></label> 
+                    </th>
+                    <td>
+    
+                        <input type="radio" name="apnNat" id="apnNat1" value="enable"><span><%-DOC.status.enable %></span>&nbsp;&nbsp;&nbsp;&nbsp;
+                        <input type="radio" name="apnNat" id="apnNat2" value="disable"><span><%-DOC.status.disable %></span> 
+                    </td>
+                </tr>
+                    <tr>
+                    <th>
+                        <label><%-DOC.apn.natLookBack %><%- colon %></label> 
+                    </th>
+                    <td>
+    
+                        <input type="radio" name="apnNatLookBack"  id="apnNatLookBack1" value="enable"><span><%-DOC.status.enable %></span>&nbsp;&nbsp;&nbsp;&nbsp;
+                        <input type="radio" name="apnNatLookBack" id="apnNatLookBack2" value="disable"><span><%-DOC.status.disable %></span> 
+                    </td>
+                </tr>
+                    <tr>
+                    <th><%-TAB.basic.apn %><%- colon %></th>
+                    <td>
+                        <input type="text" name="apnName" id="apn_name">
+                    </td>
+                </tr>
+                <tr>
+                    <th><%-DOC.apn.mtu %><%- colon %></th>
+                    <td>
+                        <input type="text" name="apnMTU" id="apn_mtu">
+                    </td>
+                </tr>
+                <tr id="apn_type">
+                    <th>
+                        <%-DOC.apn.type %><%- colon %>
+                    </th>
+                    <td>
+                    <select style="width:150px;" id="selectType">
+                        <option value="IP">IPV4</option>
+                        <option value="IPV6">IPV6</option>
+                        <option value="IPV4V6">IPV4V6</option>
                     </select>
-                </td>
-            </tr>     
-            <tr  class="hideNone" style="display:none;">
-                <th><%-DOC.apn.user %><%- colon %></th>
-                <td>
-                    <input type="text" name="apnUserName" id="apn_user_name">
-                </td>
-            </tr>
-            <tr  class="hideNone"  style="display:none;">
-                <th><%-DOC.apn.password %><%- colon %></th>
-                <td>
-                    <input type="text" name="apnUserPassword" id="apn_user_password">
-                </td>
-            </tr>
-            <tr>
-                 <th></th>
-                 <td><input type="button" name="buttom" value="<%- networktoolhtml.form5.btnSetting %>" id="btnSave"/></td>
-            </tr>
-     
-   </table>
-    </form>
+                    </td>
+                </tr>
+                <tr id="apn_authentication">
+                    <th><%-DOC.apn.authentication %><%- colon %></th>
+                    <td>
+                        <select style="width:150px;" id="selectAuthentication">
+                            <option value="0">NONE</option>
+                            <option value="1">PAP</option>
+                            <option value="2">CHAP</option>
+                            <option value="3">PAP&CHAP</option>
+                        </select>
+                    </td>
+                </tr>     
+                <tr  class="hideNone" style="display:none;">
+                    <th><%-DOC.apn.user %><%- colon %></th>
+                    <td>
+                        <input type="text" name="apnUserName" id="apn_user_name">
+                    </td>
+                </tr>
+                <tr  class="hideNone"  style="display:none;">
+                    <th><%-DOC.apn.password %><%- colon %></th>
+                    <td>
+                        <input type="text" name="apnUserPassword" id="apn_user_password">
+                    </td>
+                </tr>
+                <tr>
+                        <th></th>
+                        <td><input type="button" name="buttom" value="<%- networktoolhtml.form5.btnSetting %>" id="btnSave"/></td>
+                </tr>                   
+            </table>
+        </script>
+    </div>    
+    <!-- </form> -->
 
-    <div class = "setting_apn_helper">
+    <div class = "setting_apn_helper" id="apnHelper">
+        <script type="text/template" id="helper_template">
             <div class="helper_name"><%- DOC.apnHelper.title0 %></div>
             <div class="helper_desc"><%- DOC.apnHelper.name0 %></div>
 
@@ -228,7 +236,8 @@
 
             <div class="helper_name"><%- DOC.apnHelper.title7 %></div>
             <div class="helper_desc"><%- DOC.apnHelper.name7 %></div>
+        </script>  
     </div>
-     </script>
+  
 </div>
 

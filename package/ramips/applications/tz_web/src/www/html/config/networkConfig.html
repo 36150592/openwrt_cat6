@@ -3,6 +3,12 @@
 <script type="text/javascript">
 
     $(document).ready(function () {
+        var fm0 = ["form0", "form0Parent", "form0Id"];
+        var fm1 = ["form1", "form1Parent", "form1Id"];
+        var fm2 = ["form2", "form2Parent", "form2Id"];
+        Page.createForm(fm0);
+        Page.createForm(fm1);
+        Page.createForm(fm2);
         TempUtil.render('tabsitems-template', 'tabsitems', networkconfightml.tab_menu);
         TempUtil.render('networkform1-template0', 'form0', networkconfightml.form1);
         TempUtil.render('networkform1-template1', 'form1', networkconfightml.form1);
@@ -637,177 +643,183 @@
     <div class="tab_menu_bottom"></div>
     <div class="main_box" style="width: 60%">
         <div class="tab_boxes">
-            <div>
-                <form id="form0">
-                    <script type="text/template" id="networkform1-template0">
-                        <table class="detail" cellspacing="0">
-                            <tr style = "display:none">
-                                <td><input type="text" id="lanName0" name="lanName" class="normal inputs_lan"  /></td>
-                            </tr>
+            <div id="form0Parent">
+                <!-- <form id="form0"> -->
+                    <div id="form0Id">
+                        <script type="text/template" id="networkform1-template0">
+                            <table class="detail" cellspacing="0">
+                                <tr style = "display:none">
+                                    <td><input type="text" id="lanName0" name="lanName" class="normal inputs_lan"  /></td>
+                                </tr>
+    
+                                <tr>
+                                    <th><%- th1 %></th>
+                                    <td><input type="text" id="lanIp0" name="lanIp" class="normal inputs_lan"  /></td>
+                                </tr>
+    
+                                <tr>
+                                    <th><%- th2 %></th>
+                                    <td><input type="text" id="netMask0" name="netMask" class="normal inputs_lan"/></td></tr>
+    
+                                <tr class="nat">
+                                    <th><%- th3 %></th>
+                                    <td>
+                                        <input type="checkbox" id="dhcpServer0" name="dhcpServer" value="1" checked="checked" class="inputs_lan" /><%- td3 %>
+                                    </td>
+                                </tr>
+                                    <tr class="nat dhcp0">
+                                    <th><%- th6 %></th>
+                                    <td>
+                                        <input type="text" id="main_dns0" name="main_dns" class="txt4 inputs_lan"/>
+                                    </td>
+                                </tr>
+                                    <tr class="nat dhcp0">
+                                    <th><%- th7 %></th>
+                                    <td>
+                                        <input type="text" id="vice_dns0" name="vice_dns" class="txt4 inputs_lan"/>
+                                    </td>
+                                </tr>
+                                <tr class="nat dhcp0">
+                                    <th><%- th4 %></th>
+                                    <td>
+                                        <input type="text" id="ipBegin0" name="ipBegin" class="txt4 inputs_lan"/> -
+                                        <input type="text" id="ipEnd0" name="ipEnd" class="txt4 inputs_lan"/>
+                                    </td>
+                                </tr>
+                                <tr class="nat dhcp0">
+                                    <th><%- th5 %></th>
+                                    <td>
+                                        <input type="text" id="expireTime0" name="expireTime" class="txt2 inputs_lan"/>&nbsp;<%- td5 %></td>
+                                </tr>
+                                <tr id="trSaveLan0">
+                                    <th>&nbsp;</th>
+                                    <td><input type="button" id="btnSaveLan0" value="<%- btnSave %>"/></td>
+                                </tr>
+                            </table>
+                            <div id="reserveLists0" style="margin-top:70px;"></div>
+                                <div style="margin-top:10px;"> <input id="btnAdd0" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
+                        </script>
+                </div>
+                   
+                <!-- </form> -->
 
-                            <tr>
-                                <th><%- th1 %></th>
-                                <td><input type="text" id="lanIp0" name="lanIp" class="normal inputs_lan"  /></td>
-                            </tr>
 
-                            <tr>
-                                <th><%- th2 %></th>
-                                <td><input type="text" id="netMask0" name="netMask" class="normal inputs_lan"/></td></tr>
-
-                            <tr class="nat">
-                                <th><%- th3 %></th>
-                                <td>
-                                    <input type="checkbox" id="dhcpServer0" name="dhcpServer" value="1" checked="checked" class="inputs_lan" /><%- td3 %>
-                                </td>
-                            </tr>
-                             <tr class="nat dhcp0">
-                                <th><%- th6 %></th>
-                                <td>
-                                    <input type="text" id="main_dns0" name="main_dns" class="txt4 inputs_lan"/>
-                                </td>
-                            </tr>
-                             <tr class="nat dhcp0">
-                                <th><%- th7 %></th>
-                                <td>
-                                    <input type="text" id="vice_dns0" name="vice_dns" class="txt4 inputs_lan"/>
-                                </td>
-                            </tr>
-                            <tr class="nat dhcp0">
-                                <th><%- th4 %></th>
-                                <td>
-                                    <input type="text" id="ipBegin0" name="ipBegin" class="txt4 inputs_lan"/> -
-                                    <input type="text" id="ipEnd0" name="ipEnd" class="txt4 inputs_lan"/>
-                                </td>
-                            </tr>
-                            <tr class="nat dhcp0">
-                                <th><%- th5 %></th>
-                                <td>
-                                    <input type="text" id="expireTime0" name="expireTime" class="txt2 inputs_lan"/>&nbsp;<%- td5 %></td>
-                            </tr>
-                            <tr id="trSaveLan0">
-                                <th>&nbsp;</th>
-                                <td><input type="button" id="btnSaveLan0" value="<%- btnSave %>"/></td>
-                            </tr>
-                        </table>
-                        <div id="reserveLists0" style="margin-top:70px;"></div>
-                          <div style="margin-top:10px;"> <input id="btnAdd0" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
-                    </script>
-                </form>
-
-
-
-
-            </div>
-            <div>
-                <form id="form1">
-                    <script type="text/template" id="networkform1-template1">
-                        <table class="detail" cellspacing="0">
-                            <tr style = "display:none">
-                                <td><input type="text" id="lanName1" name="lanName" class="normal inputs_lan"  /></td>
-                            </tr>
-
-                            <tr>
-                                <th><%- th1 %></th>
-                                <td><input type="text" id="lanIp1" name="lanIp" class="normal inputs_lan"  /></td>
-                            </tr>
-
-                            <tr>
-                                <th><%- th2 %></th>
-                                <td><input type="text" id="netMask1" name="netMask" class="normal inputs_lan"/></td></tr>
-
-                            <tr class="nat">
-                                <th><%- th3 %></th>
-                                <td>
-                                    <input type="checkbox" id="dhcpServer1" name="dhcpServer" value="1" checked="checked" class="inputs_lan" /><%- td3 %>
-                                </td>
-                            </tr>
-                            <tr class="nat dhcp1">
-                                <th><%- th6 %></th>
-                                <td>
-                                    <input type="text" id="main_dns1" name="main_dns" class="txt4 inputs_lan"/>
-                                </td>
-                            </tr>
-                             <tr class="nat dhcp1">
-                                <th><%- th7 %></th>
-                                <td>
-                                    <input type="text" id="vice_dns1" name="vice_dns" class="txt4 inputs_lan"/>
-                                </td>
-                            </tr>
-                            <tr class="nat dhcp1">
-                                <th><%- th4 %></th>
-                                <td>
-                                    <input type="text" id="ipBegin1" name="ipBegin" class="txt4 inputs_lan"/> -
-                                    <input type="text" id="ipEnd1" name="ipEnd" class="txt4 inputs_lan"/></td></tr>
-                            <tr class="nat dhcp1">
-                                <th><%- th5 %></th>
-                                <td>
-                                    <input type="text" id="expireTime1" name="expireTime" class="txt2 inputs_lan"/>&nbsp;<%- td5 %></td>
-                            </tr>
-                            <tr id="trSaveLan1">
-                                <th>&nbsp;</th>
-                                <td><input type="button" id="btnSaveLan1" value="<%- btnSave %>"/></td>
-                            </tr>
-                        </table>
-                         <div id="reserveLists1" style="margin-top:70px;"></div>
-                 <div style="margin-top:10px;"> <input id="btnAdd1" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
-                    </script>
-                </form>
 
             </div>
-            <div>
-                <form id="form2">
-                    <script type="text/template" id="networkform1-template2">
-                        <table class="detail" cellspacing="0">
-                            <tr style = "display:none">
-                                <td><input type="text" id="lanName2" name="lanName" class="normal inputs_lan"  /></td>
-                            </tr>
+            <div id="form1Parent">
+                <!-- <form id="form1"> -->
+                    <div id="form1Id">
+                        <script type="text/template" id="networkform1-template1">
+                            <table class="detail" cellspacing="0">
+                                <tr style = "display:none">
+                                    <td><input type="text" id="lanName1" name="lanName" class="normal inputs_lan"  /></td>
+                                </tr>
+    
+                                <tr>
+                                    <th><%- th1 %></th>
+                                    <td><input type="text" id="lanIp1" name="lanIp" class="normal inputs_lan"  /></td>
+                                </tr>
+    
+                                <tr>
+                                    <th><%- th2 %></th>
+                                    <td><input type="text" id="netMask1" name="netMask" class="normal inputs_lan"/></td></tr>
+    
+                                <tr class="nat">
+                                    <th><%- th3 %></th>
+                                    <td>
+                                        <input type="checkbox" id="dhcpServer1" name="dhcpServer" value="1" checked="checked" class="inputs_lan" /><%- td3 %>
+                                    </td>
+                                </tr>
+                                <tr class="nat dhcp1">
+                                    <th><%- th6 %></th>
+                                    <td>
+                                        <input type="text" id="main_dns1" name="main_dns" class="txt4 inputs_lan"/>
+                                    </td>
+                                </tr>
+                                    <tr class="nat dhcp1">
+                                    <th><%- th7 %></th>
+                                    <td>
+                                        <input type="text" id="vice_dns1" name="vice_dns" class="txt4 inputs_lan"/>
+                                    </td>
+                                </tr>
+                                <tr class="nat dhcp1">
+                                    <th><%- th4 %></th>
+                                    <td>
+                                        <input type="text" id="ipBegin1" name="ipBegin" class="txt4 inputs_lan"/> -
+                                        <input type="text" id="ipEnd1" name="ipEnd" class="txt4 inputs_lan"/></td></tr>
+                                <tr class="nat dhcp1">
+                                    <th><%- th5 %></th>
+                                    <td>
+                                        <input type="text" id="expireTime1" name="expireTime" class="txt2 inputs_lan"/>&nbsp;<%- td5 %></td>
+                                </tr>
+                                <tr id="trSaveLan1">
+                                    <th>&nbsp;</th>
+                                    <td><input type="button" id="btnSaveLan1" value="<%- btnSave %>"/></td>
+                                </tr>
+                            </table>
+                                <div id="reserveLists1" style="margin-top:70px;"></div>
+                            <div style="margin-top:10px;"> <input id="btnAdd1" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
+                        </script>
+                </div>
+                <!-- </form> -->
 
-                            <tr>
-                                <th><%- th1 %></th>
-                                <td><input type="text" id="lanIp2" name="lanIp" class="normal inputs_lan"  /></td>
-                            </tr>
-
-                            <tr>
-                                <th><%- th2 %></th>
-                                <td><input type="text" id="netMask2" name="netMask" class="normal inputs_lan"/></td></tr>
-
-                            <tr class="nat">
-                                <th><%- th3 %></th>
-                                <td>
-                                    <input type="checkbox" id="dhcpServer2" name="dhcpServer" value="1" checked="checked" class="inputs_lan" /><%- td3 %>
-                                </td>
-                            </tr>
-                            <tr class="nat dhcp2">
-                                <th><%- th6 %></th>
-                                <td>
-                                    <input type="text" id="main_dns2" name="main_dns" class="txt4 inputs_lan"/>
-                                </td>
-                            </tr>
-                             <tr class="nat dhcp2">
-                                <th><%- th7 %></th>
-                                <td>
-                                    <input type="text" id="vice_dns2" name="vice_dns" class="txt4 inputs_lan"/>
-                                </td>
-                            </tr>
-                            <tr class="nat dhcp2">
-                                <th><%- th4 %></th>
-                                <td>
-                                    <input type="text" id="ipBegin2" name="ipBegin" class="txt4 inputs_lan"/> -
-                                    <input type="text" id="ipEnd2" name="ipEnd" class="txt4 inputs_lan"/></td></tr>
-                            <tr class="nat dhcp2">
-                                <th><%- th5 %></th>
-                                <td>
-                                    <input type="text" id="expireTime2" name="expireTime" class="txt2 inputs_lan"/>&nbsp;<%- td5 %></td>
-                            </tr>
-                            <tr id="trSaveLan2">
-                                <th>&nbsp;</th>
-                                <td><input type="button" id="btnSaveLan2" value="<%- btnSave %>"/></td>
-                            </tr>
-                        </table>
-                         <div id="reserveLists2" style="margin-top:70px;"></div>
-                 <div style="margin-top:10px;"> <input id="btnAdd2" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
-                    </script>
-                </form>
+            </div>
+            <div id="form2Parent">
+                <!-- <form id="form2"> -->
+                    <div id="form2Id">
+                        <script type="text/template" id="networkform1-template2">
+                            <table class="detail" cellspacing="0">
+                                <tr style = "display:none">
+                                    <td><input type="text" id="lanName2" name="lanName" class="normal inputs_lan"  /></td>
+                                </tr>
+    
+                                <tr>
+                                    <th><%- th1 %></th>
+                                    <td><input type="text" id="lanIp2" name="lanIp" class="normal inputs_lan"  /></td>
+                                </tr>
+    
+                                <tr>
+                                    <th><%- th2 %></th>
+                                    <td><input type="text" id="netMask2" name="netMask" class="normal inputs_lan"/></td></tr>
+    
+                                <tr class="nat">
+                                    <th><%- th3 %></th>
+                                    <td>
+                                        <input type="checkbox" id="dhcpServer2" name="dhcpServer" value="1" checked="checked" class="inputs_lan" /><%- td3 %>
+                                    </td>
+                                </tr>
+                                <tr class="nat dhcp2">
+                                    <th><%- th6 %></th>
+                                    <td>
+                                        <input type="text" id="main_dns2" name="main_dns" class="txt4 inputs_lan"/>
+                                    </td>
+                                </tr>
+                                    <tr class="nat dhcp2">
+                                    <th><%- th7 %></th>
+                                    <td>
+                                        <input type="text" id="vice_dns2" name="vice_dns" class="txt4 inputs_lan"/>
+                                    </td>
+                                </tr>
+                                <tr class="nat dhcp2">
+                                    <th><%- th4 %></th>
+                                    <td>
+                                        <input type="text" id="ipBegin2" name="ipBegin" class="txt4 inputs_lan"/> -
+                                        <input type="text" id="ipEnd2" name="ipEnd" class="txt4 inputs_lan"/></td></tr>
+                                <tr class="nat dhcp2">
+                                    <th><%- th5 %></th>
+                                    <td>
+                                        <input type="text" id="expireTime2" name="expireTime" class="txt2 inputs_lan"/>&nbsp;<%- td5 %></td>
+                                </tr>
+                                <tr id="trSaveLan2">
+                                    <th>&nbsp;</th>
+                                    <td><input type="button" id="btnSaveLan2" value="<%- btnSave %>"/></td>
+                                </tr>
+                            </table>
+                                <div id="reserveLists2" style="margin-top:70px;"></div>
+                            <div style="margin-top:10px;"> <input id="btnAdd2" type="button" value="<%- addMac %>" />&nbsp;&nbsp;<input type="button" class="btnSaveControl" value="<%- btnSave %>" /></div>
+                        </script>
+                </div>                  
+                <!-- </form> -->
             </div>
             <div id="ipMacEdit">
                 <script type="text/template" id="networkipMacEdit-template">

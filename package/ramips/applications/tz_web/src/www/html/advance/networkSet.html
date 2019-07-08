@@ -3,7 +3,9 @@
 
 <script type="text/javascript">
 $(document).ready(function(){
-    Page.render();
+    var fm = ["networkForm", "child_container", "networkFormId"];
+    Page.createForm(fm);
+    TempUtil.render('child_template', 'networkForm', DOC);
     Page.setStripeTable();
 
     function getInfo() {
@@ -58,8 +60,9 @@ $(document).ready(function(){
 
 
 <div class="tab_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <form id="networkForm">
+    <div id="networkFormId">
+        <script type="text/template" id="child_template">
+            <!-- <form id="networkForm"> -->
             <table id="lockPhyCellTable" class="detail" cellspacing="0">
                 <tr>
                     <th><%- lte.networkMode %><%- colon %></th>
@@ -71,12 +74,13 @@ $(document).ready(function(){
                         <option value="0"><%- networkMode.modePriorityVal %></option>
                     </select></td>
                 </tr>
-				
-				<tr>
-                     <th>&nbsp;</th>
-                     <td><input type="button" id="btnSave" value="<%- btn.set %>" /></td>
+                
+                <tr>
+                        <th>&nbsp;</th>
+                        <td><input type="button" id="btnSave" value="<%- btn.set %>" /></td>
                 </tr>
-            </table>
-        </form>
-    </script>
+            </table>         
+            <!-- </form> -->
+        </script>
+    </div>
 </div>

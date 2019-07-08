@@ -4,10 +4,10 @@
 
 
     $(document).ready(function(){
-      
+        var fm = ["form", "formParent", "formId"];
+        Page.createForm(fm);
         Page.render('#tabsitems', '#tabsitems-template');
         Page.render('#form', '#wlform1-template');
-
          Page.postJSON({
                 json: {
                     cmd: RequestCmd.WAN_MAC_GET
@@ -81,10 +81,11 @@
     <div class="tab_menu_bottom"></div>
     <div>
         <div class="tab_boxes" >
-            <div  class="main_box">
-                <form id="form">
+            <div  class="main_box" id="formParent">
+                <div id="formId">
+                <!-- <form id="form"> -->                  
                     <script type="text/template" id="wlform1-template">
-                         <table class="detail" cellspacing="0">
+                        <table class="detail" cellspacing="0">
                             <tr>
                                 <th><%- wirelessconfightml.prompt.wan%><%- colon %></th>
                                 <td>
@@ -100,10 +101,12 @@
                                 <th></th>
                                 <td><input type="button" id="btnSaveMac" value="<%- btn.save %>" /></td>
                             </tr>
-                         </table>
+                        </table>
                     </script>
-                </form>
-			
+                                   
+                <!-- </form> -->
+                </div> 			
+            </div>
         </div>
     </div>
 </div>

@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm = ["childForm", "child_container", "childFormId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'childForm', DOC);
         Page.setStripeTable();
         Page.render('#fwHead', '#fwHead_template');
         Page.render('#fwBody', '#fwBody_template');
@@ -146,32 +148,34 @@
 
 
 <div class="tab_boxes" id="child_container">
-    <script type="text/template" id="child_template">
-        <div>
-            <form id="childForm" >
-                <table class="detail" cellspacing="0">
-                    <tr>
-                        <th><%- lbl.pingRemote %><%- colon %></th>
-                        <td>
-                            <input type="checkbox" id="enableRemoteLogin" name="enableRemoteLogin" /><%- status.enable %>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><%- lbl.pingRemoteIp %><%- colon %></th>
-                        <td>
-                            <input id="btnAdd" type="button" value="<%- lbl.addRemoteIp %>" />
-                            <div id="ipLists"></div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>&nbsp;</th>
-                        <td><input type="button" id="btnSave" value="<%- btn.save %>" /></td>
-                    </tr>
-                </table>
-            </form>
-        </div>
-        <span style="clear:both"></span>
-    </script>
+    <div id="childFormId">
+        <script type="text/template" id="child_template">
+            <div>
+                <!-- <form id="childForm" > -->
+                    <table class="detail" cellspacing="0">
+                        <tr>
+                            <th><%- lbl.pingRemote %><%- colon %></th>
+                            <td>
+                                <input type="checkbox" id="enableRemoteLogin" name="enableRemoteLogin" /><%- status.enable %>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><%- lbl.pingRemoteIp %><%- colon %></th>
+                            <td>
+                                <input id="btnAdd" type="button" value="<%- lbl.addRemoteIp %>" />
+                                <div id="ipLists"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>&nbsp;</th>
+                            <td><input type="button" id="btnSave" value="<%- btn.save %>" /></td>
+                        </tr>
+                    </table>          
+                <!-- </form> -->
+            </div>
+            <span style="clear:both"></span>
+        </script>
+    </div>  
 </div>
 
 <div id="edit_box" style="display: none;">

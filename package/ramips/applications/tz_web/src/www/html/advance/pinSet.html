@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm = ["pingForm", "child_container", "pingFormId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'pingForm', DOC);
         Page.setStripeTable();
 		var $btnSave = $('#btnSave'),
 			  $pinTypes = $('input[name=radPins]'),
@@ -130,9 +132,10 @@
 </script>
 
 <div class="tab_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <div>
-            <form id="pingForm" >
+    <div id="pingFormId">
+        <script type="text/template" id="child_template">
+            <div>
+                <!-- <form id="pingForm" > -->
                 <table class="detail" cellspacing="0">
                     <tr id="trPinStatus" class="pins">
                         <th><%- lbl.pinVerification %><%- colon %></th>
@@ -146,40 +149,41 @@
                             <span id="spanChangePin" style="display:none;"><input type="radio" name="radPins" value="3" /><%- lbl.pinOper3 %>&nbsp;&nbsp;</span>
                         </td>
                     </tr>
-                <tr class="is_show_puk_hide">
-                <th><span><%-lbl.pinCode%><%- colon %></span></th>
-                <td><input type="text" id="pinPassword" name="pinPassword"><span class="cmt"><%- TAB.basic.pinSetRemind %></span></td>
-                </tr>
-                <tr class="is_change_pin" style="display:none;">
-                <th><span><%-DOC.lbl.pinOper3%><%- colon %></span></th>
-                <td><input type="text" id="pinPasswordChange" name="pinPasswordChange"></td>
-                </tr>
-                <tr class="is_change_pin" style="display:none;">
-                <th><span><%-DOC.lbl.pinchange%><%- colon %></span></th>
-                <td><input type="text" id="pinPasswordConfirm" name="pinPasswordConfirm"></td>
-                </tr>
+                    <tr class="is_show_puk_hide">
+                    <th><span><%-lbl.pinCode%><%- colon %></span></th>
+                    <td><input type="text" id="pinPassword" name="pinPassword"><span class="cmt"><%- TAB.basic.pinSetRemind %></span></td>
+                    </tr>
+                    <tr class="is_change_pin" style="display:none;">
+                    <th><span><%-DOC.lbl.pinOper3%><%- colon %></span></th>
+                    <td><input type="text" id="pinPasswordChange" name="pinPasswordChange"></td>
+                    </tr>
+                    <tr class="is_change_pin" style="display:none;">
+                    <th><span><%-DOC.lbl.pinchange%><%- colon %></span></th>
+                    <td><input type="text" id="pinPasswordConfirm" name="pinPasswordConfirm"></td>
+                    </tr>
 
-                </tr>
-                <tr class="is_show_puk" style="display:none;">
-                <th><span><%-CHECK.required.puk%><%- colon %></span></th>
-                <td><input type="text" id="pukPassword" name="pukPassword"></td>
-                </tr>
-                <tr class="is_show_puk" style="display:none;">
-                <th><span><%-CHECK.required.newPin%><%- colon %></span></th>
-                <td><input type="text" id="pukPinPassword" name="pukPinPassword"></td>
-                </tr>
-                <tr class="is_show_puk" style="display:none;">
-                <th><span><%-CHECK.required.newPinConfirm%><%- colon %></span></th>
-                <td><input type="text" id="pukPinPasswordConfirm" name="pukPinPasswordConfirm"></td>
-                </tr>
+                    </tr>
+                    <tr class="is_show_puk" style="display:none;">
+                    <th><span><%-CHECK.required.puk%><%- colon %></span></th>
+                    <td><input type="text" id="pukPassword" name="pukPassword"></td>
+                    </tr>
+                    <tr class="is_show_puk" style="display:none;">
+                    <th><span><%-CHECK.required.newPin%><%- colon %></span></th>
+                    <td><input type="text" id="pukPinPassword" name="pukPinPassword"></td>
+                    </tr>
+                    <tr class="is_show_puk" style="display:none;">
+                    <th><span><%-CHECK.required.newPinConfirm%><%- colon %></span></th>
+                    <td><input type="text" id="pukPinPasswordConfirm" name="pukPinPasswordConfirm"></td>
+                    </tr>
 
-					<tr>
-						<th>&nbsp;</th>
-						<td><input type="button" id="btnSave" value="<%- btn.set %>" /></td>
-					</tr>
-                </table>
-            </form>
-        </div>
-    </script>
+                    <tr>
+                        <th>&nbsp;</th>
+                        <td><input type="button" id="btnSave" value="<%- btn.set %>" /></td>
+                    </tr>
+                </table>    
+                <!-- </form> -->
+            </div>
+        </script>
+    </div>
 </div>
 

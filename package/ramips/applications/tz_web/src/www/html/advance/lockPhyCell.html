@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function () {
-        Page.render();
+        var fm = ["lockPhyCellForm", "child_container", "lockPhyCellFormId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'lockPhyCellForm', DOC);
 
         var $btnSave = $('#btnSave').disable(),
             $locks = $('.lock').hide(),
@@ -146,8 +148,9 @@
 </script>
 
 <div class="tab_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <form id="lockPhyCellForm">
+    <div id="lockPhyCellFormId">
+        <script type="text/template" id="child_template">
+            <!-- <form id="lockPhyCellForm"> -->
             <table id="lockPhyCellTable" class="detail" cellspacing="0">
                 <tr>
                     <th><%- lbl.lockedStatus %><%- colon %></th>
@@ -195,7 +198,8 @@
                         <input type="button" id="btnSave" value="<%= DOC.lbl.btnSave %>"/>
                     </td>
                 </tr>
-            </table>
-        </form>
-    </script>
+            </table>                             
+            <!-- </form> -->
+        </script>
+    </div>
 </div>
