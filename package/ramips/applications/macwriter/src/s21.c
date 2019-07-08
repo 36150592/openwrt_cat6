@@ -438,6 +438,7 @@ static void get_24g_wifi_signal(char* get_buf, char* set_buf)
 
 	sprintf(cmdline, "iwpriv apcli0 get_site_survey | grep \"%s\" | awk '{print $6}'", ssid);
 	read_memory(cmdline, signal, sizeof(signal));
+	util_strip_blank_of_string_end(signal);
 
 	if(strlen(signal) == 0)
 	{
@@ -468,6 +469,7 @@ static void get_58g_wifi_signal(char* get_buf, char* set_buf)
 
 	sprintf(cmdline, "iwpriv apclii0 get_site_survey | grep \"%s\" | awk '{print $6}'", ssid);
 	read_memory(cmdline, signal, sizeof(signal));
+	util_strip_blank_of_string_end(signal);
 
 	if(strlen(signal) == 0)
 	{
@@ -480,6 +482,28 @@ static void get_58g_wifi_signal(char* get_buf, char* set_buf)
 
 	return;
 }
+
+static void get_4g_rsrp(char* get_buf, char* set_buf)
+{
+	char cmdline[256] = "";
+	char rsrp[16] = "";
+
+	sprintf(cmdline, "cat /tmp/.system_info_dynamic | grep RSRP | awk -F : '{print $2}'");
+	read_memory(cmdline, rsrp, sizeof(rsrp));
+	util_strip_blank_of_string_end(rsrp);
+
+	if(strlen(rsrp) == 0)
+	{
+		strcpy(set_buf, "error:rsrp is empty!\n");
+	}
+	else
+	{
+		sprintf(set_buf,"success:%s\n",rsrp);
+	}
+
+	return;
+}
+
 
 
 int s21_precess(char* receive_buf, char* send_message)
@@ -499,6 +523,8 @@ int s21_precess(char* receive_buf, char* send_message)
 		get_24g_wifi_signal(receive_buf,send_message);
 	else if(strstr(receive_buf,"5.8g_wifi "))
 		get_58g_wifi_signal(receive_buf,send_message);
+	else if(strstr(receive_buf,"4g_rsrp"))
+		get_4g_rsrp(receive_buf,send_message);
 	else
 		return FALSE;
 
