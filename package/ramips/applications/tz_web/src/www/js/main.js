@@ -1080,20 +1080,13 @@ var Page = {
         $('tr:even', $tab).addClass("even");
         $('tr:first', $tab).removeClass("even");
     },
-    createForm:function() {
-        var arrLength = arguments.length;
-        if($("form")[0] != undefined){
-         return ;
-        }
-        if(arrLength > 0){
-         for(var i=0;i<arrLength;i++){
-      
-          var inputs = document.createElement("form");
-          $(inputs).attr('id', arguments[i][0]);
-          $("#"+ arguments[i][1]).appendTo(inputs);
-          $(inputs).appendTo('.'+ arguments[i][2]);
-         }
-        }      
+    createForm:function(arr) {
+        if(!arr) return;
+        if(arr.length <= 0) return;  
+        var inputs = document.createElement("form");
+        $(inputs).attr('id', arr[0]);
+        $(inputs).appendTo('#'+ arr[1]);
+        $("#"+ arr[2]).appendTo(inputs);     
       },
     createTable: function(title, names, values, count, columnNum, css) {
         var sb = new StringBuilder();
