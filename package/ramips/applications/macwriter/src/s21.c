@@ -419,6 +419,68 @@ static void update_config_handle(char* get_buf, char* set_buf)
 }
 
 
+static void get_24g_wifi_signal(char* get_buf, char* set_buf)
+{
+	char ssid[128] = "";
+	char cmdline[256] = "";
+	char signal[16] = "";
+
+	if(strlen(get_buf) < 11)
+	{
+		strcpy(set_buf, "error:2.4g wifi is empty\n");
+		return;
+	}
+
+	strncpy(ssid, get_buf + 10, 127);
+	system("iwpriv apcli0 set SiteSurvey=1");
+
+	sleep(1);
+
+	sprintf(cmdline, "iwpriv apcli0 get_site_survey | grep \"%s\" | awk '{print $6}'", ssid);
+	read_memory(cmdline, signal, sizeof(signal));
+
+	if(strlen(signal) == 0)
+	{
+		strcpy(set_buf, "error:0\n");
+	}
+	else
+	{
+		sprintf(set_buf,"success:%s\n",signal);
+	}
+
+	return;
+}
+
+static void get_58g_wifi_signal(char* get_buf, char* set_buf)
+{
+	char ssid[128] = "";
+	char cmdline[256] = "";
+	char signal[16] = "";
+
+	if(strlen(get_buf) < 11)
+	{
+		strcpy(set_buf, "error:5.8g wifi is empty\n");
+		return;
+	}
+
+	strncpy(ssid, get_buf + 10, 127);
+	system("iwpriv apclii0 set SiteSurvey=1");
+
+	sprintf(cmdline, "iwpriv apclii0 get_site_survey | grep \"%s\" | awk '{print $6}'", ssid);
+	read_memory(cmdline, signal, sizeof(signal));
+
+	if(strlen(signal) == 0)
+	{
+		strcpy(set_buf, "error:no this ssid!\n");
+	}
+	else
+	{
+		sprintf(set_buf,"success:%s\n",signal);
+	}
+
+	return;
+}
+
 
 int s21_precess(char* receive_buf, char* send_message)
 {
@@ -433,6 +495,10 @@ int s21_precess(char* receive_buf, char* send_message)
 		upgrade_system_handle(receive_buf,send_message);
 	else if(strstr(receive_buf,"update_config "))
 		update_config_handle(receive_buf,send_message);
+	else if(strstr(receive_buf,"2.4g_wifi "))
+		get_24g_wifi_signal(receive_buf,send_message);
+	else if(strstr(receive_buf,"5.8g_wifi "))
+		get_58g_wifi_signal(receive_buf,send_message);
 	else
 		return FALSE;
 
