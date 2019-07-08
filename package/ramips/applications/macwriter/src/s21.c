@@ -505,6 +505,16 @@ static void get_4g_rsrp(char* get_buf, char* set_buf)
 }
 
 
+static void restore_factory(char* get_buf, char* set_buf)
+{
+	system("/etc/tozed/tz_restore_factory");
+	system("sync");
+
+	strcpy(set_buf, "success\n");
+	return;
+}
+
+
 
 int s21_precess(char* receive_buf, char* send_message)
 {
@@ -525,6 +535,8 @@ int s21_precess(char* receive_buf, char* send_message)
 		get_58g_wifi_signal(receive_buf,send_message);
 	else if(strstr(receive_buf,"4g_rsrp"))
 		get_4g_rsrp(receive_buf,send_message);
+	else if(strstr(receive_buf,"restore_factory"))
+		restore_factory(receive_buf,send_message);
 	else
 		return FALSE;
 
