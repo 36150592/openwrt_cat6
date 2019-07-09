@@ -62,7 +62,7 @@
 
                         var wan_html = Page.createTable2(DOC.title.wan, names_wan, values_wan, names_wan.length, 1).replace("<td>", "<td>");
                         $('#wan_info').html(wan_html);
-
+                        Page.setStripeTable();
                     }
 
                     if (data_4g != undefined) {
@@ -101,7 +101,7 @@
 
                         var wan_html = Page.createTable2(DOC.title.apn, names_4g, values_4g, names_4g.length, 1).replace("<td>", "<td>");
                         $('#4g_info').html(wan_html);
-
+                        Page.setStripeTable();
                     }
 
                     Page.postJSON({
@@ -148,6 +148,7 @@
 
                                     var wan_html = Page.createTable2(DOC.title.apn1, names_4g1, values_4g1, names_4g1.length, 1).replace("<td>", "<td>");
                                     $('#4g1_info').html(wan_html);
+                                    Page.setStripeTable();
                                 }
                             }
 
@@ -188,7 +189,7 @@
 
                                     var wan_html = Page.createTable2(DOC.title.apn2, names_4g2, values_4g2, names_4g2.length, 1).replace("<td>", "<td>");
                                     $('#4g2_info').html(wan_html);
-
+                                    Page.setStripeTable();    
                                 }
                             }
                         }

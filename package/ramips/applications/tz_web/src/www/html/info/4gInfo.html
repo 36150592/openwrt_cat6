@@ -72,6 +72,7 @@
                     sysInfo_plmn = data_modem.plmn; 
                      var net_html = Page.createTable2(DOC.title.network, names_net, values_net, names_net.length, 1).replace("<td>", "<td>");
                      $('#net_info').html(net_html);
+                     Page.setStripeTable();
                      Page.isNULLToSpace = false;
                      return sysInfo_plmn;
                 }
