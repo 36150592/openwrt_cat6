@@ -1,26 +1,10 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <script type="text/javascript">
-
     $(document).ready(function() {
-        function createContent() {
-            var div = $('<div>', {'class': 'detail'}).text(DOC.title.localUpdate);
-            var table = $('<table>', {'class': 'detail', 'cellspacing': '0'});
-            var th = $('<th>').text(DOC.sys.selectUpdateFile + DOC.colon);
-            var form = $('<form>', {'id': 'form1', 'enctype': 'multipart/form-data', 'method': 'post', 'name': 'fileUploadForm'});
-            var input1 = $('<input>', {'type': 'file', 'id': 'fp', 'name': 'fp', 'style': 'display: none', 'onchange': 'document.fileUploadForm.filepath.value=this.value'});
-            var input2 = $('<input>', {'type': 'textfield', 'id': 'filepath'});
-            var input3 = $('<input>', {'type': 'button', 'id': 'filebutton', 'onclick': 'fp.click()'}).val(DOC.btn.browse);
-            var input4 = $('<input>', {'type': 'button', 'id': 'btnUpload'}).val(DOC.btn.upload);
-            var input5 = $('<input>', {'type': 'button', 'id': 'btnUpdatePartial'}).val(DOC.btn.update);
-            $('#child_container').append($('<script>', {'type': 'text/template', 'id': 'child_template'}).append(div).append(table));
-            table.append($('<tr>').append(th).append($('<td>').append(form.append(input1).append(input2).append(input3).append(input4)))).append($('<tr>').append($('<th>')).append($('<td>').append(input5)));
-            $("tr").removeClass();
-            $('#filebutton').css('margin', '0 4px');
-        };
-        createContent();
-
-        Page.render();
+        var fm1 = ["form1", "child_container", "form1Id"];
+        Page.createForm(fm1);
+        TempUtil.render('child_template', 'form1',DOC);
         Page.setStripeTable();
 
         var theUpdateFileName = "";
@@ -30,7 +14,7 @@
             SysUtil.upload($('#form1'), $('#fp'), "system", function(fileName) {
                 theUpdateFileName = fileName;
                 closeBox();
-            }); 
+            });
         });
 
         function update() {
@@ -41,44 +25,84 @@
                     return datas != null || isOk;
                 },
                 function() {
-				     if(datas == -1 || datas == -2)
-					 {
-					    AlertUtil.alertMsg(PROMPT.status.updateFalse);
-						location.reload();
-					  }else {
-					   AlertUtil.alertMsg(PROMPT.status.updateSuccess);
-						location.href = Page.getUrl(Url.LOGIN);
-					 
-					 }
-                        
+                    if(datas == -1 || datas == -2)
+                    {
+                        AlertUtil.alertMsg(PROMPT.status.updateFalse);
+                        location.reload();
+                    }else {
+                        AlertUtil.alertMsg(PROMPT.status.updateSuccess);
+                        reboot();
+                        location.href = Page.getUrl(Url.LOGIN);
+
+                    }
+
                 }
             );
-           
+
+        }
+		
+		function reboot(ip) {
+            // 发送重启命令
+            Page.postJSON({
+                json: {
+                    cmd: RequestCmd.SYS_REBOOT,
+                    method: JSONMethod.POST
+                },
+                success: function() {
+                    var isOk = false;
+                    var timeoutCtl = setTimeout(function() {
+                        isOk = true;
+                    }, 1000 * 90);
+                    SysUtil.showProgress(ProgressTime.REBOOT, PROMPT.status.rebooting,
+                        function() {
+                            return isOk;
+                        },
+                        function() {
+                            clearTimeout(timeoutCtl);
+                            if(ip){
+                                window.location.href = window.location.href.replace(window.location.host, ip);
+                            }else {
+                                location.reload();
+                            }
+
+                        }
+                    );
+                },
+                fail: function() {
+
+                }
+            });
         }
 
+
         $('#btnUpdatePartial').bind('click', function() {
-            
+
             if (theUpdateFileName == "") {
-                    AlertUtil.alertMsg(CHECK.required.uploadFile);
-                    return false;
+                AlertUtil.alertMsg(CHECK.required.uploadFile);
+                return false;
             }
-            
+
 
             Page.postJSON({
                 json: {
-                    cmd: RequestCmd.UPDATE_PARTIAL, 
+                    cmd: RequestCmd.UPDATE_PARTIAL,
                     method: JSONMethod.POST,
                     fileName: theUpdateFileName
                 },
                 success: function(data) {
-					datas = data.data;
+                    datas = data.data;
                 },
                 fail: function(data) {
-					datas = data.data;
+                    datas = data.data;
                 }
             });
 
             update();
+        });
+
+        $('#form1').attr({
+            "enctype": "multipart/form-data",
+            "method": "post"
         });
 
     });
@@ -86,24 +110,28 @@
 </script>
 
 <div class="detail_box" id="child_container">
-    <!-- <script type="text/template" id="child_template">
-        <div class="detail"><%- title.localUpdate %></div>
-        <table class="detail" cellspacing="0">
-            <tr>
-                <th><%- sys.selectUpdateFile %><%- colon %></th>
-                <td>
-                    <form id="form1" enctype="multipart/form-data" method="post">
-                    	<input type="file" id="fp" name="fp" style="display:none;" onchange=filepath.value=this.value>
-						<input type="textfield" id="filepath">
-						<input type="button" id="filebutton" value="<%- btn.browse %>" onclick="fp.click()">
-                        <input type="button" id="btnUpload" value="<%- btn.upload %>"/>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <th></th>
-                <td><input type="button" id="btnUpdatePartial" value="<%- btn.update %>"/></td>
-            </tr>
-        </table>
-    </script> -->
+    <div id="form1Id">
+        <script type="text/template" id="child_template">
+            <div class="detail"><%- title.localUpdate %></div>
+            <table class="detail" cellspacing="0">
+                <tr>
+                    <th><%- sys.selectUpdateFile %><%- colon %></th>
+                    <td>
+                        <!-- <form id="form1" enctype="multipart/form-data" method="post"> -->
+                            <input type="file" id="fp" name="fp" style="display:none;" onchange=filepath.value=this.value>
+                            <input type="textfield" id="filepath">
+                            <input type="button" id="filebutton" value="<%- btn.browse %>" onclick="fp.click()">
+                            <input type="button" id="btnUpload" value="<%- btn.upload %>"/>
+                        <!-- </form> -->                  
+                    </td>
+                </tr>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td>
+                        <input type="button" id="btnUpdatePartial" value="<%- btn.update %>" />
+                    </td>
+                </tr>
+            </table>
+        </script>
+    </div>
 </div>
