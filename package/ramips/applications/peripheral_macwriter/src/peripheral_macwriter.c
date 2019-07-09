@@ -375,7 +375,7 @@ int main(int argc,char **argv)
 
 	char receive_cmd[32] = "";
 	read_memory("cat /version | grep type | awk -F '=' '{print $2}'", receive_cmd, sizeof(receive_cmd));
-	if(strstr(receive_cmd,"s21"))
+	if(strstr(receive_cmd,"s21") || strstr(receive_cmd,"S21"))
 	{
 		device_type = DEVICE_S21;
 		print("this is s21");
