@@ -18,8 +18,10 @@
                    $("input[name='apnEnable']").val(apnData.enable);
                    if(apnData.enable == "1"){
                         $("#apnEnable").attr("checked",true);
+                        $('.apn_is_show').show();
                    }else{
                         $("#apnDisable").attr("checked",true);
+                        $('.apn_is_show').hide();
                    }
                    $("#selectType").val(apnData.ip_stack);
                    if(apnData.nat == "enable"){
@@ -42,10 +44,14 @@
                    }else{
                         $("#apn_name").val(apnData.apn_name);
                    }
-                   if($("#selectAuthentication").val() == "0"){
-                      $(".hideNone").hide(0);
+                   if($("#selectAuthentication").val() !== "0"){
+                        if(apnData.enable == "1") {
+                            $(".hideNone").show();
+                        }else {
+                            $(".hideNone").hide();
+                        }   
                    }else{
-                     $(".hideNone").show(0);
+                        $(".hideNone").hide();             
                    }
                    ApnList = datas.data;
                 }
@@ -115,6 +121,20 @@
 
       $('#form').addClass("setting_apn_form");
 
+      $(':radio[name="apnEnable"]').change(function() {
+          console.log($(':radio[name="apnEnable"]').attr('checked'))
+        if( $(':radio[name="apnEnable"]').attr('checked') == undefined) {
+            $('.apn_is_show').hide();
+        }else {
+            if($("#selectAuthentication").val() !== "0") {
+                $('.apn_is_show').show();
+            }else {
+                $('.apn_is_show').show();
+                $(".hideNone").hide();
+            }
+        }   
+      });
+
     });
 </script>
 
@@ -128,11 +148,11 @@
                         <label><%-DOC.apn.swich %><%- colon %></label> 
                     </th>
                     <td>
-                        <input type="radio" name="apnEnable" value="1" id="apnEnable"><span><%-DOC.apn.open %></span> &nbsp;&nbsp;&nbsp;&nbsp;
-                        <input type="radio" name="apnEnable" value="0" id="apnDisable"><span><%-DOC.apn.close %></span>
+                        <input type="radio" name="apnEnable" id="apnEnable"><span><%-DOC.apn.open %></span> &nbsp;&nbsp;&nbsp;&nbsp;
+                        <input type="radio" name="apnEnable" id="apnDisable"><span><%-DOC.apn.close %></span>
                     </td>
                 </tr>
-                <tr>
+                <tr class="apn_is_show" style="display: none">
                     <th>
                         <label><%-DOC.apn.nat %><%- colon %></label> 
                     </th>
@@ -142,7 +162,7 @@
                         <input type="radio" name="apnNat" id="apnNat2" value="disable"><span><%-DOC.status.disable %></span> 
                     </td>
                 </tr>
-                    <tr>
+                <tr class="apn_is_show" style="display: none">
                     <th>
                         <label><%-DOC.apn.natLookBack %><%- colon %></label> 
                     </th>
@@ -152,19 +172,19 @@
                         <input type="radio" name="apnNatLookBack" id="apnNatLookBack2" value="disable"><span><%-DOC.status.disable %></span> 
                     </td>
                 </tr>
-                    <tr>
+                <tr class="apn_is_show" style="display: none">
                     <th><%-TAB.basic.apn %><%- colon %></th>
                     <td>
                         <input type="text" name="apnName" id="apn_name">
                     </td>
                 </tr>
-                <tr>
+                <tr class="apn_is_show" style="display: none">
                     <th><%-DOC.apn.mtu %><%- colon %></th>
                     <td>
                         <input type="text" name="apnMTU" id="apn_mtu">
                     </td>
                 </tr>
-                <tr id="apn_type">
+                <tr id="apn_type" class="apn_is_show" style="display: none">
                     <th>
                         <%-DOC.apn.type %><%- colon %>
                     </th>
@@ -176,7 +196,7 @@
                     </select>
                     </td>
                 </tr>
-                <tr id="apn_authentication">
+                <tr id="apn_authentication" class="apn_is_show" style="display: none">
                     <th><%-DOC.apn.authentication %><%- colon %></th>
                     <td>
                         <select style="width:150px;" id="selectAuthentication">
@@ -187,13 +207,13 @@
                         </select>
                     </td>
                 </tr>     
-                <tr  class="hideNone" style="display:none;">
+                <tr  class="hideNone apn_is_show" style="display:none;">
                     <th><%-DOC.apn.user %><%- colon %></th>
                     <td>
                         <input type="text" name="apnUserName" id="apn_user_name">
                     </td>
                 </tr>
-                <tr  class="hideNone"  style="display:none;">
+                <tr  class="hideNone apn_is_show"  style="display:none;">
                     <th><%-DOC.apn.password %><%- colon %></th>
                     <td>
                         <input type="text" name="apnUserPassword" id="apn_user_password">
