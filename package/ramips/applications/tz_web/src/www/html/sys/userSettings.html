@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm1 = ["form1", "child_container", "form1Id"];
+        Page.createForm(fm1);
+        TempUtil.render('child_template', 'form1',DOC);
         Page.setStripeTable();  
 
         var rules = {
@@ -56,15 +58,16 @@
 </script>
 
 <div class="tab_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <div class = "user_settings_tip"><%- sys.userSettingsTip %></div>
-        <form id="form1" enctype="multipart/form-data" method="post">
-            <table class="detail" cellspacing="0">
-                <tr>
+    <div id="form1Id">
+        <script type="text/template" id="child_template">
+            <div class = "user_settings_tip"><%- sys.userSettingsTip %></div>
+            <!-- <form id="form1"> -->
+                <table class="detail" cellspacing="0">
+                    <tr>
                         <th><%- sys.newUsername %><%- colon %></th>
                         <td><input type="text" id="newUsername" name="newUsername" class="normal" maxlength="20" /></td>
                     </tr>
-                <tr>
+                    <tr>
                         <th><%- sys.oldPasswd %><%- colon %></th>
                         <td><input type="password" id="oldPasswd" name="oldPasswd" class="normal" maxlength="20" /></td>
                     </tr>
@@ -80,9 +83,10 @@
                         <th>&nbsp;</th>
                         <td><input type="button" id="btnSave" value="<%- btn.save %>"/></td>
                     </tr>
-            </table>
-        </form>
-    </script>
+                </table>
+            <!-- </form> -->
+        </script>
+    </div>
 </div>
 
 

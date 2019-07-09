@@ -4,7 +4,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm1 = ["form1", "child_container", "form1Id"];
+        Page.createForm(fm1);
+        TempUtil.render('child_template', 'form1',DOC);
         Page.setStripeTable();
 
         Page.postJSON({
@@ -131,41 +133,43 @@
 </script>
 
 <div class="detail_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <form id="form1">
-            <table class="detail" cellspacing="0">
-                <tr>
-                    <th><%- sys.daylightSavingTime %><%- colon %></th>
-                    <td><label id="lblTime"></label></td>
-                </tr>
-                <tr>
-                    <th><%- sys.daylightSavings %><%- colon %></th>
-                    <td>
-                        <input type="checkbox" id="daylightSavings" name="daylightSavings" class="inputs_lan" /><%- sys.ntpEnabled %>
-                    </td>
-                </tr>
-                <tr class="daylightSavingDate" style="display:none">
-                    <th><%- sys.daylightSavingStartDate %><%- colon %></th>
-                    <td><input type="text" id="daylightSavingStartDate" name="daylightSavingStartDate" class="middle" maxlength="30" /></td>
-                </tr>
-                <tr class="daylightSavingDate" style="display:none">
-                    <th>&nbsp;</th>
-                    <td><strong><%- sys.daylightSavingStartDateTips %></strong></td>
-                </tr>
-                <tr class="daylightSavingDate" style="display:none">
-                    <th><%- sys.daylightSavingEndDate %><%- colon %></th>
-                    <td><input type="text" id="daylightSavingEndDate" name="daylightSavingEndDate" class="middle" maxlength="30" /></td>
-                </tr>
-                <tr class="daylightSavingDate" style="display:none">
-                    <th>&nbsp;</th>
-                    <td><strong><%- sys.daylightSavingEndDateTips %></strong></td>
-                </tr>
-                <tr>
-                    <th>&nbsp;</th>
-                    <td><input type="button" id="btnSave" value="<%- btn.save %>"/></td>
-                </tr>
-            </table>
-        </form>
-    </script>
+    <div id="form1Id">
+        <script type="text/template" id="child_template">
+            <!-- <form id="form1"> -->
+                <table class="detail" cellspacing="0">
+                    <tr>
+                        <th><%- sys.daylightSavingTime %><%- colon %></th>
+                        <td><label id="lblTime"></label></td>
+                    </tr>
+                    <tr>
+                        <th><%- sys.daylightSavings %><%- colon %></th>
+                        <td>
+                            <input type="checkbox" id="daylightSavings" name="daylightSavings" class="inputs_lan" /><%- sys.ntpEnabled %>
+                        </td>
+                    </tr>
+                    <tr class="daylightSavingDate" style="display:none">
+                        <th><%- sys.daylightSavingStartDate %><%- colon %></th>
+                        <td><input type="text" id="daylightSavingStartDate" name="daylightSavingStartDate" class="middle" maxlength="30" /></td>
+                    </tr>
+                    <tr class="daylightSavingDate" style="display:none">
+                        <th>&nbsp;</th>
+                        <td><strong><%- sys.daylightSavingStartDateTips %></strong></td>
+                    </tr>
+                    <tr class="daylightSavingDate" style="display:none">
+                        <th><%- sys.daylightSavingEndDate %><%- colon %></th>
+                        <td><input type="text" id="daylightSavingEndDate" name="daylightSavingEndDate" class="middle" maxlength="30" /></td>
+                    </tr>
+                    <tr class="daylightSavingDate" style="display:none">
+                        <th>&nbsp;</th>
+                        <td><strong><%- sys.daylightSavingEndDateTips %></strong></td>
+                    </tr>
+                    <tr>
+                        <th>&nbsp;</th>
+                        <td><input type="button" id="btnSave" value="<%- btn.save %>"/></td>
+                    </tr>
+                </table>
+            <!-- </form> -->
+        </script>
+    </div>
 </div>
 

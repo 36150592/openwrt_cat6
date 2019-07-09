@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm1 = ["form1", "child_container", "form1Id"];
+        Page.createForm(fm1);
+        TempUtil.render('child_template', 'form1',DOC);
         Page.setStripeTable();
 
         function getDateTime() {
@@ -150,107 +152,109 @@
 </script>
 
 <div class="detail_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <form id="form1">
-            <table class="detail" cellspacing="0">
-				<tr>
-					<th><%- sys.systemTime %><%- colon %></th>
-					<td><label id="lblTime"></label></td>
-                </tr>
-                <tr>
-                    <th><%- sys.ntp %><%- colon %></th>
-                    <td>
-                        <input type="checkbox" id="ntpOpen" name="ntpOpen" value="1" checked="checked" class="inputs_lan" /><%- sys.ntpEnabled %>
-                    </td>
-                </tr>
-                <tr class="ntptd">
-                    <th><%- sys.timezone %><%- colon %></th>
-                    <td>
-
- 
-					 <select id="timezone" name="timezone">
-                        <option value="12"><%- timezone.item %></option>
-                        <option value="11.5"><%- timezone.halfitem1 %></option>
-                        <option value="11"><%- timezone.item1 %></option>
-                        <option value="10.5"><%- timezone.halfitem2 %></option>
-                        <option value="10"><%- timezone.item2 %></option>
-                        <option value="9.5"><%- timezone.halfitem3 %></option>
-                        <option value="9"><%- timezone.item3 %></option>
-                        <option value="8.5"><%- timezone.halfitem4 %></option>
-                        <option value="8"><%- timezone.item4 %></option>
-                        <option value="7.5"><%- timezone.halfitem5 %></option>
-                        <option value="7"><%- timezone.item5 %></option>
-                        <option value="6.5"><%- timezone.halfitem6 %></option>
-                        <option value="6"><%- timezone.item6 %></option>
-                        <option value="5.5"><%- timezone.halfitem7 %></option>
-                        <option value="5"><%- timezone.item7 %></option>
-                        <option value="4.5"><%- timezone.halfitem8 %></option>
-                        <option value="4"><%- timezone.item8 %></option>
-                        <option value="3.5"><%- timezone.halfitem9 %></option>
-                        <option value="3"><%- timezone.item9 %></option>
-                        <option value="2.5"><%- timezone.halfitem10 %></option>
-                        <option value="2"><%- timezone.item10 %></option>
-                        <option value="1.5"><%- timezone.halfitem11 %></option>
-                        <option value="1"><%- timezone.item11 %></option>
-                        <option value="0.5"><%- timezone.halfitem12 %></option>
-                        <option value="0"><%- timezone.item12 %></option>
-
-                        <option value="-0.5"><%- timezone.halfitem13 %></option>
-                        <option value="-1"><%- timezone.item13 %></option>
-                        <option value="-1.5"><%- timezone.halfitem14 %></option>
-                        <option value="-2"><%- timezone.item14 %></option>
-                        <option value="-2.5"><%- timezone.halfitem15 %></option>
-                        <option value="-3"><%- timezone.item15 %></option>
-                        <option value="-3.5"><%- timezone.halfitem16 %></option>
-                        <option value="-4"><%- timezone.item16 %></option>
-                        <option value="-4.5"><%- timezone.halfitem17 %></option>
-                        <option value="-5"><%- timezone.item17 %></option>
-                        <option value="-5.5"><%- timezone.halfitem18 %></option>
-                        <option value="-6"><%- timezone.item18 %></option>
-                        <option value="-6.5"><%- timezone.halfitem19 %></option>
-                        <option value="-7"><%- timezone.item19 %></option>
-                        <option value="-7.5"><%- timezone.halfitem20 %></option>
-                        <option value="-8"><%- timezone.item20 %></option>
-                        <option value="-8.5"><%- timezone.halfitem21 %></option>
-                        <option value="-9"><%- timezone.item21 %></option>
-                        <option value="-9.5"><%- timezone.halfitem22 %></option>
-                        <option value="-10"><%- timezone.item22 %></option>
-                        <option value="-10.5"><%- timezone.halfitem23 %></option>
-                        <option value="-11"><%- timezone.item23 %></option>
-                        <option value="-11.5"><%- timezone.halfitem24 %></option>
-                        <option value="-12"><%- timezone.item24 %></option>
-                    </select>
-					</td>
-                </tr>
-                <tr class="ntptd">
-                    <th><%- sys.ntpServer %>1<%- colon %></th>
-                    <td><input type="text" id="timeServer" name="timeServer" class="large" maxlength="100" /></td>
-                </tr>
-                <tr class="ntptd">
-                    <th><%- sys.ntpServer %>2<%- colon %></th>
-                    <td><input type="text" id="timeServer2" name="timeServer2" class="large" maxlength="100" /></td>
-                </tr>
-                <tr class="ntptd">
-                    <th><%- sys.ntpServer %>3<%- colon %></th>
-                    <td><input type="text" id="timeServer3" name="timeServer3" class="large" maxlength="100" /></td>
-                </tr>
-                <tr class="ntptd">
-                    <th><%- sys.ntpServer %>4<%- colon %></th>
-                    <td><input type="text" id="timeServer4" name="timeServer4" class="large" maxlength="100" /></td>
-                </tr>
-                <tr class="datatd" style="display:none">
-                    <th><%- sys.clientTime %><%- colon %></th>
-                    <td>
-                        <input type="text" id="datetime" name="datetime" class="normal" maxlength="20" />&nbsp;&nbsp;
-                        <input type="button" id="autoTime" value="<%- btn.getClientTime %>"/>
-                    </td>
-                </tr>
-                <tr>
-                    <th>&nbsp;</th>
-                    <td><input type="button" id="btnSave" value="<%- btn.save %>"/></td>
-                </tr>
-            </table>
-        </form>
-    </script>
+    <div id="form1Id">
+        <script type="text/template" id="child_template">
+            <!-- <form id="form1"> -->
+                <table class="detail" cellspacing="0">
+                    <tr>
+                        <th><%- sys.systemTime %><%- colon %></th>
+                        <td><label id="lblTime"></label></td>
+                    </tr>
+                    <tr>
+                        <th><%- sys.ntp %><%- colon %></th>
+                        <td>
+                            <input type="checkbox" id="ntpOpen" name="ntpOpen" value="1" checked="checked" class="inputs_lan" /><%- sys.ntpEnabled %>
+                        </td>
+                    </tr>
+                    <tr class="ntptd">
+                        <th><%- sys.timezone %><%- colon %></th>
+                        <td>
+    
+        
+                            <select id="timezone" name="timezone">
+                            <option value="12"><%- timezone.item %></option>
+                            <option value="11.5"><%- timezone.halfitem1 %></option>
+                            <option value="11"><%- timezone.item1 %></option>
+                            <option value="10.5"><%- timezone.halfitem2 %></option>
+                            <option value="10"><%- timezone.item2 %></option>
+                            <option value="9.5"><%- timezone.halfitem3 %></option>
+                            <option value="9"><%- timezone.item3 %></option>
+                            <option value="8.5"><%- timezone.halfitem4 %></option>
+                            <option value="8"><%- timezone.item4 %></option>
+                            <option value="7.5"><%- timezone.halfitem5 %></option>
+                            <option value="7"><%- timezone.item5 %></option>
+                            <option value="6.5"><%- timezone.halfitem6 %></option>
+                            <option value="6"><%- timezone.item6 %></option>
+                            <option value="5.5"><%- timezone.halfitem7 %></option>
+                            <option value="5"><%- timezone.item7 %></option>
+                            <option value="4.5"><%- timezone.halfitem8 %></option>
+                            <option value="4"><%- timezone.item8 %></option>
+                            <option value="3.5"><%- timezone.halfitem9 %></option>
+                            <option value="3"><%- timezone.item9 %></option>
+                            <option value="2.5"><%- timezone.halfitem10 %></option>
+                            <option value="2"><%- timezone.item10 %></option>
+                            <option value="1.5"><%- timezone.halfitem11 %></option>
+                            <option value="1"><%- timezone.item11 %></option>
+                            <option value="0.5"><%- timezone.halfitem12 %></option>
+                            <option value="0"><%- timezone.item12 %></option>
+    
+                            <option value="-0.5"><%- timezone.halfitem13 %></option>
+                            <option value="-1"><%- timezone.item13 %></option>
+                            <option value="-1.5"><%- timezone.halfitem14 %></option>
+                            <option value="-2"><%- timezone.item14 %></option>
+                            <option value="-2.5"><%- timezone.halfitem15 %></option>
+                            <option value="-3"><%- timezone.item15 %></option>
+                            <option value="-3.5"><%- timezone.halfitem16 %></option>
+                            <option value="-4"><%- timezone.item16 %></option>
+                            <option value="-4.5"><%- timezone.halfitem17 %></option>
+                            <option value="-5"><%- timezone.item17 %></option>
+                            <option value="-5.5"><%- timezone.halfitem18 %></option>
+                            <option value="-6"><%- timezone.item18 %></option>
+                            <option value="-6.5"><%- timezone.halfitem19 %></option>
+                            <option value="-7"><%- timezone.item19 %></option>
+                            <option value="-7.5"><%- timezone.halfitem20 %></option>
+                            <option value="-8"><%- timezone.item20 %></option>
+                            <option value="-8.5"><%- timezone.halfitem21 %></option>
+                            <option value="-9"><%- timezone.item21 %></option>
+                            <option value="-9.5"><%- timezone.halfitem22 %></option>
+                            <option value="-10"><%- timezone.item22 %></option>
+                            <option value="-10.5"><%- timezone.halfitem23 %></option>
+                            <option value="-11"><%- timezone.item23 %></option>
+                            <option value="-11.5"><%- timezone.halfitem24 %></option>
+                            <option value="-12"><%- timezone.item24 %></option>
+                        </select>
+                        </td>
+                    </tr>
+                    <tr class="ntptd">
+                        <th><%- sys.ntpServer %>1<%- colon %></th>
+                        <td><input type="text" id="timeServer" name="timeServer" class="large" maxlength="100" /></td>
+                    </tr>
+                    <tr class="ntptd">
+                        <th><%- sys.ntpServer %>2<%- colon %></th>
+                        <td><input type="text" id="timeServer2" name="timeServer2" class="large" maxlength="100" /></td>
+                    </tr>
+                    <tr class="ntptd">
+                        <th><%- sys.ntpServer %>3<%- colon %></th>
+                        <td><input type="text" id="timeServer3" name="timeServer3" class="large" maxlength="100" /></td>
+                    </tr>
+                    <tr class="ntptd">
+                        <th><%- sys.ntpServer %>4<%- colon %></th>
+                        <td><input type="text" id="timeServer4" name="timeServer4" class="large" maxlength="100" /></td>
+                    </tr>
+                    <tr class="datatd" style="display:none">
+                        <th><%- sys.clientTime %><%- colon %></th>
+                        <td>
+                            <input type="text" id="datetime" name="datetime" class="normal" maxlength="20" />&nbsp;&nbsp;
+                            <input type="button" id="autoTime" value="<%- btn.getClientTime %>"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>&nbsp;</th>
+                        <td><input type="button" id="btnSave" value="<%- btn.save %>"/></td>
+                    </tr>
+                </table>
+            <!-- </form> -->
+        </script>
+    </div>
 </div>
 

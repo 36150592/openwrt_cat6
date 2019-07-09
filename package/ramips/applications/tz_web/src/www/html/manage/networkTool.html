@@ -24,6 +24,16 @@ function readSize(){
 }
 
     $(document).ready(function(){
+        var fm1 = ["form1", "form1Parent", "form1Id"];
+        var fm2 = ["form2", "form2Parent", "form2Id"];
+        var fm3 = ["form3", "form3Parent", "form3Id"];
+        var fm4 = ["form4", "form4Parent", "form4Id"];
+        var fm5 = ["form5", "form5Parent", "form5Id"];
+        Page.createForm(fm1);
+        Page.createForm(fm2);
+        Page.createForm(fm3);
+        Page.createForm(fm4);
+        Page.createForm(fm5);
         TempUtil.render('tabsitems-template', 'tabsitems', networktoolhtml.tab_menu);
         TempUtil.render('networktoolform1-template', 'form1', networktoolhtml.form1);
         TempUtil.render('networktoolform2-template', 'form2', networktoolhtml.form2);
@@ -290,158 +300,164 @@ function readSize(){
     <div class="tab_menu_bottom"></div>
     <div>
         <div class="tab_boxes">
-            <div class="main_box">
-                <form id="form1">
-                    <script type="text/template" id="networktoolform1-template">
-                        <table class="detail" cellspacing="0"><tr>
-                            <th><%- th1 %>&nbsp;</th>
-                            <td><input type="text" id="pingNum" name="pingNum" class="normal inputs_lan"  />
-                            <input type="checkbox" name="pingLoop" value="1"><%- th1radio%></td>
-                            </tr>
-
-                            <tr class="odd">
-                                <th><%- th2 %>&nbsp;</th>
-                                <td><input type="text" id="pingUrl" name="pingUrl" class="normal inputs_lan"/></td></tr>
-
-                            
-                            <tr id="trSaveLan" class="even" >
-                                <th>&nbsp;</th>
-                                <td>
-                                    <input type="button" id="btnPingStart" value="<%- btnStart %>"/>
-                                    <input type="button" id="btnPingStop" value="<%- btnStop %>"/>
-                                </td>
-                            </tr>
-
-                            <tr class="odd">
-                                <th>&nbsp;</th>
-                                <td>
-                                    <textarea id="PingTxtPingResult" cols="80" rows="20"></textarea>
-                                    <br>
-                                    <input type="button" onclick="javascript:$('#PingTxtPingResult').text('')" value="<%- btnClear %>">
-                                </td>
-                            </tr>
-                        </table>
-                    </script>
-                </form>
-
-            </div>
-
-            <div class="main_box">
-                <form id="form2">
-                    <script type="text/template" id="networktoolform2-template">
-                        <table class="detail" cellspacing="0">
-                            <tr><td colspan="2"><span class="cmt"><%- tipLabel %></span></td></tr>
-                            <tr>
-                            <th><%- th1 %>&nbsp;</th>
-                            <td><input type="text" id="catchPackageIfname" name="catchPackageIfname" class="normal inputs_lan"  />
-                                <span class="cmt"><%- th1tip %></span>
-                            </td>
-                            </tr>
-
-                            <tr id="trSaveLan" class="even" >
-                                <th>&nbsp;</th>
-                                <td>
-                                    <input type="button" id="btnCatchPkgStart" value="<%- btnStart %>"/>
-                                    <input type="button" id="btnCatchPkgStop" value="<%- btnStop %>"/>
-                                </td>
-                            </tr>
-
-                            <tr class="odd">
-                                <th><%- th2 %>&nbsp;</th>
-                                <td>
-                                    <label id="catchPkgLable"></label>
-                                    <a id="catchPkglink" href="html/manage/network_tool_log.tcpdump" download><%- downfile %></a>
-                                </td>
-                            </tr>
-                        </table>
-                    </script>
-                </form>
-            </div>
-
-            <div class="main_box">
-                <form id="form3">
-                    <script type="text/template" id="networktoolform3-template">
-                        <table class="detail" cellspacing="0">
-                            <tr class="odd">
+            <div class="main_box" id="form1Parent">
+                <div id="form1Id">
+                     <!-- <form id="form1"> -->
+                        <script type="text/template" id="networktoolform1-template">
+                            <table class="detail" cellspacing="0"><tr>
                                 <th><%- th1 %>&nbsp;</th>
-                                <td><input type="text" id="traceUrl" name="traceUrl" class="normal inputs_lan"/></td>
-                            </tr>
-                             <tr class="odd">
-                                <th><%- th2 %>&nbsp;</th>
-                                <td><input type="text" id="tracePort" name="tracePort" class="normal inputs_lan"/></td>
-                            </tr>
-                            
-                            <tr id="trSaveLan" class="even" >
-                                <th>&nbsp;</th>
-                                <td>
-                                    <input type="button" id="btnTraceStart" value="<%- btnStart %>"/>
-                                    <input type="button" id="btnTraceStop" value="<%- btnStop %>"/>
-                                </td>
-                            </tr>
-
-                            <tr class="odd">
-                                <th>&nbsp;</th>
-                                <td>
-                                    <textarea id="traceTxtResult" cols="80" rows="20"></textarea>
-                                    <br>
-                                </td>
-                            </tr>
-                        </table>
-                    </script>
-                </form>
-
+                                <td><input type="text" id="pingNum" name="pingNum" class="normal inputs_lan"  />
+                                <input type="checkbox" name="pingLoop" value="1"><%- th1radio%></td>
+                                </tr>
+    
+                                <tr class="odd">
+                                    <th><%- th2 %>&nbsp;</th>
+                                    <td><input type="text" id="pingUrl" name="pingUrl" class="normal inputs_lan"/></td></tr>
+    
+                                
+                                <tr id="trSaveLan" class="even" >
+                                    <th>&nbsp;</th>
+                                    <td>
+                                        <input type="button" id="btnPingStart" value="<%- btnStart %>"/>
+                                        <input type="button" id="btnPingStop" value="<%- btnStop %>"/>
+                                    </td>
+                                </tr>
+    
+                                <tr class="odd">
+                                    <th>&nbsp;</th>
+                                    <td>
+                                        <textarea id="PingTxtPingResult" cols="80" rows="20"></textarea>
+                                        <br>
+                                        <input type="button" onclick="javascript:$('#PingTxtPingResult').text('')" value="<%- btnClear %>">
+                                    </td>
+                                </tr>
+                            </table>
+                        </script>
+                    <!-- </form> -->
+                </div>          
             </div>
 
-
-            <div class="main_box">
-                <form id="form4">
-                    <script type="text/template" id="networktoolform4-template">
-                        <table class="detail" cellspacing="0">
-                            
-                            <tr id="trSaveLan" class="even" >
-                                <th>&nbsp;</th>
-                                <td>
-                                    <input type="button" id="btnLogStart" value="<%- btnStart %>"/>
-                                    <input type="button" id="btnLogStop" value="<%- btnStop %>"/>
-                                </td>
-                            </tr>
-
-                             <tr class="odd">
+            <div class="main_box" id="form2Parent">
+                <div id="form2Id">
+                      <!-- <form id="form2"> -->
+                        <script type="text/template" id="networktoolform2-template">
+                            <table class="detail" cellspacing="0">
+                                <tr><td colspan="2"><span class="cmt"><%- tipLabel %></span></td></tr>
+                                <tr>
                                 <th><%- th1 %>&nbsp;</th>
-                                <td>
-                                    <label id="logLable"></label>
-                                    <a id="logLink" href="html/manage/network_tool_log.tar" download><%- downfile %></a>
+                                <td><input type="text" id="catchPackageIfname" name="catchPackageIfname" class="normal inputs_lan"  />
+                                    <span class="cmt"><%- th1tip %></span>
                                 </td>
-                            </tr>
-                        </table>
-                    </script>
-                </form>
-
+                                </tr>
+    
+                                <tr id="trSaveLan" class="even" >
+                                    <th>&nbsp;</th>
+                                    <td>
+                                        <input type="button" id="btnCatchPkgStart" value="<%- btnStart %>"/>
+                                        <input type="button" id="btnCatchPkgStop" value="<%- btnStop %>"/>
+                                    </td>
+                                </tr>
+    
+                                <tr class="odd">
+                                    <th><%- th2 %>&nbsp;</th>
+                                    <td>
+                                        <label id="catchPkgLable"></label>
+                                        <a id="catchPkglink" href="html/manage/network_tool_log.tcpdump" download><%- downfile %></a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </script>
+                    <!-- </form> -->
+                </div>            
             </div>
 
-            <div class="main_box">
-                <form id="form5">
-                    <script type="text/template" id="networktoolform5-template">
-                        <table class="detail" cellspacing="0">
+            <div class="main_box" id="form3Parent">
+                <div id="form3Id">
+                     <!-- <form id="form3"> -->
+                        <script type="text/template" id="networktoolform3-template">
+                            <table class="detail" cellspacing="0">
+                                <tr class="odd">
+                                    <th><%- th1 %>&nbsp;</th>
+                                    <td><input type="text" id="traceUrl" name="traceUrl" class="normal inputs_lan"/></td>
+                                </tr>
+                                    <tr class="odd">
+                                    <th><%- th2 %>&nbsp;</th>
+                                    <td><input type="text" id="tracePort" name="tracePort" class="normal inputs_lan"/></td>
+                                </tr>
+                                
+                                <tr id="trSaveLan" class="even" >
+                                    <th>&nbsp;</th>
+                                    <td>
+                                        <input type="button" id="btnTraceStart" value="<%- btnStart %>"/>
+                                        <input type="button" id="btnTraceStop" value="<%- btnStop %>"/>
+                                    </td>
+                                </tr>
+    
+                                <tr class="odd">
+                                    <th>&nbsp;</th>
+                                    <td>
+                                        <textarea id="traceTxtResult" cols="80" rows="20"></textarea>
+                                        <br>
+                                    </td>
+                                </tr>
+                            </table>
+                        </script>
+                    <!-- </form> -->        
+                </div>
+            </div>
 
-                            <tr>
-                                <th><%- qxdmMessage %></th>
-                                <td>
-                                    <input type="checkbox" id="qxdmSwitch" name="qxdmSwitch" /><%- status %>
-                                </td>
-                            </tr>
-                            
-                            <tr class="even" >
-                                <th>&nbsp;</th>
-                                <td>
-                                    <input type="button" id="btnSetting" value="<%- btnSetting %>"/>
-                                </td>
-                            </tr>
 
-                        </table>
-                    </script>
-                </form>
+            <div class="main_box" id="form4Parent">
+                <div id="form4Id">
+                    <!-- <form id="form4"> -->
+                        <script type="text/template" id="networktoolform4-template">
+                            <table class="detail" cellspacing="0">
+                                
+                                <tr id="trSaveLan" class="even" >
+                                    <th>&nbsp;</th>
+                                    <td>
+                                        <input type="button" id="btnLogStart" value="<%- btnStart %>"/>
+                                        <input type="button" id="btnLogStop" value="<%- btnStop %>"/>
+                                    </td>
+                                </tr>
+    
+                                    <tr class="odd">
+                                    <th><%- th1 %>&nbsp;</th>
+                                    <td>
+                                        <label id="logLable"></label>
+                                        <a id="logLink" href="html/manage/network_tool_log.tar" download><%- downfile %></a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </script>
+                    <!-- </form> -->
+                </div>           
+            </div>
 
+            <div class="main_box" id="form5Parent">
+                <div id="form5Id">
+                    <!-- <form id="form5"> -->
+                        <script type="text/template" id="networktoolform5-template">
+                            <table class="detail" cellspacing="0">
+    
+                                <tr>
+                                    <th><%- qxdmMessage %></th>
+                                    <td>
+                                        <input type="checkbox" id="qxdmSwitch" name="qxdmSwitch" /><%- status %>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="even" >
+                                    <th>&nbsp;</th>
+                                    <td>
+                                        <input type="button" id="btnSetting" value="<%- btnSetting %>"/>
+                                    </td>
+                                </tr>
+    
+                            </table>
+                        </script>
+                    <!-- </form> -->
+                </div>           
             </div>
 
             

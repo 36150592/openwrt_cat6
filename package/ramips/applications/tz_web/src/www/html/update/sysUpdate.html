@@ -3,6 +3,22 @@
 <script type="text/javascript">
 
     $(document).ready(function() {
+        function createContent() {
+            var div = $('<div>', {'class': 'detail'}).text(DOC.title.localUpdate);
+            var table = $('<table>', {'class': 'detail', 'cellspacing': '0'});
+            var th = $('<th>').text(DOC.sys.selectUpdateFile + DOC.colon);
+            var form = $('<form>', {'id': 'form1', 'enctype': 'multipart/form-data', 'method': 'post', 'name': 'fileUploadForm'});
+            var input1 = $('<input>', {'type': 'file', 'id': 'fp', 'name': 'fp', 'style': 'display: none', 'onchange': 'document.fileUploadForm.filepath.value=this.value'});
+            var input2 = $('<input>', {'type': 'textfield', 'id': 'filepath'});
+            var input3 = $('<input>', {'type': 'button', 'id': 'filebutton', 'onclick': 'fp.click()'}).val(DOC.btn.browse);
+            var input4 = $('<input>', {'type': 'button', 'id': 'btnUpload'}).val(DOC.btn.upload);
+            var input5 = $('<input>', {'type': 'button', 'id': 'btnUpdatePartial'}).val(DOC.btn.update);
+            $('#child_container').append($('<script>', {'type': 'text/template', 'id': 'child_template'}).append(div).append(table));
+            table.append($('<tr>').append(th).append($('<td>').append(form.append(input1).append(input2).append(input3).append(input4)))).append($('<tr>').append($('<th>')).append($('<td>').append(input5)));
+            $("tr").removeClass();
+            $('#filebutton').css('margin', '6px');
+        };
+        createContent();
 
         Page.render();
         Page.setStripeTable();
@@ -70,9 +86,10 @@
 </script>
 
 <div class="detail_box" id="child_container">
-    <script type="text/template" id="child_template">
+    <!-- <script type="text/template" id="child_template">
         <div class="detail"><%- title.localUpdate %></div>
         <table class="detail" cellspacing="0">
+            <tr>
                 <th><%- sys.selectUpdateFile %><%- colon %></th>
                 <td>
                     <form id="form1" enctype="multipart/form-data" method="post">
@@ -88,20 +105,5 @@
                 <td><input type="button" id="btnUpdatePartial" value="<%- btn.update %>"/></td>
             </tr>
         </table>
-        <div class="detail"  style="display:none;"><%- title.remoteUpdate %></div>
-        <form id="remoteForm" enctype="multipart/form-data" method="post"  style="display:none;">
-            <table class="detail" cellspacing="0">
-                <tr>
-                    <th><%- lbl.fotaUrl %><%- colon %></th>
-                    <td><!-- FOTA_URL --></td>
-                </tr>
-                <tr>
-                    <th></th>
-                    <td>
-                        <input type="button" id="btnUpdate" value="<%- btn.update %>"/>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </script>
+    </script> -->
 </div>

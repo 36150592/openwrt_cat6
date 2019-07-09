@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm1 = ["form1", "child_container", "form1Id"];
+        Page.createForm(fm1);
+        TempUtil.render('child_template', 'form1',DOC);
         Page.setStripeTable();   
             var $btnExportConfig = $('#btnExportConfig');
             $btnExportConfig.bind('click', function() {
@@ -26,30 +28,37 @@
             }); 
         });
 
+        $('#form1').attr({
+            "enctype": "multipart/form-data",
+            "method": "post"
+        });
+
     });
 </script>
 
 <div class="tab_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <form id="form1" enctype="multipart/form-data" method="post">
-            <table class="detail" cellspacing="0">
-                <tr id="trExportConfig">
-                    <th><%- sys.exportCfg %><%- colon %></th>
-                    <td>
-                        <input type="button" id="btnExportConfig" value="<%- btn.exportCfg %>"/><a id="exportDelegate" style="display:none;"></a>
-                    </td>
-                </tr>
-                <tr>
-                    <th><%- sys.selectCfgFile %><%- colon %></th>
-                    <td>
-                        <input type="file" id="configFile" name="configFile" style="display:none;" onchange=filepath.value=this.value>
-			            <input type="textfield" id="filepath">
-			            <input type="button" id="filebutton" value="<%- btn.browse %>" onclick="configFile.click()">
-                        <input type="button" id="btnLoadConfig" value="<%- btn.loadCfg %>"/>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </script>
+    <div id="form1Id">
+        <script type="text/template" id="child_template">
+            <!-- <form id="form1" enctype="multipart/form-data" method="post"> -->
+                <table class="detail" cellspacing="0">
+                    <tr id="trExportConfig">
+                        <th><%- sys.exportCfg %><%- colon %></th>
+                        <td>
+                            <input type="button" id="btnExportConfig" value="<%- btn.exportCfg %>"/><a id="exportDelegate" style="display:none;"></a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><%- sys.selectCfgFile %><%- colon %></th>
+                        <td>
+                            <input type="file" id="configFile" name="configFile" style="display:none;" onchange=filepath.value=this.value>
+                            <input type="textfield" id="filepath">
+                            <input type="button" id="filebutton" value="<%- btn.browse %>" onclick="configFile.click()">
+                            <input type="button" id="btnLoadConfig" value="<%- btn.loadCfg %>"/>
+                        </td>
+                    </tr>
+                </table>
+            <!-- </form> -->
+        </script>
+    </div>
 </div>
 

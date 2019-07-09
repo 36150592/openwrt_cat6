@@ -2,7 +2,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        Page.render();
+        var fm1 = ["form1", "child_container", "form1Id"];
+        Page.createForm(fm1);
+        TempUtil.render('child_template', 'form1',DOC);
         Page.setStripeTable();
 
         var theUpdateFileName = "";
@@ -96,31 +98,39 @@
 
             update();
         });
+
+        $('#form1').attr({
+            "enctype": "multipart/form-data",
+            "method": "post"
+        });
+
     });
 
 </script>
 
 <div class="detail_box" id="child_container">
-    <script type="text/template" id="child_template">
-        <div class="detail"><%- menu.sys.configUpdate %></div>
-        <table class="detail" cellspacing="0">
-            <tr>
-                <th><%- sys.selectUpdateFile %><%- colon %></th>
-                <td>
-                    <form id="form1" enctype="multipart/form-data" method="post">
-                        <input type="file" id="fp" name="fp" style="display:none;" onchange=filepath.value=this.value>
-						<input type="textfield" id="filepath">
-						<input type="button" id="filebutton" value="<%- btn.browse %>" onclick="fp.click()">
-                        <input type="button" id="btnUpload" value="<%- btn.upload %>"/>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <th>&nbsp;</th>
-                <td>
-                    <input type="button" id="btnUpdatePartial" value="<%- btn.update %>" />
-                </td>
-            </tr>
-        </table>
-    </script>
+    <div id="form1Id">
+        <script type="text/template" id="child_template">
+            <div class="detail"><%- menu.sys.configUpdate %></div>
+            <table class="detail" cellspacing="0">
+                <tr>
+                    <th><%- sys.selectUpdateFile %><%- colon %></th>
+                    <td>
+                        <!-- <form id="form1" enctype="multipart/form-data" method="post"> -->
+                            <input type="file" id="fp" name="fp" style="display:none;" onchange=filepath.value=this.value>
+                            <input type="textfield" id="filepath">
+                            <input type="button" id="filebutton" value="<%- btn.browse %>" onclick="fp.click()">
+                            <input type="button" id="btnUpload" value="<%- btn.upload %>"/>
+                        <!-- </form> -->                  
+                    </td>
+                </tr>
+                <tr>
+                    <th>&nbsp;</th>
+                    <td>
+                        <input type="button" id="btnUpdatePartial" value="<%- btn.update %>" />
+                    </td>
+                </tr>
+            </table>
+        </script>
+    </div>
 </div>

@@ -1,9 +1,11 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <script type="text/javascript">
-    Page.render('#sys_log', '#child_template', DOC);
+    // Page.render('#sys_log', '#child_template', DOC);
     $(document).ready(function () {
-
+        var fm = ["form", "sys_log", "formId"];
+        Page.createForm(fm);
+        TempUtil.render('child_template', 'form',DOC);
         var sysLogContent = $('#sys_log_content'),
             sysLogBtn = $('#sys_log_btn');
 
@@ -27,11 +29,13 @@
 </script>
 
 <div id="sys_log">
-    <script type="text/template" id="child_template">
-        <div class="sys_log_title"><%- DOC.lbl.sysLogTitle %></div>
-        <div id="sys_log_content" class="sys_log_content"></div>
-        <form id="form">
-            <input type="button" id="sys_log_btn" class="sys_log_btn" value="<%- DOC.lbl.clearLog %>">
-        </form>      
-    </script>
+    <div id="formId">
+        <script type="text/template" id="child_template">
+            <div class="sys_log_title"><%- DOC.lbl.sysLogTitle %></div>
+            <div id="sys_log_content" class="sys_log_content"></div>
+            <!-- <form id="form"> -->
+                <input type="button" id="sys_log_btn" class="sys_log_btn" value="<%- DOC.lbl.clearLog %>">
+            <!-- </form>       -->
+        </script>
+    </div> 
 </div>
