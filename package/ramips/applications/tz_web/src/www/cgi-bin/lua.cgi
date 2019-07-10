@@ -937,7 +937,6 @@ function set_default_settings()
             tz_answer["success"] = "fail" 
         else
             ret = firewall.firewall_restart() or ''
-            uti.web_log(ret)
             if (ret ~= "success") then tz_answer["success"] = "fail" end
         end
     end  
