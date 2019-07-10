@@ -33,7 +33,7 @@ static void peripheral_test_handle(int fd, char* get_buf, char* set_buf)
 
 	while(1)
 	{
-		usleep(200000);
+		usleep(50000);
 
 		//wifi_button_status
 		if((access("/tmp/.wifi_button_press",F_OK))!=-1)   
@@ -91,7 +91,34 @@ static void peripheral_test_handle(int fd, char* get_buf, char* set_buf)
 
 
 	    memset(send_buf, 0, sizeof(send_buf));
-	    sprintf(send_buf,"%d,%d,%d,%d,%d",wifi_button_status, restore_button_status, wps_button_status, lte_main_antenna_status, lte_vice_antenna_status );
+
+	    if(wifi_button_status)
+	    	strcat(send_buf,"wifi_button_press,");
+	    else
+	    	strcat(send_buf,"wifi_button_off,");
+
+	    if(restore_button_status)
+	    	strcat(send_buf,"restore_button_press,");
+	    else
+	    	strcat(send_buf,"restore_button_off,");
+
+	    if(wps_button_status)
+	    	strcat(send_buf,"wps_button_press,");
+	    else
+	    	strcat(send_buf,"wps_button_off,");
+
+	    if(lte_main_antenna_status)
+	    	strcat(send_buf,"lte_main_antenna_on,");
+	    else
+	    	strcat(send_buf,"lte_main_antenna_off,");
+
+	    if(lte_vice_antenna_status)
+	    	strcat(send_buf,"lte_vice_antenna_on");
+	    else
+	    	strcat(send_buf,"lte_vice_antenna_off");
+
+
+	    //sprintf(send_buf,"%d,%d,%d,%d,%d",wifi_button_status, restore_button_status, wps_button_status, lte_main_antenna_status, lte_vice_antenna_status );
 	    send( fd,send_buf,strlen(send_buf),0 );
 	}
 }
