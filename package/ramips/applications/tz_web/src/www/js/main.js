@@ -160,7 +160,8 @@ var RequestCmd = {
     GET_DAYLIGHT_SAVING_TIME: 256,
     SET_DAYLIGHT_SAVING_TIME: 257,
     GET_ROAMING: 258,
-    SET_ROAMING: 259
+    SET_ROAMING: 259,
+    APPLY_ALL_RULES: 260
 };
 var MenuItem = {
     HOME: { cmd: RequestCmd.SYS_INFO, url: "html/info/homeInfo.html" },

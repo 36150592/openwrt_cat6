@@ -44,6 +44,7 @@
                 $btnApply.hide();
                 $btnCleanRules.hide();
             }else {
+                getDefaultSettingsDatas()
                 $lblShift.show();
                 $btnShifts.show();
                 $btnAdd.show();
@@ -57,6 +58,7 @@
                         json: {
                             cmd: cmd,
                             method: JSONMethod.GET,
+                            getfun: true
                         },
                         success: function(data) {
                             if (pannelIndex == 8) {
@@ -82,7 +84,7 @@
                 };
 
             if (!isPageRequests[pannelIndex]) {
-                isPageRequests[pannelIndex] = true;
+                // isPageRequests[pannelIndex] = true;
 
                 var customTitles = [], customFieldNames = [];
                 switch (pannelIndex) {
@@ -251,9 +253,9 @@
             Page.postJSON({
                 //$id: $btnApply,
                 json: {
-                    cmd: RequestCmd.APPLY_FILTER,
+                    cmd: RequestCmd.APPLY_ALL_RULES,
                     method: JSONMethod.POST,
-                    action: $('input[name="acceptAll"]:checked').val()
+                    // action: $('input[name="acceptAll"]:checked').val()
                 },
                 success: function(data) {
                     if (data.success == "success") {

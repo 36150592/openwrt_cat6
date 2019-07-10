@@ -2986,6 +2986,22 @@ function set_roaming()
     print(result_json)
 end
 
+function apply_all_rules()
+    local ret
+
+        ret = firewall.firewall_restart() or ''
+        if (ret ~= "success") then 
+            tz_answer["success"] = "fail" 
+        end
+
+    local tz_answer = {}
+    tz_answer["cmd"] = 260
+    tz_answer["success"] = ret
+    result_json = cjson.encode(tz_answer)
+    print(result_json)
+
+end
+
 local switch = {
     [0] = get_sysinfo,
     [1] = get_systime,
@@ -3101,7 +3117,8 @@ local switch = {
     [256] = get_daylight_saving_time,
     [257] = set_daylight_saving_time,
     [258] = get_roaming,
-    [259] = set_roaming
+    [259] = set_roaming,
+    [260] = apply_all_rules
 }
 
 cmdid = uti.get_env_cmdId(envv)
