@@ -4,8 +4,8 @@
 START=61
 STOP=86
 start(){
-    enable=`cfg -g TZ_SOCKET_AT_ENABLE`
-    if [ "${enable}" = "1" ]; then
+    #enable=`cfg -g TZ_SOCKET_AT_ENABLE`
+    if [ -e /tmp/.socket_at_enable ]; then
     	socket_at -d /dev/ttyUSB0 -p 5504
     fi
 }
