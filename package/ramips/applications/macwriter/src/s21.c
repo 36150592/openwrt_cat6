@@ -436,7 +436,7 @@ static void get_24g_wifi_signal(char* get_buf, char* set_buf)
 
 	sleep(1);
 
-	sprintf(cmdline, "iwpriv apcli0 get_site_survey | grep \"%s\" | awk '{print $6}'", ssid);
+	sprintf(cmdline, "iwpriv apcli0 get_site_survey | grep \"%s\" | awk '{print $5}'", ssid);
 	read_memory(cmdline, signal, sizeof(signal));
 	util_strip_blank_of_string_end(signal);
 
@@ -467,7 +467,7 @@ static void get_58g_wifi_signal(char* get_buf, char* set_buf)
 	strncpy(ssid, get_buf + 10, 127);
 	system("iwpriv apclii0 set SiteSurvey=1");
 
-	sprintf(cmdline, "iwpriv apclii0 get_site_survey | grep \"%s\" | awk '{print $6}'", ssid);
+	sprintf(cmdline, "iwpriv apclii0 get_site_survey | grep \"%s\" | awk '{print $5}'", ssid);
 	read_memory(cmdline, signal, sizeof(signal));
 	util_strip_blank_of_string_end(signal);
 
