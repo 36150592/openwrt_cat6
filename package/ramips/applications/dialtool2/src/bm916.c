@@ -2224,9 +2224,10 @@ void bm916_dial(int* Dial_proc_state )
 				}
 				
 				printf("exception_count = %d\n", exception_count);
-				if( global_dial_vars.ipv4_register_status == 1 || exception_count > 60)
+				if( global_dial_vars.ipv4_register_status == 1 || exception_count > 20)
 				{
 					printf("go out 60\n");
+					system("ifconfig eth1 up");
 					exception_count=0;
 					*Dial_proc_state=Dial_State_BMDATASTATUS;
 				}
