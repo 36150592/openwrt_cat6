@@ -1,5 +1,5 @@
-software_version=1.10
-inline_soft_version=1.10
+software_version=1.10.x1
+inline_soft_version=1.10.x1
 hwversion=TZ7.821.176
 device=4G CPE
 type=S21

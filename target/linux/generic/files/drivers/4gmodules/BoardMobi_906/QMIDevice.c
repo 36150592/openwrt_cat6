@@ -126,7 +126,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <linux/netdevice.h>
 #include <net/sch_generic.h>
 #include <linux/if_arp.h>
-#include <asm/ptrace.h>
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 4,11,0 ))
 #include <linux/sched/signal.h>
 #endif
@@ -332,8 +331,6 @@ static int gobi_qmimux_open(struct net_device *dev)
    struct net_device *real_dev = priv->real_dev;
    unsigned short oflags;
    DBG("\n");
-   printk("gobi_debug netdevname %s devname %s\n", real_dev->name, dev->name);
-   printk("gobi_debug open_flags 0x%x 0x%x 0x%x\n", priv->real_dev->flags, IFF_UP, IFF_RUNNING);
    if (!(priv->real_dev->flags & (IFF_UP|IFF_RUNNING)))
    {
       printk("Adaptor Not Up\n");
@@ -345,8 +342,6 @@ static int gobi_qmimux_open(struct net_device *dev)
       netif_carrier_on(real_dev);
    }
    
-
-   printk("qmimux_open debug\n"); 
    netif_carrier_on(real_dev);
    netif_start_queue(real_dev);
    netif_carrier_on(dev);
@@ -392,7 +387,6 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
    unsigned int len = skb->len;
    struct gobi_qmimux_hdr *hdr;
 
-#if DEBUG
    skb->dev = priv->real_dev;
    if(dev->type == ARPHRD_ETHER)  //net card type is ETHERNET. commented by qiao 2019.4.24
    {
@@ -404,7 +398,6 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
       len = skb->len - sizeof(struct gobi_qmimux_hdr); //len == qcmap padding length. commented by qiao 2019.4.24
    }
    else
-#endif
    {
       hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));
    }
@@ -822,8 +815,6 @@ void GobiSetDownReason(
    {
       pDev->iNetLinkStatus = eNetDeviceLink_Disconnected;
    }
-   printk("downreason %s\n", pDev->mpNetDev->net->name);
-   //dump_stack();
    netif_carrier_off( pDev->mpNetDev->net );
 }
 
@@ -6411,7 +6402,7 @@ void QMIWDSCallback(
          else
          {
             DBG( "Net device link is disconnected\n" );
-            //GobiSetDownReason( pDev, NO_NDIS_CONNECTION );
+            GobiSetDownReason( pDev, NO_NDIS_CONNECTION );
          }
       }
    }

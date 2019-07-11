@@ -1105,10 +1105,8 @@ static int qmimux_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
 		}
 		
 		bm_skb_put_data(skbn, skb->data + offset, len);
-#if DEBUG		
 		NETDBG("new skb package..\n ");		
 	    NetHex(skbn->data,skbn->len);
-#endif
 		           /* Copy data section to a temporary buffer */	
 		if(offset + len < skb->len)
 		{	
@@ -1121,18 +1119,7 @@ static int qmimux_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
 		}    
 		if (netif_rx(skbn) != NET_RX_SUCCESS)
 			return 0;
-		else
-		{
-			net->stats.rx_packets++;
-			net->stats.rx_bytes += skbn->len;
-			#if (LINUX_VERSION_CODE < KERNEL_VERSION( 4,7,0 ))
-			net->trans_start = jiffies;
-			#else
-			netif_trans_update(net); //No need to update jiffies in txq->trans_start twice
-			#endif
-		}
 	}while(data_completed==0);
-	
 	return 1;
 }
 
@@ -1359,11 +1346,9 @@ static int GobiNetDriverRxFixup(
    }
 #else
 	{
-#if DEBUG		
 		int iPackets = iNumberOfQmuxPacket(pSKB,1);
         NETDBG("RX:%d , Packets:%d\n",pSKB->len,iPackets);
         NetHex(pSKB->data,pSKB->len);
-#endif
 	    qmimux_rx_fixup(pDev,pSKB);
 	}
 #endif  
@@ -1852,11 +1837,11 @@ int GobiUSBNetUpdateRxUrbSize(struct net_device *net, u32 target_rx_urb_size)
       dev->rx_urb_size = new_rx_urb_size;
       if (dev->rx_urb_size > old_rx_urb_size) {
          #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,32 ))
-         //usbnet_pause_rx(dev);
+         usbnet_pause_rx(dev);
          #endif
-         //usbnet_unlink_rx_urbs(dev);
+         usbnet_unlink_rx_urbs(dev);
          #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,32 ))
-         //usbnet_resume_rx(dev);
+         usbnet_resume_rx(dev);
          #endif
       }
    }
@@ -2419,7 +2404,7 @@ static const struct usb_device_id GobiVIDPIDTable [] =
    {QMI_9X15_DEVICE(0x2020, 0x2063)},
  
    {QMI_9X15_DEVICE(0x2020, 0x2040)}, /* consider 9x30 and 9x50 same as 9x15 at the moment, change it later if needed */
-   {QMI_9X15_DEVICE(0x05c6, 0x9029)},
+  
    //Terminating entry
    { }
 };
