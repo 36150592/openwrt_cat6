@@ -1318,6 +1318,7 @@ PROMPT.status.updateSuccess = "Upgrade successful!";
 PROMPT.status.updateFalse = "Upgrade failure!";
 PROMPT.status.updating = "Upgrading";
 PROMPT.status.updatingAvailable = "New firmware available. Click OK to proceed with update";
+PROMPT.status.uploadFailed = "Upload Failed!";
 PROMPT.status.uploadSuccess = "Upload successful!";
 PROMPT.status.uploading = "Uploading file";
 PROMPT.tips.backupFirewall = "NOTICE: If you want to restore firewall settings, please upload backup file(firewallbackup.tar) first.";

@@ -553,7 +553,7 @@ var SysUtil = {
                           if (datas.success) {
                             AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
                           } else {
-                            SysUtil.processMsg(datas.message);
+                            AlertUtil.alertMsg(PROMPT.status.uploadFailed);
                           }
                           if ($.isFunction(callback)) {
                                 callback(updateFileName);
