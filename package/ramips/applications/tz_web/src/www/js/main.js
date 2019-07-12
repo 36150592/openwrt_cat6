@@ -604,9 +604,9 @@ var SysUtil = {
                         },
                         function() {
                           if (datas.success) {
-                            AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
+                            AlertUtil.alertMsg(PROMPT.status.loadingConfigSuccess);
                           } else {
-                            SysUtil.processMsg(datas.message);
+                            AlertUtil.alertMsg(PROMPT.status.loadingConfigFail);
                           }
                           if ($.isFunction(callback)) {
                                 callback(updateFileName);
