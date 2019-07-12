@@ -38,6 +38,12 @@
             var id = $('#box_ecgi_lock_id').val().trim().replace(/ /g, '');
             var ecgiLockIdList = new Array();
             var $tr=$("#idList table tr");
+            for(var i=1;i<$tr.length;i++){
+                if(id == $($tr[i]).children("td").eq(0).text()) {
+                    AlertUtil.alertMsg(PROMPT.saving.ecgiLockExistTheSameId);
+                    return;
+                }                               
+            };
             if($tr.length <= 6) {
                 var sb = String.format('<tr><td>{0}</td><td><a href="javascript:;" class="idEdit">{1}</a></td><td><a href="javascript:;" class="idDel">{2}</a></td></tr>',id, showText.edit,showText.del);
                 $("'"+sb+"'").appendTo($('#idList table'));
@@ -90,6 +96,13 @@
 
         $btnEditId.click(function () {
             var id = $('#box_ecgi_lock_id').val().trim().replace(/ /g, '');
+            var $tr=$("#idList table tr");
+            for(var i=1;i<$tr.length;i++){
+                if(id == $($tr[i]).children("td").eq(0).text()) {
+                    AlertUtil.alertMsg(PROMPT.saving.ecgiLockExistTheSameId);
+                    return;
+                }                               
+            };
             $('#idList table tr').eq(editIndex).children('td').eq(0).text(id);
             $box.removeClass('edit_box').hide();
             $mask.hide();
