@@ -39,16 +39,16 @@
                     newPasswd: Md5.md5(json.newPasswd)
                 },
                 success: function(data) {
-                    $('#newUsername').val('');
-                    $('#oldPasswd').val('');
-                    $('#newPasswd').val('');
-                    $('#newPasswd2').val('');
                     if(!data.message) {
                         AlertUtil.alertMsg(PROMPT.saving.previousPasswd);
                     }else if(!data.usrMsg){
                         AlertUtil.alertMsg(PROMPT.saving.userNameFail);
                     }else {
                         AlertUtil.alertMsg(PROMPT.saving.success);
+                        $('#newUsername').val('');
+                        $('#oldPasswd').val('');
+                        $('#newPasswd').val('');
+                        $('#newPasswd2').val('');
                     }           
                 }
             });
