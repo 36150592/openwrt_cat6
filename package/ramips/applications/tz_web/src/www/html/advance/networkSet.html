@@ -15,7 +15,7 @@ $(document).ready(function(){
             },
             success: function(datas) {
                  var data = datas.data;
-                 $("#networkMode").val("networkMode", data.act);
+                 $("#networkMode").val(data.act);
                  $("#networkMode").attr('old', data.act)
 
             }
