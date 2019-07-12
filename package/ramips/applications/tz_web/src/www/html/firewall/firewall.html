@@ -1005,7 +1005,7 @@
                 height: "auto",
                 rowData: data,
                 getSavingItem: function() {
-                    var mac = $('#mac').val().trim().toUpperCase().replace(/ /g, '').replace(/\-/g, ':');
+                    var mac = $('#mac').val().trim().toUpperCase().replace(/\u200e/g, '').replace(/\-/g, ':');
                     if (mac == "") {
                         AlertUtil.alertMsg(CHECK.required.mac);
                         return false;
