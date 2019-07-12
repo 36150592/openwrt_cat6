@@ -588,9 +588,9 @@
                     success: function(data) {
                         AlertUtil.alertMsg(PROMPT.saving.success);
                         // $lis.eq(0).click();
-                        $('#wifiOpen').attr('old',  $('#wifiOpen').val() == "on" ? 0 : 1);
-                        $('#broadcast').attr('old',  $('#broadcast').val() == "on" ? 0 : 1);
-                        $('#wmm').attr('old',  $('#wmm').val() == "on" ? 1 : 0);
+                        $('#wifiOpen').attr('old',  $('#wifiOpen').attr('checked') ? 0 : 1);
+                        $('#broadcast').attr('old',  $('#broadcast').attr('checked') ? 0 : 1);
+                        $('#wmm').attr('old',  $('#wmm').attr('checked') ? 1 : 0);
                         $('#ssid').attr('old',  $('#ssid').val());
                         $('#authenticationType').attr('old',  $('#authenticationType').val());
                         $btnSave.attr("disabled",false);
@@ -655,9 +655,9 @@
                     success: function(data) {
                         AlertUtil.alertMsg(PROMPT.saving.success);
                         // $lis.eq(0).click();
-                        $('#wifiOpen').attr('old',  $('#wifiOpen').val() == "on" ? 0 : 1);
-                        $('#broadcast').attr('old',  $('#broadcast').val() == "on" ? 0 : 1);
-                        $('#wmm').attr('old',  $('#wmm').val() == "on" ? 1 : 0);
+                        $('#wifiOpen').attr('old',  $('#wifiOpen').attr('checked') ? 0 : 1);
+                        $('#broadcast').attr('old',  $('#broadcast').attr('checked') ? 0 : 1);
+                        $('#wmm').attr('old',  $('#wmm').attr('checked') ? 1 : 0);
                         $('#ssid').attr('old',  $('#ssid').val());
                         $('#authenticationType').attr('old',  $('#authenticationType').val());
                         $('#encryptAlgorithm').attr('old', $('input:radio:checked').val());
@@ -720,9 +720,9 @@
                     success: function(data) {
                         AlertUtil.alertMsg(PROMPT.saving.success);
                         // $lis.eq(id).click();
-                        $('#wifiOpen').attr('old',  $('#wifiOpen').val() == "on" ? 0 : 1);
-                        $('#broadcast').attr('old',  $('#broadcast').val() == "on" ? 0 : 1);
-                        $('#wmm').attr('old',  $('#wmm').val() == "on" ? 1 : 0);
+                        $('#wifiOpen').attr('old',  $('#wifiOpen').attr('checked') ? 0 : 1);
+                        $('#broadcast').attr('old',  $('#broadcast').attr('checked') ? 0 : 1);
+                        $('#wmm').attr('old',  $('#wmm').attr('checked') ? 1 : 0);
                         $('#ssid').attr('old',  $('#ssid').val());
                         $('#authenticationType').attr('old',  $('#authenticationType').val());
                         $('#btn2Save' + id).attr("disabled",false);
@@ -788,9 +788,9 @@
                     success: function(data) {
                         AlertUtil.alertMsg(PROMPT.saving.success);
                         // $lis.eq(id).click();
-                        $('#wifiOpen').attr('old',  $('#wifiOpen').val() == "on" ? 0 : 1);
-                        $('#broadcast').attr('old',  $('#broadcast').val() == "on" ? 0 : 1);
-                        $('#wmm').attr('old',  $('#wmm').val() == "on" ? 1 : 0);
+                        $('#wifiOpen').attr('old',  $('#wifiOpen').attr('checked') ? 0 : 1);
+                        $('#broadcast').attr('old',  $('#broadcast').attr('checked') ? 0 : 1);
+                        $('#wmm').attr('old',  $('#wmm').attr('checked') ? 1 : 0);
                         $('#ssid').attr('old',  $('#ssid').val());
                         $('#authenticationType').attr('old',  $('#authenticationType').val());
                         $('#encryptAlgorithm').attr('old', $('input:radio:checked').val());
