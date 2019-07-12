@@ -1155,12 +1155,6 @@ void bm916_sendat(int num)
 		case Dial_State_QCRMCALL_DISCONNECT:
 			util_send_cmd(global_dialtool.dev_handle,"AT$QCRMCALL=0,1,3\r",&global_dialtool.pthread_moniter_flag);
 			break;
-		case Dial_State_CSQ:
-			util_send_cmd(global_dialtool.dev_handle,"AT+CSQ\r",&global_dialtool.pthread_moniter_flag);
-			break;	
-		case Dial_State_CSQ_SET:
-			util_send_cmd(global_dialtool.dev_handle,"AT+CSQ=1\r",&global_dialtool.pthread_moniter_flag);
-			break;
 		case Dial_State_HDRCSQ:
 			util_send_cmd(global_dialtool.dev_handle,"AT^HDRCSQ\r",&global_dialtool.pthread_moniter_flag);
 			break;
@@ -2317,7 +2311,7 @@ void bm916_dial(int* Dial_proc_state )
 					if(global_dial_vars.evdo_cdma_flag == 1)
 						*Dial_proc_state=Dial_State_HDRCSQ;
 					else
-						*Dial_proc_state=Dial_State_CSQ_SET;
+						*Dial_proc_state=Dial_State_CMEE;
 				}
 				else
 				{
@@ -2335,13 +2329,6 @@ void bm916_dial(int* Dial_proc_state )
 			}
 			break;
 
-	//set  init status after dial sucessful,and status update by reporter
-		case Dial_State_CSQ_SET:
-			if(NULL!=strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) )
-			{
-				*Dial_proc_state=Dial_State_CMEE;
-			}
-			break;
 		case Dial_State_CMEE:
 			if (NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
 			{
@@ -2354,7 +2341,10 @@ void bm916_dial(int* Dial_proc_state )
 			break;
 		case Dial_State_SIGNALIND:
 			if(NULL!= strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK))
-				*Dial_proc_state=Dial_State_CSQ;
+			{
+				global_dialtool.Dial_Lvl_1=DIAL_DEAMON;
+				*Dial_proc_state=Dial_State_BMTCELLINFO;
+			}
 			break;	
 		case Dial_State_HDRCSQ:
 			if(NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && NULL != strstr(global_dialtool.buffer_at_sponse,"^HDRCSQ:"))
@@ -2392,64 +2382,6 @@ void bm916_dial(int* Dial_proc_state )
 					global_dial_vars.signal_rssi_level=0;
 					snprintf(global_dial_vars.signal_rssi_value,sizeof(global_dial_vars.signal_rssi_value),"0");
 				}
-				global_dialtool.Dial_Lvl_1=DIAL_DEAMON;
-				*Dial_proc_state=Dial_State_BMTCELLINFO;	
-			}
-		case Dial_State_CSQ:
-			if(NULL!=strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && NULL!=strstr(global_dialtool.buffer_at_sponse,"+CSQ:"))
-			{
-				double rssi,rsrp,rsrq,snr;
-				char* tmp_ptr=strstr(global_dialtool.buffer_at_sponse,"+CSQ:")+strlen("+CSQ:");
-				char* tmp_ptr_1=strstr(tmp_ptr,CMD_EXE_OK);
-				if(NULL!=tmp_ptr_1)
-					tmp_ptr_1[0]='\0';
-				char** result_useful=(char**)m_malloc_two(5,8);
-				log_info("%s_%d\n",__FUNCTION__,__LINE__);
-				separate_str(tmp_ptr,",",result_useful);
-				rssi=atof(result_useful[0]);
-				rsrp=atof(result_useful[2]);
-				rsrq=atof(result_useful[3]);
-				snr=atof(result_useful[4]);
-				free_two(result_useful,5,8);
-				snprintf(global_dial_vars.signal_rssi_value,sizeof(global_dial_vars.signal_rssi_value),"%0.f",rssi);
-				snprintf(global_dial_vars.signal_rsrp,sizeof(global_dial_vars.signal_rsrp),"%0.f",rsrp);
-				snprintf(global_dial_vars.signal_rsrq,sizeof(global_dial_vars.signal_rsrq),"%0.f",rsrq);
-				snprintf(global_dial_vars.signal_sinr,sizeof(global_dial_vars.signal_sinr),"%0.f",snr);
-
-				//supplier provide 
-				int *p = global_init_parms.signal_rsrp_lvl;
-				if(p[0] < p[1] && p[1] < p[2] && p[2] < p[3] && p[3] < p[4])
-				{
-					if(rsrp>=p[4])
-						global_dial_vars.signal_rssi_level=5;
-					else if(rsrp>p[3]&& rsrp<=p[4])
-						global_dial_vars.signal_rssi_level=4;
-					else if(rsrp>p[2] && rsrp<=p[3])
-						global_dial_vars.signal_rssi_level=3;
-					else if(rsrp>p[1] && rsrp<=p[2])
-						global_dial_vars.signal_rssi_level=2;
-					else if(rsrp>p[0] && rsrp<=p[1])
-						global_dial_vars.signal_rssi_level=1;
-					else
-						global_dial_vars.signal_rssi_level=0;
-				}
-				else
-				{
-					p = global_init_parms.signal_rssi_lvl;
-					if(rssi<=p[0])
-						global_dial_vars.signal_rssi_level=5;
-					else if(rssi>p[0] && rssi<=p[1])
-						global_dial_vars.signal_rssi_level=4;
-					else if(rssi>p[1] && rssi <= p[2])
-						global_dial_vars.signal_rssi_level=3;
-					else if(rssi >p[2] && rssi <= p[3])
-						global_dial_vars.signal_rssi_level=2;
-					else if(rssi> p[3] && rssi<= p[4])
-						global_dial_vars.signal_rssi_level=1;
-					else
-						global_dial_vars.signal_rssi_level=0;
-				}
-				
 				global_dialtool.Dial_Lvl_1=DIAL_DEAMON;
 				*Dial_proc_state=Dial_State_BMTCELLINFO;	
 			}
@@ -2577,6 +2509,25 @@ void bm916_deamon(int* Dial_proc_state)
 						ptr_tmp3=strip_head_tail_space(buffer_tmp);
 						memset(global_dial_vars.signal_rsrp, 0, sizeof(global_dial_vars.signal_rsrp));
 						strncpy(global_dial_vars.signal_rsrp,ptr_tmp3,strlen(ptr_tmp3));
+
+						int rsrp = atoi(global_dial_vars.signal_rsrp);
+						{
+							int *p = global_init_parms.signal_rsrp_lvl;
+							if (rsrp == 0)
+								global_dial_vars.signal_rssi_level=-1;
+							else if(rsrp>=p[4])
+								global_dial_vars.signal_rssi_level=5;
+							else if(rsrp>p[3]&& rsrp<=p[4])
+								global_dial_vars.signal_rssi_level=4;
+							else if(rsrp>p[2] && rsrp<=p[3])
+								global_dial_vars.signal_rssi_level=3;
+							else if(rsrp>p[1] && rsrp<=p[2])
+								global_dial_vars.signal_rssi_level=2;
+							else if(rsrp>p[0] && rsrp<=p[1])
+								global_dial_vars.signal_rssi_level=1;
+							else
+								global_dial_vars.signal_rssi_level=0;
+						}
 
 					}
 					if(NULL!= strstr(ptr_tmp,"RSRQ:"))
@@ -3258,70 +3209,10 @@ void bm916_deamon(int* Dial_proc_state)
 						*Dial_proc_state=Dial_State_HDRCSQ;
 				}
 				else
-					*Dial_proc_state=Dial_State_CSQ;
+					*Dial_proc_state=Dial_State_QCRMCALL_V4V6;
 			}
 
 
-			break;
-		case Dial_State_CSQ:
-			if(NULL!=strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && NULL!=strstr(global_dialtool.buffer_at_sponse,"+CSQ:"))
-			{
-				float rssi,rsrp,rsrq,snr;
-				char* tmp_ptr=strstr(global_dialtool.buffer_at_sponse,"+CSQ:")+strlen("+CSQ:");
-				char* tmp_ptr_1=strstr(tmp_ptr,CMD_EXE_OK);
-				if(NULL!=tmp_ptr_1)
-					tmp_ptr_1[0]='\0';
-				char** result_useful=(char**)m_malloc_two(5,8);
-				log_info("%s_%d\n",__FUNCTION__,__LINE__);
-				separate_str(tmp_ptr,",",result_useful);
-				rssi=atof(result_useful[0]);
-				rsrp=atof(result_useful[2]);
-				rsrq=atof(result_useful[3]);
-				snr=atof(result_useful[4]);
-				free_two(result_useful,5,8);
-				snprintf(global_dial_vars.signal_rssi_value,sizeof(global_dial_vars.signal_rssi_value),"%0.f",rssi);
-				snprintf(global_dial_vars.signal_rsrp,sizeof(global_dial_vars.signal_rsrp),"%0.f",rsrp);
-				snprintf(global_dial_vars.signal_rsrq,sizeof(global_dial_vars.signal_rsrq),"%0.f",rsrq);
-				snprintf(global_dial_vars.signal_sinr,sizeof(global_dial_vars.signal_sinr),"%0.f",snr);
-
-				//supplier provide 
-				int *p = global_init_parms.signal_rsrp_lvl;
-				if(p[0] < p[1] && p[1] < p[2] && p[2] < p[3] && p[3] < p[4])
-				{
-					if(rsrp>=p[4])
-						global_dial_vars.signal_rssi_level=5;
-					else if(rsrp>p[3]&& rsrp<=p[4])
-						global_dial_vars.signal_rssi_level=4;
-					else if(rsrp>p[2] && rsrp<=p[3])
-						global_dial_vars.signal_rssi_level=3;
-					else if(rsrp>p[1] && rsrp<=p[2])
-						global_dial_vars.signal_rssi_level=2;
-					else if(rsrp>p[0] && rsrp<=p[1])
-						global_dial_vars.signal_rssi_level=1;
-					else
-						global_dial_vars.signal_rssi_level=0;
-				}
-				else
-				{
-					p = global_init_parms.signal_rssi_lvl;
-					if(rssi<=p[0])
-						global_dial_vars.signal_rssi_level=5;
-					else if(rssi > p[0] && rssi <= p[1])
-						global_dial_vars.signal_rssi_level=4;
-					else if(rssi > p[1] && rssi <= p[2])
-						global_dial_vars.signal_rssi_level=3;
-					else if(rssi > p[2] && rssi <= p[3])
-						global_dial_vars.signal_rssi_level=2;
-					else if(rssi > p[3] && rssi <= p[4])
-						global_dial_vars.signal_rssi_level=1;
-					else
-						global_dial_vars.signal_rssi_level=0;
-				}
-
-//				log_info("csq:%.1f,%.1f,%.1f,%.1f\n",rssi,rsrp,rsrq,snr);
-			}
-
-			*Dial_proc_state=Dial_State_QCRMCALL_V4V6;
 			break;
 		case Dial_State_HDRCSQ:
 			if(NULL != strstr(global_dialtool.buffer_at_sponse,CMD_EXE_OK) && NULL != strstr(global_dialtool.buffer_at_sponse,"^HDRCSQ:"))
