@@ -2888,11 +2888,11 @@ function set_ecgi_lock()
     local tz_answer = {}
     local ecgiLockEnable = tz_req["ecgiLockEnable"]
     local ecgiLockIdList = tz_req["ecgiLockIdList"]
-    if "0" == ecgiLockEnable then
+    if 0 == ecgiLockEnable then
         ret = modem.modem_disable_ecgi_lock()
         if (not ret) then tz_answer['set_ecgi_lock_enable'] = false end
     end
-    if "1" == ecgiLockEnable then
+    if 1 == ecgiLockEnable then
         ret = modem.modem_enable_ecgi_lock()
         if (not ret) then tz_answer['set_ecgi_lock_enable'] = false end
     end
