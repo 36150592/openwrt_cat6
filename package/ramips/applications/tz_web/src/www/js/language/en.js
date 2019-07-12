@@ -1936,7 +1936,7 @@ wlan5ghtml.form1.maxStation = "Max Station:";
 wlan5ghtml.form1.maxStationCmt = "Range:1~<span class=\"max_station\">32</span>";
 wlan5ghtml.form1.Mode = 'Wi-Fi Mode:';
 wlan5ghtml.form1.na = '11A';
-wlan5ghtml.form1.ac = '11NA';
+wlan5ghtml.form1.ac = '11AN';
 wlan5ghtml.form1.an_ac = '11AC';
 wlan5ghtml.form1.bandWidth = 'Bandwidth:';
 wlan5ghtml.form1.bandWidth20 = '20MHz';

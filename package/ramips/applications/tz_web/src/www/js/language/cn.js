@@ -1913,7 +1913,7 @@ wlan5ghtml.form1.maxStation = "最大连接用户数:";
 wlan5ghtml.form1.maxStationCmt = "取值范围:1~<span class=\"max_station\">32</span>";
 wlan5ghtml.form1.Mode = 'Wi-Fi工作模式:';
 wlan5ghtml.form1.na = '11A';
-wlan5ghtml.form1.ac = '11NA';
+wlan5ghtml.form1.ac = '11AN';
 wlan5ghtml.form1.an_ac = '11AC';
 wlan5ghtml.form1.bandWidth = '带宽:';
 wlan5ghtml.form1.bandWidth20 = '20MHz';
