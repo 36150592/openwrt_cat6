@@ -550,7 +550,7 @@ var SysUtil = {
                             return datas != null;
                         },
                         function() {
-                          if (datas.success) {
+                          if (datas && datas.success) {
                             AlertUtil.alertMsg(PROMPT.status.uploadSuccess);
                           } else {
                             AlertUtil.alertMsg(PROMPT.status.uploadFailed);
@@ -603,7 +603,7 @@ var SysUtil = {
                             return datas != null;
                         },
                         function() {
-                          if (datas.success) {
+                          if (datas && datas.success) {
                             AlertUtil.alertMsg(PROMPT.status.loadingConfigSuccess);
                           } else {
                             AlertUtil.alertMsg(PROMPT.status.loadingConfigFail);
