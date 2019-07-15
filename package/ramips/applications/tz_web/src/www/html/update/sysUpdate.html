@@ -11,6 +11,10 @@
         var $btnUpload = $('#btnUpload');
         var datas;
         $btnUpload.bind('click', function() {
+            if($('#fp')[0].files[0].size > 104857600) {
+                AlertUtil.alertMsg(PROMPT.status.uploadSize);
+                return;
+            };
             SysUtil.upload($('#form1'), $('#fp'), "system", function(fileName) {
                 theUpdateFileName = fileName;
                 closeBox();
