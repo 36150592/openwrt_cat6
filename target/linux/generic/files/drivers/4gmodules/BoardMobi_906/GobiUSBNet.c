@@ -455,6 +455,7 @@ int work_function(void *data)
       }
       if(pGobiDev->iQMUXEnable)
       {
+         GobiSetDownReason( pGobiDev, NO_NDIS_CONNECTION );
          GobiUSBNetUpdateRxUrbSize(pGobiDev->mpNetDev->net,pGobiDev->ULDatagramSize);
          CreateQMAPRxBuffer(pGobiDev);
       }
@@ -1105,8 +1106,10 @@ static int qmimux_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
 		}
 		
 		bm_skb_put_data(skbn, skb->data + offset, len);
+#if DEBUG		
 		NETDBG("new skb package..\n ");		
 	    NetHex(skbn->data,skbn->len);
+#endif
 		           /* Copy data section to a temporary buffer */	
 		if(offset + len < skb->len)
 		{	
@@ -1119,7 +1122,18 @@ static int qmimux_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
 		}    
 		if (netif_rx(skbn) != NET_RX_SUCCESS)
 			return 0;
+		else
+		{
+			net->stats.rx_packets++;
+			net->stats.rx_bytes += skbn->len;
+			#if (LINUX_VERSION_CODE < KERNEL_VERSION( 4,7,0 ))
+			net->trans_start = jiffies;
+			#else
+			netif_trans_update(net); //No need to update jiffies in txq->trans_start twice
+			#endif
+		}
 	}while(data_completed==0);
+	
 	return 1;
 }
 
@@ -1346,9 +1360,11 @@ static int GobiNetDriverRxFixup(
    }
 #else
 	{
+#if DEBUG		
 		int iPackets = iNumberOfQmuxPacket(pSKB,1);
         NETDBG("RX:%d , Packets:%d\n",pSKB->len,iPackets);
         NetHex(pSKB->data,pSKB->len);
+#endif
 	    qmimux_rx_fixup(pDev,pSKB);
 	}
 #endif  
@@ -1823,6 +1839,7 @@ int GobiUSBNetStartXmit(
 
 int GobiUSBNetUpdateRxUrbSize(struct net_device *net, u32 target_rx_urb_size)
 {
+    printk("in RxUrbsize\n");
    struct usbnet   *dev = netdev_priv(net);
    u32   old_rx_urb_size = dev->rx_urb_size;
    u32   new_rx_urb_size = 4000;
@@ -1836,12 +1853,18 @@ int GobiUSBNetUpdateRxUrbSize(struct net_device *net, u32 target_rx_urb_size)
    {
       dev->rx_urb_size = new_rx_urb_size;
       if (dev->rx_urb_size > old_rx_urb_size) {
+         /* discard the urb operation by bm_su, for some kernel panic problem */
+         #if 1
          #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,32 ))
          usbnet_pause_rx(dev);
          #endif
+
+        printk("before usbnet_unlink_rx_urbs\n");
          usbnet_unlink_rx_urbs(dev);
+        printk("after usbnet_unlink_rx_urbs\n");
          #if (LINUX_VERSION_CODE >= KERNEL_VERSION( 2,6,32 ))
          usbnet_resume_rx(dev);
+         #endif
          #endif
       }
    }
@@ -2404,7 +2427,7 @@ static const struct usb_device_id GobiVIDPIDTable [] =
    {QMI_9X15_DEVICE(0x2020, 0x2063)},
  
    {QMI_9X15_DEVICE(0x2020, 0x2040)}, /* consider 9x30 and 9x50 same as 9x15 at the moment, change it later if needed */
-  
+   {QMI_9X15_DEVICE(0x05c6, 0x9029)},
    //Terminating entry
    { }
 };
@@ -2524,7 +2547,7 @@ int GobiUSBNetProbe(
    sGobiUSBNet * pGobiDev;
    struct ethhdr *eth;
    int iNumberOfMUXIDSupported=3;
-
+   bool net_reg_st =false;
 #if 0
    /* There exists a race condition in the firmware that sometimes results
     * in the absence of Ethernet framing of packets received from the device.
@@ -2596,7 +2619,7 @@ int GobiUSBNetProbe(
    status = usbnet_probe( pIntf, pVIDPIDs );
    if (status < 0)
    {
-      DBG( "usbnet_probe failed %d\n", status );
+      pr_err( "usbnet_probe failed %d\n", status );
       return status;
    }
 
@@ -2612,7 +2635,7 @@ int GobiUSBNetProbe(
 
    if (pDev == NULL || pDev->net == NULL)
    {
-      DBG( "failed to get netdevice\n" );
+      pr_err( "failed to get netdevice\n" );
       usbnet_disconnect( pIntf );
       usb_set_intfdata(pIntf, NULL);
       return -ENXIO;
@@ -2622,7 +2645,7 @@ int GobiUSBNetProbe(
    pGobiDev = kzalloc( sizeof( sGobiUSBNet ), GOBI_GFP_KERNEL );
    if (pGobiDev == NULL)
    {
-      DBG( "falied to allocate device buffers" );
+      pr_err( "falied to allocate device buffers" );
       usbnet_disconnect( pIntf );
       usb_set_intfdata(pIntf, NULL);
       return -ENOMEM;
@@ -2651,7 +2674,7 @@ int GobiUSBNetProbe(
    pNetDevOps = kmalloc( sizeof( struct net_device_ops ), GOBI_GFP_KERNEL );
    if (pNetDevOps == NULL)
    {
-      DBG( "falied to allocate net device ops" );
+      pr_err( "falied to allocate net device ops\n" );
       usbnet_disconnect( pIntf );
       usb_set_intfdata(pIntf, NULL);
       return -ENOMEM;
@@ -2757,7 +2780,7 @@ int GobiUSBNetProbe(
    pGobiDev->iStoppingNetDev = 0;
    pGobiDev->nRmnet = 0;
   // if(ifacenum==2)// only allow interface 8 to allow qmux
-   if(1) //set all device support multi rmnet to allow qmux.
+   while(1) //set all device support multi rmnet to allow qmux.
    {
       if ( (iQMAPEnable != 0) && ( iNumberOfMUXIDSupported > 1 ) )
       {
@@ -2796,6 +2819,7 @@ int GobiUSBNetProbe(
                      pGobiDev->pNetDevice[iMuxID-MUX_ID_START] = gobi_qmimux_register_device(pDev->net,index,iMuxID);
                      pGobiDev->WDSClientID[iMuxID-MUX_ID_START] = (u16)-1;
                   }
+                  net_reg_st = true;
                }
             }
             else
@@ -2805,6 +2829,15 @@ int GobiUSBNetProbe(
             rtnl_unlock();
          }
          GobiClearDownReason( pGobiDev, NO_NDIS_CONNECTION );
+         if (net_reg_st)
+         {
+            break;
+         }
+         else
+         {
+            printk(KERN_INFO "try to register netdev again\n");
+            continue;
+         }
       }
    }
    
@@ -3339,7 +3372,7 @@ int gobi_rtnl_trylock(void)
          return 1;
       }
       wait_ms(100);
-   }while(iCount++<10);
+   }while(iCount++<30); /* try to fixup some abnormal situation that subnet card registration */
    return 0;
 }
 

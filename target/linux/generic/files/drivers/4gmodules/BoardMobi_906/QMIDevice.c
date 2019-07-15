@@ -387,6 +387,7 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
    unsigned int len = skb->len;
    struct gobi_qmimux_hdr *hdr;
 
+#if DEBUG
    skb->dev = priv->real_dev;
    if(dev->type == ARPHRD_ETHER)  //net card type is ETHERNET. commented by qiao 2019.4.24
    {
@@ -398,6 +399,7 @@ static netdev_tx_t gobi_qmimux_start_xmit(struct sk_buff *skb, struct net_device
       len = skb->len - sizeof(struct gobi_qmimux_hdr); //len == qcmap padding length. commented by qiao 2019.4.24
    }
    else
+#endif
    {
       hdr = (struct gobi_qmimux_hdr *)gobi_skb_push(skb, sizeof(struct gobi_qmimux_hdr));
    }
@@ -6402,7 +6404,8 @@ void QMIWDSCallback(
          else
          {
             DBG( "Net device link is disconnected\n" );
-            GobiSetDownReason( pDev, NO_NDIS_CONNECTION );
+            /* there is no need to disconnect the parent network card by bm_su */
+            //GobiSetDownReason( pDev, NO_NDIS_CONNECTION );
          }
       }
    }
@@ -8419,7 +8422,10 @@ struct net_device* gobi_qmimux_register_device(struct net_device *real_dev,int i
   // new_dev->flags           = IFF_NOARP | IFF_MULTICAST;
   // random_ether_addr(new_dev->dev_addr);
    if (!new_dev)
+   {
+      pr_err("alloc netdev failed\n");
       return NULL;
+   }
    qmimux_setup(new_dev);
    priv = netdev_priv(new_dev);
    priv->mux_id = mux_id;
